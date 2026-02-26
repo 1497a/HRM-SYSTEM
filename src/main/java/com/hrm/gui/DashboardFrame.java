@@ -58,7 +58,7 @@ public class DashboardFrame extends JFrame {
         setSize(1100, 750);
         setMinimumSize(new Dimension(900, 650));
 
-        lblStatus = new JLabel("San sang");
+        lblStatus = new JLabel("Sẵn sàng");
         lblStatus.setFont(new Font("Segoe UI", Font.PLAIN, 12));
     }
 
@@ -66,22 +66,22 @@ public class DashboardFrame extends JFrame {
         JMenuBar menuBar = new JMenuBar();
 
         // File Menu
-        JMenu mnuFile = new JMenu("He Thong");
+        JMenu mnuFile = new JMenu("Hệ Thống");
         mnuFile.setMnemonic('H');
 
-        JMenuItem mnuDashboard = new JMenuItem("Trang chu");
+        JMenuItem mnuDashboard = new JMenuItem("Trang chủ");
         mnuDashboard.addActionListener(e -> showDashboard());
 
-        JMenuItem mnuProfile = new JMenuItem("Thong tin ca nhan");
+        JMenuItem mnuProfile = new JMenuItem("Thông tin cá nhân");
         mnuProfile.addActionListener(e -> showProfile());
 
-        JMenuItem mnuChangePassword = new JMenuItem("Doi mat khau");
-        mnuChangePassword.addActionListener(e -> showMessage("Chuc nang doi mat khau"));
+        JMenuItem mnuChangePassword = new JMenuItem("Đổi mật khẩu");
+        mnuChangePassword.addActionListener(e -> showMessage("Chức năng đổi mật khẩu"));
 
-        JMenuItem mnuLogout = new JMenuItem("Dang xuat");
+        JMenuItem mnuLogout = new JMenuItem("Đăng xuất");
         mnuLogout.addActionListener(e -> performLogout());
 
-        JMenuItem mnuExit = new JMenuItem("Thoat");
+        JMenuItem mnuExit = new JMenuItem("Thoát");
         mnuExit.addActionListener(e -> System.exit(0));
 
         mnuFile.add(mnuDashboard);
@@ -93,29 +93,29 @@ public class DashboardFrame extends JFrame {
         mnuFile.add(mnuExit);
 
         // Employee Menu
-        JMenu mnuEmployee = new JMenu("Nhan Vien");
+        JMenu mnuEmployee = new JMenu("Nhân Viên");
         mnuEmployee.setMnemonic('N');
 
-        mnuEmployeeList = new JMenuItem("Danh sach nhan vien");
-        mnuEmployeeList.addActionListener(e -> showMessage("Danh sach nhan vien"));
+        mnuEmployeeList = new JMenuItem("Danh sách nhân viên");
+        mnuEmployeeList.addActionListener(e -> showMessage("Danh sách nhân viên"));
 
-        mnuEmployeeCreate = new JMenuItem("Them nhan vien moi");
-        mnuEmployeeCreate.addActionListener(e -> showMessage("Them nhan vien moi"));
+        mnuEmployeeCreate = new JMenuItem("Thêm nhân viên mới");
+        mnuEmployeeCreate.addActionListener(e -> showMessage("Thêm nhân viên mới"));
 
         mnuEmployee.add(mnuEmployeeList);
         mnuEmployee.add(mnuEmployeeCreate);
 
         // Leave Menu
-        JMenu mnuLeave = new JMenu("Nghi Phep");
+        JMenu mnuLeave = new JMenu("Nghỉ Phép");
         mnuLeave.setMnemonic('P');
 
-        mnuLeaveList = new JMenuItem("Quan ly nghi phep");
+        mnuLeaveList = new JMenuItem("Quản lý nghỉ phép");
         mnuLeaveList.addActionListener(e -> showLeavePanel());
 
-        mnuLeaveRequest = new JMenuItem("Tao don nghi phep");
+        mnuLeaveRequest = new JMenuItem("Tạo đơn nghỉ phép");
         mnuLeaveRequest.addActionListener(e -> createLeaveRequest());
 
-        mnuLeaveApprove = new JMenuItem("Duyet don (cho Quan ly)");
+        mnuLeaveApprove = new JMenuItem("Duyệt đơn (cho Quản lý)");
         mnuLeaveApprove.addActionListener(e -> showLeavePanel());
 
         mnuLeave.add(mnuLeaveList);
@@ -124,19 +124,19 @@ public class DashboardFrame extends JFrame {
         mnuLeave.add(mnuLeaveApprove);
 
         // Evaluation Menu
-        JMenu mnuEvaluation = new JMenu("Danh Gia");
+        JMenu mnuEvaluation = new JMenu("Đánh Giá");
         mnuEvaluation.setMnemonic('D');
 
-        mnuEvalList = new JMenuItem("Quan ly danh gia");
+        mnuEvalList = new JMenuItem("Quản lý đánh giá");
         mnuEvalList.addActionListener(e -> showEvaluationPanel());
 
-        mnuEvalSelf = new JMenuItem("Ket qua cua toi");
+        mnuEvalSelf = new JMenuItem("Kết quả của tôi");
         mnuEvalSelf.addActionListener(e -> showEvalResults());
 
-        mnuEvalReview = new JMenuItem("Danh gia nhan vien");
+        mnuEvalReview = new JMenuItem("Đánh giá nhân viên");
         mnuEvalReview.addActionListener(e -> showEvaluationPanel());
 
-        mnuEvalManage = new JMenuItem("Cau hinh ky danh gia");
+        mnuEvalManage = new JMenuItem("Cấu hình kỳ đánh giá");
         mnuEvalManage.addActionListener(e -> showEvaluationPanel());
 
         mnuEvaluation.add(mnuEvalList);
@@ -146,20 +146,20 @@ public class DashboardFrame extends JFrame {
         mnuEvaluation.add(mnuEvalManage);
 
         // Admin Menu
-        JMenu mnuAdmin = new JMenu("Quan Tri");
+        JMenu mnuAdmin = new JMenu("Quản Trị");
         mnuAdmin.setMnemonic('Q');
 
-        mnuUserManage = new JMenuItem("Quan ly tai khoan");
-        mnuUserManage.addActionListener(e -> showMessage("Quan ly tai khoan"));
+        mnuUserManage = new JMenuItem("Quản lý tài khoản");
+        mnuUserManage.addActionListener(e -> showMessage("Quản lý tài khoản"));
 
-        mnuRoleManage = new JMenuItem("Quan ly vai tro");
-        mnuRoleManage.addActionListener(e -> showMessage("Quan ly vai tro"));
+        mnuRoleManage = new JMenuItem("Quản lý vai trò");
+        mnuRoleManage.addActionListener(e -> showMessage("Quản lý vai trò"));
 
-        mnuReports = new JMenuItem("Bao cao");
-        mnuReports.addActionListener(e -> showMessage("Bao cao"));
+        mnuReports = new JMenuItem("Báo cáo");
+        mnuReports.addActionListener(e -> showMessage("Báo cáo"));
 
-        mnuSettings = new JMenuItem("Cai dat he thong");
-        mnuSettings.addActionListener(e -> showMessage("Cai dat he thong"));
+        mnuSettings = new JMenuItem("Cài đặt hệ thống");
+        mnuSettings.addActionListener(e -> showMessage("Cài đặt hệ thống"));
 
         mnuAdmin.add(mnuUserManage);
         mnuAdmin.add(mnuRoleManage);
@@ -168,10 +168,10 @@ public class DashboardFrame extends JFrame {
         mnuAdmin.add(mnuSettings);
 
         // Help Menu
-        JMenu mnuHelp = new JMenu("Tro Giup");
+        JMenu mnuHelp = new JMenu("Trợ Giúp");
         mnuHelp.setMnemonic('T');
 
-        JMenuItem mnuAbout = new JMenuItem("Gioi thieu");
+        JMenuItem mnuAbout = new JMenuItem("Giới thiệu");
         mnuAbout.addActionListener(e -> showAbout());
 
         mnuHelp.add(mnuAbout);
@@ -242,17 +242,17 @@ public class DashboardFrame extends JFrame {
         contentPanel.setBorder(new EmptyBorder(20, 10, 20, 10));
 
         // Quick Access Cards
-        contentPanel.add(createQuickCard("Thong Tin Ca Nhan", "Xem va cap nhat thong tin",
+        contentPanel.add(createQuickCard("Thông Tin Cá Nhân", "Xem và cập nhật thông tin",
             new Color(52, 152, 219), this::showProfile));
-        contentPanel.add(createQuickCard("Nghi Phep", "Quan ly don nghi phep",
+        contentPanel.add(createQuickCard("Nghỉ Phép", "Quản lý đơn nghỉ phép",
             new Color(46, 204, 113), this::showLeavePanel));
-        contentPanel.add(createQuickCard("Danh Gia", "Xem va quan ly danh gia",
+        contentPanel.add(createQuickCard("Đánh Giá", "Xem và quản lý đánh giá",
             new Color(155, 89, 182), this::showEvaluationPanel));
-        contentPanel.add(createQuickCard("Tao Don Phep", "Tao don xin nghi phep moi",
+        contentPanel.add(createQuickCard("Tạo Đơn Phép", "Tạo đơn xin nghỉ phép mới",
             new Color(241, 196, 15), this::createLeaveRequest));
-        contentPanel.add(createQuickCard("Ket Qua Danh Gia", "Xem ket qua danh gia cua toi",
+        contentPanel.add(createQuickCard("Kết Quả Đánh Giá", "Xem kết quả đánh giá của tôi",
             new Color(230, 126, 34), this::showEvalResults));
-        contentPanel.add(createQuickCard("Tro Ve Trang Chu", "Quay lai man hinh chinh",
+        contentPanel.add(createQuickCard("Trở Về Trang Chủ", "Quay lại màn hình chính",
             new Color(149, 165, 166), this::showDashboard));
 
         // Wrap content in scroll pane
@@ -273,11 +273,11 @@ public class DashboardFrame extends JFrame {
         JPanel welcomePanel = new JPanel(new GridLayout(2, 1));
         welcomePanel.setOpaque(false);
 
-        JLabel lblWelcome = new JLabel("Xin chao, " + currentUser.getFullName());
+        JLabel lblWelcome = new JLabel("Xin chào, " + currentUser.getFullName());
         lblWelcome.setFont(new Font("Segoe UI", Font.BOLD, 20));
         lblWelcome.setForeground(Color.WHITE);
 
-        JLabel lblRole = new JLabel("Vai tro: " + currentUser.getRoleNames());
+        JLabel lblRole = new JLabel("Vai trò: " + currentUser.getRoleNames());
         lblRole.setFont(new Font("Segoe UI", Font.PLAIN, 14));
         lblRole.setForeground(new Color(200, 220, 240));
 
@@ -298,16 +298,16 @@ public class DashboardFrame extends JFrame {
         JPanel navPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT, 10, 0));
         navPanel.setOpaque(false);
 
-        JButton btnHome = UIHelper.createNavButton("Trang chu");
+        JButton btnHome = UIHelper.createNavButton("Trang chủ");
         btnHome.addActionListener(e -> showDashboard());
 
-        JButton btnLeave = UIHelper.createNavButton("Nghi phep");
+        JButton btnLeave = UIHelper.createNavButton("Nghỉ phép");
         btnLeave.addActionListener(e -> showLeavePanel());
 
-        JButton btnEval = UIHelper.createNavButton("Danh gia");
+        JButton btnEval = UIHelper.createNavButton("Đánh giá");
         btnEval.addActionListener(e -> showEvaluationPanel());
 
-        JButton btnLogout = UIHelper.createStyledButton("Dang Xuat", UIHelper.DANGER_COLOR, Color.WHITE);
+        JButton btnLogout = UIHelper.createStyledButton("Đăng Xuất", UIHelper.DANGER_COLOR, Color.WHITE);
         btnLogout.addActionListener(e -> performLogout());
 
         navPanel.add(btnHome);
@@ -402,9 +402,9 @@ public class DashboardFrame extends JFrame {
     }
 
     private void updateStatus() {
-        String permissions = currentUser.hasRole("ADMIN") ? "Toan quyen" :
-            "Quyen han theo vai tro";
-        lblStatus.setText("Vai tro: " + currentUser.getRoleNames() + " | " + permissions);
+        String permissions = currentUser.hasRole("ADMIN") ? "Toàn quyền" :
+            "Quyền hạn theo vai trò";
+        lblStatus.setText("Vai trò: " + currentUser.getRoleNames() + " | " + permissions);
     }
 
     private String getInitials(String fullName) {
@@ -419,7 +419,7 @@ public class DashboardFrame extends JFrame {
     // Navigation methods
     private void showDashboard() {
         cardLayout.show(mainContentArea, CARD_DASHBOARD);
-        lblStatus.setText("Trang chu | Vai tro: " + currentUser.getRoleNames());
+        lblStatus.setText("Trang chủ | Vai trò: " + currentUser.getRoleNames());
     }
 
     private void showLeavePanel() {
@@ -428,7 +428,7 @@ public class DashboardFrame extends JFrame {
         LeaveListPanel newLeavePanel = new LeaveListPanel();
         mainContentArea.add(newLeavePanel, CARD_LEAVE, 1);
         cardLayout.show(mainContentArea, CARD_LEAVE);
-        lblStatus.setText("Quan ly nghi phep | Vai tro: " + currentUser.getRoleNames());
+        lblStatus.setText("Quản lý nghỉ phép | Vai trò: " + currentUser.getRoleNames());
     }
 
     private void showEvaluationPanel() {
@@ -437,7 +437,7 @@ public class DashboardFrame extends JFrame {
         EvalCycleListPanel newEvalPanel = new EvalCycleListPanel();
         mainContentArea.add(newEvalPanel, CARD_EVAL, 2);
         cardLayout.show(mainContentArea, CARD_EVAL);
-        lblStatus.setText("Quan ly danh gia | Vai tro: " + currentUser.getRoleNames());
+        lblStatus.setText("Quản lý đánh giá | Vai trò: " + currentUser.getRoleNames());
     }
 
     private void createLeaveRequest() {
@@ -450,7 +450,7 @@ public class DashboardFrame extends JFrame {
 
     private void showEvalResults() {
         EvalResultPanel resultPanel = new EvalResultPanel();
-        JDialog dialog = new JDialog(this, "Ket qua danh gia cua toi", true);
+        JDialog dialog = new JDialog(this, "Kết quả đánh giá của tôi", true);
         dialog.setContentPane(resultPanel);
         dialog.setSize(800, 600);
         dialog.setLocationRelativeTo(this);
@@ -459,13 +459,13 @@ public class DashboardFrame extends JFrame {
 
     private void showProfile() {
         StringBuilder info = new StringBuilder();
-        info.append("THONG TIN TAI KHOAN\n");
+        info.append("THÔNG TIN TÀI KHOẢN\n");
         info.append("==================\n\n");
-        info.append("Ho ten: ").append(currentUser.getFullName()).append("\n");
-        info.append("Ten dang nhap: ").append(currentUser.getUsername()).append("\n");
+        info.append("Họ tên: ").append(currentUser.getFullName()).append("\n");
+        info.append("Tên đăng nhập: ").append(currentUser.getUsername()).append("\n");
         info.append("Email: ").append(currentUser.getEmail()).append("\n");
-        info.append("Vai tro: ").append(currentUser.getRoleNames()).append("\n\n");
-        info.append("QUYEN HAN:\n");
+        info.append("Vai trò: ").append(currentUser.getRoleNames()).append("\n\n");
+        info.append("QUYỀN HẠN:\n");
         info.append("---------\n");
 
         currentUser.getRoles().forEach(role -> {
@@ -481,33 +481,33 @@ public class DashboardFrame extends JFrame {
         JScrollPane scrollPane = new JScrollPane(textArea);
         scrollPane.setPreferredSize(new Dimension(400, 400));
 
-        JOptionPane.showMessageDialog(this, scrollPane, "Thong Tin Ca Nhan",
+        JOptionPane.showMessageDialog(this, scrollPane, "Thông Tin Cá Nhân",
             JOptionPane.INFORMATION_MESSAGE);
     }
 
     private void showAbout() {
         JOptionPane.showMessageDialog(this,
             "HRM SYSTEM\n" +
-            "He Thong Quan Ly Nhan Su\n\n" +
-            "Phien ban: 1.0\n" +
+            "Hệ Thống Quản Lý Nhân Sự\n\n" +
+            "Phiên bản: 1.0\n" +
             "Module: Leave + Evaluation\n" +
             "Java Swing Desktop Application\n\n" +
             "© 2024 HRM System",
-            "Gioi Thieu",
+            "Giới Thiệu",
             JOptionPane.INFORMATION_MESSAGE);
     }
 
     private void showMessage(String feature) {
         JOptionPane.showMessageDialog(this,
-            "Chuc nang: " + feature + "\n\nDang phat trien...",
-            "Thong Bao",
+            "Chức năng: " + feature + "\n\nĐang phát triển...",
+            "Thông Báo",
             JOptionPane.INFORMATION_MESSAGE);
     }
 
     private void performLogout() {
         int confirm = JOptionPane.showConfirmDialog(this,
-            "Ban co chac muon dang xuat?",
-            "Xac Nhan Dang Xuat",
+            "Bạn có chắc muốn đăng xuất?",
+            "Xác Nhận Đăng Xuất",
             JOptionPane.YES_NO_OPTION,
             JOptionPane.QUESTION_MESSAGE);
 

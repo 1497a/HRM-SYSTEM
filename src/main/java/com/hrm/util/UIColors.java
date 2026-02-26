@@ -90,7 +90,7 @@ public final class UIColors {
     public static final Color TABLE_HEADER_BG = PRIMARY_PURPLE;
 
     /** Table header text */
-    public static final Color TABLE_HEADER_FG = WHITE;
+    public static final Color TABLE_HEADER_FG = TEXT_DARK;
 
     /** Table alternate row */
     public static final Color TABLE_ALT_ROW = new Color(250, 248, 255);

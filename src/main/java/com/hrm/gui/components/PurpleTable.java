@@ -41,8 +41,11 @@ public class PurpleTable extends JTable {
         header.setPreferredSize(new Dimension(header.getWidth(), 40));
         header.setReorderingAllowed(false);
 
-        // Make header renderer opaque
-        ((DefaultTableCellRenderer) header.getDefaultRenderer()).setHorizontalAlignment(SwingConstants.CENTER);
+        // Make header renderer opaque and styled
+        DefaultTableCellRenderer renderer = (DefaultTableCellRenderer) header.getDefaultRenderer();
+        renderer.setHorizontalAlignment(SwingConstants.CENTER);
+        renderer.setBackground(UIColors.TABLE_HEADER_BG);
+        renderer.setForeground(UIColors.TABLE_HEADER_FG);
 
         // Table body style
         setRowHeight(35);

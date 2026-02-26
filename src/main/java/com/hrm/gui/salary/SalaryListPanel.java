@@ -101,7 +101,7 @@ public class SalaryListPanel extends JPanel {
         tblBangLuong.setFont(new Font("Segoe UI", Font.PLAIN, 13));
         tblBangLuong.getTableHeader().setFont(new Font("Segoe UI", Font.BOLD, 13));
         tblBangLuong.getTableHeader().setBackground(UIColors.PRIMARY_PURPLE);
-        tblBangLuong.getTableHeader().setForeground(UIColors.WHITE);
+        tblBangLuong.getTableHeader().setForeground(UIColors.TEXT_DARK);
         tblBangLuong.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
         tblBangLuong.setSelectionBackground(UIColors.LIGHT_PURPLE);
         tblBangLuong.setSelectionForeground(UIColors.TEXT_DARK);
@@ -166,7 +166,7 @@ public class SalaryListPanel extends JPanel {
         tblChiTiet.setFont(new Font("Segoe UI", Font.PLAIN, 13));
         tblChiTiet.getTableHeader().setFont(new Font("Segoe UI", Font.BOLD, 13));
         tblChiTiet.getTableHeader().setBackground(UIColors.PRIMARY_PURPLE);
-        tblChiTiet.getTableHeader().setForeground(UIColors.WHITE);
+        tblChiTiet.getTableHeader().setForeground(UIColors.TEXT_DARK);
         tblChiTiet.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
         tblChiTiet.setSelectionBackground(UIColors.LIGHT_PURPLE);
         tblChiTiet.setSelectionForeground(UIColors.TEXT_DARK);

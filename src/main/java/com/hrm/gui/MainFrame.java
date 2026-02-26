@@ -67,7 +67,7 @@ public class MainFrame extends JFrame {
         this.authService = AuthService.getInstance();
 
         if (!authService.isLoggedIn()) {
-            JOptionPane.showMessageDialog(null, "Phien lam viec khong hop le");
+            JOptionPane.showMessageDialog(null, "Phiên làm việc không hợp lệ");
             dispose();
             new LoginFrame().setVisible(true);
             return;
@@ -84,7 +84,7 @@ public class MainFrame extends JFrame {
     }
 
     private void initComponents() {
-        setTitle("HRM System - He thong quan ly nhan su");
+        setTitle("HRM System - Hệ thống quản lý nhân sự");
         setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
         setSize(1200, 750);
         setMinimumSize(new Dimension(1000, 650));
@@ -104,30 +104,30 @@ public class MainFrame extends JFrame {
         contentPanel.setBackground(UIColors.LIGHT_GRAY_BG);
 
         // Create menu buttons
-        btnDashboard = createMenuButton("Trang chu", "dashboard");
+        btnDashboard = createMenuButton("Trang chủ", "dashboard");
 
         // Nhân sự
-        btnEmployees = createMenuButton("Ho so nhan vien", "employees");
-        btnOrganization = createMenuButton("Co cau to chuc", "organization");
-        btnAppointments = createMenuButton("Bo nhiem", "appointments");
-        btnRecruitment = createMenuButton("Tuyen dung", "recruitment");
+        btnEmployees = createMenuButton("Hồ sơ nhân viên", "employees");
+        btnOrganization = createMenuButton("Cơ cấu tổ chức", "organization");
+        btnAppointments = createMenuButton("Bổ nhiệm", "appointments");
+        btnRecruitment = createMenuButton("Tuyển dụng", "recruitment");
 
         // Chấm công & Lương
-        btnAttendance = createMenuButton("Cham cong", "attendance");
-        btnContracts = createMenuButton("Hop dong lao dong", "contracts");
-        btnPayroll = createMenuButton("Tinh luong", "payroll");
+        btnAttendance = createMenuButton("Chấm công", "attendance");
+        btnContracts = createMenuButton("Hợp đồng lao động", "contracts");
+        btnPayroll = createMenuButton("Tính lương", "payroll");
 
         // Chính sách
-        btnLeave = createMenuButton("Nghi phep", "leave");
-        btnPerformance = createMenuButton("Danh gia hieu suat", "performance");
+        btnLeave = createMenuButton("Nghỉ phép", "leave");
+        btnPerformance = createMenuButton("Đánh giá hiệu suất", "performance");
 
         // Hệ thống
-        btnUsers = createMenuButton("Quan ly tai khoan", "users");
-        btnRoles = createMenuButton("Quan ly vai tro", "roles");
-        btnNotifications = createMenuButton("Thong bao", "notifications");
-        btnReports = createMenuButton("Bao cao", "reports");
-        btnSettings = createMenuButton("Cai dat", "settings");
-        btnLogout = createMenuButton("Dang xuat", "logout");
+        btnUsers = createMenuButton("Quản lý tài khoản", "users");
+        btnRoles = createMenuButton("Quản lý vai trò", "roles");
+        btnNotifications = createMenuButton("Thông báo", "notifications");
+        btnReports = createMenuButton("Báo cáo", "reports");
+        btnSettings = createMenuButton("Cài đặt", "settings");
+        btnLogout = createMenuButton("Đăng xuất", "logout");
         btnLogout.setForeground(UIColors.DANGER_RED);
     }
 
@@ -227,7 +227,7 @@ public class MainFrame extends JFrame {
         lblHeaderRole.setForeground(new Color(255, 255, 255, 180));
 
         // Logout button in header
-        JButton btnHeaderLogout = new JButton("Dang xuat");
+        JButton btnHeaderLogout = new JButton("Đăng xuất");
         btnHeaderLogout.setFont(new Font("Segoe UI", Font.PLAIN, 12));
         btnHeaderLogout.setForeground(Color.WHITE);
         btnHeaderLogout.setBackground(UIColors.DARK_PURPLE);
@@ -435,7 +435,7 @@ public class MainFrame extends JFrame {
         dashboardPanel.setBorder(new EmptyBorder(25, 25, 25, 25));
 
         // Header
-        JLabel lblHeader = new JLabel("Tong quan");
+        JLabel lblHeader = new JLabel("Tổng quan");
         lblHeader.setFont(new Font("Segoe UI", Font.BOLD, 24));
         lblHeader.setForeground(UIColors.TEXT_DARK);
         dashboardPanel.add(lblHeader, BorderLayout.NORTH);
@@ -445,12 +445,12 @@ public class MainFrame extends JFrame {
         cardsPanel.setOpaque(false);
         cardsPanel.setBorder(new EmptyBorder(25, 0, 0, 0));
 
-        cardsPanel.add(RoundedPanel.createStatCard("Tai khoan", "4", UIColors.PRIMARY_PURPLE));
-        cardsPanel.add(RoundedPanel.createStatCard("Vai tro", "4", UIColors.SUCCESS_GREEN));
-        cardsPanel.add(RoundedPanel.createStatCard("Nhan vien", "10", UIColors.WARNING_YELLOW));
-        cardsPanel.add(RoundedPanel.createStatCard("Nghi phep cho duyet", "3", UIColors.DANGER_RED));
-        cardsPanel.add(RoundedPanel.createStatCard("Danh gia thang nay", "5", UIColors.DARK_PURPLE));
-        cardsPanel.add(RoundedPanel.createStatCard("Bao cao moi", "2", UIColors.INFO_BLUE));
+        cardsPanel.add(RoundedPanel.createStatCard("Tài khoản", "4", UIColors.PRIMARY_PURPLE));
+        cardsPanel.add(RoundedPanel.createStatCard("Vai trò", "4", UIColors.SUCCESS_GREEN));
+        cardsPanel.add(RoundedPanel.createStatCard("Nhân viên", "10", UIColors.WARNING_YELLOW));
+        cardsPanel.add(RoundedPanel.createStatCard("Nghỉ phép chờ duyệt", "3", UIColors.DANGER_RED));
+        cardsPanel.add(RoundedPanel.createStatCard("Đánh giá tháng này", "5", UIColors.DARK_PURPLE));
+        cardsPanel.add(RoundedPanel.createStatCard("Báo cáo mới", "2", UIColors.INFO_BLUE));
 
         JPanel centerPanel = new JPanel(new BorderLayout());
         centerPanel.setOpaque(false);
@@ -463,7 +463,7 @@ public class MainFrame extends JFrame {
 
         User currentUser = SessionContext.getInstance().getCurrentUser();
         String displayName = currentUser != null ? currentUser.getFullName() : "Guest";
-        JLabel lblWelcome = new JLabel("Chao mung " + displayName + " den voi HRM System!");
+        JLabel lblWelcome = new JLabel("Chào mừng " + displayName + " đến với HRM System!");
         lblWelcome.setFont(new Font("Segoe UI", Font.PLAIN, 16));
         lblWelcome.setForeground(UIColors.TEXT_GRAY);
         welcomePanel.add(lblWelcome, BorderLayout.NORTH);
@@ -484,7 +484,7 @@ public class MainFrame extends JFrame {
         settingsPanel.setBackground(UIColors.LIGHT_GRAY_BG);
         settingsPanel.setBorder(new EmptyBorder(25, 25, 25, 25));
 
-        JLabel lblHeader = new JLabel("Cai dat tai khoan");
+        JLabel lblHeader = new JLabel("Cài đặt tài khoản");
         lblHeader.setFont(new Font("Segoe UI", Font.BOLD, 24));
         lblHeader.setForeground(UIColors.TEXT_DARK);
         settingsPanel.add(lblHeader, BorderLayout.NORTH);
@@ -498,7 +498,7 @@ public class MainFrame extends JFrame {
         gbc.insets = new Insets(8, 8, 8, 8);
         gbc.anchor = GridBagConstraints.WEST;
 
-        JLabel lblPasswordTitle = new JLabel("Doi mat khau");
+        JLabel lblPasswordTitle = new JLabel("Đổi mật khẩu");
         lblPasswordTitle.setFont(new Font("Segoe UI", Font.BOLD, 18));
         lblPasswordTitle.setForeground(UIColors.PRIMARY_PURPLE);
         gbc.gridx = 0;
@@ -508,7 +508,7 @@ public class MainFrame extends JFrame {
 
         gbc.gridwidth = 1;
         gbc.gridy = 1;
-        JLabel lbl1 = new JLabel("Mat khau hien tai:");
+        JLabel lbl1 = new JLabel("Mật khẩu hiện tại:");
         lbl1.setFont(new Font("Segoe UI", Font.PLAIN, 14));
         passwordCard.add(lbl1, gbc);
 
@@ -519,7 +519,7 @@ public class MainFrame extends JFrame {
 
         gbc.gridx = 0;
         gbc.gridy = 2;
-        JLabel lbl2 = new JLabel("Mat khau moi:");
+        JLabel lbl2 = new JLabel("Mật khẩu mới:");
         lbl2.setFont(new Font("Segoe UI", Font.PLAIN, 14));
         passwordCard.add(lbl2, gbc);
 
@@ -530,7 +530,7 @@ public class MainFrame extends JFrame {
 
         gbc.gridx = 0;
         gbc.gridy = 3;
-        JLabel lbl3 = new JLabel("Xac nhan mat khau:");
+        JLabel lbl3 = new JLabel("Xác nhận mật khẩu:");
         lbl3.setFont(new Font("Segoe UI", Font.PLAIN, 14));
         passwordCard.add(lbl3, gbc);
 
@@ -539,7 +539,7 @@ public class MainFrame extends JFrame {
         gbc.gridx = 1;
         passwordCard.add(txtConfirmPass, gbc);
 
-        PurpleButton btnChangePassword = new PurpleButton("Doi mat khau");
+        PurpleButton btnChangePassword = new PurpleButton("Đổi mật khẩu");
         gbc.gridx = 1;
         gbc.gridy = 4;
         gbc.insets = new Insets(20, 8, 8, 8);
@@ -551,13 +551,13 @@ public class MainFrame extends JFrame {
             String confirmPass = new String(txtConfirmPass.getPassword());
 
             if (currentPass.isEmpty() || newPass.isEmpty() || confirmPass.isEmpty()) {
-                JOptionPane.showMessageDialog(this, "Vui long nhap day du thong tin",
+                JOptionPane.showMessageDialog(this, "Vui lòng nhập đầy đủ thông tin",
                         "Loi", JOptionPane.WARNING_MESSAGE);
                 return;
             }
 
             if (!newPass.equals(confirmPass)) {
-                JOptionPane.showMessageDialog(this, "Mat khau xac nhan khong khop",
+                JOptionPane.showMessageDialog(this, "Mật khẩu xác nhận không khớp",
                         "Loi", JOptionPane.WARNING_MESSAGE);
                 return;
             }
@@ -566,7 +566,7 @@ public class MainFrame extends JFrame {
             if (currentUser != null) {
                 ServiceResult<Void> result = authService.changePassword(currentUser.getId(), currentPass, newPass);
                 if (result.isSuccess()) {
-                    JOptionPane.showMessageDialog(this, "Doi mat khau thanh cong!",
+                    JOptionPane.showMessageDialog(this, "Đổi mật khẩu thành công!",
                             "Thong bao", JOptionPane.INFORMATION_MESSAGE);
                     txtCurrentPass.setText("");
                     txtNewPass.setText("");
@@ -576,7 +576,7 @@ public class MainFrame extends JFrame {
                             "Loi", JOptionPane.ERROR_MESSAGE);
                 }
             } else {
-                JOptionPane.showMessageDialog(this, "Khong tim thay nguoi dung hien tai",
+                JOptionPane.showMessageDialog(this, "Không tìm thấy người dùng hiện tại",
                         "Loi", JOptionPane.ERROR_MESSAGE);
             }
         });
@@ -608,7 +608,7 @@ public class MainFrame extends JFrame {
         JPanel centerPanel = new JPanel(new GridBagLayout());
         centerPanel.setOpaque(false);
 
-        JLabel lblPlaceholder = new JLabel("Chuc nang dang phat trien...");
+        JLabel lblPlaceholder = new JLabel("Chức năng đang phát triển...");
         lblPlaceholder.setFont(new Font("Segoe UI", Font.PLAIN, 18));
         lblPlaceholder.setForeground(UIColors.TEXT_GRAY);
         centerPanel.add(lblPlaceholder);
@@ -628,7 +628,7 @@ public class MainFrame extends JFrame {
         wrapperPanel.setBackground(UIColors.LIGHT_GRAY_BG);
         wrapperPanel.setBorder(new EmptyBorder(15, 15, 15, 15));
 
-        JLabel lblHeader = new JLabel("Quan ly nghi phep");
+        JLabel lblHeader = new JLabel("Quản lý nghỉ phép");
         lblHeader.setFont(new Font("Segoe UI", Font.BOLD, 24));
         lblHeader.setForeground(UIColors.TEXT_DARK);
         lblHeader.setBorder(new EmptyBorder(0, 10, 15, 0));
@@ -651,7 +651,7 @@ public class MainFrame extends JFrame {
         wrapperPanel.setBackground(UIColors.LIGHT_GRAY_BG);
         wrapperPanel.setBorder(new EmptyBorder(15, 15, 15, 15));
 
-        JLabel lblHeader = new JLabel("Cham cong & Lam them gio");
+        JLabel lblHeader = new JLabel("Chấm công & Làm thêm giờ");
         lblHeader.setFont(new Font("Segoe UI", Font.BOLD, 24));
         lblHeader.setForeground(UIColors.TEXT_DARK);
         lblHeader.setBorder(new EmptyBorder(0, 10, 15, 0));
@@ -674,7 +674,7 @@ public class MainFrame extends JFrame {
         wrapperPanel.setBackground(UIColors.LIGHT_GRAY_BG);
         wrapperPanel.setBorder(new EmptyBorder(15, 15, 15, 15));
 
-        JLabel lblHeader = new JLabel("Danh gia hieu suat");
+        JLabel lblHeader = new JLabel("Đánh giá hiệu suất");
         lblHeader.setFont(new Font("Segoe UI", Font.BOLD, 24));
         lblHeader.setForeground(UIColors.TEXT_DARK);
         lblHeader.setBorder(new EmptyBorder(0, 10, 15, 0));
@@ -697,7 +697,7 @@ public class MainFrame extends JFrame {
         wrapperPanel.setBackground(UIColors.LIGHT_GRAY_BG);
         wrapperPanel.setBorder(new EmptyBorder(15, 15, 15, 15));
 
-        JLabel lblHeader = new JLabel("Quan ly tai khoan");
+        JLabel lblHeader = new JLabel("Quản lý tài khoản");
         lblHeader.setFont(new Font("Segoe UI", Font.BOLD, 24));
         lblHeader.setForeground(UIColors.TEXT_DARK);
         lblHeader.setBorder(new EmptyBorder(0, 10, 15, 0));
@@ -720,7 +720,7 @@ public class MainFrame extends JFrame {
         wrapperPanel.setBackground(UIColors.LIGHT_GRAY_BG);
         wrapperPanel.setBorder(new EmptyBorder(15, 15, 15, 15));
 
-        JLabel lblHeader = new JLabel("Quan ly vai tro");
+        JLabel lblHeader = new JLabel("Quản lý vai trò");
         lblHeader.setFont(new Font("Segoe UI", Font.BOLD, 24));
         lblHeader.setForeground(UIColors.TEXT_DARK);
         lblHeader.setBorder(new EmptyBorder(0, 10, 15, 0));
@@ -737,8 +737,8 @@ public class MainFrame extends JFrame {
 
     private void logout() {
         int confirm = JOptionPane.showConfirmDialog(this,
-                "Ban co chac muon dang xuat?",
-                "Xac nhan dang xuat",
+                "Bạn có chắc muốn đăng xuất?",
+                "Xác nhận đăng xuất",
                 JOptionPane.YES_NO_OPTION,
                 JOptionPane.QUESTION_MESSAGE);
 
@@ -751,8 +751,8 @@ public class MainFrame extends JFrame {
 
     private void confirmExit() {
         int confirm = JOptionPane.showConfirmDialog(this,
-                "Ban co chac muon thoat ung dung?",
-                "Xac nhan thoat",
+                "Bạn có chắc muốn thoát ứng dụng?",
+                "Xác nhận thoát",
                 JOptionPane.YES_NO_OPTION,
                 JOptionPane.QUESTION_MESSAGE);
 
@@ -771,7 +771,7 @@ public class MainFrame extends JFrame {
         wrapperPanel.setBorder(new EmptyBorder(15, 15, 15, 15));
 
         // Header
-        JLabel lblHeader = new JLabel("Quan ly To chuc & Chuc vu");
+        JLabel lblHeader = new JLabel("Quản lý Tổ chức & Chức vụ");
         lblHeader.setFont(new Font("Segoe UI", Font.BOLD, 24));
         lblHeader.setForeground(UIColors.TEXT_DARK);
         lblHeader.setBorder(new EmptyBorder(0, 10, 15, 0));
@@ -784,11 +784,11 @@ public class MainFrame extends JFrame {
 
         // Tab 1: Phòng ban
         DepartmentPanel departmentPanel = new DepartmentPanel();
-        tabbedPane.addTab("Phong ban", departmentPanel);
+        tabbedPane.addTab("Phòng ban", departmentPanel);
 
         // Tab 2: Chức vụ
         PositionPanel positionPanel = new PositionPanel();
-        tabbedPane.addTab("Chuc vu", positionPanel);
+        tabbedPane.addTab("Chức vụ", positionPanel);
 
         wrapperPanel.add(tabbedPane, BorderLayout.CENTER);
 

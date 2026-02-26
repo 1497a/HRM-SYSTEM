@@ -269,7 +269,7 @@ public class ReportPanel extends JPanel {
         table.setFont(new Font("Segoe UI", Font.PLAIN, 13));
         table.getTableHeader().setFont(new Font("Segoe UI", Font.BOLD, 13));
         table.getTableHeader().setBackground(UIColors.PRIMARY_PURPLE);
-        table.getTableHeader().setForeground(UIColors.WHITE);
+        table.getTableHeader().setForeground(UIColors.TEXT_DARK);
         table.setSelectionBackground(UIColors.LIGHT_PURPLE);
         table.setSelectionForeground(UIColors.TEXT_DARK);
         table.setGridColor(UIColors.BORDER_GRAY);

@@ -109,7 +109,7 @@ public class NotificationPanel extends JPanel {
         tblThongBao.setFont(new Font("Segoe UI", Font.PLAIN, 13));
         tblThongBao.getTableHeader().setFont(new Font("Segoe UI", Font.BOLD, 13));
         tblThongBao.getTableHeader().setBackground(UIColors.PRIMARY_PURPLE);
-        tblThongBao.getTableHeader().setForeground(UIColors.WHITE);
+        tblThongBao.getTableHeader().setForeground(UIColors.TEXT_DARK);
         tblThongBao.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
         tblThongBao.setSelectionBackground(UIColors.LIGHT_PURPLE);
         tblThongBao.setSelectionForeground(UIColors.TEXT_DARK);
