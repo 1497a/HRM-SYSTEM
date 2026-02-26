@@ -4,7 +4,7 @@ import com.hrm.model.EvalCriteria;
 import com.hrm.model.EvalScore;
 import com.hrm.model.User;
 import com.hrm.service.EvaluationService;
-import com.hrm.service.MockDataService;
+import com.hrm.service.AuthService;
 import com.hrm.util.SessionContext;
 import com.hrm.util.UIHelper;
 
@@ -58,7 +58,7 @@ public class EvalDoDialog extends JDialog {
         // Employee combo
         cboEmployee = new JComboBox<>();
         // Add mock employees (in real app, this would come from employee service)
-        List<User> users = MockDataService.getInstance().getAllUsers();
+        List<User> users = AuthService.getInstance().getAllUsers();
         for (User user : users) {
             if (!user.hasRole("ADMIN") && user.getId() != currentUser.getId()) {
                 cboEmployee.addItem(new UserItem(user.getId(), user.getFullName()));

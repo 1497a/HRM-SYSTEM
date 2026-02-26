@@ -1,10 +1,10 @@
 package com.hrm.gui.admin;
 
 import com.hrm.model.Permission;
-import com.hrm.model.User;
-import com.hrm.service.MockDataService;
-import com.hrm.util.UIHelper;
 import com.hrm.model.Role;
+import com.hrm.model.User;
+import com.hrm.service.AuthService;
+import com.hrm.util.UIHelper;
 
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
@@ -14,6 +14,7 @@ import javax.swing.table.DefaultTableModel;
 import java.awt.*;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 /**
  * User Permission Dialog - Manage per-user permission exceptions
@@ -21,8 +22,8 @@ import java.util.Map;
  * (Denied)
  */
 public class UserPermissionDialog extends JDialog {
-    private final MockDataService dataService;
-    private final User user;
+    private final AuthService authService;
+    private User user;
 
     private JTable table;
     private DefaultTableModel tableModel;
@@ -30,7 +31,7 @@ public class UserPermissionDialog extends JDialog {
 
     public UserPermissionDialog(Frame parent, User user) {
         super(parent, "Phan quyen cho: " + user.getFullName(), true);
-        this.dataService = MockDataService.getInstance();
+        this.authService = AuthService.getInstance();
         this.user = user;
 
         initComponents();
@@ -42,10 +43,16 @@ public class UserPermissionDialog extends JDialog {
     }
 
     private void initComponents() {
-        // Module filter
+        // Module filter - derive distinct modules from all permissions
         cboModule = new JComboBox<>();
         cboModule.addItem("Tat ca");
-        for (String module : dataService.getPermissionModules()) {
+        List<Permission> allPermissions = authService.getAllPermissions();
+        List<String> modules = allPermissions.stream()
+                .map(Permission::getModule)
+                .distinct()
+                .sorted()
+                .collect(Collectors.toList());
+        for (String module : modules) {
             cboModule.addItem(module);
         }
         cboModule.addActionListener(e -> loadData());
@@ -155,17 +162,26 @@ public class UserPermissionDialog extends JDialog {
     }
 
     private void loadData() {
+        // Refresh user from DB to get current roles/permissions
+        final int userId = user.getId();
+        user = authService.getAllUsers().stream()
+                .filter(u -> u.getId() == userId)
+                .findFirst()
+                .orElse(user);
+
         tableModel.setRowCount(0);
         String selectedModule = (String) cboModule.getSelectedItem();
-        List<Permission> permissions = dataService.getAllPermissions();
-        Map<String, Boolean> userPerms = user.getUserPermissions();
+        List<Permission> permissions = authService.getAllPermissions();
+
+        // Fetch user-specific permission overrides fresh from DB
+        Map<String, Boolean> userOverrides = authService.getUserPermissions(user.getId());
 
         for (Permission perm : permissions) {
             if (!"Tat ca".equals(selectedModule) && !perm.getModule().equals(selectedModule)) {
                 continue;
             }
 
-            // Check if user has this permission from roles
+            // Check if user has this permission from their roles
             boolean fromRole = false;
             for (Role role : user.getRoles()) {
                 if (role.hasPermission(perm.getCode())) {
@@ -174,19 +190,24 @@ public class UserPermissionDialog extends JDialog {
                 }
             }
 
-            // Check user-specific exception
-            Boolean exception = userPerms.get(perm.getCode());
+            // Check user-specific override
+            Boolean override = userOverrides.get(perm.getCode());
             String exceptionText;
-            if (exception == null) {
+            if (override == null) {
                 exceptionText = "(Theo vai tro)";
-            } else if (exception) {
+            } else if (override) {
                 exceptionText = "Cap quyen";
             } else {
                 exceptionText = "Tu choi";
             }
 
             // Calculate effective permission
-            boolean effective = user.hasPermission(perm.getCode());
+            boolean effective;
+            if (override != null) {
+                effective = override;
+            } else {
+                effective = fromRole;
+            }
 
             Object[] row = {
                     perm.getCode(),
@@ -200,20 +221,24 @@ public class UserPermissionDialog extends JDialog {
     }
 
     private void applyChanges() {
+        // Stop any active cell editing before reading values
+        if (table.isEditing()) {
+            table.getCellEditor().stopCellEditing();
+        }
+
         for (int i = 0; i < tableModel.getRowCount(); i++) {
             String permCode = (String) tableModel.getValueAt(i, 0);
             String exception = (String) tableModel.getValueAt(i, 3);
 
             if ("(Theo vai tro)".equals(exception)) {
-                user.removePermissionException(permCode);
+                authService.removeUserPermission(user.getId(), permCode);
             } else if ("Cap quyen".equals(exception)) {
-                user.grantPermission(permCode);
+                authService.setUserPermission(user.getId(), permCode, true);
             } else if ("Tu choi".equals(exception)) {
-                user.denyPermission(permCode);
+                authService.setUserPermission(user.getId(), permCode, false);
             }
         }
 
-        dataService.saveUser(user);
         loadData(); // Refresh to show updated effective permissions
 
         JOptionPane.showMessageDialog(this,

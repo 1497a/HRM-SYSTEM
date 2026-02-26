@@ -2,7 +2,6 @@ package com.hrm.gui;
 
 import com.hrm.model.User;
 import com.hrm.service.AuthService;
-import com.hrm.service.MockDataService;
 import com.hrm.gui.components.PurpleButton;
 import com.hrm.util.UIColors;
 
@@ -28,8 +27,6 @@ public class LoginFrame extends JFrame {
     private final AuthService authService;
 
     public LoginFrame() {
-        // Initialize mock data
-        MockDataService.getInstance().initializeData();
         this.authService = AuthService.getInstance();
         initComponents();
         setupLayout();
@@ -163,19 +160,8 @@ public class LoginFrame extends JFrame {
         btnLogin.setAlignmentX(Component.LEFT_ALIGNMENT);
         btnLogin.setMaximumSize(new Dimension(280, 45));
 
-        // Demo accounts info - display all accounts
-        StringBuilder accountsHtml = new StringBuilder("<html><div style='text-align:center;'>");
-        accountsHtml.append("<b>Tai khoan demo:</b><br/>");
-        for (User user : MockDataService.getInstance().getAllUsers()) {
-            accountsHtml.append(user.getUsername())
-                    .append(" / ")
-                    .append(user.getPassword())
-                    .append(" (")
-                    .append(user.getRoleNames())
-                    .append(")<br/>");
-        }
-        accountsHtml.append("</div></html>");
-        JLabel lblDemo = new JLabel(accountsHtml.toString());
+        // Demo accounts info - static label
+        JLabel lblDemo = new JLabel("<html><div style='text-align:center;'><b>Tai khoan:</b> admin / 123</div></html>");
         lblDemo.setFont(new Font("Segoe UI", Font.PLAIN, 11));
         lblDemo.setForeground(UIColors.TEXT_LIGHT_GRAY);
         lblDemo.setAlignmentX(Component.LEFT_ALIGNMENT);

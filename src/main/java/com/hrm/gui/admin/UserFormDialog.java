@@ -2,7 +2,8 @@ package com.hrm.gui.admin;
 
 import com.hrm.model.Role;
 import com.hrm.model.User;
-import com.hrm.service.MockDataService;
+import com.hrm.service.AuthService;
+import com.hrm.service.ServiceResult;
 import com.hrm.util.UIHelper;
 
 import javax.swing.*;
@@ -14,7 +15,7 @@ import java.util.List;
  * User Form Dialog - Create/Edit user accounts
  */
 public class UserFormDialog extends JDialog {
-    private final MockDataService dataService;
+    private final AuthService authService;
     private final User editingUser;
     private boolean successful = false;
 
@@ -23,12 +24,13 @@ public class UserFormDialog extends JDialog {
     private JTextField txtFullName;
     private JTextField txtEmail;
     private JPanel rolesPanel;
+    private ButtonGroup roleGroup;
     private JCheckBox chkActive;
     private JCheckBox chkLocked;
 
     public UserFormDialog(Frame parent, User user) {
         super(parent, user == null ? "Tao tai khoan moi" : "Sua tai khoan", true);
-        this.dataService = MockDataService.getInstance();
+        this.authService = AuthService.getInstance();
         this.editingUser = user;
 
         initComponents();
@@ -37,7 +39,7 @@ public class UserFormDialog extends JDialog {
             loadUserData();
         }
 
-        setSize(450, 500);
+        setSize(450, 520);
         setLocationRelativeTo(parent);
     }
 
@@ -50,14 +52,25 @@ public class UserFormDialog extends JDialog {
         chkActive.setSelected(true);
         chkLocked = new JCheckBox("Khoa tai khoan");
 
-        // Roles panel with checkboxes
+        // Roles panel with radio buttons (single role per account)
         rolesPanel = new JPanel();
         rolesPanel.setLayout(new BoxLayout(rolesPanel, BoxLayout.Y_AXIS));
-        List<Role> roles = dataService.getAllRoles();
+        roleGroup = new ButtonGroup();
+
+        List<Role> roles = authService.getAllRoles();
         for (Role role : roles) {
-            JCheckBox chk = new JCheckBox(role.getName() + " (" + role.getCode() + ")");
-            chk.setActionCommand(role.getCode());
-            rolesPanel.add(chk);
+            JRadioButton rb = new JRadioButton(role.getName() + " (" + role.getCode() + ")");
+            rb.setActionCommand(role.getCode());
+            roleGroup.add(rb);
+            rolesPanel.add(rb);
+        }
+
+        // Select first role by default when creating
+        if (editingUser == null && rolesPanel.getComponentCount() > 0) {
+            Component first = rolesPanel.getComponent(0);
+            if (first instanceof JRadioButton) {
+                ((JRadioButton) first).setSelected(true);
+            }
         }
 
         if (editingUser != null) {
@@ -140,11 +153,19 @@ public class UserFormDialog extends JDialog {
         chkActive.setSelected(editingUser.isActive());
         chkLocked.setSelected(editingUser.isLocked());
 
-        // Check roles
+        // Select the radio button matching user's current role
+        String currentRoleCode = null;
+        if (editingUser.getRoles() != null && !editingUser.getRoles().isEmpty()) {
+            currentRoleCode = editingUser.getRoles().get(0).getCode();
+        }
+
         for (Component comp : rolesPanel.getComponents()) {
-            if (comp instanceof JCheckBox) {
-                JCheckBox chk = (JCheckBox) comp;
-                chk.setSelected(editingUser.hasRole(chk.getActionCommand()));
+            if (comp instanceof JRadioButton) {
+                JRadioButton rb = (JRadioButton) comp;
+                if (rb.getActionCommand().equals(currentRoleCode)) {
+                    rb.setSelected(true);
+                    break;
+                }
             }
         }
     }
@@ -168,50 +189,69 @@ public class UserFormDialog extends JDialog {
             JOptionPane.showMessageDialog(this, "Vui long nhap mat khau", "Loi", JOptionPane.ERROR_MESSAGE);
             return;
         }
-        if (editingUser == null && dataService.isUsernameExists(username)) {
-            JOptionPane.showMessageDialog(this, "Ten dang nhap da ton tai", "Loi", JOptionPane.ERROR_MESSAGE);
+
+        // Get selected role code from radio buttons
+        String selectedRoleCode = null;
+        ButtonModel selectedModel = roleGroup.getSelection();
+        if (selectedModel != null) {
+            selectedRoleCode = selectedModel.getActionCommand();
+        }
+        if (selectedRoleCode == null || selectedRoleCode.isEmpty()) {
+            JOptionPane.showMessageDialog(this, "Vui long chon vai tro", "Loi", JOptionPane.ERROR_MESSAGE);
             return;
         }
 
-        User user;
         if (editingUser == null) {
             // Create new user
-            user = dataService.createUser(username, password, fullName, email);
-        } else {
-            // Update existing user
-            user = editingUser;
-            if (!password.isEmpty()) {
-                user.setPassword(password);
+            ServiceResult<Integer> result = authService.createUser(username, password, null, selectedRoleCode, email);
+            if (!result.isSuccess()) {
+                JOptionPane.showMessageDialog(this, result.getMessage(), "Loi", JOptionPane.ERROR_MESSAGE);
+                return;
             }
-            user.setFullName(fullName);
-            user.setEmail(email);
-        }
-
-        if (user != null) {
-            user.setActive(chkActive.isSelected());
-            user.setLocked(chkLocked.isSelected());
-
-            // Update roles
-            user.getRoles().clear();
-            for (Component comp : rolesPanel.getComponents()) {
-                if (comp instanceof JCheckBox) {
-                    JCheckBox chk = (JCheckBox) comp;
-                    if (chk.isSelected()) {
-                        Role role = dataService.getRole(chk.getActionCommand());
-                        if (role != null) {
-                            user.addRole(role);
-                        }
-                    }
-                }
-            }
-
-            dataService.saveUser(user);
             successful = true;
-
             JOptionPane.showMessageDialog(this,
-                    editingUser == null ? "Da tao tai khoan thanh cong!" : "Da cap nhat tai khoan thanh cong!",
+                    "Da tao tai khoan thanh cong!",
                     "Thong bao",
                     JOptionPane.INFORMATION_MESSAGE);
+            dispose();
+        } else {
+            // Update existing user
+            editingUser.setFullName(fullName);
+            editingUser.setEmail(email);
+            editingUser.setActive(chkActive.isSelected());
+            editingUser.setLocked(chkLocked.isSelected());
+
+            // Update role: find the selected Role object and replace current roles list
+            final String roleCode = selectedRoleCode;
+            Role selectedRole = authService.getAllRoles().stream()
+                    .filter(r -> r.getCode().equals(roleCode))
+                    .findFirst()
+                    .orElse(null);
+            if (selectedRole != null) {
+                editingUser.getRoles().clear();
+                editingUser.getRoles().add(selectedRole);
+            }
+
+            ServiceResult<Void> result = authService.updateUser(editingUser);
+            if (!result.isSuccess()) {
+                JOptionPane.showMessageDialog(this, result.getMessage(), "Loi", JOptionPane.ERROR_MESSAGE);
+                return;
+            }
+
+            // If a new password was provided, inform the user that password change is done via Settings
+            if (!password.isEmpty()) {
+                JOptionPane.showMessageDialog(this,
+                        "Thong tin tai khoan da duoc cap nhat.\nDe doi mat khau, vui long su dung chuc nang Doi mat khau trong Cai dat.",
+                        "Thong bao",
+                        JOptionPane.INFORMATION_MESSAGE);
+            } else {
+                JOptionPane.showMessageDialog(this,
+                        "Da cap nhat tai khoan thanh cong!",
+                        "Thong bao",
+                        JOptionPane.INFORMATION_MESSAGE);
+            }
+
+            successful = true;
             dispose();
         }
     }

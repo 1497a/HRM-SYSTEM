@@ -1,0 +1,434 @@
+package com.hrm.gui.contract;
+
+import com.hrm.gui.components.PurpleButton;
+import com.hrm.model.HopDongLaoDong;
+import com.hrm.service.HopDongService;
+import com.hrm.service.ServiceResult;
+import com.hrm.util.UIColors;
+
+import javax.swing.*;
+import javax.swing.border.EmptyBorder;
+import java.awt.*;
+import java.text.NumberFormat;
+import java.time.LocalDate;
+import java.time.ZoneId;
+import java.util.Date;
+import java.util.Locale;
+
+/**
+ * Dialog tạo/xem hợp đồng lao động.
+ */
+public class ContractFormDialog extends JDialog {
+
+    private boolean saved = false;
+
+    // Mode
+    private final HopDongLaoDong hopDongHienThi;
+
+    // Form fields
+    private JTextField txtSoHopDong;
+    private JTextField txtMaNV;
+    private JComboBox<String> cboLoaiHopDong;
+    private JFormattedTextField txtLuongCoSo;
+    private JSpinner spnNgayKy;
+    private JSpinner spnNgayHieuLuc;
+    private JSpinner spnNgayHetHieuLuc;
+    private JTextArea txtGhiChu;
+    private JCheckBox chkKhongXacDinhNgayHet;
+
+    // Buttons
+    private PurpleButton btnLuu;
+    private JButton btnHuy;
+
+    /**
+     * Constructor tạo mới hợp đồng.
+     */
+    public ContractFormDialog(Frame parent) {
+        this(parent, null);
+    }
+
+    /**
+     * Constructor xem/hiển thị hợp đồng đã có.
+     */
+    public ContractFormDialog(Frame parent, HopDongLaoDong hopDong) {
+        super(parent,
+              hopDong == null ? "Tạo Hợp Đồng Lao Động" : "Chi Tiết Hợp Đồng #" + hopDong.getMaHopDong(),
+              true);
+        this.hopDongHienThi = hopDong;
+        initComponents();
+        layoutComponents();
+        if (hopDong != null) {
+            fillForm(hopDong);
+            setReadOnly();
+        }
+        pack();
+        setMinimumSize(new Dimension(520, 580));
+        setLocationRelativeTo(parent);
+    }
+
+    // ============================
+    // Init components
+    // ============================
+
+    private void initComponents() {
+        // Số hợp đồng
+        txtSoHopDong = new JTextField(20);
+        txtSoHopDong.setFont(new Font("Segoe UI", Font.PLAIN, 14));
+
+        // Mã nhân viên
+        txtMaNV = new JTextField(20);
+        txtMaNV.setFont(new Font("Segoe UI", Font.PLAIN, 14));
+
+        // Loại hợp đồng
+        cboLoaiHopDong = new JComboBox<>(new String[]{
+            "thu_viec", "co_thoi_han", "khong_xac_dinh_thoi_han"
+        });
+        cboLoaiHopDong.setFont(new Font("Segoe UI", Font.PLAIN, 14));
+        cboLoaiHopDong.setRenderer(new DefaultListCellRenderer() {
+            @Override
+            public Component getListCellRendererComponent(JList<?> list, Object value,
+                    int index, boolean isSelected, boolean cellHasFocus) {
+                super.getListCellRendererComponent(list, value, index, isSelected, cellHasFocus);
+                if (value != null) {
+                    switch (value.toString()) {
+                        case "thu_viec":                  setText("Thử việc");                  break;
+                        case "co_thoi_han":               setText("Có thời hạn");               break;
+                        case "khong_xac_dinh_thoi_han":   setText("Không xác định thời hạn");   break;
+                        default:                          setText(value.toString());
+                    }
+                }
+                return this;
+            }
+        });
+        cboLoaiHopDong.addActionListener(e -> onLoaiHopDongChanged());
+
+        // Lương cơ sở
+        NumberFormat fmt = NumberFormat.getIntegerInstance(new Locale("vi", "VN"));
+        fmt.setGroupingUsed(true);
+        txtLuongCoSo = new JFormattedTextField(fmt);
+        txtLuongCoSo.setFont(new Font("Segoe UI", Font.PLAIN, 14));
+        txtLuongCoSo.setColumns(20);
+        txtLuongCoSo.setValue(0L);
+
+        // Ngày ký
+        SpinnerDateModel ngayKyModel = new SpinnerDateModel(new Date(), null, null, java.util.Calendar.DAY_OF_MONTH);
+        spnNgayKy = new JSpinner(ngayKyModel);
+        spnNgayKy.setEditor(new JSpinner.DateEditor(spnNgayKy, "dd/MM/yyyy"));
+        spnNgayKy.setFont(new Font("Segoe UI", Font.PLAIN, 14));
+
+        // Ngày hiệu lực
+        SpinnerDateModel ngayHieuLucModel = new SpinnerDateModel(new Date(), null, null, java.util.Calendar.DAY_OF_MONTH);
+        spnNgayHieuLuc = new JSpinner(ngayHieuLucModel);
+        spnNgayHieuLuc.setEditor(new JSpinner.DateEditor(spnNgayHieuLuc, "dd/MM/yyyy"));
+        spnNgayHieuLuc.setFont(new Font("Segoe UI", Font.PLAIN, 14));
+
+        // Ngày hết hiệu lực
+        SpinnerDateModel ngayHetModel = new SpinnerDateModel(new Date(), null, null, java.util.Calendar.DAY_OF_MONTH);
+        spnNgayHetHieuLuc = new JSpinner(ngayHetModel);
+        spnNgayHetHieuLuc.setEditor(new JSpinner.DateEditor(spnNgayHetHieuLuc, "dd/MM/yyyy"));
+        spnNgayHetHieuLuc.setFont(new Font("Segoe UI", Font.PLAIN, 14));
+
+        // Checkbox không xác định ngày hết hiệu lực
+        chkKhongXacDinhNgayHet = new JCheckBox("Không xác định thời hạn kết thúc");
+        chkKhongXacDinhNgayHet.setFont(new Font("Segoe UI", Font.PLAIN, 13));
+        chkKhongXacDinhNgayHet.setOpaque(false);
+        chkKhongXacDinhNgayHet.addActionListener(e ->
+                spnNgayHetHieuLuc.setEnabled(!chkKhongXacDinhNgayHet.isSelected()));
+
+        // Ghi chú
+        txtGhiChu = new JTextArea(3, 20);
+        txtGhiChu.setFont(new Font("Segoe UI", Font.PLAIN, 14));
+        txtGhiChu.setLineWrap(true);
+        txtGhiChu.setWrapStyleWord(true);
+
+        // Buttons
+        btnLuu = new PurpleButton("Lưu");
+        btnHuy = new JButton("Hủy");
+        btnHuy.setFont(new Font("Segoe UI", Font.PLAIN, 14));
+        btnHuy.setCursor(new Cursor(Cursor.HAND_CURSOR));
+
+        btnLuu.addActionListener(e -> luuHopDong());
+        btnHuy.addActionListener(e -> dispose());
+    }
+
+    private void onLoaiHopDongChanged() {
+        String loai = (String) cboLoaiHopDong.getSelectedItem();
+        boolean isKhongXacDinh = "khong_xac_dinh_thoi_han".equals(loai);
+        if (isKhongXacDinh) {
+            chkKhongXacDinhNgayHet.setSelected(true);
+            spnNgayHetHieuLuc.setEnabled(false);
+        } else {
+            chkKhongXacDinhNgayHet.setSelected(false);
+            spnNgayHetHieuLuc.setEnabled(true);
+        }
+    }
+
+    // ============================
+    // Layout
+    // ============================
+
+    private void layoutComponents() {
+        JPanel mainPanel = new JPanel(new BorderLayout(10, 10));
+        mainPanel.setBackground(UIColors.LIGHT_GRAY_BG);
+        mainPanel.setBorder(new EmptyBorder(16, 16, 16, 16));
+
+        // Form panel
+        JPanel formPanel = new JPanel(new GridBagLayout());
+        formPanel.setBackground(UIColors.WHITE);
+        formPanel.setBorder(BorderFactory.createCompoundBorder(
+                BorderFactory.createLineBorder(UIColors.BORDER_GRAY),
+                new EmptyBorder(16, 16, 16, 16)));
+
+        GridBagConstraints gbc = new GridBagConstraints();
+        gbc.insets = new Insets(6, 8, 6, 8);
+        gbc.anchor = GridBagConstraints.WEST;
+
+        // Tiêu đề form
+        JLabel lblTitle = new JLabel("THÔNG TIN HỢP ĐỒNG LAO ĐỘNG");
+        lblTitle.setFont(new Font("Segoe UI", Font.BOLD, 16));
+        lblTitle.setForeground(UIColors.PRIMARY_PURPLE);
+        gbc.gridx = 0; gbc.gridy = 0; gbc.gridwidth = 2;
+        gbc.insets = new Insets(0, 8, 12, 8);
+        formPanel.add(lblTitle, gbc);
+        gbc.gridwidth = 1;
+        gbc.insets = new Insets(6, 8, 6, 8);
+
+        // Số hợp đồng
+        addFormRow(formPanel, gbc, 1, "Số hợp đồng (*)", txtSoHopDong);
+        // Mã NV
+        addFormRow(formPanel, gbc, 2, "Mã nhân viên (*)", txtMaNV);
+        // Loại hợp đồng
+        addFormRow(formPanel, gbc, 3, "Loại hợp đồng (*)", cboLoaiHopDong);
+        // Lương cơ sở
+        addFormRow(formPanel, gbc, 4, "Lương cơ sở (đ) (*)", txtLuongCoSo);
+        // Ngày ký
+        addFormRow(formPanel, gbc, 5, "Ngày ký (*)", spnNgayKy);
+        // Ngày hiệu lực
+        addFormRow(formPanel, gbc, 6, "Ngày hiệu lực (*)", spnNgayHieuLuc);
+
+        // Row: Ngày hết hiệu lực + checkbox
+        gbc.gridx = 0; gbc.gridy = 7;
+        JLabel lblHetHieuLuc = new JLabel("Ngày hết hiệu lực:");
+        lblHetHieuLuc.setFont(new Font("Segoe UI", Font.PLAIN, 14));
+        lblHetHieuLuc.setForeground(UIColors.TEXT_DARK);
+        formPanel.add(lblHetHieuLuc, gbc);
+
+        gbc.gridx = 1; gbc.gridy = 7;
+        gbc.fill = GridBagConstraints.HORIZONTAL;
+        gbc.weightx = 1.0;
+        JPanel ngayHetPanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 0, 0));
+        ngayHetPanel.setOpaque(false);
+        ngayHetPanel.add(spnNgayHetHieuLuc);
+        ngayHetPanel.add(Box.createHorizontalStrut(8));
+        ngayHetPanel.add(chkKhongXacDinhNgayHet);
+        formPanel.add(ngayHetPanel, gbc);
+        gbc.fill = GridBagConstraints.NONE;
+        gbc.weightx = 0;
+
+        // Ghi chú
+        gbc.gridx = 0; gbc.gridy = 8;
+        JLabel lblGhiChu = new JLabel("Ghi chú:");
+        lblGhiChu.setFont(new Font("Segoe UI", Font.PLAIN, 14));
+        lblGhiChu.setForeground(UIColors.TEXT_DARK);
+        formPanel.add(lblGhiChu, gbc);
+
+        gbc.gridx = 1; gbc.gridy = 8;
+        gbc.fill = GridBagConstraints.BOTH;
+        gbc.weightx = 1.0;
+        JScrollPane scrollGhiChu = new JScrollPane(txtGhiChu);
+        scrollGhiChu.setPreferredSize(new Dimension(280, 70));
+        formPanel.add(scrollGhiChu, gbc);
+        gbc.fill = GridBagConstraints.NONE;
+        gbc.weightx = 0;
+
+        mainPanel.add(formPanel, BorderLayout.CENTER);
+
+        // Button panel
+        JPanel btnPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT, 8, 0));
+        btnPanel.setOpaque(false);
+        btnPanel.setBorder(new EmptyBorder(8, 0, 0, 0));
+        btnPanel.add(btnHuy);
+        btnPanel.add(btnLuu);
+
+        mainPanel.add(btnPanel, BorderLayout.SOUTH);
+
+        setContentPane(mainPanel);
+    }
+
+    private void addFormRow(JPanel panel, GridBagConstraints gbc, int row, String label, JComponent field) {
+        gbc.gridx = 0; gbc.gridy = row;
+        JLabel lbl = new JLabel(label + ":");
+        lbl.setFont(new Font("Segoe UI", Font.PLAIN, 14));
+        lbl.setForeground(UIColors.TEXT_DARK);
+        panel.add(lbl, gbc);
+
+        gbc.gridx = 1; gbc.gridy = row;
+        gbc.fill = GridBagConstraints.HORIZONTAL;
+        gbc.weightx = 1.0;
+        panel.add(field, gbc);
+        gbc.fill = GridBagConstraints.NONE;
+        gbc.weightx = 0;
+    }
+
+    // ============================
+    // Fill form (view mode)
+    // ============================
+
+    private void fillForm(HopDongLaoDong hd) {
+        txtSoHopDong.setText(hd.getSoHopDong() != null ? hd.getSoHopDong() : "");
+        txtMaNV.setText(String.valueOf(hd.getMaNV()));
+
+        // Loại hợp đồng - map DB value to combo items
+        String loai = hd.getLoaiHopDong();
+        String comboLoai = loai;
+        if ("xac_dinh_thoi_han".equals(loai)) comboLoai = "co_thoi_han";
+        else if ("khong_xac_dinh".equals(loai)) comboLoai = "khong_xac_dinh_thoi_han";
+        for (int i = 0; i < cboLoaiHopDong.getItemCount(); i++) {
+            if (cboLoaiHopDong.getItemAt(i).equals(comboLoai)) {
+                cboLoaiHopDong.setSelectedIndex(i);
+                break;
+            }
+        }
+
+        txtLuongCoSo.setValue(hd.getLuongCoSo());
+
+        if (hd.getNgayKy() != null) {
+            spnNgayKy.setValue(Date.from(hd.getNgayKy().atStartOfDay(ZoneId.systemDefault()).toInstant()));
+        }
+        if (hd.getNgayHieuLuc() != null) {
+            spnNgayHieuLuc.setValue(Date.from(hd.getNgayHieuLuc().atStartOfDay(ZoneId.systemDefault()).toInstant()));
+        }
+        if (hd.getNgayHetHieuLuc() != null) {
+            spnNgayHetHieuLuc.setValue(Date.from(hd.getNgayHetHieuLuc().atStartOfDay(ZoneId.systemDefault()).toInstant()));
+        } else {
+            chkKhongXacDinhNgayHet.setSelected(true);
+            spnNgayHetHieuLuc.setEnabled(false);
+        }
+
+        txtGhiChu.setText(hd.getNoiDung() != null ? hd.getNoiDung() : "");
+    }
+
+    private void setReadOnly() {
+        txtSoHopDong.setEditable(false);
+        txtMaNV.setEditable(false);
+        cboLoaiHopDong.setEnabled(false);
+        txtLuongCoSo.setEditable(false);
+        spnNgayKy.setEnabled(false);
+        spnNgayHieuLuc.setEnabled(false);
+        spnNgayHetHieuLuc.setEnabled(false);
+        chkKhongXacDinhNgayHet.setEnabled(false);
+        txtGhiChu.setEditable(false);
+        btnLuu.setVisible(false);
+        setTitle("Chi Tiết Hợp Đồng");
+    }
+
+    // ============================
+    // Save action
+    // ============================
+
+    private void luuHopDong() {
+        // Validate số hợp đồng
+        String soHopDong = txtSoHopDong.getText().trim();
+        if (soHopDong.isEmpty()) {
+            JOptionPane.showMessageDialog(this, "Số hợp đồng không được để trống.",
+                    "Lỗi nhập liệu", JOptionPane.ERROR_MESSAGE);
+            txtSoHopDong.requestFocus();
+            return;
+        }
+
+        // Validate mã NV
+        String maNVStr = txtMaNV.getText().trim();
+        if (maNVStr.isEmpty()) {
+            JOptionPane.showMessageDialog(this, "Mã nhân viên không được để trống.",
+                    "Lỗi nhập liệu", JOptionPane.ERROR_MESSAGE);
+            txtMaNV.requestFocus();
+            return;
+        }
+        int maNV;
+        try {
+            maNV = Integer.parseInt(maNVStr);
+        } catch (NumberFormatException ex) {
+            JOptionPane.showMessageDialog(this, "Mã nhân viên phải là số nguyên.",
+                    "Lỗi nhập liệu", JOptionPane.ERROR_MESSAGE);
+            txtMaNV.requestFocus();
+            return;
+        }
+
+        // Lương cơ sở
+        long luongCoSo = 0;
+        try {
+            Object val = txtLuongCoSo.getValue();
+            if (val instanceof Number) {
+                luongCoSo = ((Number) val).longValue();
+            }
+        } catch (Exception ex) {
+            luongCoSo = 0;
+        }
+        if (luongCoSo <= 0) {
+            JOptionPane.showMessageDialog(this, "Lương cơ sở phải lớn hơn 0.",
+                    "Lỗi nhập liệu", JOptionPane.ERROR_MESSAGE);
+            txtLuongCoSo.requestFocus();
+            return;
+        }
+
+        // Ngày ký và ngày hiệu lực
+        Date ngayKyDate = (Date) spnNgayKy.getValue();
+        Date ngayHieuLucDate = (Date) spnNgayHieuLuc.getValue();
+        LocalDate ngayKy = ngayKyDate.toInstant().atZone(ZoneId.systemDefault()).toLocalDate();
+        LocalDate ngayHieuLuc = ngayHieuLucDate.toInstant().atZone(ZoneId.systemDefault()).toLocalDate();
+
+        // Ngày hết hiệu lực (nullable)
+        LocalDate ngayHetHieuLuc = null;
+        if (!chkKhongXacDinhNgayHet.isSelected()) {
+            Date ngayHetDate = (Date) spnNgayHetHieuLuc.getValue();
+            ngayHetHieuLuc = ngayHetDate.toInstant().atZone(ZoneId.systemDefault()).toLocalDate();
+        }
+
+        // Map combo loại HĐ -> DB value
+        String comboLoai = (String) cboLoaiHopDong.getSelectedItem();
+        String loaiHopDong;
+        if ("thu_viec".equals(comboLoai)) {
+            loaiHopDong = "thu_viec";
+        } else if ("co_thoi_han".equals(comboLoai)) {
+            loaiHopDong = "xac_dinh_thoi_han";
+        } else {
+            loaiHopDong = "khong_xac_dinh";
+            ngayHetHieuLuc = null; // Đảm bảo null
+        }
+
+        // Ghi chú
+        String ghiChu = txtGhiChu.getText().trim();
+
+        // Tạo HopDongLaoDong object
+        HopDongLaoDong hd = new HopDongLaoDong();
+        hd.setSoHopDong(soHopDong);
+        hd.setMaNV(maNV);
+        hd.setLoaiHopDong(loaiHopDong);
+        hd.setLuongCoSo(luongCoSo);
+        hd.setNgayKy(ngayKy);
+        hd.setNgayHieuLuc(ngayHieuLuc);
+        hd.setNgayHetHieuLuc(ngayHetHieuLuc);
+        hd.setNoiDung(ghiChu.isEmpty() ? null : ghiChu);
+
+        // Gọi service
+        ServiceResult<HopDongLaoDong> result = HopDongService.getInstance().taoHopDong(hd);
+
+        if (result.isSuccess()) {
+            JOptionPane.showMessageDialog(this, result.getMessage(),
+                    "Thành công", JOptionPane.INFORMATION_MESSAGE);
+            saved = true;
+            dispose();
+        } else {
+            JOptionPane.showMessageDialog(this, result.getMessage(),
+                    "Lỗi", JOptionPane.ERROR_MESSAGE);
+        }
+    }
+
+    // ============================
+    // Getter
+    // ============================
+
+    public boolean isSaved() {
+        return saved;
+    }
+}

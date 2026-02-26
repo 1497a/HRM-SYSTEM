@@ -2,8 +2,9 @@ package com.hrm.gui.attendance;
 
 import com.hrm.model.*;
 import com.hrm.service.AttendanceService;
-import com.hrm.service.AttendanceService.ServiceResult;
-import com.hrm.service.MockDataService;
+import com.hrm.service.SalaryService;
+import com.hrm.service.ServiceResult;
+import com.hrm.service.AuthService;
 import com.hrm.util.SessionContext;
 import com.hrm.util.UIColors;
 
@@ -18,6 +19,8 @@ import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.Locale;
+import com.hrm.model.BangLuong;
+import com.hrm.model.ChiTietLuong;
 
 public class AttendancePanel extends JPanel {
 
@@ -120,7 +123,7 @@ public class AttendancePanel extends JPanel {
         GridBagConstraints g=gbc();
         g.gridx=0;g.gridy=0;f.add(new JLabel("Nhan vien:"),g);
         JComboBox<String>cNV=new JComboBox<>();
-        for(User u:MockDataService.getInstance().getAllUsers())if(!u.hasRole("ADMIN"))cNV.addItem(u.getId()+" - "+u.getFullName());
+        for(User u:AuthService.getInstance().getAllUsers())if(!u.hasRole("ADMIN"))cNV.addItem(u.getId()+" - "+u.getFullName());
         g.gridx=1;g.weightx=1;f.add(cNV,g);
         g.gridx=0;g.gridy=1;g.weightx=0;f.add(new JLabel("Ca lam:"),g);
         JComboBox<String>cCa=new JComboBox<>();
@@ -144,7 +147,7 @@ public class AttendancePanel extends JPanel {
             cc.setGioVao(LocalDate.now().atTime(Integer.parseInt(v[0]),Integer.parseInt(v[1])));
             cc.setGioRa(LocalDate.now().atTime(Integer.parseInt(r[0]),Integer.parseInt(r[1])));
             cc.setSoGioLam(cc.tinhSoGioLam());cc.setPhuongThucChamCong(ChamCong.PhuongThuc.THU_CONG);
-            User nv=MockDataService.getInstance().getUserById(maNV);
+            User nv=AuthService.getInstance().getAllUsers().stream().filter(u->u.getId()==maNV).findFirst().orElse(null);
             cc.setEmployeeName(nv!=null?nv.getFullName():"NV-"+maNV);
             ChamCong.TrangThai[]tts={ChamCong.TrangThai.DUNG_GIO,ChamCong.TrangThai.DI_MUON,
                 ChamCong.TrangThai.VE_SOM,ChamCong.TrangThai.VANG_MAT};
@@ -167,7 +170,7 @@ public class AttendancePanel extends JPanel {
         JButton bT=btn("+ Them ca moi",UIColors.SUCCESS_GREEN);bT.addActionListener(e->dlgCaLam(null));
         JButton bS=btn("Sua",UIColors.PRIMARY_PURPLE);bS.addActionListener(e->{
             int row=tableCaLam.getSelectedRow();if(row<0){JOptionPane.showMessageDialog(this,"Chon ca lam.");return;}
-            CaLam ca=com.hrm.repo.AttendanceRepository.getInstance().findCaLamByMa((String)modelCaLam.getValueAt(row,0));
+            CaLam ca=com.hrm.repo.AttendanceRepository.getInstance().findCaLamById((String)modelCaLam.getValueAt(row,0));
             if(ca!=null)dlgCaLam(ca);});
         JButton bX=btn("Xoa",UIColors.DANGER_RED);bX.addActionListener(e->xoaCaLam());
         bp.add(bT);bp.add(bS);bp.add(bX);hdr.add(bp,BorderLayout.EAST);p.add(hdr,BorderLayout.NORTH);
@@ -244,7 +247,7 @@ public class AttendancePanel extends JPanel {
         info.add(lbl("He so:","x1.5 (thuong), x2.0 (cuoi tuan), x3.0 (le)",UIColors.TEXT_DARK));
         p.add(info,BorderLayout.SOUTH);return p;}
     private void loadOT(){modelOT.setRowCount(0);DateTimeFormatter f=DateTimeFormatter.ofPattern("dd/MM/yyyy");
-        for(DangKyLamThem don:com.hrm.repo.AttendanceRepository.getInstance().findAllDonOT())
+        for(DangKyLamThem don:svc.getDonLamThemTatCa())
             modelOT.addRow(new Object[]{don.getMaDK(),don.getMaNV(),
                 don.getNgay()!=null?don.getNgay().format(f):"-",String.format("%.1f",don.getSoGio()),
                 "x"+don.getHeSoOT(),don.getLyDo(),don.getTrangThai().getDisplayName(),
@@ -269,7 +272,9 @@ public class AttendancePanel extends JPanel {
         int maDK=(int)modelOT.getValueAt(row,0);
         String input=JOptionPane.showInputDialog(this,"Nhap he so moi (vd: 1.5):","Chinh he so",JOptionPane.QUESTION_MESSAGE);
         if(input==null||input.trim().isEmpty())return;
-        try{double hs=Double.parseDouble(input.trim());svc.capNhatHeSoOT(maDK,hs);loadOT();
+        try{double hs=Double.parseDouble(input.trim());
+            ServiceResult<Void>r=svc.capNhatHeSoOT(maDK,hs);
+            JOptionPane.showMessageDialog(this,r.getMessage());loadOT();
         }catch(NumberFormatException ex){JOptionPane.showMessageDialog(this,"He so phai la so.");}}
 
     // ═══════════════════════════════════
@@ -303,8 +308,10 @@ public class AttendancePanel extends JPanel {
     private void loadLuong(){modelLuong.setRowCount(0);
         int th=Integer.parseInt((String)cboThangL.getSelectedItem());
         int nm=Integer.parseInt((String)cboNamL.getSelectedItem());
-        bangLuongHienTai=svc.tinhBangLuong(th,nm);
-        List<ChiTietLuong>ds=svc.getChiTietLuong(bangLuongHienTai.getMaBL());
+        ServiceResult<BangLuong>blRes=SalaryService.getInstance().tinhLuong(th,nm);
+        if(!blRes.isSuccess()){JOptionPane.showMessageDialog(this,blRes.getMessage(),"Loi",JOptionPane.ERROR_MESSAGE);return;}
+        bangLuongHienTai=blRes.getData();
+        List<ChiTietLuong>ds=SalaryService.getInstance().getChiTiet(bangLuongHienTai.getMaBL());
         double tQ=0,tO=0,tK=0;
         for(ChiTietLuong ct:ds){modelLuong.addRow(new Object[]{ct.getMaNV(),ct.getTenNV(),
             fmtTien(ct.getLuongCoBan()),ct.getSoNgayCong(),String.format("%.1f",ct.getTongGioLam()),
@@ -324,7 +331,7 @@ public class AttendancePanel extends JPanel {
         if(row<0){JOptionPane.showMessageDialog(this,"Chon NV de xem.");return;}
         if(bangLuongHienTai==null){JOptionPane.showMessageDialog(this,"Chua tinh luong.");return;}
         int maNV=(int)modelLuong.getValueAt(row,0);String tenNV=(String)modelLuong.getValueAt(row,1);
-        List<ChiTietLuong>dsCT=svc.getChiTietLuong(bangLuongHienTai.getMaBL());
+        List<ChiTietLuong>dsCT=SalaryService.getInstance().getChiTiet(bangLuongHienTai.getMaBL());
         ChiTietLuong ct=dsCT.stream().filter(c->c.getMaNV()==maNV).findFirst().orElse(null);
         if(ct==null){JOptionPane.showMessageDialog(this,"Khong tim thay.");return;}
         JDialog d=new JDialog((Frame)SwingUtilities.getWindowAncestor(this),"Chi tiet luong: "+tenNV,true);
@@ -381,7 +388,7 @@ public class AttendancePanel extends JPanel {
             int row = tablePC.getSelectedRow();
             if (row < 0) { JOptionPane.showMessageDialog(this, "Chon khoan de sua."); return; }
             int maPC = (int) modelPC.getValueAt(row, 0);
-            CauHinhPhuCap pc = com.hrm.repo.AttendanceRepository.getInstance().findCauHinhPCById(maPC);
+            CauHinhPhuCap pc = svc.getAllCauHinhPC().stream().filter(x->x.getMaPC()==maPC).findFirst().orElse(null);
             if (pc != null) dlgPhuCap(pc);
         });
         JButton bXoa = btn("Xoa", UIColors.DANGER_RED);

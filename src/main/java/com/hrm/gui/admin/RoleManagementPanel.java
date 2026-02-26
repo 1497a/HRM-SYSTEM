@@ -1,7 +1,8 @@
 package com.hrm.gui.admin;
 
 import com.hrm.model.Role;
-import com.hrm.service.MockDataService;
+import com.hrm.service.AuthService;
+import com.hrm.service.ServiceResult;
 import com.hrm.util.SessionContext;
 import com.hrm.util.UIColors;
 import com.hrm.util.UIHelper;
@@ -19,7 +20,7 @@ import java.util.List;
  * Module 9: Phân quyền và bảo mật
  */
 public class RoleManagementPanel extends JPanel {
-    private final MockDataService dataService;
+    private final AuthService authService;
     private final SessionContext sessionContext;
 
     private JTable table;
@@ -30,7 +31,7 @@ public class RoleManagementPanel extends JPanel {
     private JButton btnRefresh;
 
     public RoleManagementPanel() {
-        this.dataService = MockDataService.getInstance();
+        this.authService = AuthService.getInstance();
         this.sessionContext = SessionContext.getInstance();
 
         initComponents();
@@ -133,7 +134,7 @@ public class RoleManagementPanel extends JPanel {
 
     private void loadData() {
         tableModel.setRowCount(0);
-        List<Role> roles = dataService.getAllRoles();
+        List<Role> roles = authService.getAllRoles();
 
         for (Role role : roles) {
             Object[] row = {
@@ -167,7 +168,10 @@ public class RoleManagementPanel extends JPanel {
         }
 
         String roleCode = (String) tableModel.getValueAt(selectedRow, 0);
-        Role role = dataService.getRole(roleCode);
+        Role role = authService.getAllRoles().stream()
+                .filter(r -> r.getCode().equals(roleCode))
+                .findFirst()
+                .orElse(null);
         if (role != null) {
             RoleFormDialog dialog = new RoleFormDialog(
                     (Frame) SwingUtilities.getWindowAncestor(this), role);
@@ -189,15 +193,6 @@ public class RoleManagementPanel extends JPanel {
         }
 
         String roleCode = (String) tableModel.getValueAt(selectedRow, 0);
-        Role role = dataService.getRole(roleCode);
-
-        if (role != null && role.isSystemRole()) {
-            JOptionPane.showMessageDialog(this,
-                    "Khong the xoa vai tro he thong!",
-                    "Loi",
-                    JOptionPane.ERROR_MESSAGE);
-            return;
-        }
 
         int confirm = JOptionPane.showConfirmDialog(this,
                 "Ban co chac muon xoa vai tro '" + roleCode + "'?",
@@ -206,7 +201,8 @@ public class RoleManagementPanel extends JPanel {
                 JOptionPane.WARNING_MESSAGE);
 
         if (confirm == JOptionPane.YES_OPTION) {
-            if (dataService.deleteRole(roleCode)) {
+            ServiceResult<Void> result = authService.deleteRole(roleCode);
+            if (result.isSuccess()) {
                 JOptionPane.showMessageDialog(this,
                         "Da xoa vai tro thanh cong!",
                         "Thong bao",
@@ -214,7 +210,7 @@ public class RoleManagementPanel extends JPanel {
                 loadData();
             } else {
                 JOptionPane.showMessageDialog(this,
-                        "Khong the xoa vai tro! Co the vai tro dang duoc gan cho tai khoan.",
+                        result.getMessage(),
                         "Loi",
                         JOptionPane.ERROR_MESSAGE);
             }

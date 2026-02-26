@@ -160,6 +160,7 @@ CREATE TABLE DANGKYLAMTHEM (
     maNV INT NOT NULL,
     ngay DATE NOT NULL,
     soGio DECIMAL(4,2) NOT NULL,
+    heSoOT DECIMAL(4,2) NOT NULL DEFAULT 1.50,
     lyDo NVARCHAR(500),
     nguoiDuyet INT,
     ngayDuyet DATETIME,
@@ -512,6 +513,18 @@ CREATE TABLE UNGVIEN (
 -- =====================================================
 -- BẢNG PHỤ TRỢ: AUDIT LOG
 -- =====================================================
+
+-- Bảng CAUHINHPHUCAP (Cấu hình phụ cấp & khấu trừ)
+CREATE TABLE CAUHINHPHUCAP (
+    maPC INT AUTO_INCREMENT PRIMARY KEY,
+    loai ENUM('phu_cap','khau_tru') NOT NULL DEFAULT 'phu_cap',
+    tenKhoan VARCHAR(100) NOT NULL,
+    kieuTinh ENUM('co_dinh','phan_tram') NOT NULL DEFAULT 'co_dinh',
+    giaTri DOUBLE NOT NULL DEFAULT 0,
+    nguon VARCHAR(50) DEFAULT 'CongTy',
+    hoatDong TINYINT(1) NOT NULL DEFAULT 1,
+    ngayTao DATETIME DEFAULT CURRENT_TIMESTAMP
+) ENGINE=InnoDB;
 
 -- Bảng LOG_AUDIT (Ghi nhận hoạt động hệ thống)
 CREATE TABLE LOG_AUDIT (

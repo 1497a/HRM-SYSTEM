@@ -30,5 +30,8 @@ bin/
 # Documentation
 *.md
 
+# AI tools
+.claude/
+
 # Invalid files
 nul

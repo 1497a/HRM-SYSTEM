@@ -17,6 +17,7 @@ public class User {
     private String email;
     private boolean active;
     private boolean locked;
+    private Integer maNV; // Nullable: liên kết 0..1 với NHANVIEN
     private List<Role> roles;
     // User-specific permission exceptions (key = permissionCode, value = granted/denied)
     private Map<String, Boolean> userPermissions;
@@ -87,6 +88,14 @@ public class User {
 
     public void setLocked(boolean locked) {
         this.locked = locked;
+    }
+
+    public Integer getMaNV() {
+        return maNV;
+    }
+
+    public void setMaNV(Integer maNV) {
+        this.maNV = maNV;
     }
 
     public List<Role> getRoles() {

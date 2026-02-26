@@ -1,12 +1,20 @@
 package com.hrm.gui;
 
 import com.hrm.service.AuthService;
+import com.hrm.service.ServiceResult;
 import com.hrm.gui.components.PurpleButton;
 import com.hrm.gui.components.RoundedPanel;
 import com.hrm.gui.leave.LeaveListPanel;
 import com.hrm.gui.evaluation.EvalCycleListPanel;
 import com.hrm.gui.admin.UserManagementPanel;
 import com.hrm.gui.admin.RoleManagementPanel;
+import com.hrm.gui.employee.EmployeeListPanel;
+import com.hrm.gui.appointment.AppointmentListPanel;
+import com.hrm.gui.contract.ContractListPanel;
+import com.hrm.gui.salary.SalaryListPanel;
+import com.hrm.gui.notification.NotificationPanel;
+import com.hrm.gui.recruitment.RecruitmentPanel;
+import com.hrm.gui.report.ReportPanel;
 import com.hrm.model.User;
 import com.hrm.util.SessionContext;
 import com.hrm.util.UIColors;
@@ -368,15 +376,15 @@ public class MainFrame extends JFrame {
         btnDashboard.addActionListener(e -> showDashboard());
 
         // Nhan su
-        btnEmployees.addActionListener(e -> showPlaceholder("Ho so nhan vien"));
+        btnEmployees.addActionListener(e -> showEmployeeManagement());
         btnOrganization.addActionListener(e -> showOrganization());
-        btnAppointments.addActionListener(e -> showPlaceholder("Bo nhiem"));
-        btnRecruitment.addActionListener(e -> showPlaceholder("Tuyen dung"));
+        btnAppointments.addActionListener(e -> showAppointmentManagement());
+        btnRecruitment.addActionListener(e -> showRecruitment());
 
         // Cham cong & Luong
         btnAttendance.addActionListener(e -> showAttendance());
-        btnContracts.addActionListener(e -> showPlaceholder("Hop dong lao dong"));
-        btnPayroll.addActionListener(e -> showPlaceholder("Tinh luong"));
+        btnContracts.addActionListener(e -> showContractManagement());
+        btnPayroll.addActionListener(e -> showSalaryManagement());
 
         // Chinh sach
         btnLeave.addActionListener(e -> showLeaveManagement());
@@ -385,8 +393,8 @@ public class MainFrame extends JFrame {
         // He thong
         btnUsers.addActionListener(e -> showUserManagement());
         btnRoles.addActionListener(e -> showRoleManagement());
-        btnNotifications.addActionListener(e -> showPlaceholder("Thong bao"));
-        btnReports.addActionListener(e -> showPlaceholder("Bao cao"));
+        btnNotifications.addActionListener(e -> showNotifications());
+        btnReports.addActionListener(e -> showReports());
         btnSettings.addActionListener(e -> showSettings());
         btnLogout.addActionListener(e -> logout());
     }
@@ -554,12 +562,23 @@ public class MainFrame extends JFrame {
                 return;
             }
 
-            // Mock success - in real app this would update database
-            JOptionPane.showMessageDialog(this, "Doi mat khau thanh cong (mock)",
-                    "Thong bao", JOptionPane.INFORMATION_MESSAGE);
-            txtCurrentPass.setText("");
-            txtNewPass.setText("");
-            txtConfirmPass.setText("");
+            User currentUser = authService.getCurrentUser();
+            if (currentUser != null) {
+                ServiceResult<Void> result = authService.changePassword(currentUser.getId(), currentPass, newPass);
+                if (result.isSuccess()) {
+                    JOptionPane.showMessageDialog(this, "Doi mat khau thanh cong!",
+                            "Thong bao", JOptionPane.INFORMATION_MESSAGE);
+                    txtCurrentPass.setText("");
+                    txtNewPass.setText("");
+                    txtConfirmPass.setText("");
+                } else {
+                    JOptionPane.showMessageDialog(this, result.getMessage(),
+                            "Loi", JOptionPane.ERROR_MESSAGE);
+                }
+            } else {
+                JOptionPane.showMessageDialog(this, "Khong tim thay nguoi dung hien tai",
+                        "Loi", JOptionPane.ERROR_MESSAGE);
+            }
         });
 
         JPanel centerPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
@@ -773,6 +792,125 @@ public class MainFrame extends JFrame {
 
         wrapperPanel.add(tabbedPane, BorderLayout.CENTER);
 
+        contentPanel.add(wrapperPanel);
+        contentPanel.revalidate();
+        contentPanel.repaint();
+    }
+
+    private void showEmployeeManagement() {
+        setActiveButton(btnEmployees);
+        contentPanel.removeAll();
+        JPanel wrapperPanel = new JPanel(new BorderLayout());
+        wrapperPanel.setBackground(UIColors.LIGHT_GRAY_BG);
+        wrapperPanel.setBorder(new EmptyBorder(15, 15, 15, 15));
+        JLabel lblHeader = new JLabel("Hồ sơ nhân viên");
+        lblHeader.setFont(new Font("Segoe UI", Font.BOLD, 24));
+        lblHeader.setForeground(UIColors.TEXT_DARK);
+        lblHeader.setBorder(new EmptyBorder(0, 10, 15, 0));
+        wrapperPanel.add(lblHeader, BorderLayout.NORTH);
+        wrapperPanel.add(new EmployeeListPanel(), BorderLayout.CENTER);
+        contentPanel.add(wrapperPanel);
+        contentPanel.revalidate();
+        contentPanel.repaint();
+    }
+
+    private void showAppointmentManagement() {
+        setActiveButton(btnAppointments);
+        contentPanel.removeAll();
+        JPanel wrapperPanel = new JPanel(new BorderLayout());
+        wrapperPanel.setBackground(UIColors.LIGHT_GRAY_BG);
+        wrapperPanel.setBorder(new EmptyBorder(15, 15, 15, 15));
+        JLabel lblHeader = new JLabel("Bổ nhiệm & Phân công");
+        lblHeader.setFont(new Font("Segoe UI", Font.BOLD, 24));
+        lblHeader.setForeground(UIColors.TEXT_DARK);
+        lblHeader.setBorder(new EmptyBorder(0, 10, 15, 0));
+        wrapperPanel.add(lblHeader, BorderLayout.NORTH);
+        wrapperPanel.add(new AppointmentListPanel(), BorderLayout.CENTER);
+        contentPanel.add(wrapperPanel);
+        contentPanel.revalidate();
+        contentPanel.repaint();
+    }
+
+    private void showContractManagement() {
+        setActiveButton(btnContracts);
+        contentPanel.removeAll();
+        JPanel wrapperPanel = new JPanel(new BorderLayout());
+        wrapperPanel.setBackground(UIColors.LIGHT_GRAY_BG);
+        wrapperPanel.setBorder(new EmptyBorder(15, 15, 15, 15));
+        JLabel lblHeader = new JLabel("Hợp đồng lao động");
+        lblHeader.setFont(new Font("Segoe UI", Font.BOLD, 24));
+        lblHeader.setForeground(UIColors.TEXT_DARK);
+        lblHeader.setBorder(new EmptyBorder(0, 10, 15, 0));
+        wrapperPanel.add(lblHeader, BorderLayout.NORTH);
+        wrapperPanel.add(new ContractListPanel(), BorderLayout.CENTER);
+        contentPanel.add(wrapperPanel);
+        contentPanel.revalidate();
+        contentPanel.repaint();
+    }
+
+    private void showSalaryManagement() {
+        setActiveButton(btnPayroll);
+        contentPanel.removeAll();
+        JPanel wrapperPanel = new JPanel(new BorderLayout());
+        wrapperPanel.setBackground(UIColors.LIGHT_GRAY_BG);
+        wrapperPanel.setBorder(new EmptyBorder(15, 15, 15, 15));
+        JLabel lblHeader = new JLabel("Tính lương");
+        lblHeader.setFont(new Font("Segoe UI", Font.BOLD, 24));
+        lblHeader.setForeground(UIColors.TEXT_DARK);
+        lblHeader.setBorder(new EmptyBorder(0, 10, 15, 0));
+        wrapperPanel.add(lblHeader, BorderLayout.NORTH);
+        wrapperPanel.add(new SalaryListPanel(), BorderLayout.CENTER);
+        contentPanel.add(wrapperPanel);
+        contentPanel.revalidate();
+        contentPanel.repaint();
+    }
+
+    private void showNotifications() {
+        setActiveButton(btnNotifications);
+        contentPanel.removeAll();
+        JPanel wrapperPanel = new JPanel(new BorderLayout());
+        wrapperPanel.setBackground(UIColors.LIGHT_GRAY_BG);
+        wrapperPanel.setBorder(new EmptyBorder(15, 15, 15, 15));
+        JLabel lblHeader = new JLabel("Thông báo");
+        lblHeader.setFont(new Font("Segoe UI", Font.BOLD, 24));
+        lblHeader.setForeground(UIColors.TEXT_DARK);
+        lblHeader.setBorder(new EmptyBorder(0, 10, 15, 0));
+        wrapperPanel.add(lblHeader, BorderLayout.NORTH);
+        wrapperPanel.add(new NotificationPanel(), BorderLayout.CENTER);
+        contentPanel.add(wrapperPanel);
+        contentPanel.revalidate();
+        contentPanel.repaint();
+    }
+
+    private void showRecruitment() {
+        setActiveButton(btnRecruitment);
+        contentPanel.removeAll();
+        JPanel wrapperPanel = new JPanel(new BorderLayout());
+        wrapperPanel.setBackground(UIColors.LIGHT_GRAY_BG);
+        wrapperPanel.setBorder(new EmptyBorder(15, 15, 15, 15));
+        JLabel lblHeader = new JLabel("Tuyển dụng");
+        lblHeader.setFont(new Font("Segoe UI", Font.BOLD, 24));
+        lblHeader.setForeground(UIColors.TEXT_DARK);
+        lblHeader.setBorder(new EmptyBorder(0, 10, 15, 0));
+        wrapperPanel.add(lblHeader, BorderLayout.NORTH);
+        wrapperPanel.add(new RecruitmentPanel(), BorderLayout.CENTER);
+        contentPanel.add(wrapperPanel);
+        contentPanel.revalidate();
+        contentPanel.repaint();
+    }
+
+    private void showReports() {
+        setActiveButton(btnReports);
+        contentPanel.removeAll();
+        JPanel wrapperPanel = new JPanel(new BorderLayout());
+        wrapperPanel.setBackground(UIColors.LIGHT_GRAY_BG);
+        wrapperPanel.setBorder(new EmptyBorder(15, 15, 15, 15));
+        JLabel lblHeader = new JLabel("Báo cáo");
+        lblHeader.setFont(new Font("Segoe UI", Font.BOLD, 24));
+        lblHeader.setForeground(UIColors.TEXT_DARK);
+        lblHeader.setBorder(new EmptyBorder(0, 10, 15, 0));
+        wrapperPanel.add(lblHeader, BorderLayout.NORTH);
+        wrapperPanel.add(new ReportPanel(), BorderLayout.CENTER);
         contentPanel.add(wrapperPanel);
         contentPanel.revalidate();
         contentPanel.repaint();

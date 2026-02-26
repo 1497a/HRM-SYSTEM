@@ -1,8 +1,8 @@
 package com.hrm.gui.admin;
 
-import com.hrm.model.Role;
 import com.hrm.model.User;
-import com.hrm.service.MockDataService;
+import com.hrm.service.AuthService;
+import com.hrm.service.ServiceResult;
 import com.hrm.util.SessionContext;
 import com.hrm.util.UIColors;
 import com.hrm.util.UIHelper;
@@ -20,7 +20,7 @@ import java.util.List;
  * Module 9: Phân quyền và bảo mật
  */
 public class UserManagementPanel extends JPanel {
-    private final MockDataService dataService;
+    private final AuthService authService;
     private final SessionContext sessionContext;
 
     private JTable table;
@@ -33,7 +33,7 @@ public class UserManagementPanel extends JPanel {
     private JButton btnRefresh;
 
     public UserManagementPanel() {
-        this.dataService = MockDataService.getInstance();
+        this.authService = AuthService.getInstance();
         this.sessionContext = SessionContext.getInstance();
 
         initComponents();
@@ -144,7 +144,7 @@ public class UserManagementPanel extends JPanel {
 
     private void loadData() {
         tableModel.setRowCount(0);
-        List<User> users = dataService.getAllUsers();
+        List<User> users = authService.getAllUsers();
 
         for (User user : users) {
             String status = user.isLocked() ? "Khoa" : (user.isActive() ? "Hoat dong" : "Ngung");
@@ -163,7 +163,7 @@ public class UserManagementPanel extends JPanel {
     private void searchUsers() {
         String keyword = txtSearch.getText().toLowerCase().trim();
         tableModel.setRowCount(0);
-        List<User> users = dataService.getAllUsers();
+        List<User> users = authService.getAllUsers();
 
         for (User user : users) {
             if (user.getUsername().toLowerCase().contains(keyword) ||
@@ -201,8 +201,11 @@ public class UserManagementPanel extends JPanel {
             return;
         }
 
-        String username = (String) tableModel.getValueAt(selectedRow, 1);
-        User user = dataService.getUser(username);
+        int userId = (int) tableModel.getValueAt(selectedRow, 0);
+        User user = authService.getAllUsers().stream()
+                .filter(u -> u.getId() == userId)
+                .findFirst()
+                .orElse(null);
         if (user != null) {
             UserFormDialog dialog = new UserFormDialog(
                     (Frame) SwingUtilities.getWindowAncestor(this), user);
@@ -223,14 +226,8 @@ public class UserManagementPanel extends JPanel {
             return;
         }
 
+        int userId = (int) tableModel.getValueAt(selectedRow, 0);
         String username = (String) tableModel.getValueAt(selectedRow, 1);
-        if ("admin".equals(username)) {
-            JOptionPane.showMessageDialog(this,
-                    "Khong the xoa tai khoan admin!",
-                    "Loi",
-                    JOptionPane.ERROR_MESSAGE);
-            return;
-        }
 
         int confirm = JOptionPane.showConfirmDialog(this,
                 "Ban co chac muon xoa tai khoan '" + username + "'?",
@@ -239,7 +236,8 @@ public class UserManagementPanel extends JPanel {
                 JOptionPane.WARNING_MESSAGE);
 
         if (confirm == JOptionPane.YES_OPTION) {
-            if (dataService.deleteUser(username)) {
+            ServiceResult<Void> result = authService.deleteUser(userId);
+            if (result.isSuccess()) {
                 JOptionPane.showMessageDialog(this,
                         "Da xoa tai khoan thanh cong!",
                         "Thong bao",
@@ -247,7 +245,7 @@ public class UserManagementPanel extends JPanel {
                 loadData();
             } else {
                 JOptionPane.showMessageDialog(this,
-                        "Khong the xoa tai khoan!",
+                        result.getMessage(),
                         "Loi",
                         JOptionPane.ERROR_MESSAGE);
             }
@@ -264,8 +262,11 @@ public class UserManagementPanel extends JPanel {
             return;
         }
 
-        String username = (String) tableModel.getValueAt(selectedRow, 1);
-        User user = dataService.getUser(username);
+        int userId = (int) tableModel.getValueAt(selectedRow, 0);
+        User user = authService.getAllUsers().stream()
+                .filter(u -> u.getId() == userId)
+                .findFirst()
+                .orElse(null);
         if (user != null) {
             UserPermissionDialog dialog = new UserPermissionDialog(
                     (Frame) SwingUtilities.getWindowAncestor(this), user);

@@ -2,10 +2,10 @@ package com.hrm.service;
 
 import com.hrm.model.*;
 import com.hrm.repo.LeaveRepository;
-import com.hrm.util.SessionContext;
 
 import java.time.DayOfWeek;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.List;
 
 /**
@@ -65,7 +65,7 @@ public class LeaveService {
             return ServiceResult.error("Ngay ket thuc phai sau ngay bat dau");
         }
 
-        LeaveType leaveType = repository.getLeaveType(leaveTypeCode);
+        LeaveType leaveType = repository.findLoaiPhepById(leaveTypeCode);
         if (leaveType == null) {
             return ServiceResult.error("Loai phep khong hop le");
         }
@@ -77,17 +77,12 @@ public class LeaveService {
 
         // Check balance for annual leave
         if ("AL".equals(leaveTypeCode)) {
-            LeaveBalance balance = repository.getBalance(employeeId, leaveTypeCode, LocalDate.now().getYear());
+            LeaveBalance balance = repository.findByMaNVAndNamAndLoai(employeeId,
+                    LocalDate.now().getYear(), leaveTypeCode);
             if (balance == null || balance.getRemainingDays() < totalDays) {
                 int remaining = balance != null ? balance.getRemainingDays() : 0;
                 return ServiceResult.error("So ngay phep con lai khong du. Con lai: " + remaining + " ngay");
             }
-        }
-
-        // Check for overlapping approved requests
-        List<LeaveRequest> overlapping = repository.findOverlapping(employeeId, startDate, endDate);
-        if (!overlapping.isEmpty()) {
-            return ServiceResult.error("Da co don nghi phep duoc duyet trong khoang thoi gian nay");
         }
 
         // Create request
@@ -102,7 +97,7 @@ public class LeaveService {
         request.setReason(reason);
         request.setStatus(LeaveRequest.Status.PENDING);
 
-        repository.save(request);
+        repository.insert(request);
         return ServiceResult.success(request, "Tao don nghi phep thanh cong");
     }
 
@@ -124,22 +119,27 @@ public class LeaveService {
         request.setApproverName(approverName);
         request.setApproverNote(note);
 
+        LocalDateTime now = LocalDateTime.now();
+
         if (approve) {
             // Deduct balance for annual leave
             if ("AL".equals(request.getLeaveTypeCode())) {
-                LeaveBalance balance = repository.getBalance(request.getEmployeeId(),
-                        request.getLeaveTypeCode(), LocalDate.now().getYear());
+                LeaveBalance balance = repository.findByMaNVAndNamAndLoai(request.getEmployeeId(),
+                        LocalDate.now().getYear(), request.getLeaveTypeCode());
                 if (balance != null) {
                     if (balance.getRemainingDays() < request.getTotalDays()) {
                         return ServiceResult.error("Nhan vien khong du so ngay phep");
                     }
-                    balance.deductDays(request.getTotalDays());
+                    repository.capNhatSoDaDung(request.getEmployeeId(),
+                            LocalDate.now().getYear(), request.getLeaveTypeCode(), request.getTotalDays());
                 }
             }
             request.setStatus(LeaveRequest.Status.APPROVED);
+            repository.updateTrangThai(requestId, "da_duyet", approverId, now, null);
             return ServiceResult.success(request, "Da duyet don nghi phep");
         } else {
             request.setStatus(LeaveRequest.Status.REJECTED);
+            repository.updateTrangThai(requestId, "tu_choi", approverId, now, note);
             return ServiceResult.success(request, "Da tu choi don nghi phep");
         }
     }
@@ -158,27 +158,25 @@ public class LeaveService {
         }
 
         if (request.getStatus() == LeaveRequest.Status.APPROVED) {
-            // Restore balance
+            // Restore balance for annual leave
             if ("AL".equals(request.getLeaveTypeCode())) {
-                LeaveBalance balance = repository.getBalance(request.getEmployeeId(),
-                        request.getLeaveTypeCode(), LocalDate.now().getYear());
-                if (balance != null) {
-                    balance.restoreDays(request.getTotalDays());
-                }
+                repository.capNhatSoDaDung(request.getEmployeeId(),
+                        LocalDate.now().getYear(), request.getLeaveTypeCode(), -request.getTotalDays());
             }
         }
 
         request.setStatus(LeaveRequest.Status.CANCELLED);
+        repository.updateTrangThai(requestId, "huy", 0, null, null);
         return ServiceResult.success(request, "Da huy don nghi phep");
     }
 
     // Query methods
     public List<LeaveRequest> getMyRequests(int employeeId) {
-        return repository.findByEmployeeId(employeeId);
+        return repository.findByMaNV(employeeId);
     }
 
     public List<LeaveRequest> getPendingRequests() {
-        return repository.findPendingRequests();
+        return repository.findChoDuyet();
     }
 
     public List<LeaveRequest> getAllRequests() {
@@ -186,11 +184,11 @@ public class LeaveService {
     }
 
     public List<LeaveType> getAllLeaveTypes() {
-        return repository.getAllLeaveTypes();
+        return repository.findAllLoaiPhep();
     }
 
     public List<LeaveBalance> getBalances(int employeeId) {
-        return repository.getBalances(employeeId, LocalDate.now().getYear());
+        return repository.findByMaNVAndNam(employeeId, LocalDate.now().getYear());
     }
 
     public LeaveRequest getRequest(int id) {

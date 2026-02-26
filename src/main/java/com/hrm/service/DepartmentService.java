@@ -1,107 +1,155 @@
 package com.hrm.service;
 
 import com.hrm.model.Department;
+import com.hrm.repo.BoNhiemRepository;
 import com.hrm.repo.DepartmentRepository;
-import java.util.ArrayList;
+
 import java.util.List;
 
+/**
+ * Service quản lý phòng ban.
+ * Áp dụng business logic, delegate persistence xuống DepartmentRepository (JDBC).
+ */
 public class DepartmentService {
 
-    private DepartmentRepository repository = new DepartmentRepository();
+    private final DepartmentRepository repository = new DepartmentRepository();
+    private final BoNhiemRepository boNhiemRepo = BoNhiemRepository.getInstance();
 
+    /**
+     * Lấy tất cả phòng ban.
+     */
     public List<Department> getAllDepartments() {
         return repository.findAll();
     }
 
+    /**
+     * Lấy danh sách phòng ban đang hoạt động.
+     * Trạng thái "hoat_dong" theo ENUM trong DB.
+     */
     public List<Department> getActiveDepartments() {
-        List<Department> result = new ArrayList<>();
-        for (Department d : repository.findAll()) {
-            if ("hoat dong".equals(d.getTrangThai())) {
-                result.add(d);
-            }
-        }
-        return result;
+        return repository.findActive();
     }
 
+    /**
+     * Tìm phòng ban theo mã.
+     */
     public Department getById(String maPhongBan) {
         return repository.findById(maPhongBan);
     }
 
+    /**
+     * Thêm phòng ban mới.
+     *
+     * @param maPhongBan  mã phòng ban (duy nhất)
+     * @param tenPhongBan tên phòng ban
+     * @param phongBanCha mã phòng ban cha (null nếu là phòng ban gốc)
+     * @throws IllegalArgumentException nếu dữ liệu không hợp lệ
+     */
     public void addDepartment(String maPhongBan, String tenPhongBan, String phongBanCha) {
         if (maPhongBan == null || maPhongBan.trim().isEmpty()) {
-            throw new IllegalArgumentException("Ma phong ban khong duoc de trong.");
+            throw new IllegalArgumentException("Mã phòng ban không được để trống.");
         }
-
         if (tenPhongBan == null || tenPhongBan.trim().isEmpty()) {
-            throw new IllegalArgumentException("Ten phong ban khong duoc de trong.");
+            throw new IllegalArgumentException("Tên phòng ban không được để trống.");
         }
-
         if (repository.existsById(maPhongBan.trim())) {
-            throw new IllegalArgumentException("Ma phong ban '" + maPhongBan + "' da ton tai trong he thong.");
+            throw new IllegalArgumentException("Mã phòng ban '" + maPhongBan.trim() + "' đã tồn tại trong hệ thống.");
         }
 
-        if (phongBanCha != null) {
-            Department cha = repository.findById(phongBanCha);
+        if (phongBanCha != null && !phongBanCha.trim().isEmpty()) {
+            Department cha = repository.findById(phongBanCha.trim());
             if (cha == null) {
-                throw new IllegalArgumentException("Phong ban cha khong ton tai.");
+                throw new IllegalArgumentException("Phòng ban cha không tồn tại.");
             }
-            if (!"hoat dong".equals(cha.getTrangThai())) {
-                throw new IllegalArgumentException("Phong ban cha '" + cha.getTenPhongBan() + "' da ngung hoat dong.");
+            if (!"hoat_dong".equals(cha.getTrangThai())) {
+                throw new IllegalArgumentException(
+                        "Phòng ban cha '" + cha.getTenPhongBan() + "' đã ngưng hoạt động.");
             }
         }
 
-        Department dept = new Department(maPhongBan.trim(), tenPhongBan.trim(), phongBanCha, "hoat dong");
+        String maCha = (phongBanCha != null && !phongBanCha.trim().isEmpty()) ? phongBanCha.trim() : null;
+        Department dept = new Department(maPhongBan.trim(), tenPhongBan.trim(), maCha, "hoat_dong");
         repository.save(dept);
     }
 
+    /**
+     * Cập nhật thông tin phòng ban.
+     *
+     * @param maPhongBan     mã phòng ban cần cập nhật
+     * @param tenMoi         tên mới
+     * @param phongBanChaMoi mã phòng ban cha mới (null nếu là gốc)
+     * @throws IllegalArgumentException nếu dữ liệu không hợp lệ
+     */
     public void updateDepartment(String maPhongBan, String tenMoi, String phongBanChaMoi) {
         Department dept = repository.findById(maPhongBan);
         if (dept == null) {
-            throw new IllegalArgumentException("Khong tim thay phong ban.");
+            throw new IllegalArgumentException("Không tìm thấy phòng ban.");
         }
-
         if (tenMoi == null || tenMoi.trim().isEmpty()) {
-            throw new IllegalArgumentException("Ten phong ban khong duoc de trong.");
+            throw new IllegalArgumentException("Tên phòng ban không được để trống.");
         }
 
-        if (phongBanChaMoi != null) {
-            Department cha = repository.findById(phongBanChaMoi);
+        if (phongBanChaMoi != null && !phongBanChaMoi.trim().isEmpty()) {
+            Department cha = repository.findById(phongBanChaMoi.trim());
             if (cha == null) {
-                throw new IllegalArgumentException("Phong ban cha khong ton tai.");
+                throw new IllegalArgumentException("Phòng ban cha không tồn tại.");
             }
-            if (!"hoat dong".equals(cha.getTrangThai())) {
-                throw new IllegalArgumentException("Phong ban cha '" + cha.getTenPhongBan() + "' da ngung hoat dong.");
-            }
-
-            if (isDescendant(maPhongBan, phongBanChaMoi)) {
+            if (!"hoat_dong".equals(cha.getTrangThai())) {
                 throw new IllegalArgumentException(
-                        "Khong the chon phong ban con/chau lam phong ban cha. Se tao vong lap trong cay to chuc.");
+                        "Phòng ban cha '" + cha.getTenPhongBan() + "' đã ngưng hoạt động.");
+            }
+            if (isDescendant(maPhongBan, phongBanChaMoi.trim())) {
+                throw new IllegalArgumentException(
+                        "Không thể chọn phòng ban con/cháu làm phòng ban cha. Sẽ tạo vòng lặp trong cây tổ chức.");
             }
         }
 
+        String maCha = (phongBanChaMoi != null && !phongBanChaMoi.trim().isEmpty()) ? phongBanChaMoi.trim() : null;
         dept.setTenPhongBan(tenMoi.trim());
-        dept.setPhongBanCha(phongBanChaMoi);
+        dept.setPhongBanCha(maCha);
         repository.update(dept);
     }
 
+    /**
+     * Ngưng hoạt động phòng ban.
+     * Phải ngưng tất cả phòng ban con trước.
+     *
+     * @param maPhongBan mã phòng ban cần ngưng
+     * @throws IllegalArgumentException nếu không thể ngưng
+     */
     public void deactivateDepartment(String maPhongBan) {
         Department dept = repository.findById(maPhongBan);
         if (dept == null) {
-            throw new IllegalArgumentException("Khong tim thay phong ban.");
+            throw new IllegalArgumentException("Không tìm thấy phòng ban.");
         }
 
         List<Department> danhSachCon = repository.findChildren(maPhongBan);
         for (Department con : danhSachCon) {
-            if ("hoat dong".equals(con.getTrangThai())) {
-                throw new IllegalArgumentException("Khong the ngung hoat dong. Phong ban '" + con.getTenPhongBan()
-                        + "' van dang hoat dong. Vui long ngung cac phong ban con truoc.");
+            if ("hoat_dong".equals(con.getTrangThai())) {
+                throw new IllegalArgumentException(
+                        "Không thể ngưng hoạt động. Phòng ban '" + con.getTenPhongBan()
+                        + "' vẫn đang hoạt động. Vui lòng ngưng các phòng ban con trước.");
             }
         }
 
-        dept.setTrangThai("ngung hoat dong");
+        if (boNhiemRepo.hasActiveBoNhiemInDepartment(maPhongBan)) {
+            throw new IllegalArgumentException(
+                    "Không thể ngưng hoạt động. Phòng ban vẫn còn bổ nhiệm đang hiệu lực. "
+                    + "Vui lòng kết thúc các bổ nhiệm trước.");
+        }
+
+        dept.setTrangThai("ngung_hoat_dong");
         repository.update(dept);
     }
 
+    // =====================================================================
+    // ==================== Private Helpers ================================
+    // =====================================================================
+
+    /**
+     * Kiểm tra maCon có phải là hậu duệ (con/cháu) của maCha không.
+     * Dùng để ngăn chặn vòng lặp trong cây phòng ban.
+     */
     private boolean isDescendant(String maCha, String maCon) {
         if (maCon == null) {
             return false;
@@ -109,12 +157,10 @@ public class DepartmentService {
         if (maCon.equals(maCha)) {
             return true;
         }
-
         Department con = repository.findById(maCon);
         if (con == null) {
             return false;
         }
-
         return isDescendant(maCha, con.getPhongBanCha());
     }
 }

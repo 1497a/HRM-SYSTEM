@@ -1,0 +1,825 @@
+package com.hrm.gui.employee;
+
+import com.hrm.gui.components.PurpleTable;
+import com.hrm.model.BoNhiem;
+import com.hrm.model.ChamCong;
+import com.hrm.model.HopDongLaoDong;
+import com.hrm.model.NhanVien;
+import com.hrm.model.ThongTinCaNhan;
+import com.hrm.service.AttendanceService;
+import com.hrm.service.BoNhiemService;
+import com.hrm.service.HopDongService;
+import com.hrm.service.NhanVienService;
+import com.hrm.util.UIColors;
+
+import javax.swing.*;
+import javax.swing.border.TitledBorder;
+import javax.swing.table.DefaultTableCellRenderer;
+import javax.swing.table.DefaultTableModel;
+import java.awt.*;
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
+import java.util.List;
+
+/**
+ * EmployeeDetailPanel - Modal dialog showing full employee profile.
+ *
+ * Displays:
+ *   Tab 1 - Thong tin ca nhan  : personal info (ThongTinCaNhan) + NhanVien fields
+ *   Tab 2 - Bo nhiem hien tai  : current effective appointment + appointment history table
+ *   Tab 3 - Lich su cham cong  : monthly attendance history with month/year filter
+ *
+ * Opened from EmployeeListPanel when the user clicks "Xem ho so".
+ * Receives an int maNV (employee primary-key id).
+ */
+public class EmployeeDetailPanel extends JDialog {
+
+    // =====================================================================
+    // Services
+    // =====================================================================
+    private final NhanVienService nvService       = NhanVienService.getInstance();
+    private final BoNhiemService  boNhiemService  = BoNhiemService.getInstance();
+    private final HopDongService  hopDongService  = HopDongService.getInstance();
+    private final AttendanceService attendanceSvc = AttendanceService.getInstance();
+
+    // =====================================================================
+    // Data
+    // =====================================================================
+    private final int maNV;
+    private NhanVien        nhanVien;
+    private ThongTinCaNhan  thongTinCaNhan;
+    private BoNhiem         boNhiemHienTai;
+    private HopDongLaoDong  hopDongHieuLuc;
+
+    // =====================================================================
+    // Formatters
+    // =====================================================================
+    private static final DateTimeFormatter DATE_FMT     = DateTimeFormatter.ofPattern("dd/MM/yyyy");
+    private static final DateTimeFormatter DATETIME_FMT = DateTimeFormatter.ofPattern("HH:mm dd/MM/yyyy");
+    private static final DateTimeFormatter TIME_FMT     = DateTimeFormatter.ofPattern("HH:mm");
+
+    // =====================================================================
+    // Tab 2 – appointment history table
+    // =====================================================================
+    private static final String[] COL_BO_NHIEM = {
+        "Phong ban", "Chuc vu", "Loai", "Tu ngay", "Den ngay", "Trang thai"
+    };
+    private DefaultTableModel boNhiemTableModel;
+
+    // =====================================================================
+    // Tab 3 – attendance table + filter controls
+    // =====================================================================
+    private static final String[] COL_CHAM_CONG = {
+        "Ngay", "Ca lam", "Gio vao", "Gio ra", "So gio", "Trang thai"
+    };
+    private DefaultTableModel chamCongTableModel;
+    private JComboBox<String>  cboThang;
+    private JComboBox<Integer> cboNam;
+
+    // =====================================================================
+    // Constructor
+    // =====================================================================
+
+    /**
+     * Creates and opens the employee detail dialog.
+     *
+     * @param parent  owner frame (used for positioning)
+     * @param maNV    primary-key id of the employee to display
+     */
+    public EmployeeDetailPanel(Frame parent, int maNV) {
+        super(parent, "Ho so nhan vien", true);
+        this.maNV = maNV;
+
+        loadData();
+        buildUI();
+
+        setSize(750, 600);
+        setLocationRelativeTo(parent);
+        setDefaultCloseOperation(DISPOSE_ON_CLOSE);
+        setResizable(true);
+    }
+
+    // =====================================================================
+    // Data loading
+    // =====================================================================
+
+    private void loadData() {
+        nhanVien       = nvService.getById(maNV);
+        thongTinCaNhan = nvService.getThongTinCaNhan(maNV);
+        boNhiemHienTai = boNhiemService.getBoNhiemChinhHieuLuc(maNV);
+        hopDongHieuLuc = hopDongService.getHieuLuc(maNV);
+    }
+
+    // =====================================================================
+    // Top-level UI construction
+    // =====================================================================
+
+    private void buildUI() {
+        // Title bar label with employee name
+        String dialogTitle = "Ho so nhan vien";
+        if (nhanVien != null && nhanVien.getHoTen() != null && !nhanVien.getHoTen().isEmpty()) {
+            dialogTitle = "Ho so: " + nhanVien.getHoTen();
+        }
+        setTitle(dialogTitle);
+
+        // Root panel
+        JPanel root = new JPanel(new BorderLayout(0, 0));
+        root.setBackground(UIColors.WHITE);
+
+        // Header band
+        root.add(buildHeader(), BorderLayout.NORTH);
+
+        // Tabbed pane
+        JTabbedPane tabs = new JTabbedPane(JTabbedPane.TOP);
+        tabs.setFont(new Font("Segoe UI", Font.BOLD, 13));
+        tabs.setBackground(UIColors.LIGHT_GRAY_BG);
+        tabs.addTab("Thong tin ca nhan",  buildPersonalTab());
+        tabs.addTab("Bo nhiem hien tai",  buildAppointmentTab());
+        tabs.addTab("Lich su cham cong",  buildAttendanceTab());
+        root.add(tabs, BorderLayout.CENTER);
+
+        // Close button at the bottom
+        root.add(buildFooter(), BorderLayout.SOUTH);
+
+        setContentPane(root);
+    }
+
+    // =====================================================================
+    // Header
+    // =====================================================================
+
+    private JPanel buildHeader() {
+        JPanel header = new JPanel(new BorderLayout());
+        header.setBackground(UIColors.PRIMARY_PURPLE);
+        header.setBorder(BorderFactory.createEmptyBorder(14, 20, 14, 20));
+
+        String name = "(Khong ro ten)";
+        String code = "#" + maNV;
+        if (thongTinCaNhan != null && thongTinCaNhan.getHoTen() != null) {
+            name = thongTinCaNhan.getHoTen();
+        } else if (nhanVien != null && nhanVien.getHoTen() != null) {
+            name = nhanVien.getHoTen();
+        }
+        if (nhanVien != null && nhanVien.getMaNhanVien() != null) {
+            code = nhanVien.getMaNhanVien();
+        }
+
+        JLabel lblName = new JLabel(name);
+        lblName.setFont(new Font("Segoe UI", Font.BOLD, 18));
+        lblName.setForeground(UIColors.WHITE);
+
+        JLabel lblCode = new JLabel(code);
+        lblCode.setFont(new Font("Segoe UI", Font.PLAIN, 13));
+        lblCode.setForeground(new Color(220, 210, 255));
+
+        JPanel textPanel = new JPanel();
+        textPanel.setOpaque(false);
+        textPanel.setLayout(new BoxLayout(textPanel, BoxLayout.Y_AXIS));
+        textPanel.add(lblName);
+        textPanel.add(Box.createVerticalStrut(2));
+        textPanel.add(lblCode);
+
+        header.add(textPanel, BorderLayout.WEST);
+
+        // Status badge on the right
+        if (nhanVien != null) {
+            JLabel badge = createStatusBadge(nhanVien.getTrangThai(), nhanVien.getTrangThaiDisplay());
+            JPanel badgeWrap = new JPanel(new FlowLayout(FlowLayout.RIGHT, 0, 0));
+            badgeWrap.setOpaque(false);
+            badgeWrap.add(badge);
+            header.add(badgeWrap, BorderLayout.EAST);
+        }
+
+        return header;
+    }
+
+    // =====================================================================
+    // Tab 1 – Personal information
+    // =====================================================================
+
+    private JScrollPane buildPersonalTab() {
+        JPanel content = new JPanel();
+        content.setLayout(new BoxLayout(content, BoxLayout.Y_AXIS));
+        content.setBackground(UIColors.WHITE);
+        content.setBorder(BorderFactory.createEmptyBorder(16, 20, 16, 20));
+
+        // ---- Section: Thong tin nhan vien --------------------------------
+        content.add(buildSectionTitle("Thong tin nhan vien"));
+        content.add(Box.createVerticalStrut(8));
+
+        JPanel nvPanel = buildInfoGrid();
+        addInfoRow(nvPanel, 0, "Ma nhan vien:",
+                nhanVien != null ? safe(nhanVien.getMaNhanVien()) : "");
+        addInfoRow(nvPanel, 1, "Loai hop dong:",
+                nhanVien != null ? safe(nhanVien.getLoaiHopDongDisplay()) : "");
+        addInfoRow(nvPanel, 2, "Ngay vao lam:",
+                nhanVien != null && nhanVien.getNgayVaoLam() != null
+                        ? nhanVien.getNgayVaoLam().format(DATE_FMT) : "");
+        addInfoRow(nvPanel, 3, "Trang thai:",
+                buildStatusLabelComponent(
+                        nhanVien != null ? nhanVien.getTrangThai() : null,
+                        nhanVien != null ? nhanVien.getTrangThaiDisplay() : "Khong ro"));
+        content.add(nvPanel);
+        content.add(Box.createVerticalStrut(16));
+
+        // ---- Section: Thong tin ca nhan ----------------------------------
+        content.add(buildSectionTitle("Thong tin ca nhan"));
+        content.add(Box.createVerticalStrut(8));
+
+        JPanel ttcnPanel = buildInfoGrid();
+        if (thongTinCaNhan != null) {
+            addInfoRow(ttcnPanel, 0, "Ho va ten:",        safe(thongTinCaNhan.getHoTen()));
+            addInfoRow(ttcnPanel, 1, "Ngay sinh:",
+                    thongTinCaNhan.getNgaySinh() != null
+                            ? thongTinCaNhan.getNgaySinh().format(DATE_FMT) : "");
+            addInfoRow(ttcnPanel, 2, "Gioi tinh:",        formatGioiTinh(thongTinCaNhan.getGioiTinh()));
+            addInfoRow(ttcnPanel, 3, "CCCD:",             safe(thongTinCaNhan.getCccd()));
+            addInfoRow(ttcnPanel, 4, "So dien thoai:",    safe(thongTinCaNhan.getDienThoai()));
+            addInfoRow(ttcnPanel, 5, "Email:",            safe(thongTinCaNhan.getEmail()));
+            addInfoRow(ttcnPanel, 6, "Dia chi:",          safe(thongTinCaNhan.getDiaChi()));
+            addInfoRow(ttcnPanel, 7, "Dia chi thuong tru:",
+                    safe(thongTinCaNhan.getDiaChiThuongTru()));
+            addInfoRow(ttcnPanel, 8, "Que quan:",         safe(thongTinCaNhan.getQueQuan()));
+            addInfoRow(ttcnPanel, 9, "Tinh trang hon nhan:",
+                    formatHonNhan(thongTinCaNhan.getTinhTrangHonNhan()));
+        } else {
+            JLabel noData = new JLabel("  Khong co thong tin ca nhan.");
+            noData.setFont(new Font("Segoe UI", Font.ITALIC, 13));
+            noData.setForeground(UIColors.TEXT_GRAY);
+            ttcnPanel.add(noData, buildGbc(0, 0, 2));
+        }
+        content.add(ttcnPanel);
+        content.add(Box.createVerticalStrut(16));
+
+        // ---- Section: Hop dong hien tai (summary only) -------------------
+        content.add(buildSectionTitle("Hop dong lao dong"));
+        content.add(Box.createVerticalStrut(8));
+
+        JPanel hdPanel = buildInfoGrid();
+        if (hopDongHieuLuc != null) {
+            addInfoRow(hdPanel, 0, "So hop dong:",   safe(hopDongHieuLuc.getSoHopDong()));
+            addInfoRow(hdPanel, 1, "Loai hop dong:", safe(hopDongHieuLuc.getLoaiHopDongDisplay()));
+            addInfoRow(hdPanel, 2, "Ngay ky:",
+                    hopDongHieuLuc.getNgayKy() != null
+                            ? hopDongHieuLuc.getNgayKy().format(DATE_FMT) : "");
+            addInfoRow(hdPanel, 3, "Hieu luc tu:",
+                    hopDongHieuLuc.getNgayHieuLuc() != null
+                            ? hopDongHieuLuc.getNgayHieuLuc().format(DATE_FMT) : "");
+            addInfoRow(hdPanel, 4, "Hieu luc den:",
+                    hopDongHieuLuc.getNgayHetHieuLuc() != null
+                            ? hopDongHieuLuc.getNgayHetHieuLuc().format(DATE_FMT)
+                            : "Khong xac dinh");
+            addInfoRow(hdPanel, 5, "Trang thai:",
+                    buildStatusLabelComponent(
+                            hopDongHieuLuc.getTrangThai(),
+                            hopDongHieuLuc.getTrangThaiDisplay()));
+        } else {
+            JLabel noHd = new JLabel("  Chua co hop dong hieu luc.");
+            noHd.setFont(new Font("Segoe UI", Font.ITALIC, 13));
+            noHd.setForeground(UIColors.TEXT_GRAY);
+            hdPanel.add(noHd, buildGbc(0, 0, 2));
+        }
+        content.add(hdPanel);
+
+        // Filler to push content up
+        content.add(Box.createVerticalGlue());
+
+        JScrollPane scroll = new JScrollPane(content);
+        scroll.setBorder(BorderFactory.createEmptyBorder());
+        scroll.getVerticalScrollBar().setUnitIncrement(16);
+        return scroll;
+    }
+
+    // =====================================================================
+    // Tab 2 – Appointment
+    // =====================================================================
+
+    private JPanel buildAppointmentTab() {
+        JPanel panel = new JPanel(new BorderLayout(0, 12));
+        panel.setBackground(UIColors.WHITE);
+        panel.setBorder(BorderFactory.createEmptyBorder(16, 20, 16, 20));
+
+        // ---- Current effective appointment --------------------------------
+        JPanel currentPanel = new JPanel(new BorderLayout(0, 8));
+        currentPanel.setBackground(UIColors.WHITE);
+
+        currentPanel.add(buildSectionTitle("Bo nhiem chinh hien tai"), BorderLayout.NORTH);
+
+        JPanel detailGrid = buildInfoGrid();
+        if (boNhiemHienTai != null) {
+            String tenPB = boNhiemHienTai.getTenPhongBan() != null
+                    ? boNhiemHienTai.getTenPhongBan()
+                    : safe(boNhiemHienTai.getMaPhongBan());
+            String tenCV = boNhiemHienTai.getTenChucVu() != null
+                    ? boNhiemHienTai.getTenChucVu()
+                    : safe(boNhiemHienTai.getMaChucVu());
+
+            addInfoRow(detailGrid, 0, "Phong ban:",         tenPB);
+            addInfoRow(detailGrid, 1, "Chuc vu:",           tenCV);
+            addInfoRow(detailGrid, 2, "Loai bo nhiem:",     safe(boNhiemHienTai.getLoaiBoNhiemDisplay()));
+            addInfoRow(detailGrid, 3, "Ty le huong luong:", boNhiemHienTai.getTyLeHuongLuong() + "%");
+            addInfoRow(detailGrid, 4, "Tu ngay:",
+                    boNhiemHienTai.getTuNgay() != null
+                            ? boNhiemHienTai.getTuNgay().format(DATE_FMT) : "");
+            addInfoRow(detailGrid, 5, "Den ngay:",
+                    boNhiemHienTai.getDenNgay() != null
+                            ? boNhiemHienTai.getDenNgay().format(DATE_FMT) : "Khong xac dinh");
+            addInfoRow(detailGrid, 6, "Trang thai:",
+                    buildStatusLabelComponent(
+                            boNhiemHienTai.getTrangThai(),
+                            boNhiemHienTai.getTrangThaiDisplay()));
+        } else {
+            JLabel noData = new JLabel("  Chua co bo nhiem chinh hieu luc.");
+            noData.setFont(new Font("Segoe UI", Font.ITALIC, 13));
+            noData.setForeground(UIColors.TEXT_GRAY);
+            detailGrid.add(noData, buildGbc(0, 0, 2));
+        }
+        currentPanel.add(detailGrid, BorderLayout.CENTER);
+        panel.add(currentPanel, BorderLayout.NORTH);
+
+        // ---- Appointment history table ------------------------------------
+        JPanel historyPanel = new JPanel(new BorderLayout(0, 6));
+        historyPanel.setBackground(UIColors.WHITE);
+
+        JLabel histTitle = buildSectionTitle("Lich su bo nhiem");
+        historyPanel.add(histTitle, BorderLayout.NORTH);
+
+        boNhiemTableModel = PurpleTable.createNonEditableModel(COL_BO_NHIEM);
+        populateBoNhiemTable();
+
+        PurpleTable boNhiemTable = new PurpleTable(boNhiemTableModel);
+        boNhiemTable.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+        boNhiemTable.setDefaultRenderer(Object.class, new AppointmentStatusRenderer());
+
+        // Column widths
+        int[] colWidths = {130, 130, 90, 90, 90, 90};
+        for (int i = 0; i < colWidths.length; i++) {
+            boNhiemTable.getColumnModel().getColumn(i).setPreferredWidth(colWidths[i]);
+        }
+
+        JScrollPane tableScroll = new JScrollPane(boNhiemTable);
+        tableScroll.setBorder(BorderFactory.createLineBorder(UIColors.BORDER_GRAY));
+        tableScroll.setPreferredSize(new Dimension(700, 200));
+        historyPanel.add(tableScroll, BorderLayout.CENTER);
+
+        panel.add(historyPanel, BorderLayout.CENTER);
+        return panel;
+    }
+
+    // =====================================================================
+    // Tab 3 – Attendance history
+    // =====================================================================
+
+    private JPanel buildAttendanceTab() {
+        JPanel panel = new JPanel(new BorderLayout(0, 10));
+        panel.setBackground(UIColors.WHITE);
+        panel.setBorder(BorderFactory.createEmptyBorder(16, 20, 16, 20));
+
+        // ---- Filter bar ---------------------------------------------------
+        JPanel filterPanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 10, 4));
+        filterPanel.setOpaque(false);
+
+        JLabel lblFilter = new JLabel("Chon thang / nam:");
+        lblFilter.setFont(new Font("Segoe UI", Font.PLAIN, 13));
+        lblFilter.setForeground(UIColors.TEXT_DARK);
+
+        String[] thangItems = {
+            "Thang 1", "Thang 2", "Thang 3", "Thang 4",
+            "Thang 5", "Thang 6", "Thang 7", "Thang 8",
+            "Thang 9", "Thang 10", "Thang 11", "Thang 12"
+        };
+        cboThang = new JComboBox<>(thangItems);
+        cboThang.setFont(new Font("Segoe UI", Font.PLAIN, 13));
+        cboThang.setPreferredSize(new Dimension(110, 30));
+
+        int currentYear = LocalDate.now().getYear();
+        Integer[] years = new Integer[5];
+        for (int i = 0; i < 5; i++) {
+            years[i] = currentYear - i;
+        }
+        cboNam = new JComboBox<>(years);
+        cboNam.setFont(new Font("Segoe UI", Font.PLAIN, 13));
+        cboNam.setPreferredSize(new Dimension(80, 30));
+
+        // Pre-select current month
+        cboThang.setSelectedIndex(LocalDate.now().getMonthValue() - 1);
+        cboNam.setSelectedItem(currentYear);
+
+        JButton btnLoad = new JButton("Xem");
+        btnLoad.setFont(new Font("Segoe UI", Font.BOLD, 13));
+        btnLoad.setBackground(UIColors.PRIMARY_PURPLE);
+        btnLoad.setForeground(UIColors.WHITE);
+        btnLoad.setFocusPainted(false);
+        btnLoad.setBorderPainted(false);
+        btnLoad.setOpaque(true);
+        btnLoad.setPreferredSize(new Dimension(70, 30));
+        btnLoad.setCursor(new Cursor(Cursor.HAND_CURSOR));
+        btnLoad.addActionListener(e -> loadChamCongData());
+
+        filterPanel.add(lblFilter);
+        filterPanel.add(cboThang);
+        filterPanel.add(cboNam);
+        filterPanel.add(btnLoad);
+
+        panel.add(filterPanel, BorderLayout.NORTH);
+
+        // ---- Attendance table --------------------------------------------
+        chamCongTableModel = PurpleTable.createNonEditableModel(COL_CHAM_CONG);
+
+        PurpleTable chamCongTable = new PurpleTable(chamCongTableModel);
+        chamCongTable.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+        chamCongTable.setDefaultRenderer(Object.class, new AttendanceStatusRenderer());
+
+        int[] colWidths = {90, 110, 110, 110, 70, 100};
+        for (int i = 0; i < colWidths.length; i++) {
+            chamCongTable.getColumnModel().getColumn(i).setPreferredWidth(colWidths[i]);
+        }
+
+        JScrollPane tableScroll = new JScrollPane(chamCongTable);
+        tableScroll.setBorder(BorderFactory.createLineBorder(UIColors.BORDER_GRAY));
+        panel.add(tableScroll, BorderLayout.CENTER);
+
+        // Load data for current month immediately
+        loadChamCongData();
+
+        return panel;
+    }
+
+    // =====================================================================
+    // Data population helpers
+    // =====================================================================
+
+    private void populateBoNhiemTable() {
+        boNhiemTableModel.setRowCount(0);
+        try {
+            List<BoNhiem> list = boNhiemService.getByMaNV(maNV);
+            if (list == null || list.isEmpty()) return;
+            for (BoNhiem bn : list) {
+                String tenPB = bn.getTenPhongBan() != null
+                        ? bn.getTenPhongBan() : safe(bn.getMaPhongBan());
+                String tenCV = bn.getTenChucVu() != null
+                        ? bn.getTenChucVu() : safe(bn.getMaChucVu());
+                boNhiemTableModel.addRow(new Object[]{
+                    tenPB,
+                    tenCV,
+                    safe(bn.getLoaiBoNhiemDisplay()),
+                    bn.getTuNgay() != null ? bn.getTuNgay().format(DATE_FMT) : "",
+                    bn.getDenNgay() != null ? bn.getDenNgay().format(DATE_FMT) : "Khong xac dinh",
+                    safe(bn.getTrangThaiDisplay())
+                });
+            }
+        } catch (Exception ex) {
+            // Silently ignore; table stays empty
+        }
+    }
+
+    private void loadChamCongData() {
+        chamCongTableModel.setRowCount(0);
+        try {
+            int thang = cboThang.getSelectedIndex() + 1;
+            int nam   = (Integer) cboNam.getSelectedItem();
+            List<ChamCong> list = attendanceSvc.getChamCongTheoThang(maNV, thang, nam);
+            if (list == null || list.isEmpty()) return;
+            for (ChamCong cc : list) {
+                String gioVao = cc.getGioVao() != null
+                        ? cc.getGioVao().format(TIME_FMT) : "";
+                String gioRa  = cc.getGioRa() != null
+                        ? cc.getGioRa().format(TIME_FMT) : "";
+                String soGio  = cc.getSoGioLam() > 0
+                        ? String.format("%.2f", cc.getSoGioLam()) : "";
+                String trangThai = cc.getTrangThai() != null
+                        ? cc.getTrangThai().getDisplayName() : "";
+                chamCongTableModel.addRow(new Object[]{
+                    cc.getNgay() != null ? cc.getNgay().format(DATE_FMT) : "",
+                    safe(cc.getTenCaLam()),
+                    gioVao,
+                    gioRa,
+                    soGio,
+                    trangThai
+                });
+            }
+        } catch (Exception ex) {
+            // Silently ignore; table stays empty
+        }
+    }
+
+    // =====================================================================
+    // Footer
+    // =====================================================================
+
+    private JPanel buildFooter() {
+        JPanel footer = new JPanel(new FlowLayout(FlowLayout.RIGHT, 16, 10));
+        footer.setBackground(UIColors.LIGHT_GRAY_BG);
+        footer.setBorder(BorderFactory.createMatteBorder(1, 0, 0, 0, UIColors.BORDER_GRAY));
+
+        JButton btnClose = new JButton("Dong");
+        btnClose.setFont(new Font("Segoe UI", Font.BOLD, 13));
+        btnClose.setBackground(UIColors.PRIMARY_PURPLE);
+        btnClose.setForeground(UIColors.WHITE);
+        btnClose.setFocusPainted(false);
+        btnClose.setBorderPainted(false);
+        btnClose.setOpaque(true);
+        btnClose.setPreferredSize(new Dimension(90, 34));
+        btnClose.setCursor(new Cursor(Cursor.HAND_CURSOR));
+        btnClose.addActionListener(e -> dispose());
+
+        footer.add(btnClose);
+        return footer;
+    }
+
+    // =====================================================================
+    // Reusable UI building blocks
+    // =====================================================================
+
+    /**
+     * Builds a section title label with PRIMARY_PURPLE styling and a bottom separator.
+     */
+    private JLabel buildSectionTitle(String text) {
+        JLabel lbl = new JLabel(text.toUpperCase()) {
+            @Override
+            protected void paintComponent(Graphics g) {
+                super.paintComponent(g);
+                Graphics2D g2 = (Graphics2D) g;
+                g2.setColor(UIColors.PRIMARY_PURPLE);
+                g2.setStroke(new BasicStroke(1.5f));
+                g2.drawLine(0, getHeight() - 2, getWidth(), getHeight() - 2);
+            }
+        };
+        lbl.setFont(new Font("Segoe UI", Font.BOLD, 13));
+        lbl.setForeground(UIColors.PRIMARY_PURPLE);
+        lbl.setBorder(BorderFactory.createEmptyBorder(0, 0, 6, 0));
+        lbl.setAlignmentX(Component.LEFT_ALIGNMENT);
+        return lbl;
+    }
+
+    /**
+     * Creates a two-column GridBagLayout panel for key-value info rows.
+     */
+    private JPanel buildInfoGrid() {
+        JPanel panel = new JPanel(new GridBagLayout());
+        panel.setBackground(UIColors.WHITE);
+        panel.setAlignmentX(Component.LEFT_ALIGNMENT);
+        return panel;
+    }
+
+    /**
+     * Adds a label+value pair into an info-grid panel at the given row index.
+     * The value parameter is a String; the component is a JLabel.
+     */
+    private void addInfoRow(JPanel grid, int row, String labelText, String valueText) {
+        JLabel lbl = new JLabel(labelText);
+        lbl.setFont(new Font("Segoe UI", Font.BOLD, 13));
+        lbl.setForeground(UIColors.TEXT_GRAY);
+        lbl.setPreferredSize(new Dimension(170, 24));
+
+        JLabel val = new JLabel(valueText);
+        val.setFont(new Font("Segoe UI", Font.PLAIN, 13));
+        val.setForeground(UIColors.TEXT_DARK);
+
+        GridBagConstraints gbcLbl = new GridBagConstraints();
+        gbcLbl.gridx     = 0;
+        gbcLbl.gridy     = row;
+        gbcLbl.anchor    = GridBagConstraints.WEST;
+        gbcLbl.insets    = new Insets(3, 0, 3, 12);
+        gbcLbl.fill      = GridBagConstraints.NONE;
+
+        GridBagConstraints gbcVal = new GridBagConstraints();
+        gbcVal.gridx     = 1;
+        gbcVal.gridy     = row;
+        gbcVal.anchor    = GridBagConstraints.WEST;
+        gbcVal.insets    = new Insets(3, 0, 3, 0);
+        gbcVal.fill      = GridBagConstraints.HORIZONTAL;
+        gbcVal.weightx   = 1.0;
+
+        grid.add(lbl, gbcLbl);
+        grid.add(val, gbcVal);
+    }
+
+    /**
+     * Adds a label+component pair (value is a Component, e.g. a colored JLabel)
+     * into an info-grid panel at the given row index.
+     */
+    private void addInfoRow(JPanel grid, int row, String labelText, Component valueComponent) {
+        JLabel lbl = new JLabel(labelText);
+        lbl.setFont(new Font("Segoe UI", Font.BOLD, 13));
+        lbl.setForeground(UIColors.TEXT_GRAY);
+        lbl.setPreferredSize(new Dimension(170, 24));
+
+        GridBagConstraints gbcLbl = new GridBagConstraints();
+        gbcLbl.gridx     = 0;
+        gbcLbl.gridy     = row;
+        gbcLbl.anchor    = GridBagConstraints.WEST;
+        gbcLbl.insets    = new Insets(3, 0, 3, 12);
+        gbcLbl.fill      = GridBagConstraints.NONE;
+
+        GridBagConstraints gbcVal = new GridBagConstraints();
+        gbcVal.gridx     = 1;
+        gbcVal.gridy     = row;
+        gbcVal.anchor    = GridBagConstraints.WEST;
+        gbcVal.insets    = new Insets(3, 0, 3, 0);
+        gbcVal.fill      = GridBagConstraints.HORIZONTAL;
+        gbcVal.weightx   = 1.0;
+
+        grid.add(lbl, gbcLbl);
+        grid.add(valueComponent, gbcVal);
+    }
+
+    /**
+     * Convenience GridBagConstraints spanning 'colspan' columns at (col, row).
+     */
+    private GridBagConstraints buildGbc(int col, int row, int colspan) {
+        GridBagConstraints gbc = new GridBagConstraints();
+        gbc.gridx      = col;
+        gbc.gridy      = row;
+        gbc.gridwidth  = colspan;
+        gbc.anchor     = GridBagConstraints.WEST;
+        gbc.insets     = new Insets(4, 0, 4, 0);
+        gbc.fill       = GridBagConstraints.HORIZONTAL;
+        gbc.weightx    = 1.0;
+        return gbc;
+    }
+
+    /**
+     * Creates a colored status badge JLabel for an employee or record status.
+     *
+     * @param statusKey  raw status string, e.g. "dang_lam_viec", "hieu_luc"
+     * @param displayText text to show inside the badge
+     */
+    private JLabel createStatusBadge(String statusKey, String displayText) {
+        JLabel badge = new JLabel("  " + displayText + "  ") {
+            @Override
+            protected void paintComponent(Graphics g) {
+                Graphics2D g2 = (Graphics2D) g.create();
+                g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+                g2.setColor(getBackground());
+                g2.fillRoundRect(0, 0, getWidth(), getHeight(), 12, 12);
+                g2.dispose();
+                super.paintComponent(g);
+            }
+        };
+        badge.setOpaque(false);
+        badge.setFont(new Font("Segoe UI", Font.BOLD, 12));
+        badge.setForeground(UIColors.WHITE);
+        badge.setBackground(resolveStatusColor(statusKey));
+        badge.setBorder(BorderFactory.createEmptyBorder(4, 10, 4, 10));
+        return badge;
+    }
+
+    /**
+     * Returns a JLabel component (opaque, colored) suitable for embedding in
+     * an info-grid row to display a status value.
+     */
+    private JLabel buildStatusLabelComponent(String statusKey, String displayText) {
+        Color bg = resolveStatusColor(statusKey);
+        JLabel lbl = new JLabel("  " + safe(displayText) + "  ") {
+            @Override
+            protected void paintComponent(Graphics g) {
+                Graphics2D g2 = (Graphics2D) g.create();
+                g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+                g2.setColor(getBackground());
+                g2.fillRoundRect(0, 0, getWidth(), getHeight(), 10, 10);
+                g2.dispose();
+                super.paintComponent(g);
+            }
+        };
+        lbl.setOpaque(false);
+        lbl.setFont(new Font("Segoe UI", Font.BOLD, 12));
+        lbl.setForeground(UIColors.WHITE);
+        lbl.setBackground(bg);
+        lbl.setBorder(BorderFactory.createEmptyBorder(3, 8, 3, 8));
+        return lbl;
+    }
+
+    /**
+     * Maps a raw status key to a display color.
+     */
+    private Color resolveStatusColor(String statusKey) {
+        if (statusKey == null) return UIColors.TEXT_GRAY;
+        switch (statusKey) {
+            case "dang_lam_viec":
+            case "hieu_luc":
+            case "dung_gio":
+                return UIColors.SUCCESS_GREEN;
+            case "tam_nghi":
+            case "cho_duyet":
+            case "di_muon":
+            case "ve_som":
+                return new Color(230, 120, 0);   // amber/warning
+            case "nghi_viec":
+            case "tu_choi":
+            case "huy":
+            case "vang_mat":
+                return UIColors.DANGER_RED;
+            case "het_han":
+            case "het_hieu_luc":
+                return UIColors.TEXT_GRAY;
+            case "thanh_ly":
+                return new Color(23, 162, 184);  // info blue
+            case "nghi_phep":
+                return new Color(0, 123, 200);
+            case "cong_tac":
+                return new Color(100, 60, 200);
+            default:
+                return UIColors.TEXT_GRAY;
+        }
+    }
+
+    // =====================================================================
+    // Custom table cell renderers
+    // =====================================================================
+
+    /**
+     * Highlights the Trang thai column (index 5) in the appointment table.
+     */
+    private class AppointmentStatusRenderer extends DefaultTableCellRenderer {
+        @Override
+        public Component getTableCellRendererComponent(JTable table, Object value,
+                boolean isSelected, boolean hasFocus, int row, int col) {
+            Component c = super.getTableCellRendererComponent(
+                    table, value, isSelected, hasFocus, row, col);
+            setHorizontalAlignment(SwingConstants.CENTER);
+            setBorder(BorderFactory.createEmptyBorder(0, 8, 0, 8));
+
+            if (!isSelected) {
+                c.setBackground(row % 2 == 0 ? Color.WHITE : UIColors.TABLE_ALT_ROW);
+                c.setForeground(UIColors.TEXT_DARK);
+
+                if (col == 5 && value != null) {
+                    String v = value.toString();
+                    if (v.contains("Hieu luc") || v.contains("hieu_luc")) {
+                        c.setForeground(UIColors.SUCCESS_GREEN);
+                    } else if (v.contains("Cho duyet") || v.contains("cho_duyet")) {
+                        c.setForeground(new Color(230, 120, 0));
+                    } else if (v.contains("Het") || v.contains("Tu choi")) {
+                        c.setForeground(UIColors.DANGER_RED);
+                    }
+                    ((JLabel) c).setFont(new Font("Segoe UI", Font.BOLD, 12));
+                }
+            }
+            return c;
+        }
+    }
+
+    /**
+     * Highlights the Trang thai column (index 5) in the attendance table.
+     */
+    private class AttendanceStatusRenderer extends DefaultTableCellRenderer {
+        @Override
+        public Component getTableCellRendererComponent(JTable table, Object value,
+                boolean isSelected, boolean hasFocus, int row, int col) {
+            Component c = super.getTableCellRendererComponent(
+                    table, value, isSelected, hasFocus, row, col);
+            setHorizontalAlignment(SwingConstants.CENTER);
+            setBorder(BorderFactory.createEmptyBorder(0, 8, 0, 8));
+
+            if (!isSelected) {
+                c.setBackground(row % 2 == 0 ? Color.WHITE : UIColors.TABLE_ALT_ROW);
+                c.setForeground(UIColors.TEXT_DARK);
+
+                if (col == 5 && value != null) {
+                    String v = value.toString();
+                    if (v.contains("ung gio") || v.equals("Dung gio")) {
+                        c.setForeground(UIColors.SUCCESS_GREEN);
+                    } else if (v.contains("muon") || v.contains("som")) {
+                        c.setForeground(new Color(230, 120, 0));
+                    } else if (v.contains("Vang") || v.contains("vang")) {
+                        c.setForeground(UIColors.DANGER_RED);
+                    } else if (v.contains("phep") || v.contains("Phep")) {
+                        c.setForeground(new Color(0, 123, 200));
+                    }
+                    ((JLabel) c).setFont(new Font("Segoe UI", Font.BOLD, 12));
+                }
+            }
+            return c;
+        }
+    }
+
+    // =====================================================================
+    // Value formatting helpers
+    // =====================================================================
+
+    /** Returns the string if non-null and non-empty, otherwise empty string. */
+    private static String safe(String s) {
+        return (s != null && !s.isEmpty()) ? s : "";
+    }
+
+    private static String formatGioiTinh(String value) {
+        if (value == null) return "";
+        switch (value) {
+            case "nam":  return "Nam";
+            case "nu":   return "Nu";
+            case "khac": return "Khac";
+            default:     return value;
+        }
+    }
+
+    private static String formatHonNhan(String value) {
+        if (value == null) return "";
+        switch (value) {
+            case "doc_than":    return "Doc than";
+            case "da_ket_hon":  return "Da ket hon";
+            case "ly_hon":      return "Ly hon / Goa";
+            default:            return value;
+        }
+    }
+}

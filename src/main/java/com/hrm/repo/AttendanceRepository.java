@@ -1,191 +1,640 @@
 package com.hrm.repo;
 
-import com.hrm.model.*;
+import com.hrm.model.CaLam;
+import com.hrm.model.CauHinhPhuCap;
+import com.hrm.model.ChamCong;
+import com.hrm.model.DangKyLamThem;
+import com.hrm.model.ThanhPhanLuong;
+import com.hrm.util.DatabaseConnection;
 
+import java.sql.*;
 import java.time.LocalDate;
-import java.time.LocalTime;
-import java.util.*;
-import java.util.stream.Collectors;
+import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 
+/**
+ * JDBC repository cho Attendance (Ca làm, Chấm công, Đăng ký làm thêm).
+ * Singleton pattern.
+ */
 public class AttendanceRepository {
 
     private static AttendanceRepository instance;
 
-    private Map<String, CaLam> danhSachCaLam;
-    private Map<Integer, ChamCong> danhSachChamCong;
-    private Map<Integer, DangKyLamThem> danhSachDonOT;
-    private Map<Integer, BangLuong> danhSachBangLuong;
-    private Map<Integer, ChiTietLuong> danhSachChiTietLuong;
-    private Map<Integer, Double> luongCoBan;
-    private Map<Integer, CauHinhPhuCap> danhSachCauHinhPC;
-
-    private int nextChamCongId = 1;
-    private int nextDonOTId = 1;
-    private int nextBangLuongId = 1;
-    private int nextChiTietLuongId = 1;
-    private int nextCauHinhPCId = 1;
-
-    private AttendanceRepository() {
-        danhSachCaLam = new LinkedHashMap<>();
-        danhSachChamCong = new LinkedHashMap<>();
-        danhSachDonOT = new LinkedHashMap<>();
-        danhSachBangLuong = new LinkedHashMap<>();
-        danhSachChiTietLuong = new LinkedHashMap<>();
-        luongCoBan = new LinkedHashMap<>();
-        danhSachCauHinhPC = new LinkedHashMap<>();
-        initializeMockData();
-    }
+    private AttendanceRepository() {}
 
     public static synchronized AttendanceRepository getInstance() {
-        if (instance == null) instance = new AttendanceRepository();
+        if (instance == null) {
+            instance = new AttendanceRepository();
+        }
         return instance;
     }
 
-    private void initializeMockData() {
-        // Ca làm
-        CaLam caHC = new CaLam("HANH_CHINH", "Ca hanh chinh", LocalTime.of(8, 0), LocalTime.of(17, 0));
-        caHC.setSoGioChuan(8.0); danhSachCaLam.put(caHC.getMaCaLam(), caHC);
-        CaLam caSang = new CaLam("CA_SANG", "Ca sang", LocalTime.of(6, 0), LocalTime.of(14, 0));
-        caSang.setSoGioChuan(8.0); danhSachCaLam.put(caSang.getMaCaLam(), caSang);
-        CaLam caChieu = new CaLam("CA_CHIEU", "Ca chieu", LocalTime.of(14, 0), LocalTime.of(22, 0));
-        caChieu.setSoGioChuan(8.0); danhSachCaLam.put(caChieu.getMaCaLam(), caChieu);
+    // =====================================================================
+    // CALAM
+    // =====================================================================
 
-        // Lương cơ bản
-        luongCoBan.put(2, 15000000.0);
-        luongCoBan.put(3, 20000000.0);
-        luongCoBan.put(4, 10000000.0);
-
-        // ── Cấu hình phụ cấp / khấu trừ mặc định ──
-        saveCauHinhPC(new CauHinhPhuCap(ThanhPhanLuong.Loai.PHU_CAP,
-                "Phu cap an trua", CauHinhPhuCap.KieuTinh.CO_DINH, 500000, "CongTy"));
-        saveCauHinhPC(new CauHinhPhuCap(ThanhPhanLuong.Loai.PHU_CAP,
-                "Phu cap di lai", CauHinhPhuCap.KieuTinh.CO_DINH, 300000, "CongTy"));
-        saveCauHinhPC(new CauHinhPhuCap(ThanhPhanLuong.Loai.PHU_CAP,
-                "Phu cap dien thoai", CauHinhPhuCap.KieuTinh.CO_DINH, 200000, "CongTy"));
-        saveCauHinhPC(new CauHinhPhuCap(ThanhPhanLuong.Loai.KHAU_TRU,
-                "BHXH (8%)", CauHinhPhuCap.KieuTinh.PHAN_TRAM, 8.0, "LuatDinh"));
-        saveCauHinhPC(new CauHinhPhuCap(ThanhPhanLuong.Loai.KHAU_TRU,
-                "BHYT (1.5%)", CauHinhPhuCap.KieuTinh.PHAN_TRAM, 1.5, "LuatDinh"));
-        saveCauHinhPC(new CauHinhPhuCap(ThanhPhanLuong.Loai.KHAU_TRU,
-                "BHTN (1%)", CauHinhPhuCap.KieuTinh.PHAN_TRAM, 1.0, "LuatDinh"));
-
-        // Chấm công mẫu
-        LocalDate today = LocalDate.now();
-        for (int i = 6; i >= 1; i--) {
-            LocalDate ngay = today.minusDays(i);
-            if (ngay.getDayOfWeek().getValue() >= 6) continue;
-            ChamCong cc = new ChamCong();
-            cc.setMaChamCong(nextChamCongId++); cc.setMaNV(4); cc.setNgay(ngay);
-            cc.setMaCaLam("HANH_CHINH"); cc.setTenCaLam("Ca hanh chinh");
-            cc.setGioVao(ngay.atTime(8, 0)); cc.setGioRa(ngay.atTime(17, 15));
-            cc.setSoGioLam(cc.tinhSoGioLam()); cc.setGioLamThem(0);
-            cc.setTrangThai(ChamCong.TrangThai.DUNG_GIO);
-            cc.setPhuongThucChamCong(ChamCong.PhuongThuc.THU_CONG);
-            cc.setEmployeeName("Nguyen Van An");
-            danhSachChamCong.put(cc.getMaChamCong(), cc);
+    public List<CaLam> findAllCaLam() {
+        String sql = "SELECT maCaLam, tenCaLam, gioBatDau, gioKetThuc, soGioChuan, "
+                + "choPhepLamThem, moTa, trangThai FROM CALAM ORDER BY maCaLam";
+        List<CaLam> result = new ArrayList<>();
+        try (Connection conn = DatabaseConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql);
+             ResultSet rs = ps.executeQuery()) {
+            while (rs.next()) {
+                result.add(mapCaLam(rs));
+            }
+        } catch (SQLException e) {
+            throw new RuntimeException("Lỗi tải danh sách ca làm: " + e.getMessage(), e);
         }
-
-        // Đơn OT mẫu
-        DangKyLamThem don1 = new DangKyLamThem(4, today.minusDays(3), 2.0, "Hoan thanh bao cao");
-        don1.setMaDK(nextDonOTId++); don1.setHeSoOT(1.5);
-        don1.duyet(1); don1.setApproverName("Administrator");
-        danhSachDonOT.put(don1.getMaDK(), don1);
-        DangKyLamThem don2 = new DangKyLamThem(4, today.plusDays(1), 3.0, "Fix bug gap");
-        don2.setMaDK(nextDonOTId++); don2.setHeSoOT(1.5);
-        danhSachDonOT.put(don2.getMaDK(), don2);
+        return result;
     }
 
-    // ── CA LÀM ──
-    public List<CaLam> findCaLamHoatDong() {
-        return danhSachCaLam.values().stream().filter(CaLam::conHoatDong).collect(Collectors.toList());
+    public List<CaLam> findActiveCaLam() {
+        String sql = "SELECT maCaLam, tenCaLam, gioBatDau, gioKetThuc, soGioChuan, "
+                + "choPhepLamThem, moTa, trangThai FROM CALAM WHERE trangThai = 'hoat_dong' ORDER BY maCaLam";
+        List<CaLam> result = new ArrayList<>();
+        try (Connection conn = DatabaseConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql);
+             ResultSet rs = ps.executeQuery()) {
+            while (rs.next()) {
+                result.add(mapCaLam(rs));
+            }
+        } catch (SQLException e) {
+            throw new RuntimeException("Lỗi tải ca làm hoạt động: " + e.getMessage(), e);
+        }
+        return result;
     }
-    public CaLam findCaLamByMa(String ma) { return danhSachCaLam.get(ma); }
-    public CaLam saveCaLam(CaLam ca) { danhSachCaLam.put(ca.getMaCaLam(), ca); return ca; }
-    public boolean deleteCaLam(String ma) {
-        CaLam ca = danhSachCaLam.get(ma);
-        if (ca != null) { ca.setTrangThai(CaLam.TrangThai.NGUNG_HOAT_DONG); return true; }
+
+    public CaLam findCaLamById(String maCaLam) {
+        String sql = "SELECT maCaLam, tenCaLam, gioBatDau, gioKetThuc, soGioChuan, "
+                + "choPhepLamThem, moTa, trangThai FROM CALAM WHERE maCaLam = ?";
+        try (Connection conn = DatabaseConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setString(1, maCaLam);
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    return mapCaLam(rs);
+                }
+            }
+        } catch (SQLException e) {
+            throw new RuntimeException("Lỗi tìm ca làm: " + e.getMessage(), e);
+        }
+        return null;
+    }
+
+    /**
+     * INSERT or UPDATE depending on whether the record already exists.
+     */
+    public void saveCaLam(CaLam caLam) {
+        boolean exists = findCaLamById(caLam.getMaCaLam()) != null;
+        if (exists) {
+            String sql = "UPDATE CALAM SET tenCaLam=?, gioBatDau=?, gioKetThuc=?, soGioChuan=?, "
+                    + "choPhepLamThem=?, moTa=?, trangThai=? WHERE maCaLam=?";
+            try (Connection conn = DatabaseConnection.getConnection();
+                 PreparedStatement ps = conn.prepareStatement(sql)) {
+                ps.setString(1, caLam.getTenCaLam());
+                ps.setTime(2, Time.valueOf(caLam.getGioBatDau()));
+                ps.setTime(3, Time.valueOf(caLam.getGioKetThuc()));
+                ps.setDouble(4, caLam.getSoGioChuan());
+                ps.setBoolean(5, caLam.isChoPhepLamThem());
+                ps.setString(6, caLam.getMoTa());
+                ps.setString(7, caLam.getTrangThai() != null ? caLam.getTrangThai().getDbValue() : "hoat_dong");
+                ps.setString(8, caLam.getMaCaLam());
+                ps.executeUpdate();
+            } catch (SQLException e) {
+                throw new RuntimeException("Lỗi cập nhật ca làm: " + e.getMessage(), e);
+            }
+        } else {
+            String sql = "INSERT INTO CALAM (maCaLam, tenCaLam, gioBatDau, gioKetThuc, soGioChuan, "
+                    + "choPhepLamThem, moTa, trangThai) VALUES (?,?,?,?,?,?,?,?)";
+            try (Connection conn = DatabaseConnection.getConnection();
+                 PreparedStatement ps = conn.prepareStatement(sql)) {
+                ps.setString(1, caLam.getMaCaLam());
+                ps.setString(2, caLam.getTenCaLam());
+                ps.setTime(3, Time.valueOf(caLam.getGioBatDau()));
+                ps.setTime(4, Time.valueOf(caLam.getGioKetThuc()));
+                ps.setDouble(5, caLam.getSoGioChuan());
+                ps.setBoolean(6, caLam.isChoPhepLamThem());
+                ps.setString(7, caLam.getMoTa());
+                ps.setString(8, caLam.getTrangThai() != null ? caLam.getTrangThai().getDbValue() : "hoat_dong");
+                ps.executeUpdate();
+            } catch (SQLException e) {
+                throw new RuntimeException("Lỗi thêm ca làm: " + e.getMessage(), e);
+            }
+        }
+    }
+
+    public void deleteCaLam(String maCaLam) {
+        String sql = "UPDATE CALAM SET trangThai='ngung_hoat_dong' WHERE maCaLam=?";
+        try (Connection conn = DatabaseConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setString(1, maCaLam);
+            ps.executeUpdate();
+        } catch (SQLException e) {
+            throw new RuntimeException("Lỗi xóa ca làm: " + e.getMessage(), e);
+        }
+    }
+
+    private CaLam mapCaLam(ResultSet rs) throws SQLException {
+        CaLam ca = new CaLam();
+        ca.setMaCaLam(rs.getString("maCaLam"));
+        ca.setTenCaLam(rs.getString("tenCaLam"));
+        Time gioBD = rs.getTime("gioBatDau");
+        if (gioBD != null) ca.setGioBatDau(gioBD.toLocalTime());
+        Time gioKT = rs.getTime("gioKetThuc");
+        if (gioKT != null) ca.setGioKetThuc(gioKT.toLocalTime());
+        ca.setSoGioChuan(rs.getDouble("soGioChuan"));
+        ca.setChoPhepLamThem(rs.getBoolean("choPhepLamThem"));
+        ca.setMoTa(rs.getString("moTa"));
+        String tt = rs.getString("trangThai");
+        if (tt != null) {
+            try {
+                ca.setTrangThai(CaLam.TrangThai.fromDbValue(tt));
+            } catch (IllegalArgumentException ignored) {
+                ca.setTrangThai(CaLam.TrangThai.HOAT_DONG);
+            }
+        }
+        return ca;
+    }
+
+    // =====================================================================
+    // CHAMCONG
+    // =====================================================================
+
+    /**
+     * INSERT a new ChamCong record. Returns the generated maChamCong.
+     */
+    public int saveChamCong(ChamCong cc) {
+        String sql = "INSERT INTO CHAMCONG (maNV, ngay, maCaLam, gioVao, gioRa, soGioLam, "
+                + "gioLamThem, trangThai, phuongThucChamCong, ghiChu) "
+                + "VALUES (?,?,?,?,?,?,?,?,?,?)";
+        try (Connection conn = DatabaseConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
+            ps.setInt(1, cc.getMaNV());
+            ps.setDate(2, Date.valueOf(cc.getNgay()));
+            ps.setString(3, cc.getMaCaLam());
+            ps.setTimestamp(4, cc.getGioVao() != null ? Timestamp.valueOf(cc.getGioVao()) : null);
+            ps.setTimestamp(5, cc.getGioRa() != null ? Timestamp.valueOf(cc.getGioRa()) : null);
+            ps.setDouble(6, cc.getSoGioLam());
+            ps.setDouble(7, cc.getGioLamThem());
+            ps.setString(8, cc.getTrangThai() != null ? cc.getTrangThai().getDbValue() : "dung_gio");
+            ps.setString(9, cc.getPhuongThucChamCong() != null ? cc.getPhuongThucChamCong().getDbValue() : "thu_cong");
+            ps.setString(10, cc.getGhiChu());
+            ps.executeUpdate();
+            try (ResultSet keys = ps.getGeneratedKeys()) {
+                if (keys.next()) {
+                    int id = keys.getInt(1);
+                    cc.setMaChamCong(id);
+                    return id;
+                }
+            }
+        } catch (SQLException e) {
+            throw new RuntimeException("Lỗi thêm chấm công: " + e.getMessage(), e);
+        }
+        return 0;
+    }
+
+    public void updateChamCong(ChamCong cc) {
+        String sql = "UPDATE CHAMCONG SET gioVao=?, gioRa=?, soGioLam=?, gioLamThem=?, "
+                + "trangThai=?, phuongThucChamCong=?, ghiChu=? WHERE maChamCong=?";
+        try (Connection conn = DatabaseConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setTimestamp(1, cc.getGioVao() != null ? Timestamp.valueOf(cc.getGioVao()) : null);
+            ps.setTimestamp(2, cc.getGioRa() != null ? Timestamp.valueOf(cc.getGioRa()) : null);
+            ps.setDouble(3, cc.getSoGioLam());
+            ps.setDouble(4, cc.getGioLamThem());
+            ps.setString(5, cc.getTrangThai() != null ? cc.getTrangThai().getDbValue() : "dung_gio");
+            ps.setString(6, cc.getPhuongThucChamCong() != null ? cc.getPhuongThucChamCong().getDbValue() : "thu_cong");
+            ps.setString(7, cc.getGhiChu());
+            ps.setInt(8, cc.getMaChamCong());
+            ps.executeUpdate();
+        } catch (SQLException e) {
+            throw new RuntimeException("Lỗi cập nhật chấm công: " + e.getMessage(), e);
+        }
+    }
+
+    public ChamCong findChamCongByNVAndNgay(int maNV, LocalDate ngay) {
+        String sql = "SELECT c.*, t.hoTen, ca.tenCaLam FROM CHAMCONG c "
+                + "LEFT JOIN THONGTINCANHAN t ON c.maNV = t.maNV "
+                + "LEFT JOIN CALAM ca ON c.maCaLam = ca.maCaLam "
+                + "WHERE c.maNV=? AND c.ngay=?";
+        try (Connection conn = DatabaseConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setInt(1, maNV);
+            ps.setDate(2, Date.valueOf(ngay));
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    return mapChamCong(rs);
+                }
+            }
+        } catch (SQLException e) {
+            throw new RuntimeException("Lỗi tìm chấm công: " + e.getMessage(), e);
+        }
+        return null;
+    }
+
+    public List<ChamCong> findByNVAndThang(int maNV, int thang, int nam) {
+        String sql = "SELECT c.*, t.hoTen, ca.tenCaLam FROM CHAMCONG c "
+                + "LEFT JOIN THONGTINCANHAN t ON c.maNV = t.maNV "
+                + "LEFT JOIN CALAM ca ON c.maCaLam = ca.maCaLam "
+                + "WHERE c.maNV=? AND MONTH(c.ngay)=? AND YEAR(c.ngay)=? ORDER BY c.ngay";
+        List<ChamCong> result = new ArrayList<>();
+        try (Connection conn = DatabaseConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setInt(1, maNV);
+            ps.setInt(2, thang);
+            ps.setInt(3, nam);
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    result.add(mapChamCong(rs));
+                }
+            }
+        } catch (SQLException e) {
+            throw new RuntimeException("Lỗi tải chấm công theo tháng: " + e.getMessage(), e);
+        }
+        return result;
+    }
+
+    public List<ChamCong> findByThang(int thang, int nam) {
+        String sql = "SELECT c.*, t.hoTen, ca.tenCaLam FROM CHAMCONG c "
+                + "LEFT JOIN THONGTINCANHAN t ON c.maNV = t.maNV "
+                + "LEFT JOIN CALAM ca ON c.maCaLam = ca.maCaLam "
+                + "WHERE MONTH(c.ngay)=? AND YEAR(c.ngay)=? ORDER BY c.ngay, c.maNV";
+        List<ChamCong> result = new ArrayList<>();
+        try (Connection conn = DatabaseConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setInt(1, thang);
+            ps.setInt(2, nam);
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    result.add(mapChamCong(rs));
+                }
+            }
+        } catch (SQLException e) {
+            throw new RuntimeException("Lỗi tải chấm công tất cả: " + e.getMessage(), e);
+        }
+        return result;
+    }
+
+    public double getTongGioLamThemTrongThang(int maNV, int thang, int nam) {
+        String sql = "SELECT COALESCE(SUM(gioLamThem), 0) FROM CHAMCONG "
+                + "WHERE maNV=? AND MONTH(ngay)=? AND YEAR(ngay)=?";
+        try (Connection conn = DatabaseConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setInt(1, maNV);
+            ps.setInt(2, thang);
+            ps.setInt(3, nam);
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) return rs.getDouble(1);
+            }
+        } catch (SQLException e) {
+            throw new RuntimeException("Lỗi tính giờ làm thêm: " + e.getMessage(), e);
+        }
+        return 0;
+    }
+
+    private ChamCong mapChamCong(ResultSet rs) throws SQLException {
+        ChamCong cc = new ChamCong();
+        cc.setMaChamCong(rs.getInt("maChamCong"));
+        cc.setMaNV(rs.getInt("maNV"));
+        Date ngay = rs.getDate("ngay");
+        if (ngay != null) cc.setNgay(ngay.toLocalDate());
+        cc.setMaCaLam(rs.getString("maCaLam"));
+        // tenCaLam from JOIN
+        try { cc.setTenCaLam(rs.getString("tenCaLam")); } catch (SQLException ignored) {}
+        // employeeName from JOIN
+        try { cc.setEmployeeName(rs.getString("hoTen")); } catch (SQLException ignored) {}
+        Timestamp gioVao = rs.getTimestamp("gioVao");
+        if (gioVao != null) cc.setGioVao(gioVao.toLocalDateTime());
+        Timestamp gioRa = rs.getTimestamp("gioRa");
+        if (gioRa != null) cc.setGioRa(gioRa.toLocalDateTime());
+        cc.setSoGioLam(rs.getDouble("soGioLam"));
+        cc.setGioLamThem(rs.getDouble("gioLamThem"));
+        String tt = rs.getString("trangThai");
+        if (tt != null) {
+            try { cc.setTrangThai(ChamCong.TrangThai.fromDbValue(tt)); }
+            catch (IllegalArgumentException ignored) {}
+        }
+        String pt = rs.getString("phuongThucChamCong");
+        if (pt != null) {
+            try { cc.setPhuongThucChamCong(ChamCong.PhuongThuc.fromDbValue(pt)); }
+            catch (IllegalArgumentException ignored) {}
+        }
+        cc.setGhiChu(rs.getString("ghiChu"));
+        return cc;
+    }
+
+    // =====================================================================
+    // DANGKYLAMTHEM
+    // =====================================================================
+
+    /**
+     * INSERT a new DangKyLamThem. Returns generated maDK.
+     */
+    public int saveDangKyLamThem(DangKyLamThem dk) {
+        String sql = "INSERT INTO DANGKYLAMTHEM (maNV, ngay, soGio, heSoOT, lyDo, trangThai) VALUES (?,?,?,?,?,?)";
+        try (Connection conn = DatabaseConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
+            ps.setInt(1, dk.getMaNV());
+            ps.setDate(2, Date.valueOf(dk.getNgay()));
+            ps.setDouble(3, dk.getSoGio());
+            ps.setDouble(4, dk.getHeSoOT() > 0 ? dk.getHeSoOT() : 1.5);
+            ps.setString(5, dk.getLyDo());
+            ps.setString(6, dk.getTrangThai() != null ? dk.getTrangThai().getDbValue() : "cho_duyet");
+            ps.executeUpdate();
+            try (ResultSet keys = ps.getGeneratedKeys()) {
+                if (keys.next()) {
+                    int id = keys.getInt(1);
+                    dk.setMaDK(id);
+                    return id;
+                }
+            }
+        } catch (SQLException e) {
+            throw new RuntimeException("Lỗi thêm đăng ký làm thêm: " + e.getMessage(), e);
+        }
+        return 0;
+    }
+
+    public void updateTrangThai(int maDK, String trangThai, int nguoiDuyet, LocalDateTime ngayDuyet) {
+        String sql = "UPDATE DANGKYLAMTHEM SET trangThai=?, nguoiDuyet=?, ngayDuyet=? WHERE maDK=?";
+        try (Connection conn = DatabaseConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setString(1, trangThai);
+            ps.setInt(2, nguoiDuyet);
+            ps.setTimestamp(3, ngayDuyet != null ? Timestamp.valueOf(ngayDuyet) : null);
+            ps.setInt(4, maDK);
+            ps.executeUpdate();
+        } catch (SQLException e) {
+            throw new RuntimeException("Lỗi cập nhật trạng thái đơn OT: " + e.getMessage(), e);
+        }
+    }
+
+    public List<DangKyLamThem> findByMaNV(int maNV) {
+        String sql = "SELECT d.*, t.hoTen FROM DANGKYLAMTHEM d "
+                + "LEFT JOIN THONGTINCANHAN t ON d.maNV = t.maNV "
+                + "WHERE d.maNV=? ORDER BY d.ngay DESC";
+        List<DangKyLamThem> result = new ArrayList<>();
+        try (Connection conn = DatabaseConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setInt(1, maNV);
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    result.add(mapDangKyLamThem(rs));
+                }
+            }
+        } catch (SQLException e) {
+            throw new RuntimeException("Lỗi tải đơn OT theo nhân viên: " + e.getMessage(), e);
+        }
+        return result;
+    }
+
+    /** Returns all pending OT requests with tenNV transient filled. */
+    public List<DangKyLamThem> findChoDuyet() {
+        String sql = "SELECT d.*, t.hoTen FROM DANGKYLAMTHEM d "
+                + "LEFT JOIN THONGTINCANHAN t ON d.maNV = t.maNV "
+                + "WHERE d.trangThai='cho_duyet' ORDER BY d.ngay DESC";
+        List<DangKyLamThem> result = new ArrayList<>();
+        try (Connection conn = DatabaseConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql);
+             ResultSet rs = ps.executeQuery()) {
+            while (rs.next()) {
+                result.add(mapDangKyLamThem(rs));
+            }
+        } catch (SQLException e) {
+            throw new RuntimeException("Lỗi tải đơn OT chờ duyệt: " + e.getMessage(), e);
+        }
+        return result;
+    }
+
+    public DangKyLamThem findById(int maDK) {
+        String sql = "SELECT d.*, t.hoTen FROM DANGKYLAMTHEM d "
+                + "LEFT JOIN THONGTINCANHAN t ON d.maNV = t.maNV "
+                + "WHERE d.maDK=?";
+        try (Connection conn = DatabaseConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setInt(1, maDK);
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    return mapDangKyLamThem(rs);
+                }
+            }
+        } catch (SQLException e) {
+            throw new RuntimeException("Lỗi tìm đơn OT: " + e.getMessage(), e);
+        }
+        return null;
+    }
+
+    /** Returns true if there is an approved OT request for this employee on this day. */
+    public boolean hasDuyetForNVAndNgay(int maNV, LocalDate ngay) {
+        String sql = "SELECT COUNT(*) FROM DANGKYLAMTHEM WHERE maNV=? AND ngay=? AND trangThai='da_duyet'";
+        try (Connection conn = DatabaseConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setInt(1, maNV);
+            ps.setDate(2, Date.valueOf(ngay));
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) return rs.getInt(1) > 0;
+            }
+        } catch (SQLException e) {
+            throw new RuntimeException("Lỗi kiểm tra đơn OT: " + e.getMessage(), e);
+        }
         return false;
     }
-    public List<CaLam> findAllCaLam() { return new ArrayList<>(danhSachCaLam.values()); }
 
-    // ── CHẤM CÔNG ──
-    public ChamCong saveChamCong(ChamCong cc) {
-        if (cc.getMaChamCong() == 0) cc.setMaChamCong(nextChamCongId++);
-        danhSachChamCong.put(cc.getMaChamCong(), cc); return cc;
-    }
-    public ChamCong findByMaNVAndNgay(int maNV, LocalDate ngay) {
-        return danhSachChamCong.values().stream()
-            .filter(cc -> cc.getMaNV() == maNV && cc.getNgay().equals(ngay)).findFirst().orElse(null);
-    }
-    public List<ChamCong> findByMaNVAndNgayBetween(int maNV, LocalDate tu, LocalDate den) {
-        return danhSachChamCong.values().stream()
-            .filter(cc -> cc.getMaNV() == maNV && !cc.getNgay().isBefore(tu) && !cc.getNgay().isAfter(den))
-            .sorted(Comparator.comparing(ChamCong::getNgay).reversed()).collect(Collectors.toList());
-    }
-    public List<ChamCong> findByThangNam(int thang, int nam) {
-        return danhSachChamCong.values().stream()
-            .filter(cc -> cc.getNgay().getMonthValue() == thang && cc.getNgay().getYear() == nam)
-            .sorted(Comparator.comparing(ChamCong::getNgay).thenComparing(ChamCong::getMaNV)).collect(Collectors.toList());
+    /** Sum of approved OT hours for this employee in the given month/year. */
+    public double getTongGioOTDaDuyetTrongThang(int maNV, int thang, int nam) {
+        String sql = "SELECT COALESCE(SUM(soGio), 0) FROM DANGKYLAMTHEM "
+                + "WHERE maNV=? AND MONTH(ngay)=? AND YEAR(ngay)=? AND trangThai='da_duyet'";
+        try (Connection conn = DatabaseConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setInt(1, maNV);
+            ps.setInt(2, thang);
+            ps.setInt(3, nam);
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) return rs.getDouble(1);
+            }
+        } catch (SQLException e) {
+            throw new RuntimeException("Lỗi tính OT đã duyệt: " + e.getMessage(), e);
+        }
+        return 0;
     }
 
-    // ── ĐƠN OT ──
-    public DangKyLamThem saveDonOT(DangKyLamThem don) {
-        if (don.getMaDK() == 0) don.setMaDK(nextDonOTId++);
-        danhSachDonOT.put(don.getMaDK(), don); return don;
-    }
-    public DangKyLamThem findDonOTById(int maDK) { return danhSachDonOT.get(maDK); }
-    public List<DangKyLamThem> findDonOTByMaNV(int maNV) {
-        return danhSachDonOT.values().stream().filter(d -> d.getMaNV() == maNV)
-            .sorted(Comparator.comparing(DangKyLamThem::getNgayTao).reversed()).collect(Collectors.toList());
-    }
-    public List<DangKyLamThem> findDonOTChoDuyet() {
-        return danhSachDonOT.values().stream().filter(DangKyLamThem::dangChoDuyet)
-            .sorted(Comparator.comparing(DangKyLamThem::getNgayTao).reversed()).collect(Collectors.toList());
-    }
-    public List<DangKyLamThem> findAllDonOT() { return new ArrayList<>(danhSachDonOT.values()); }
-    public List<DangKyLamThem> findDonOTDaDuyetTheoThang(int thang, int nam) {
-        return danhSachDonOT.values().stream()
-            .filter(d -> d.daDuocDuyet() && d.getNgay() != null
-                && d.getNgay().getMonthValue() == thang && d.getNgay().getYear() == nam)
-            .collect(Collectors.toList());
-    }
-    public boolean deleteDonOT(int maDK) { return danhSachDonOT.remove(maDK) != null; }
-
-    // ── BẢNG LƯƠNG ──
-    public BangLuong saveBangLuong(BangLuong bl) {
-        if (bl.getMaBL() == 0) bl.setMaBL(nextBangLuongId++);
-        danhSachBangLuong.put(bl.getMaBL(), bl); return bl;
-    }
-    public List<BangLuong> findAllBangLuong() { return new ArrayList<>(danhSachBangLuong.values()); }
-
-    // ── CHI TIẾT LƯƠNG ──
-    public ChiTietLuong saveChiTietLuong(ChiTietLuong ct) {
-        if (ct.getMaChiTietLuong() == 0) ct.setMaChiTietLuong(nextChiTietLuongId++);
-        danhSachChiTietLuong.put(ct.getMaChiTietLuong(), ct); return ct;
-    }
-    public List<ChiTietLuong> findChiTietLuongByMaBL(int maBL) {
-        return danhSachChiTietLuong.values().stream()
-            .filter(ct -> ct.getMaBL() == maBL).collect(Collectors.toList());
+    private DangKyLamThem mapDangKyLamThem(ResultSet rs) throws SQLException {
+        DangKyLamThem dk = new DangKyLamThem();
+        dk.setMaDK(rs.getInt("maDK"));
+        dk.setMaNV(rs.getInt("maNV"));
+        Date ngay = rs.getDate("ngay");
+        if (ngay != null) dk.setNgay(ngay.toLocalDate());
+        dk.setSoGio(rs.getDouble("soGio"));
+        try { double hs = rs.getDouble("heSoOT"); if (!rs.wasNull() && hs > 0) dk.setHeSoOT(hs); } catch (SQLException ignored) {}
+        dk.setLyDo(rs.getString("lyDo"));
+        int nd = rs.getInt("nguoiDuyet");
+        if (!rs.wasNull()) dk.setNguoiDuyet(nd);
+        Timestamp ngayDuyet = rs.getTimestamp("ngayDuyet");
+        if (ngayDuyet != null) dk.setNgayDuyet(ngayDuyet.toLocalDateTime());
+        String tt = rs.getString("trangThai");
+        if (tt != null) {
+            try { dk.setTrangThai(DangKyLamThem.TrangThai.fromDbValue(tt)); }
+            catch (IllegalArgumentException ignored) {}
+        }
+        // transient
+        try { dk.setEmployeeName(rs.getString("hoTen")); } catch (SQLException ignored) {}
+        return dk;
     }
 
-    // ── LƯƠNG CƠ BẢN ──
-    public double getLuongCoBan(int maNV) { return luongCoBan.getOrDefault(maNV, 10000000.0); }
-    public void setLuongCoBan(int maNV, double luong) { luongCoBan.put(maNV, luong); }
+    // =====================================================================
+    // Count working days in a month for a specific employee (not absent)
+    // =====================================================================
 
-    // ── CẤU HÌNH PHỤ CẤP / KHẤU TRỪ ──
-    public CauHinhPhuCap saveCauHinhPC(CauHinhPhuCap pc) {
-        if (pc.getMaPC() == 0) pc.setMaPC(nextCauHinhPCId++);
-        danhSachCauHinhPC.put(pc.getMaPC(), pc); return pc;
+    public int countNgayCong(int maNV, int thang, int nam) {
+        String sql = "SELECT COUNT(*) FROM CHAMCONG WHERE maNV=? AND MONTH(ngay)=? AND YEAR(ngay)=? "
+                + "AND trangThai != 'vang_mat'";
+        try (Connection conn = DatabaseConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setInt(1, maNV);
+            ps.setInt(2, thang);
+            ps.setInt(3, nam);
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) return rs.getInt(1);
+            }
+        } catch (SQLException e) {
+            throw new RuntimeException("Lỗi đếm ngày công: " + e.getMessage(), e);
+        }
+        return 0;
     }
-    public CauHinhPhuCap findCauHinhPCById(int maPC) { return danhSachCauHinhPC.get(maPC); }
-    public List<CauHinhPhuCap> findAllCauHinhPC() { return new ArrayList<>(danhSachCauHinhPC.values()); }
-    public List<CauHinhPhuCap> findCauHinhPCHoatDong() {
-        return danhSachCauHinhPC.values().stream()
-            .filter(CauHinhPhuCap::isHoatDong).collect(Collectors.toList());
+
+    // =====================================================================
+    // DANGKYLAMTHEM — findAll
+    // =====================================================================
+
+    /** Returns all OT requests (all statuses), newest first. */
+    public List<DangKyLamThem> findAllDangKyLamThem() {
+        String sql = "SELECT d.*, t.hoTen FROM DANGKYLAMTHEM d "
+                + "LEFT JOIN THONGTINCANHAN t ON d.maNV = t.maNV "
+                + "ORDER BY d.ngay DESC";
+        List<DangKyLamThem> result = new ArrayList<>();
+        try (Connection conn = DatabaseConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql);
+             ResultSet rs = ps.executeQuery()) {
+            while (rs.next()) {
+                result.add(mapDangKyLamThem(rs));
+            }
+        } catch (SQLException e) {
+            throw new RuntimeException("Lỗi tải tất cả đơn OT: " + e.getMessage(), e);
+        }
+        return result;
     }
-    public boolean deleteCauHinhPC(int maPC) {
-        CauHinhPhuCap pc = danhSachCauHinhPC.get(maPC);
-        if (pc != null) { pc.setHoatDong(false); return true; }
-        return false;
+
+    /** Update heSoOT on a DangKyLamThem record. */
+    public void updateHeSoOT(int maDK, double heSo) {
+        String sql = "UPDATE DANGKYLAMTHEM SET heSoOT=? WHERE maDK=?";
+        try (Connection conn = DatabaseConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setDouble(1, heSo);
+            ps.setInt(2, maDK);
+            ps.executeUpdate();
+        } catch (SQLException e) {
+            throw new RuntimeException("Lỗi cập nhật hệ số OT: " + e.getMessage(), e);
+        }
+    }
+
+    // =====================================================================
+    // CAUHINHPHUCAP
+    // =====================================================================
+
+    public List<CauHinhPhuCap> findAllCauHinhPC() {
+        String sql = "SELECT maPC, loai, tenKhoan, kieuTinh, giaTri, nguon, hoatDong "
+                + "FROM CAUHINHPHUCAP ORDER BY loai, tenKhoan";
+        List<CauHinhPhuCap> result = new ArrayList<>();
+        try (Connection conn = DatabaseConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql);
+             ResultSet rs = ps.executeQuery()) {
+            while (rs.next()) {
+                result.add(mapCauHinhPC(rs));
+            }
+        } catch (SQLException e) {
+            throw new RuntimeException("Lỗi tải cấu hình phụ cấp: " + e.getMessage(), e);
+        }
+        return result;
+    }
+
+    public CauHinhPhuCap findCauHinhPCById(int maPC) {
+        String sql = "SELECT maPC, loai, tenKhoan, kieuTinh, giaTri, nguon, hoatDong "
+                + "FROM CAUHINHPHUCAP WHERE maPC=?";
+        try (Connection conn = DatabaseConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setInt(1, maPC);
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) return mapCauHinhPC(rs);
+            }
+        } catch (SQLException e) {
+            throw new RuntimeException("Lỗi tìm cấu hình phụ cấp: " + e.getMessage(), e);
+        }
+        return null;
+    }
+
+    public int insertCauHinhPC(CauHinhPhuCap pc) {
+        String sql = "INSERT INTO CAUHINHPHUCAP (loai, tenKhoan, kieuTinh, giaTri, nguon, hoatDong) "
+                + "VALUES (?,?,?,?,?,1)";
+        try (Connection conn = DatabaseConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
+            ps.setString(1, pc.getLoai() == ThanhPhanLuong.Loai.PHU_CAP ? "phu_cap" : "khau_tru");
+            ps.setString(2, pc.getTenKhoan());
+            ps.setString(3, pc.getKieuTinh() == CauHinhPhuCap.KieuTinh.CO_DINH ? "co_dinh" : "phan_tram");
+            ps.setDouble(4, pc.getGiaTri());
+            ps.setString(5, pc.getNguon());
+            ps.executeUpdate();
+            try (ResultSet keys = ps.getGeneratedKeys()) {
+                if (keys.next()) {
+                    int id = keys.getInt(1);
+                    pc.setMaPC(id);
+                    return id;
+                }
+            }
+        } catch (SQLException e) {
+            throw new RuntimeException("Lỗi thêm cấu hình phụ cấp: " + e.getMessage(), e);
+        }
+        return 0;
+    }
+
+    public void updateCauHinhPC(CauHinhPhuCap pc) {
+        String sql = "UPDATE CAUHINHPHUCAP SET loai=?, tenKhoan=?, kieuTinh=?, giaTri=?, nguon=? WHERE maPC=?";
+        try (Connection conn = DatabaseConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setString(1, pc.getLoai() == ThanhPhanLuong.Loai.PHU_CAP ? "phu_cap" : "khau_tru");
+            ps.setString(2, pc.getTenKhoan());
+            ps.setString(3, pc.getKieuTinh() == CauHinhPhuCap.KieuTinh.CO_DINH ? "co_dinh" : "phan_tram");
+            ps.setDouble(4, pc.getGiaTri());
+            ps.setString(5, pc.getNguon());
+            ps.setInt(6, pc.getMaPC());
+            ps.executeUpdate();
+        } catch (SQLException e) {
+            throw new RuntimeException("Lỗi cập nhật cấu hình phụ cấp: " + e.getMessage(), e);
+        }
+    }
+
+    public void deactivateCauHinhPC(int maPC) {
+        String sql = "UPDATE CAUHINHPHUCAP SET hoatDong=0 WHERE maPC=?";
+        try (Connection conn = DatabaseConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setInt(1, maPC);
+            ps.executeUpdate();
+        } catch (SQLException e) {
+            throw new RuntimeException("Lỗi ngừng cấu hình phụ cấp: " + e.getMessage(), e);
+        }
+    }
+
+    private CauHinhPhuCap mapCauHinhPC(ResultSet rs) throws SQLException {
+        CauHinhPhuCap pc = new CauHinhPhuCap();
+        pc.setMaPC(rs.getInt("maPC"));
+        String loaiStr = rs.getString("loai");
+        pc.setLoai("phu_cap".equals(loaiStr) ? ThanhPhanLuong.Loai.PHU_CAP : ThanhPhanLuong.Loai.KHAU_TRU);
+        pc.setTenKhoan(rs.getString("tenKhoan"));
+        String kieuStr = rs.getString("kieuTinh");
+        pc.setKieuTinh("co_dinh".equals(kieuStr) ? CauHinhPhuCap.KieuTinh.CO_DINH : CauHinhPhuCap.KieuTinh.PHAN_TRAM);
+        pc.setGiaTri(rs.getDouble("giaTri"));
+        pc.setNguon(rs.getString("nguon"));
+        pc.setHoatDong(rs.getBoolean("hoatDong"));
+        return pc;
     }
 }

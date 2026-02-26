@@ -2,22 +2,25 @@ package com.hrm.gui.admin;
 
 import com.hrm.model.Permission;
 import com.hrm.model.Role;
-import com.hrm.service.MockDataService;
+import com.hrm.service.AuthService;
+import com.hrm.service.ServiceResult;
 import com.hrm.util.UIHelper;
 
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
 import javax.swing.border.TitledBorder;
 import java.awt.*;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 /**
  * Role Form Dialog - Create/Edit roles with permission assignment
  */
 public class RoleFormDialog extends JDialog {
-    private final MockDataService dataService;
+    private final AuthService authService;
     private final Role editingRole;
     private boolean successful = false;
 
@@ -29,7 +32,7 @@ public class RoleFormDialog extends JDialog {
 
     public RoleFormDialog(Frame parent, Role role) {
         super(parent, role == null ? "Tao vai tro moi" : "Sua vai tro", true);
-        this.dataService = MockDataService.getInstance();
+        this.authService = AuthService.getInstance();
         this.editingRole = role;
         this.permissionCheckboxes = new HashMap<>();
 
@@ -58,15 +61,28 @@ public class RoleFormDialog extends JDialog {
         permissionsPanel = new JPanel();
         permissionsPanel.setLayout(new BoxLayout(permissionsPanel, BoxLayout.Y_AXIS));
 
-        List<String> modules = dataService.getPermissionModules();
+        List<Permission> allPermissions = authService.getAllPermissions();
+
+        // Derive distinct, sorted module list from all permissions
+        List<String> modules = allPermissions.stream()
+                .map(Permission::getModule)
+                .distinct()
+                .sorted()
+                .collect(Collectors.toList());
+
         for (String module : modules) {
+            // Filter permissions for this module
+            final String currentModule = module;
+            List<Permission> modulePermissions = allPermissions.stream()
+                    .filter(p -> currentModule.equals(p.getModule()))
+                    .collect(Collectors.toList());
+
             JPanel modulePanel = new JPanel();
             modulePanel.setLayout(new BoxLayout(modulePanel, BoxLayout.Y_AXIS));
             modulePanel.setBorder(new TitledBorder(module));
             modulePanel.setAlignmentX(Component.LEFT_ALIGNMENT);
 
-            List<Permission> permissions = dataService.getPermissionsByModule(module);
-            for (Permission perm : permissions) {
+            for (Permission perm : modulePermissions) {
                 JCheckBox chk = new JCheckBox(perm.getName() + " (" + perm.getCode() + ")");
                 chk.setActionCommand(perm.getCode());
                 permissionCheckboxes.put(perm.getCode(), chk);
@@ -78,15 +94,17 @@ public class RoleFormDialog extends JDialog {
             JButton btnSelectAll = new JButton("Chon tat ca");
             btnSelectAll.setFont(new Font("Segoe UI", Font.PLAIN, 10));
             btnSelectAll.addActionListener(e -> {
-                for (Permission perm : permissions) {
-                    permissionCheckboxes.get(perm.getCode()).setSelected(true);
+                for (Permission perm : modulePermissions) {
+                    JCheckBox chk = permissionCheckboxes.get(perm.getCode());
+                    if (chk != null) chk.setSelected(true);
                 }
             });
             JButton btnDeselectAll = new JButton("Bo chon");
             btnDeselectAll.setFont(new Font("Segoe UI", Font.PLAIN, 10));
             btnDeselectAll.addActionListener(e -> {
-                for (Permission perm : permissions) {
-                    permissionCheckboxes.get(perm.getCode()).setSelected(false);
+                for (Permission perm : modulePermissions) {
+                    JCheckBox chk = permissionCheckboxes.get(perm.getCode());
+                    if (chk != null) chk.setSelected(false);
                 }
             });
             moduleButtonPanel.add(btnSelectAll);
@@ -157,7 +175,7 @@ public class RoleFormDialog extends JDialog {
         txtName.setText(editingRole.getName());
         txtDescription.setText(editingRole.getDescription());
 
-        // Check permissions
+        // Check permissions that belong to this role
         for (Permission perm : editingRole.getPermissions()) {
             JCheckBox chk = permissionCheckboxes.get(perm.getCode());
             if (chk != null) {
@@ -180,32 +198,62 @@ public class RoleFormDialog extends JDialog {
             JOptionPane.showMessageDialog(this, "Vui long nhap ten vai tro", "Loi", JOptionPane.ERROR_MESSAGE);
             return;
         }
-        if (editingRole == null && dataService.getRole(code) != null) {
-            JOptionPane.showMessageDialog(this, "Ma vai tro da ton tai", "Loi", JOptionPane.ERROR_MESSAGE);
-            return;
-        }
 
-        Role role;
+        // Check for duplicate code when creating
         if (editingRole == null) {
-            role = new Role(code, name, description);
-        } else {
-            role = editingRole;
-            role.setName(name);
-            role.setDescription(description);
-            role.clearPermissions();
-        }
-
-        // Add selected permissions
-        for (Map.Entry<String, JCheckBox> entry : permissionCheckboxes.entrySet()) {
-            if (entry.getValue().isSelected()) {
-                Permission perm = dataService.getPermission(entry.getKey());
-                if (perm != null) {
-                    role.addPermission(perm);
-                }
+            boolean codeExists = authService.getAllRoles().stream()
+                    .anyMatch(r -> r.getCode().equalsIgnoreCase(code));
+            if (codeExists) {
+                JOptionPane.showMessageDialog(this, "Ma vai tro da ton tai", "Loi", JOptionPane.ERROR_MESSAGE);
+                return;
             }
         }
 
-        dataService.saveRole(role);
+        // Collect selected permission codes
+        List<String> selectedPermissionCodes = new ArrayList<>();
+        for (Map.Entry<String, JCheckBox> entry : permissionCheckboxes.entrySet()) {
+            if (entry.getValue().isSelected()) {
+                selectedPermissionCodes.add(entry.getKey());
+            }
+        }
+
+        if (editingRole == null) {
+            // Create new role
+            ServiceResult<Void> createResult = authService.createRole(code, name, description);
+            if (!createResult.isSuccess()) {
+                JOptionPane.showMessageDialog(this, createResult.getMessage(), "Loi", JOptionPane.ERROR_MESSAGE);
+                return;
+            }
+
+            // Assign permissions
+            ServiceResult<Void> permResult = authService.setRolePermissions(code, selectedPermissionCodes);
+            if (!permResult.isSuccess()) {
+                JOptionPane.showMessageDialog(this,
+                        "Da tao vai tro nhung khong the gan quyen: " + permResult.getMessage(),
+                        "Canh bao",
+                        JOptionPane.WARNING_MESSAGE);
+            }
+        } else {
+            // Update existing role
+            editingRole.setName(name);
+            editingRole.setDescription(description);
+
+            ServiceResult<Void> updateResult = authService.updateRole(editingRole);
+            if (!updateResult.isSuccess()) {
+                JOptionPane.showMessageDialog(this, updateResult.getMessage(), "Loi", JOptionPane.ERROR_MESSAGE);
+                return;
+            }
+
+            // Update permissions
+            ServiceResult<Void> permResult = authService.setRolePermissions(editingRole.getCode(), selectedPermissionCodes);
+            if (!permResult.isSuccess()) {
+                JOptionPane.showMessageDialog(this,
+                        "Da cap nhat vai tro nhung khong the cap nhat quyen: " + permResult.getMessage(),
+                        "Canh bao",
+                        JOptionPane.WARNING_MESSAGE);
+            }
+        }
+
         successful = true;
 
         JOptionPane.showMessageDialog(this,

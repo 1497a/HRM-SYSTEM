@@ -1,50 +1,153 @@
 package com.hrm.repo;
 
 import com.hrm.model.Position;
+import com.hrm.util.DatabaseConnection;
+
+import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * Repository JDBC cho bảng CHUCVU.
+ */
 public class PositionRepository {
 
-    private List<Position> positions = new ArrayList<>();
-
-    public PositionRepository() {
-        // Dữ liệu mẫu
-        positions.add(new Position("CV001", "Giam doc", 1, 3.5, 5000000, "Lanh dao tong cong ty", "hoat dong"));
-        positions.add(new Position("CV002", "Truong phong", 2, 2.8, 3000000, "Quan ly phong ban", "hoat dong"));
-        positions
-                .add(new Position("CV003", "Senior Developer", 3, 2.2, 1500000, "Lap trinh vien cap cao", "hoat dong"));
-        positions.add(
-                new Position("CV004", "Junior Developer", 4, 1.4, 500000, "Lap trinh vien moi vao nghe", "hoat dong"));
-    }
-
+    /**
+     * Lấy tất cả chức vụ.
+     */
     public List<Position> findAll() {
-        return positions;
+        List<Position> list = new ArrayList<>();
+        String sql = "SELECT maChucVu, tenChucVu, capBac, heSoLuong, phuCapChucVu, moTa, trangThai "
+                   + "FROM CHUCVU ORDER BY capBac, maChucVu";
+        try (Connection conn = DatabaseConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql);
+             ResultSet rs = ps.executeQuery()) {
+            while (rs.next()) {
+                list.add(mapRow(rs));
+            }
+        } catch (SQLException e) {
+            System.err.println("Lỗi PositionRepository.findAll: " + e.getMessage());
+            e.printStackTrace();
+        }
+        return list;
     }
 
+    /**
+     * Tìm chức vụ theo mã.
+     */
     public Position findById(String maChucVu) {
-        for (Position p : positions) {
-            if (p.getMaChucVu().equals(maChucVu)) {
-                return p;
+        String sql = "SELECT maChucVu, tenChucVu, capBac, heSoLuong, phuCapChucVu, moTa, trangThai "
+                   + "FROM CHUCVU WHERE maChucVu = ?";
+        try (Connection conn = DatabaseConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setString(1, maChucVu);
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    return mapRow(rs);
+                }
             }
+        } catch (SQLException e) {
+            System.err.println("Lỗi PositionRepository.findById: " + e.getMessage());
+            e.printStackTrace();
         }
         return null;
     }
 
-    public boolean existsById(String maChucVu) {
-        return findById(maChucVu) != null;
-    }
-
-    public void save(Position position) {
-        positions.add(position);
-    }
-
-    public void update(Position updated) {
-        for (int i = 0; i < positions.size(); i++) {
-            if (positions.get(i).getMaChucVu().equals(updated.getMaChucVu())) {
-                positions.set(i, updated);
-                return;
+    /**
+     * Lấy danh sách chức vụ đang hoạt động.
+     */
+    public List<Position> findActive() {
+        List<Position> list = new ArrayList<>();
+        String sql = "SELECT maChucVu, tenChucVu, capBac, heSoLuong, phuCapChucVu, moTa, trangThai "
+                   + "FROM CHUCVU WHERE trangThai = 'hoat_dong' ORDER BY capBac, maChucVu";
+        try (Connection conn = DatabaseConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql);
+             ResultSet rs = ps.executeQuery()) {
+            while (rs.next()) {
+                list.add(mapRow(rs));
             }
+        } catch (SQLException e) {
+            System.err.println("Lỗi PositionRepository.findActive: " + e.getMessage());
+            e.printStackTrace();
         }
+        return list;
+    }
+
+    /**
+     * Kiểm tra mã chức vụ có tồn tại không.
+     */
+    public boolean existsById(String maChucVu) {
+        String sql = "SELECT 1 FROM CHUCVU WHERE maChucVu = ?";
+        try (Connection conn = DatabaseConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setString(1, maChucVu);
+            try (ResultSet rs = ps.executeQuery()) {
+                return rs.next();
+            }
+        } catch (SQLException e) {
+            System.err.println("Lỗi PositionRepository.existsById: " + e.getMessage());
+            e.printStackTrace();
+        }
+        return false;
+    }
+
+    /**
+     * Thêm chức vụ mới vào cơ sở dữ liệu.
+     */
+    public void save(Position position) {
+        String sql = "INSERT INTO CHUCVU (maChucVu, tenChucVu, capBac, heSoLuong, phuCapChucVu, moTa, trangThai) "
+                   + "VALUES (?, ?, ?, ?, ?, ?, ?)";
+        try (Connection conn = DatabaseConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setString(1, position.getMaChucVu());
+            ps.setString(2, position.getTenChucVu());
+            ps.setInt(3, position.getCapBac());
+            ps.setDouble(4, position.getHeSoLuong());
+            ps.setDouble(5, position.getPhuCapChucVu());
+            ps.setString(6, position.getMoTa());
+            ps.setString(7, position.getTrangThai());
+            ps.executeUpdate();
+        } catch (SQLException e) {
+            System.err.println("Lỗi PositionRepository.save: " + e.getMessage());
+            e.printStackTrace();
+        }
+    }
+
+    /**
+     * Cập nhật thông tin chức vụ.
+     */
+    public void update(Position position) {
+        String sql = "UPDATE CHUCVU SET tenChucVu = ?, capBac = ?, heSoLuong = ?, phuCapChucVu = ?, moTa = ?, trangThai = ? "
+                   + "WHERE maChucVu = ?";
+        try (Connection conn = DatabaseConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setString(1, position.getTenChucVu());
+            ps.setInt(2, position.getCapBac());
+            ps.setDouble(3, position.getHeSoLuong());
+            ps.setDouble(4, position.getPhuCapChucVu());
+            ps.setString(5, position.getMoTa());
+            ps.setString(6, position.getTrangThai());
+            ps.setString(7, position.getMaChucVu());
+            ps.executeUpdate();
+        } catch (SQLException e) {
+            System.err.println("Lỗi PositionRepository.update: " + e.getMessage());
+            e.printStackTrace();
+        }
+    }
+
+    // =====================================================================
+    // ==================== Private Helpers ================================
+    // =====================================================================
+
+    private Position mapRow(ResultSet rs) throws SQLException {
+        return new Position(
+                rs.getString("maChucVu"),
+                rs.getString("tenChucVu"),
+                rs.getInt("capBac"),
+                rs.getDouble("heSoLuong"),
+                rs.getDouble("phuCapChucVu"),
+                rs.getString("moTa"),
+                rs.getString("trangThai")
+        );
     }
 }
