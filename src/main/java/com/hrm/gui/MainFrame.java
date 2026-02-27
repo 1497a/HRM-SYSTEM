@@ -1,25 +1,47 @@
 package com.hrm.gui;
 
-import com.hrm.service.AuthService;
-import com.hrm.gui.components.PurpleButton;
-import com.hrm.gui.components.RoundedPanel;
-import com.hrm.gui.leave.LeaveListPanel;
-import com.hrm.gui.evaluation.EvalCycleListPanel;
-import com.hrm.gui.admin.UserManagementPanel;
-import com.hrm.gui.admin.RoleManagementPanel;
-import com.hrm.model.User;
-import com.hrm.util.SessionContext;
-import com.hrm.util.UIColors;
-import com.hrm.gui.admin.DepartmentPanel;
-import com.hrm.gui.admin.PositionPanel;
-
-import javax.swing.*;
-import javax.swing.border.EmptyBorder;
-import java.awt.*;
+import java.awt.BorderLayout;
+import java.awt.Color;
+import java.awt.Component;
+import java.awt.Cursor;
+import java.awt.Dimension;
+import java.awt.FlowLayout;
+import java.awt.Font;
+import java.awt.GridBagConstraints;
+import java.awt.GridBagLayout;
+import java.awt.GridLayout;
+import java.awt.Insets;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 
+import javax.swing.BorderFactory;
+import javax.swing.Box;
+import javax.swing.BoxLayout;
+import javax.swing.JButton;
+import javax.swing.JFrame;
+import javax.swing.JLabel;
+import javax.swing.JOptionPane;
+import javax.swing.JPanel;
+import javax.swing.JPasswordField;
+import javax.swing.JScrollPane;
+import javax.swing.JTabbedPane;
+import javax.swing.SwingConstants;
+import javax.swing.border.EmptyBorder;
+
+import com.hrm.gui.admin.DepartmentPanel;
+import com.hrm.gui.admin.PositionPanel;
+import com.hrm.gui.admin.RoleManagementPanel;
+import com.hrm.gui.admin.UserManagementPanel;
 import com.hrm.gui.attendance.AttendancePanel;
+import com.hrm.gui.bonhiem.AppointmentPanel;
+import com.hrm.gui.components.PurpleButton;
+import com.hrm.gui.components.RoundedPanel;
+import com.hrm.gui.evaluation.EvalCycleListPanel;
+import com.hrm.gui.leave.LeaveListPanel;
+import com.hrm.model.User;
+import com.hrm.service.AuthService;
+import com.hrm.util.SessionContext;
+import com.hrm.util.UIColors;
 
 /**
  * MainFrame - Main application frame with purple theme
@@ -370,7 +392,27 @@ public class MainFrame extends JFrame {
         // Nhan su
         btnEmployees.addActionListener(e -> showPlaceholder("Ho so nhan vien"));
         btnOrganization.addActionListener(e -> showOrganization());
-        btnAppointments.addActionListener(e -> showPlaceholder("Bo nhiem"));
+        btnAppointments.addActionListener(e -> {
+    setActiveButton(btnAppointments);
+    contentPanel.removeAll();
+
+    JPanel wrapper = new JPanel(new BorderLayout());
+    wrapper.setBackground(UIColors.LIGHT_GRAY_BG);
+    wrapper.setBorder(new EmptyBorder(15, 15, 15, 15));
+
+    JLabel lblHeader = new JLabel("Bổ nhiệm & Điều chuyển");
+    lblHeader.setFont(new Font("Segoe UI", Font.BOLD, 24));
+    lblHeader.setForeground(UIColors.TEXT_DARK);
+    lblHeader.setBorder(new EmptyBorder(0, 10, 15, 0));
+    wrapper.add(lblHeader, BorderLayout.NORTH);
+
+    AppointmentPanel panel = new AppointmentPanel(); 
+    wrapper.add(panel, BorderLayout.CENTER);
+
+    contentPanel.add(wrapper);
+    contentPanel.revalidate();
+    contentPanel.repaint();
+});
         btnRecruitment.addActionListener(e -> showPlaceholder("Tuyen dung"));
 
         // Cham cong & Luong

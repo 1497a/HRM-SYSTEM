@@ -1,7 +1,9 @@
 package com.hrm;
 
+import javax.swing.SwingUtilities;
+import javax.swing.UIManager;
+
 import com.hrm.gui.LoginFrame;
-import javax.swing.*;
 
 /**
  * Main entry point for HRM Application
