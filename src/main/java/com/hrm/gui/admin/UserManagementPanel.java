@@ -29,7 +29,6 @@ public class UserManagementPanel extends JPanel {
     private JButton btnCreate;
     private JButton btnEdit;
     private JButton btnDelete;
-    private JButton btnPermissions;
     private JButton btnRefresh;
 
     public UserManagementPanel() {
@@ -60,9 +59,6 @@ public class UserManagementPanel extends JPanel {
 
         btnDelete = UIHelper.createDangerButton("Xoa");
         btnDelete.addActionListener(e -> deleteUser());
-
-        btnPermissions = UIHelper.createDefaultButton("Phan quyen");
-        btnPermissions.addActionListener(e -> managePermissions());
 
         btnRefresh = UIHelper.createDefaultButton("Lam moi");
         btnRefresh.addActionListener(e -> loadData());
@@ -125,7 +121,6 @@ public class UserManagementPanel extends JPanel {
         }
         if (sessionContext.hasPermission("USER_UPDATE")) {
             buttonPanel.add(btnEdit);
-            buttonPanel.add(btnPermissions);
         }
         if (sessionContext.hasPermission("USER_DELETE")) {
             buttonPanel.add(btnDelete);
@@ -252,26 +247,5 @@ public class UserManagementPanel extends JPanel {
         }
     }
 
-    private void managePermissions() {
-        int selectedRow = table.getSelectedRow();
-        if (selectedRow < 0) {
-            JOptionPane.showMessageDialog(this,
-                    "Vui long chon tai khoan can phan quyen",
-                    "Thong bao",
-                    JOptionPane.WARNING_MESSAGE);
-            return;
-        }
 
-        int userId = (int) tableModel.getValueAt(selectedRow, 0);
-        User user = authService.getAllUsers().stream()
-                .filter(u -> u.getId() == userId)
-                .findFirst()
-                .orElse(null);
-        if (user != null) {
-            UserPermissionDialog dialog = new UserPermissionDialog(
-                    (Frame) SwingUtilities.getWindowAncestor(this), user);
-            dialog.setVisible(true);
-            loadData();
-        }
-    }
 }

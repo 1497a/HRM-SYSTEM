@@ -1,5 +1,6 @@
 package com.hrm.gui.admin;
 
+import com.hrm.gui.components.CheckboxTree;
 import com.hrm.model.Permission;
 import com.hrm.model.Role;
 import com.hrm.service.AuthService;
@@ -9,15 +10,15 @@ import com.hrm.util.UIHelper;
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
 import javax.swing.border.TitledBorder;
+import javax.swing.tree.DefaultTreeModel;
 import java.awt.*;
-import java.util.ArrayList;
-import java.util.HashMap;
+import java.util.*;
 import java.util.List;
-import java.util.Map;
 import java.util.stream.Collectors;
 
 /**
- * Role Form Dialog - Create/Edit roles with permission assignment
+ * Dialog tạo/sửa vai trò với ma trận phân quyền theo module x hành động.
+ * Đã nâng cấp sử dụng CheckboxTree để hiển thị toàn bộ chi tiết quyền rõ ràng.
  */
 public class RoleFormDialog extends JDialog {
     private final AuthService authService;
@@ -27,14 +28,36 @@ public class RoleFormDialog extends JDialog {
     private JTextField txtCode;
     private JTextField txtName;
     private JTextArea txtDescription;
-    private JPanel permissionsPanel;
-    private Map<String, JCheckBox> permissionCheckboxes;
+
+    // Tree hiển thị quyền
+    private CheckboxTree permissionTree;
+    private CheckboxTree.CheckboxTreeNode rooTreeNode;
+
+    // Tất cả permission (code -> Permission)
+    private final Map<String, Permission> allPermMap = new HashMap<>();
+
+    private static final Map<String, String> MODULE_VI;
+    static {
+        MODULE_VI = new LinkedHashMap<>();
+        MODULE_VI.put("Employee",     "Nhân viên");
+        MODULE_VI.put("Leave",        "Nghỉ phép");
+        MODULE_VI.put("Evaluation",   "Đánh giá");
+        MODULE_VI.put("User",         "Tài khoản");
+        MODULE_VI.put("Role",         "Vai trò");
+        MODULE_VI.put("Report",       "Báo cáo");
+        MODULE_VI.put("Settings",     "Cài đặt");
+        MODULE_VI.put("Organization", "Tổ chức");
+        MODULE_VI.put("Appointment",  "Bổ nhiệm");
+        MODULE_VI.put("Attendance",   "Chấm công");
+        MODULE_VI.put("Contract",     "Hợp đồng");
+        MODULE_VI.put("Payroll",      "Lương");
+        MODULE_VI.put("Recruitment",  "Tuyển dụng");
+    }
 
     public RoleFormDialog(Frame parent, Role role) {
-        super(parent, role == null ? "Tao vai tro moi" : "Sua vai tro", true);
+        super(parent, role == null ? "Tạo vai trò mới" : "Sửa vai trò", true);
         this.authService = AuthService.getInstance();
         this.editingRole = role;
-        this.permissionCheckboxes = new HashMap<>();
 
         initComponents();
         setupLayout();
@@ -42,129 +65,119 @@ public class RoleFormDialog extends JDialog {
             loadRoleData();
         }
 
-        setSize(600, 600);
+        setSize(600, 650);
         setLocationRelativeTo(parent);
     }
 
+    /** Tạo mã vai trò tự động dạng VT001, VT002, ... */
+    private String generateRoleCode() {
+        List<Role> roles = authService.getAllRoles();
+        int maxNum = 0;
+        for (Role r : roles) {
+            String code = r.getCode();
+            if (code != null && code.matches("VT\\d+")) {
+                try {
+                    int num = Integer.parseInt(code.substring(2));
+                    if (num > maxNum) maxNum = num;
+                } catch (NumberFormatException ignored) {}
+            }
+        }
+        return String.format("VT%03d", maxNum + 1);
+    }
+
     private void initComponents() {
+        // Mã vai trò luôn chỉ đọc — tự sinh cho vai trò mới, cố định cho vai trò đang sửa
         txtCode = new JTextField(20);
+        txtCode.setEditable(false);
+        txtCode.setBackground(new Color(240, 240, 240));
+
         txtName = new JTextField(20);
         txtDescription = new JTextArea(3, 20);
         txtDescription.setLineWrap(true);
         txtDescription.setWrapStyleWord(true);
 
-        if (editingRole != null) {
-            txtCode.setEditable(false);
+        if (editingRole == null) {
+            txtCode.setText(generateRoleCode());
         }
 
-        // Permissions panel organized by module
-        permissionsPanel = new JPanel();
-        permissionsPanel.setLayout(new BoxLayout(permissionsPanel, BoxLayout.Y_AXIS));
-
+        // Tải tất cả quyền
         List<Permission> allPermissions = authService.getAllPermissions();
-
-        // Derive distinct, sorted module list from all permissions
-        List<String> modules = allPermissions.stream()
-                .map(Permission::getModule)
-                .distinct()
-                .sorted()
-                .collect(Collectors.toList());
-
-        for (String module : modules) {
-            // Filter permissions for this module
-            final String currentModule = module;
-            List<Permission> modulePermissions = allPermissions.stream()
-                    .filter(p -> currentModule.equals(p.getModule()))
-                    .collect(Collectors.toList());
-
-            JPanel modulePanel = new JPanel();
-            modulePanel.setLayout(new BoxLayout(modulePanel, BoxLayout.Y_AXIS));
-            modulePanel.setBorder(new TitledBorder(module));
-            modulePanel.setAlignmentX(Component.LEFT_ALIGNMENT);
-
-            for (Permission perm : modulePermissions) {
-                JCheckBox chk = new JCheckBox(perm.getName() + " (" + perm.getCode() + ")");
-                chk.setActionCommand(perm.getCode());
-                permissionCheckboxes.put(perm.getCode(), chk);
-                modulePanel.add(chk);
-            }
-
-            // Add select all / deselect all buttons for this module
-            JPanel moduleButtonPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
-            JButton btnSelectAll = new JButton("Chon tat ca");
-            btnSelectAll.setFont(new Font("Segoe UI", Font.PLAIN, 10));
-            btnSelectAll.addActionListener(e -> {
-                for (Permission perm : modulePermissions) {
-                    JCheckBox chk = permissionCheckboxes.get(perm.getCode());
-                    if (chk != null) chk.setSelected(true);
-                }
-            });
-            JButton btnDeselectAll = new JButton("Bo chon");
-            btnDeselectAll.setFont(new Font("Segoe UI", Font.PLAIN, 10));
-            btnDeselectAll.addActionListener(e -> {
-                for (Permission perm : modulePermissions) {
-                    JCheckBox chk = permissionCheckboxes.get(perm.getCode());
-                    if (chk != null) chk.setSelected(false);
-                }
-            });
-            moduleButtonPanel.add(btnSelectAll);
-            moduleButtonPanel.add(btnDeselectAll);
-            modulePanel.add(moduleButtonPanel);
-
-            permissionsPanel.add(modulePanel);
-            permissionsPanel.add(Box.createVerticalStrut(5));
+        for (Permission p : allPermissions) {
+            allPermMap.put(p.getCode(), p);
         }
+
+        // Nhóm các quyền theo module
+        Map<String, List<Permission>> permsByModule = allPermissions.stream()
+                .filter(p -> p.getModule() != null)
+                .collect(Collectors.groupingBy(Permission::getModule));
+
+        // Xây dựng cây quyền
+        rooTreeNode = new CheckboxTree.CheckboxTreeNode("Tất cả quyền hạn");
+        
+        List<String> modules = permsByModule.keySet().stream().sorted().collect(Collectors.toList());
+        for (String module : modules) {
+            String moduleName = MODULE_VI.getOrDefault(module, module);
+            CheckboxTree.CheckboxTreeNode moduleNode = new CheckboxTree.CheckboxTreeNode(moduleName);
+            rooTreeNode.add(moduleNode);
+
+            List<Permission> modulePerms = permsByModule.get(module);
+            // Sắp xếp theo tên quyền để dễ nhìn
+            modulePerms.sort(Comparator.comparing(Permission::getName));
+            
+            for (Permission p : modulePerms) {
+                CheckboxTree.CheckboxTreeNode permNode = new CheckboxTree.CheckboxTreeNode(p.getName(), p.getCode());
+                moduleNode.add(permNode);
+            }
+        }
+        
+        permissionTree = new CheckboxTree(rooTreeNode);
     }
 
     private void setupLayout() {
         JPanel mainPanel = new JPanel(new BorderLayout(10, 10));
         mainPanel.setBorder(new EmptyBorder(15, 15, 15, 15));
 
-        // Form panel
+        // --- Phần form thông tin ---
         JPanel formPanel = new JPanel(new GridBagLayout());
         GridBagConstraints gbc = new GridBagConstraints();
         gbc.insets = new Insets(5, 5, 5, 5);
         gbc.anchor = GridBagConstraints.WEST;
 
-        // Code
         gbc.gridx = 0; gbc.gridy = 0;
-        formPanel.add(new JLabel("Ma vai tro:"), gbc);
+        formPanel.add(new JLabel("Mã vai trò:"), gbc);
         gbc.gridx = 1; gbc.fill = GridBagConstraints.HORIZONTAL;
         formPanel.add(txtCode, gbc);
 
-        // Name
         gbc.gridx = 0; gbc.gridy = 1; gbc.fill = GridBagConstraints.NONE;
-        formPanel.add(new JLabel("Ten vai tro:"), gbc);
+        formPanel.add(new JLabel("Tên vai trò:"), gbc);
         gbc.gridx = 1; gbc.fill = GridBagConstraints.HORIZONTAL;
         formPanel.add(txtName, gbc);
 
-        // Description
         gbc.gridx = 0; gbc.gridy = 2; gbc.fill = GridBagConstraints.NONE;
         gbc.anchor = GridBagConstraints.NORTHWEST;
-        formPanel.add(new JLabel("Mo ta:"), gbc);
+        formPanel.add(new JLabel("Mô tả:"), gbc);
         gbc.gridx = 1; gbc.fill = GridBagConstraints.HORIZONTAL;
-        JScrollPane descScroll = new JScrollPane(txtDescription);
-        formPanel.add(descScroll, gbc);
+        formPanel.add(new JScrollPane(txtDescription), gbc);
 
-        // Permissions
-        JScrollPane permScroll = new JScrollPane(permissionsPanel);
-        permScroll.setBorder(new TitledBorder("Quyen han"));
-        permScroll.setPreferredSize(new Dimension(550, 300));
-
-        // Buttons
+        // --- Danh sách phân quyền dạng Cây ---
+        JScrollPane treeScroll = new JScrollPane(permissionTree);
+        treeScroll.setBorder(new TitledBorder("Cây phân quyền chi tiết"));
+        treeScroll.setPreferredSize(new Dimension(540, 350));
+        
+        // --- Nút Lưu / Hủy ---
         JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT));
-        JButton btnSave = UIHelper.createSuccessButton("Luu");
+        JButton btnSave = UIHelper.createSuccessButton("Lưu");
         btnSave.addActionListener(e -> save());
-        JButton btnCancel = UIHelper.createDefaultButton("Huy");
+        JButton btnCancel = UIHelper.createDefaultButton("Hủy");
         btnCancel.addActionListener(e -> dispose());
         buttonPanel.add(btnSave);
         buttonPanel.add(btnCancel);
 
-        JPanel topPanel = new JPanel(new BorderLayout());
+        JPanel topPanel = new JPanel(new BorderLayout(0, 4));
         topPanel.add(formPanel, BorderLayout.NORTH);
 
         mainPanel.add(topPanel, BorderLayout.NORTH);
-        mainPanel.add(permScroll, BorderLayout.CENTER);
+        mainPanel.add(treeScroll, BorderLayout.CENTER);
         mainPanel.add(buttonPanel, BorderLayout.SOUTH);
 
         setContentPane(mainPanel);
@@ -173,13 +186,48 @@ public class RoleFormDialog extends JDialog {
     private void loadRoleData() {
         txtCode.setText(editingRole.getCode());
         txtName.setText(editingRole.getName());
-        txtDescription.setText(editingRole.getDescription());
+        txtDescription.setText(editingRole.getDescription() != null ? editingRole.getDescription() : "");
 
-        // Check permissions that belong to this role
-        for (Permission perm : editingRole.getPermissions()) {
-            JCheckBox chk = permissionCheckboxes.get(perm.getCode());
-            if (chk != null) {
-                chk.setSelected(true);
+        Set<String> roleCodes = editingRole.getPermissions().stream()
+                .map(Permission::getCode).collect(Collectors.toSet());
+
+        // Đệ quy để chọn các node trong cây
+        checkNodesByCodes(rooTreeNode, roleCodes);
+        
+        // Cập nhật lại giao diện (vì load programatically không kích hoạt sự kiện click)
+        permissionTree.repaint();
+    }
+    
+    // Hàm phụ trợ xử lý chọn node từ CSDL
+    private void checkNodesByCodes(CheckboxTree.CheckboxTreeNode node, Set<String> validCodes) {
+        if (node.isLeaf()) {
+            if (node.getUserObjectCode() != null && validCodes.contains(node.getUserObjectCode())) {
+                node.setSelected(true);
+            }
+        } else {
+            boolean allSelected = true;
+            boolean anySelected = false;
+            
+            for (int i = 0; i < node.getChildCount(); i++) {
+                CheckboxTree.CheckboxTreeNode child = (CheckboxTree.CheckboxTreeNode) node.getChildAt(i);
+                checkNodesByCodes(child, validCodes);
+                
+                if (child.isSelected()) {
+                    anySelected = true;
+                } else if (child.isPartialSelection()) {
+                    anySelected = true;
+                    allSelected = false;
+                } else {
+                    allSelected = false;
+                }
+            }
+            
+            if (node.getChildCount() > 0) {
+                if (allSelected) {
+                    node.setSelected(true);
+                } else if (anySelected) {
+                    node.setPartialSelection(true);
+                }
             }
         }
     }
@@ -189,77 +237,51 @@ public class RoleFormDialog extends JDialog {
         String name = txtName.getText().trim();
         String description = txtDescription.getText().trim();
 
-        // Validation
-        if (code.isEmpty()) {
-            JOptionPane.showMessageDialog(this, "Vui long nhap ma vai tro", "Loi", JOptionPane.ERROR_MESSAGE);
-            return;
-        }
         if (name.isEmpty()) {
-            JOptionPane.showMessageDialog(this, "Vui long nhap ten vai tro", "Loi", JOptionPane.ERROR_MESSAGE);
+            JOptionPane.showMessageDialog(this, "Vui lòng nhập tên vai trò.", "Lỗi", JOptionPane.ERROR_MESSAGE);
             return;
         }
 
-        // Check for duplicate code when creating
-        if (editingRole == null) {
-            boolean codeExists = authService.getAllRoles().stream()
-                    .anyMatch(r -> r.getCode().equalsIgnoreCase(code));
-            if (codeExists) {
-                JOptionPane.showMessageDialog(this, "Ma vai tro da ton tai", "Loi", JOptionPane.ERROR_MESSAGE);
-                return;
-            }
-        }
-
-        // Collect selected permission codes
-        List<String> selectedPermissionCodes = new ArrayList<>();
-        for (Map.Entry<String, JCheckBox> entry : permissionCheckboxes.entrySet()) {
-            if (entry.getValue().isSelected()) {
-                selectedPermissionCodes.add(entry.getKey());
+        List<String> selectedCodes = new ArrayList<>();
+        List<CheckboxTree.CheckboxTreeNode> selectedLeaves = permissionTree.getSelectedLeaves();
+        for (CheckboxTree.CheckboxTreeNode leave : selectedLeaves) {
+            if (leave.getUserObjectCode() != null) {
+                selectedCodes.add(leave.getUserObjectCode());
             }
         }
 
         if (editingRole == null) {
-            // Create new role
-            ServiceResult<Void> createResult = authService.createRole(code, name, description);
+            ServiceResult<Void> createResult = authService.createRole(code, name, description.isEmpty() ? null : description);
             if (!createResult.isSuccess()) {
-                JOptionPane.showMessageDialog(this, createResult.getMessage(), "Loi", JOptionPane.ERROR_MESSAGE);
+                JOptionPane.showMessageDialog(this, createResult.getMessage(), "Lỗi", JOptionPane.ERROR_MESSAGE);
                 return;
             }
-
-            // Assign permissions
-            ServiceResult<Void> permResult = authService.setRolePermissions(code, selectedPermissionCodes);
+            ServiceResult<Void> permResult = authService.setRolePermissions(code, selectedCodes);
             if (!permResult.isSuccess()) {
                 JOptionPane.showMessageDialog(this,
-                        "Da tao vai tro nhung khong the gan quyen: " + permResult.getMessage(),
-                        "Canh bao",
-                        JOptionPane.WARNING_MESSAGE);
+                        "Đã tạo vai trò nhưng không thể gán quyền: " + permResult.getMessage(),
+                        "Cảnh báo", JOptionPane.WARNING_MESSAGE);
             }
         } else {
-            // Update existing role
             editingRole.setName(name);
             editingRole.setDescription(description);
-
             ServiceResult<Void> updateResult = authService.updateRole(editingRole);
             if (!updateResult.isSuccess()) {
-                JOptionPane.showMessageDialog(this, updateResult.getMessage(), "Loi", JOptionPane.ERROR_MESSAGE);
+                JOptionPane.showMessageDialog(this, updateResult.getMessage(), "Lỗi", JOptionPane.ERROR_MESSAGE);
                 return;
             }
-
-            // Update permissions
-            ServiceResult<Void> permResult = authService.setRolePermissions(editingRole.getCode(), selectedPermissionCodes);
+            ServiceResult<Void> permResult = authService.setRolePermissions(editingRole.getCode(), selectedCodes);
             if (!permResult.isSuccess()) {
                 JOptionPane.showMessageDialog(this,
-                        "Da cap nhat vai tro nhung khong the cap nhat quyen: " + permResult.getMessage(),
-                        "Canh bao",
-                        JOptionPane.WARNING_MESSAGE);
+                        "Đã cập nhật vai trò nhưng không thể cập nhật quyền: " + permResult.getMessage(),
+                        "Cảnh báo", JOptionPane.WARNING_MESSAGE);
             }
         }
 
         successful = true;
-
         JOptionPane.showMessageDialog(this,
-                editingRole == null ? "Da tao vai tro thanh cong!" : "Da cap nhat vai tro thanh cong!",
-                "Thong bao",
-                JOptionPane.INFORMATION_MESSAGE);
+                editingRole == null ? "Đã tạo vai trò thành công!" : "Đã cập nhật vai trò thành công!",
+                "Thông báo", JOptionPane.INFORMATION_MESSAGE);
         dispose();
     }
 
