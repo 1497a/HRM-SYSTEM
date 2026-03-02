@@ -168,10 +168,7 @@ public class RoleManagementPanel extends JPanel {
         }
 
         String roleCode = (String) tableModel.getValueAt(selectedRow, 0);
-        Role role = authService.getAllRoles().stream()
-                .filter(r -> r.getCode().equals(roleCode))
-                .findFirst()
-                .orElse(null);
+        Role role = authService.getRoleByCode(roleCode);
         if (role != null) {
             RoleFormDialog dialog = new RoleFormDialog(
                     (Frame) SwingUtilities.getWindowAncestor(this), role);

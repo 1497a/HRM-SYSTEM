@@ -15,7 +15,7 @@ public class BangLuong {
         NHAP("nhap", "Nháp"),
         DA_TINH("da_tinh", "Đã tính"),
         DA_DUYET("da_duyet", "Đã duyệt"),
-        DA_CHI("da_chi", "Đã chi");
+        DA_KHOA("da_khoa", "Đã khóa");
 
         private final String dbValue;
         private final String displayName;

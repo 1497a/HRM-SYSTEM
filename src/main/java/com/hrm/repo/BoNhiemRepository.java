@@ -104,6 +104,22 @@ public class BoNhiemRepository {
     }
 
     // ============================
+    // updateLyDoTuChoi
+    // ============================
+
+    public void updateLyDoTuChoi(int maBoNhiem, String lyDo) {
+        String sql = "UPDATE BONHIEM SET lyDo=? WHERE maBoNhiem=?";
+        try (Connection conn = DatabaseConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setString(1, lyDo);
+            ps.setInt(2, maBoNhiem);
+            ps.executeUpdate();
+        } catch (SQLException e) {
+            System.err.println("Lỗi updateLyDoTuChoi: " + e.getMessage());
+        }
+    }
+
+    // ============================
     // updateNguoiDuyet
     // ============================
 

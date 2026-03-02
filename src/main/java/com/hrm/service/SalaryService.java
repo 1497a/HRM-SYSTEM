@@ -97,8 +97,22 @@ public class SalaryService {
                 // Tiền OT (đơn giản hoá: 0)
                 double tienOT = 0.0;
 
+                // Phụ cấp từ CAUHINHPHUCAP
+                List<Object[]> bonusCfgs = bangLuongRepo.getCauHinhPhuCapRaw();
+                List<ThanhPhanLuong> bonusItems = new java.util.ArrayList<>();
+                double tongBonus = 0;
+                for (Object[] cfg : bonusCfgs) {
+                    String ten  = (String) cfg[0];
+                    String kieu = (String) cfg[1];
+                    double gia  = (double) cfg[2];
+                    String ng   = (String) cfg[3];
+                    double amt  = "phan_tram".equals(kieu) ? gia / 100.0 * luongCoBan : gia;
+                    tongBonus  += amt;
+                    bonusItems.add(new ThanhPhanLuong(ThanhPhanLuong.Loai.PHU_CAP, ten, amt, ng));
+                }
+
                 // Tổng thu nhập
-                double tongThuNhap = luongCoBan + tongLuongChucVu + tienOT;
+                double tongThuNhap = luongCoBan + tongLuongChucVu + tienOT + tongBonus;
 
                 // Tính thuế TNCN luỹ tiến
                 double thueTNCN = tinhThueTNCN(tongThuNhap);
@@ -125,6 +139,11 @@ public class SalaryService {
                 ctl.setSoNgayCong(soNgayCong);
                 ctl.setTongGioOT(0);
                 ctl.setTrangThai(ChiTietLuong.TrangThai.DA_TINH);
+
+                // Thêm phụ cấp vào danh sách
+                for (ThanhPhanLuong bonus : bonusItems) {
+                    ctl.themThanhPhan(bonus);
+                }
 
                 // Thêm các thành phần lương chi tiết vào danh sách
                 ctl.themThanhPhan(new ThanhPhanLuong(
@@ -159,8 +178,35 @@ public class SalaryService {
     // khoaBangLuong
     // ============================
 
+    public ServiceResult<Void> duyetBangLuong(int maBangLuong) {
+        try {
+            BangLuong bl = bangLuongRepo.findById(maBangLuong);
+            if (bl == null) {
+                return ServiceResult.error("Không tìm thấy bảng lương.");
+            }
+            if (bl.getTrangThai() != BangLuong.TrangThai.DA_TINH) {
+                return ServiceResult.error("Chi co the duyet bang luong co trang thai Da tinh.");
+            }
+            int userId = 0;
+            if (SessionContext.getInstance().getCurrentUser() != null) {
+                userId = SessionContext.getInstance().getCurrentUser().getId();
+            }
+            bangLuongRepo.approveBangLuong(maBangLuong, userId);
+            return ServiceResult.success(null, "Duyet bang luong thanh cong.");
+        } catch (Exception e) {
+            return ServiceResult.error("Lỗi khi duyệt bảng lương: " + e.getMessage());
+        }
+    }
+
     public ServiceResult<Void> khoaBangLuong(int maBangLuong) {
         try {
+            BangLuong bl = bangLuongRepo.findById(maBangLuong);
+            if (bl == null) {
+                return ServiceResult.error("Không tìm thấy bảng lương.");
+            }
+            if (bl.getTrangThai() != BangLuong.TrangThai.DA_DUYET) {
+                return ServiceResult.error("Can duyet bang luong truoc khi khoa.");
+            }
             int userId = 0;
             if (SessionContext.getInstance().getCurrentUser() != null) {
                 userId = SessionContext.getInstance().getCurrentUser().getId();

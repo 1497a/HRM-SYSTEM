@@ -2,6 +2,7 @@ package com.hrm.gui.admin;
 
 import com.hrm.model.Position;
 import com.hrm.model.SalaryHistory;
+import com.hrm.repo.PositionRepository;
 import com.hrm.service.PositionService;
 import com.hrm.util.SessionContext;
 
@@ -41,12 +42,17 @@ public class PositionPanel extends JPanel {
         title.setBorder(BorderFactory.createEmptyBorder(0, 0, 10, 0));
         topPanel.add(title, BorderLayout.NORTH);
 
+        // Gợi ý tìm kiếm
+        JLabel lblHint = new JLabel("Tim theo: Ma / Ten chuc vu / Trang thai");
+        lblHint.setFont(new Font("Arial", Font.ITALIC, 11));
+        topPanel.add(lblHint, BorderLayout.SOUTH);
+
         // Panel chứa search + filter
         JPanel searchFilterPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
 
         JLabel lblSearch = new JLabel("Tim kiem:");
         txtSearch = new JTextField(20);
-        txtSearch.setToolTipText("Nhap ten chuc vu de tim kiem");
+        txtSearch.setToolTipText("Nhap ma hoac ten chuc vu de tim kiem");
 
         JLabel lblFilter = new JLabel("    Trang thai:");
         cboFilter = new JComboBox<>(new String[] { "Tat ca", "Hoat dong", "Ngung" });
@@ -156,9 +162,10 @@ public class PositionPanel extends JPanel {
 
         RowFilter<DefaultTableModel, Object> rf = new RowFilter<DefaultTableModel, Object>() {
             public boolean include(Entry<? extends DefaultTableModel, ? extends Object> entry) {
-                // Lọc theo tên (cột 1)
+                // Lọc theo mã (cột 0) hoặc tên (cột 1)
+                String ma = entry.getStringValue(0).toLowerCase();
                 String tenChucVu = entry.getStringValue(1).toLowerCase();
-                boolean matchSearch = searchText.isEmpty() || tenChucVu.contains(searchText);
+                boolean matchSearch = searchText.isEmpty() || ma.contains(searchText) || tenChucVu.contains(searchText);
 
                 // Lọc theo trạng thái (cột 5)
                 String trangThai = entry.getStringValue(5);
@@ -224,11 +231,24 @@ public class PositionPanel extends JPanel {
         }
 
         try {
+            String maChucVu = txtMa.getText().trim();
+            if (maChucVu.isEmpty()) {
+                JOptionPane.showMessageDialog(this, "Ma chuc vu khong duoc de trong.", "Loi nhap lieu", JOptionPane.ERROR_MESSAGE);
+                return;
+            }
+            // Kiểm tra trùng mã chức vụ đang hoạt động
+            if (new PositionRepository().existsActiveByCode(maChucVu)) {
+                JOptionPane.showMessageDialog(this,
+                        "Ma chuc vu '" + maChucVu + "' da ton tai va dang hoat dong. Vui long dung ma khac.",
+                        "Trung ma chuc vu", JOptionPane.ERROR_MESSAGE);
+                return;
+            }
+
             int capBac = Integer.parseInt(txtCapBac.getText().trim());
             double heSo = Double.parseDouble(txtHeSo.getText().trim());
             double phuCap = Double.parseDouble(txtPhuCap.getText().trim());
 
-            service.addPosition(txtMa.getText().trim(), txtTen.getText().trim(), capBac, heSo, phuCap,
+            service.addPosition(maChucVu, txtTen.getText().trim(), capBac, heSo, phuCap,
                     txtMoTa.getText().trim());
             refreshTable();
             JOptionPane.showMessageDialog(this, "Them chuc vu thanh cong!");

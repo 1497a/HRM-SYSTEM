@@ -84,6 +84,45 @@ public class ThongBaoRepository {
     }
 
     /**
+     * Chèn nhiều thông báo cùng lúc (bulk insert) trong một connection.
+     */
+    public void insertBulk(List<ThongBao> list) {
+        if (list == null || list.isEmpty()) return;
+        String sql = "INSERT INTO THONGBAO (tieuDe, noiDung, loaiThongBao, maTaiKhoanGui, "
+                + "maTaiKhoanNhan, daDoc, linkLienQuan, ngayTao) "
+                + "VALUES (?, ?, ?, ?, ?, FALSE, ?, NOW())";
+        try (Connection conn = DatabaseConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            conn.setAutoCommit(false);
+            try {
+                for (ThongBao tb : list) {
+                    ps.setString(1, tb.getTieuDe());
+                    ps.setString(2, tb.getNoiDung());
+                    ps.setString(3, tb.getLoaiThongBao());
+                    if (tb.getMaTaiKhoanGui() == 0) {
+                        ps.setNull(4, Types.INTEGER);
+                    } else {
+                        ps.setInt(4, tb.getMaTaiKhoanGui());
+                    }
+                    ps.setInt(5, tb.getMaTaiKhoanNhan());
+                    ps.setString(6, tb.getLinkLienQuan());
+                    ps.addBatch();
+                }
+                ps.executeBatch();
+                conn.commit();
+            } catch (SQLException e) {
+                conn.rollback();
+                throw e;
+            } finally {
+                conn.setAutoCommit(true);
+            }
+        } catch (SQLException e) {
+            System.err.println("Lỗi insertBulk thông báo: " + e.getMessage());
+            e.printStackTrace();
+        }
+    }
+
+    /**
      * Lấy tất cả thông báo của người nhận, mới nhất trước.
      */
     public List<ThongBao> findByNguoiNhan(int maTaiKhoanNhan) {

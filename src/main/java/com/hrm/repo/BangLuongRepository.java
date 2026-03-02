@@ -151,25 +151,56 @@ public class BangLuongRepository {
 
     private String blStatusToDb(BangLuong.TrangThai tt) {
         if (tt == null) return "dang_xu_ly";
-        // Map existing enum values to DB ENUM('dang_xu_ly','da_khoa')
         switch (tt) {
-            case DA_DUYET:
-            case DA_CHI:
-                return "da_khoa";
-            case DA_TINH:
-                return "dang_xu_ly";
-            default:
-                return "dang_xu_ly";
+            case DA_TINH:  return "dang_xu_ly";
+            case DA_DUYET: return "da_duyet";
+            case DA_KHOA:  return "da_khoa";
+            default:       return "dang_xu_ly";
         }
     }
 
     private BangLuong.TrangThai dbToBlStatus(String db) {
         if (db == null) return BangLuong.TrangThai.NHAP;
         switch (db) {
-            case "da_khoa": return BangLuong.TrangThai.DA_DUYET;
             case "dang_xu_ly": return BangLuong.TrangThai.DA_TINH;
-            default: return BangLuong.TrangThai.NHAP;
+            case "da_duyet":   return BangLuong.TrangThai.DA_DUYET;
+            case "da_khoa":    return BangLuong.TrangThai.DA_KHOA;
+            default:           return BangLuong.TrangThai.NHAP;
         }
+    }
+
+    public void approveBangLuong(int maBangLuong, int nguoiDuyet) {
+        String sql = "UPDATE BANGLUONG SET trangThai='da_duyet', ngayDuyet=NOW(), nguoiDuyet=? "
+                + "WHERE maBangLuong=? AND trangThai='dang_xu_ly'";
+        try (Connection conn = DatabaseConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setInt(1, nguoiDuyet);
+            ps.setInt(2, maBangLuong);
+            ps.executeUpdate();
+        } catch (SQLException e) {
+            throw new RuntimeException("Lỗi duyệt bảng lương: " + e.getMessage(), e);
+        }
+    }
+
+    public List<Object[]> getCauHinhPhuCapRaw() {
+        String sql = "SELECT tenKhoan, kieuTinh, giaTri, nguon "
+                + "FROM CAUHINHPHUCAP WHERE hoatDong=TRUE AND loai='phu_cap'";
+        List<Object[]> result = new ArrayList<>();
+        try (Connection conn = DatabaseConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql);
+             ResultSet rs = ps.executeQuery()) {
+            while (rs.next()) {
+                result.add(new Object[]{
+                        rs.getString("tenKhoan"),
+                        rs.getString("kieuTinh"),
+                        rs.getDouble("giaTri"),
+                        rs.getString("nguon")
+                });
+            }
+        } catch (SQLException e) {
+            // Return empty list if CAUHINHPHUCAP not configured
+        }
+        return result;
     }
 
     // =====================================================================
@@ -370,9 +401,10 @@ public class BangLuongRepository {
             try (ResultSet rs = ps.executeQuery()) {
                 while (rs.next()) {
                     double tyLe = rs.getDouble("tyLeHuongLuong");
-                    double heSo = rs.getDouble("heSoLuong");
                     double phuCap = rs.getDouble("phuCapChucVu");
-                    total += (tyLe / 100.0) * heSo * luongCoSo + phuCap;
+                    // Theo logic mới: lương chức vụ thực chất chỉ là phụ cấp chức vụ
+                    // Có thể tính theo tỷ lệ bổ nhiệm (nếu kiêm nhiệm chỉ được hưởng % phụ cấp)
+                    total += (tyLe / 100.0) * phuCap;
                 }
             }
         } catch (SQLException e) {

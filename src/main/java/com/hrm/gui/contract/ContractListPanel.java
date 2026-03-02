@@ -311,23 +311,31 @@ public class ContractListPanel extends JPanel {
             Component c = super.getTableCellRendererComponent(t, value, isSelected, hasFocus, row, col);
             setHorizontalAlignment(SwingConstants.CENTER);
             setBorder(BorderFactory.createEmptyBorder(0, 8, 0, 8));
+            setToolTipText(null);
 
             if (!isSelected) {
                 c.setBackground(row % 2 == 0 ? Color.WHITE : UIColors.TABLE_ALT_ROW);
                 c.setForeground(UIColors.TEXT_DARK);
 
-                // Tô màu cột trạng thái (cột 8)
+                // Tô màu + tooltip cột trạng thái (cột 8)
                 if (col == 8 && value != null) {
                     String val = value.toString();
                     if ("Hiệu lực".equals(val)) {
                         c.setForeground(UIColors.SUCCESS_GREEN);
                         ((JLabel) c).setFont(new Font("Segoe UI", Font.BOLD, 12));
+                        setToolTipText("Hop dong dang co hieu luc");
                     } else if ("Hết hạn".equals(val)) {
                         c.setForeground(new Color(230, 120, 0));
                         ((JLabel) c).setFont(new Font("Segoe UI", Font.BOLD, 12));
-                    } else if ("Thanh lý".equals(val) || "Hủy".equals(val)) {
+                        setToolTipText("Hop dong da het thoi han");
+                    } else if ("Thanh lý".equals(val)) {
                         c.setForeground(UIColors.DANGER_RED);
                         ((JLabel) c).setFont(new Font("Segoe UI", Font.BOLD, 12));
+                        setToolTipText("Hop dong da duoc thanh ly");
+                    } else if ("Hủy".equals(val)) {
+                        c.setForeground(UIColors.DANGER_RED);
+                        ((JLabel) c).setFont(new Font("Segoe UI", Font.BOLD, 12));
+                        setToolTipText("Hop dong da bi huy");
                     }
                 }
             }

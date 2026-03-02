@@ -37,12 +37,17 @@ public class DepartmentPanel extends JPanel {
         title.setBorder(BorderFactory.createEmptyBorder(0, 0, 10, 0));
         topPanel.add(title, BorderLayout.NORTH);
 
+        // Gợi ý tìm kiếm
+        JLabel lblHint = new JLabel("Tim theo: Ma / Ten phong ban / Trang thai");
+        lblHint.setFont(new Font("Arial", Font.ITALIC, 11));
+        topPanel.add(lblHint, BorderLayout.SOUTH);
+
         // Panel chứa search + filter
         JPanel searchFilterPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
 
         JLabel lblSearch = new JLabel("Tim kiem:");
         txtSearch = new JTextField(20);
-        txtSearch.setToolTipText("Nhap ten phong ban de tim kiem");
+        txtSearch.setToolTipText("Nhap ma hoac ten phong ban de tim kiem");
 
         JLabel lblFilter = new JLabel("    Trang thai:");
         cboFilter = new JComboBox<>(new String[] { "Tat ca", "Hoat dong", "Ngung hoat dong" });
@@ -149,9 +154,10 @@ public class DepartmentPanel extends JPanel {
 
         RowFilter<DefaultTableModel, Object> rf = new RowFilter<DefaultTableModel, Object>() {
             public boolean include(Entry<? extends DefaultTableModel, ? extends Object> entry) {
-                // Lọc theo tên (cột 1)
+                // Lọc theo mã (cột 0) hoặc tên (cột 1)
+                String ma = entry.getStringValue(0).toLowerCase();
                 String tenPhongBan = entry.getStringValue(1).toLowerCase();
-                boolean matchSearch = searchText.isEmpty() || tenPhongBan.contains(searchText);
+                boolean matchSearch = searchText.isEmpty() || ma.contains(searchText) || tenPhongBan.contains(searchText);
 
                 // Lọc theo trạng thái (cột 3)
                 String trangThai = entry.getStringValue(3);

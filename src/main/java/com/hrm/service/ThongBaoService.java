@@ -5,6 +5,11 @@ import com.hrm.repo.ThongBaoRepository;
 import com.hrm.repo.TaiKhoanRepository;
 import com.hrm.model.User;
 
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -70,6 +75,43 @@ public class ThongBaoService {
     }
 
     /**
+     * Gửi thông báo cá nhân từ người dùng đến một nhân viên cụ thể.
+     */
+    public void guiThongBaoCaNhan(int nguoiGui, int maNVNhan, String tieuDe, String noiDung) {
+        User nguoiNhan = findUserByMaNVDirect(maNVNhan);
+        if (nguoiNhan == null) {
+            System.err.println("ThongBaoService: Khong tim thay tai khoan cho maNV=" + maNVNhan);
+            return;
+        }
+        ThongBao tb = buildThongBao(nguoiGui, nguoiNhan.getId(), tieuDe, noiDung, "thong_bao_chung");
+        thongBaoRepo.insert(tb);
+    }
+
+    /**
+     * Gửi thông báo tới tất cả nhân viên thuộc một phòng ban.
+     */
+    public void guiThongBaoPhongBan(int nguoiGui, String maPhongBan, String tieuDe, String noiDung) {
+        List<Integer> maTaiKhoanList = findTaiKhoanByPhongBan(maPhongBan);
+        sendBulk(nguoiGui, maTaiKhoanList, tieuDe, noiDung);
+    }
+
+    /**
+     * Gửi thông báo tới tất cả nhân viên có chức vụ chỉ định.
+     */
+    public void guiThongBaoChucVu(int nguoiGui, String maChucVu, String tieuDe, String noiDung) {
+        List<Integer> maTaiKhoanList = findTaiKhoanByChucVu(maChucVu);
+        sendBulk(nguoiGui, maTaiKhoanList, tieuDe, noiDung);
+    }
+
+    /**
+     * Gửi thông báo tới tất cả tài khoản đang hoạt động.
+     */
+    public void guiThongBaoTatCa(int nguoiGui, String tieuDe, String noiDung) {
+        List<Integer> maTaiKhoanList = findAllActiveTaiKhoan();
+        sendBulk(nguoiGui, maTaiKhoanList, tieuDe, noiDung);
+    }
+
+    /**
      * Đánh dấu một thông báo là đã đọc.
      */
     public ServiceResult<Void> danhDauDaDoc(int maThongBao) {
@@ -129,18 +171,88 @@ public class ThongBaoService {
 
     private User findUserByMaNVDirect(int maNV) {
         String sql = "SELECT tk.maTaiKhoan FROM TAIKHOAN tk WHERE tk.maNV = ?";
-        try (java.sql.Connection conn = com.hrm.util.DatabaseConnection.getConnection();
-             java.sql.PreparedStatement ps = conn.prepareStatement(sql)) {
+        try (Connection conn = com.hrm.util.DatabaseConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setInt(1, maNV);
-            try (java.sql.ResultSet rs = ps.executeQuery()) {
+            try (ResultSet rs = ps.executeQuery()) {
                 if (rs.next()) {
                     int maTaiKhoan = rs.getInt("maTaiKhoan");
                     return taiKhoanRepo.findById(maTaiKhoan);
                 }
             }
-        } catch (java.sql.SQLException e) {
+        } catch (SQLException e) {
             System.err.println("Lỗi findUserByMaNVDirect: " + e.getMessage());
         }
         return null;
+    }
+
+    private ThongBao buildThongBao(int nguoiGui, int nguoiNhan, String tieuDe, String noiDung, String loai) {
+        ThongBao tb = new ThongBao();
+        tb.setMaTaiKhoanGui(nguoiGui);
+        tb.setMaTaiKhoanNhan(nguoiNhan);
+        tb.setTieuDe(tieuDe);
+        tb.setNoiDung(noiDung);
+        tb.setLoaiThongBao(loai);
+        return tb;
+    }
+
+    private void sendBulk(int nguoiGui, List<Integer> maTaiKhoanList, String tieuDe, String noiDung) {
+        if (maTaiKhoanList.isEmpty()) return;
+        List<ThongBao> batch = new ArrayList<>();
+        for (int maTK : maTaiKhoanList) {
+            batch.add(buildThongBao(nguoiGui, maTK, tieuDe, noiDung, "thong_bao_chung"));
+        }
+        thongBaoRepo.insertBulk(batch);
+    }
+
+    private List<Integer> findTaiKhoanByPhongBan(String maPhongBan) {
+        List<Integer> list = new ArrayList<>();
+        String sql = "SELECT DISTINCT tk.maTaiKhoan FROM TAIKHOAN tk "
+                + "JOIN NHANVIEN nv ON tk.maNV = nv.maNV "
+                + "JOIN BONHIEM bn ON nv.maNV = bn.maNV "
+                + "WHERE bn.maPhongBan = ? AND bn.trangThai = 'hieu_luc' "
+                + "AND nv.trangThai = 'dang_lam_viec' AND tk.hoatDong = TRUE";
+        try (Connection conn = com.hrm.util.DatabaseConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setString(1, maPhongBan);
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) list.add(rs.getInt(1));
+            }
+        } catch (SQLException e) {
+            System.err.println("Lỗi findTaiKhoanByPhongBan: " + e.getMessage());
+        }
+        return list;
+    }
+
+    private List<Integer> findTaiKhoanByChucVu(String maChucVu) {
+        List<Integer> list = new ArrayList<>();
+        String sql = "SELECT DISTINCT tk.maTaiKhoan FROM TAIKHOAN tk "
+                + "JOIN NHANVIEN nv ON tk.maNV = nv.maNV "
+                + "JOIN BONHIEM bn ON nv.maNV = bn.maNV "
+                + "WHERE bn.maChucVu = ? AND bn.trangThai = 'hieu_luc' "
+                + "AND nv.trangThai = 'dang_lam_viec' AND tk.hoatDong = TRUE";
+        try (Connection conn = com.hrm.util.DatabaseConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setString(1, maChucVu);
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) list.add(rs.getInt(1));
+            }
+        } catch (SQLException e) {
+            System.err.println("Lỗi findTaiKhoanByChucVu: " + e.getMessage());
+        }
+        return list;
+    }
+
+    private List<Integer> findAllActiveTaiKhoan() {
+        List<Integer> list = new ArrayList<>();
+        String sql = "SELECT maTaiKhoan FROM TAIKHOAN WHERE hoatDong = TRUE AND biKhoa = FALSE";
+        try (Connection conn = com.hrm.util.DatabaseConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql);
+             ResultSet rs = ps.executeQuery()) {
+            while (rs.next()) list.add(rs.getInt(1));
+        } catch (SQLException e) {
+            System.err.println("Lỗi findAllActiveTaiKhoan: " + e.getMessage());
+        }
+        return list;
     }
 }

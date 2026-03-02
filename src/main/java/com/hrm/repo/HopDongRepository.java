@@ -208,6 +208,25 @@ public class HopDongRepository {
     }
 
     // ============================
+    // countByYearMonth - for auto code generation
+    // ============================
+
+    public int countByYearMonth(int year, int month) {
+        String prefix = String.format("HD-%04d%02d-", year, month);
+        String sql = "SELECT COUNT(*) FROM HOPDONGLAODONG WHERE soHopDong LIKE ?";
+        try (Connection conn = DatabaseConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setString(1, prefix + "%");
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) return rs.getInt(1);
+            }
+        } catch (SQLException e) {
+            System.err.println("Lỗi countByYearMonth: " + e.getMessage());
+        }
+        return 0;
+    }
+
+    // ============================
     // existsBySoHopDong
     // ============================
 

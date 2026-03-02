@@ -3,10 +3,7 @@ package com.hrm;
 import com.hrm.gui.LoginFrame;
 import javax.swing.*;
 
-/**
- * Main entry point for HRM Application
- * Uses Module 9 Authentication with database
- */
+
 public class MainApp {
 
     public static void main(String[] args) {

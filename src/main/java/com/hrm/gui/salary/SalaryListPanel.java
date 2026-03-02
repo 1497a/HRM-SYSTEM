@@ -31,6 +31,7 @@ public class SalaryListPanel extends JPanel {
     private JTable tblBangLuong;
     private DefaultTableModel modelBangLuong;
     private JButton btnTinhLuong;
+    private JButton btnDuyetBangLuong;
     private JButton btnKhoaBangLuong;
     private JButton btnLamMoiBL;
 
@@ -79,14 +80,17 @@ public class SalaryListPanel extends JPanel {
         toolbar.setOpaque(false);
 
         btnTinhLuong = UIHelper.createSuccessButton("Tính lương tháng mới");
+        btnDuyetBangLuong = UIHelper.createWarningButton("Duyệt bảng lương");
         btnKhoaBangLuong = UIHelper.createDangerButton("Khóa bảng lương");
         btnLamMoiBL = UIHelper.createDefaultButton("Làm mới");
 
         btnTinhLuong.addActionListener(e -> tinhLuongThangMoi());
+        btnDuyetBangLuong.addActionListener(e -> duyetBangLuong());
         btnKhoaBangLuong.addActionListener(e -> khoaBangLuong());
         btnLamMoiBL.addActionListener(e -> loadBangLuong());
 
         toolbar.add(btnTinhLuong);
+        toolbar.add(btnDuyetBangLuong);
         toolbar.add(btnKhoaBangLuong);
         toolbar.add(btnLamMoiBL);
 
@@ -295,6 +299,39 @@ public class SalaryListPanel extends JPanel {
         }
     }
 
+    private void duyetBangLuong() {
+        int row = tblBangLuong.getSelectedRow();
+        if (row < 0) {
+            JOptionPane.showMessageDialog(this,
+                    "Vui lòng chọn bảng lương cần duyệt.",
+                    "Thông báo", JOptionPane.WARNING_MESSAGE);
+            return;
+        }
+        int maBL = (int) modelBangLuong.getValueAt(row, 0);
+        String tenBL = (String) modelBangLuong.getValueAt(row, 3);
+
+        int confirm = JOptionPane.showConfirmDialog(this,
+                "Duyệt bảng lương: " + tenBL + "?",
+                "Xác nhận duyệt", JOptionPane.YES_NO_OPTION, JOptionPane.QUESTION_MESSAGE);
+        if (confirm != JOptionPane.YES_OPTION) return;
+
+        try {
+            ServiceResult<Void> sr = salaryService.duyetBangLuong(maBL);
+            if (sr.isSuccess()) {
+                JOptionPane.showMessageDialog(this,
+                        "Đã duyệt bảng lương thành công.",
+                        "Thành công", JOptionPane.INFORMATION_MESSAGE);
+                loadBangLuong();
+            } else {
+                JOptionPane.showMessageDialog(this,
+                        sr.getMessage(), "Lỗi", JOptionPane.ERROR_MESSAGE);
+            }
+        } catch (Exception ex) {
+            JOptionPane.showMessageDialog(this,
+                    "Lỗi duyệt bảng lương: " + ex.getMessage(), "Lỗi", JOptionPane.ERROR_MESSAGE);
+        }
+    }
+
     private void khoaBangLuong() {
         int row = tblBangLuong.getSelectedRow();
         if (row < 0) {
@@ -366,12 +403,14 @@ public class SalaryListPanel extends JPanel {
             setHorizontalAlignment(SwingConstants.CENTER);
             if (!isSelected && value != null) {
                 String v = value.toString();
-                if (v.contains("Đã duyệt") || v.contains("Đã chi") || v.contains("da_khoa")) {
+                if (v.contains("Đã khóa")) {
                     c.setForeground(UIColors.SUCCESS_GREEN);
-                } else if (v.contains("Nháp")) {
-                    c.setForeground(UIColors.TEXT_DARK);
-                } else {
+                } else if (v.contains("Đã duyệt")) {
+                    c.setForeground(new Color(230, 120, 0));
+                } else if (v.contains("Đã tính")) {
                     c.setForeground(UIColors.INFO_BLUE);
+                } else {
+                    c.setForeground(UIColors.TEXT_DARK);
                 }
                 ((JLabel) c).setFont(new Font("Segoe UI", Font.BOLD, 12));
             }

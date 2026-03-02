@@ -2,10 +2,16 @@ package com.hrm.service;
 
 import com.hrm.model.BoNhiem;
 import com.hrm.model.NhanVien;
+import com.hrm.model.Position;
+import com.hrm.model.ThongTinCaNhan;
+import com.hrm.model.User;
 import com.hrm.repo.BoNhiemRepository;
 import com.hrm.repo.NhanVienRepository;
+import com.hrm.repo.PositionRepository;
+import com.hrm.repo.ThongTinCaNhanRepository;
 
 import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.List;
 
 /**
@@ -18,6 +24,8 @@ public class BoNhiemService {
 
     private final BoNhiemRepository boNhiemRepo = BoNhiemRepository.getInstance();
     private final NhanVienRepository nvRepo = NhanVienRepository.getInstance();
+    private final PositionRepository positionRepo = new PositionRepository();
+    private final ThongTinCaNhanRepository ttcnRepo = ThongTinCaNhanRepository.getInstance();
 
     private BoNhiemService() {
     }
@@ -128,6 +136,15 @@ public class BoNhiemService {
         bn.setNgayPheDuyet(now);
         bn.setNguoiDuyet(nguoiDuyetId);
 
+        // Tự động tạo tài khoản và vai trò khi phê duyệt bổ nhiệm chính
+        if ("chinh".equals(bn.getLoaiBoNhiem())) {
+            try {
+                autoTaoTaiKhoanVaVaiTro(bn);
+            } catch (Exception ex) {
+                System.err.println("Canh bao tu tao tai khoan: " + ex.getMessage());
+            }
+        }
+
         return ServiceResult.success(bn, "Phê duyệt bổ nhiệm thành công.");
     }
 
@@ -136,7 +153,11 @@ public class BoNhiemService {
     // ============================
 
     public ServiceResult<BoNhiem> tuChoiBoNhiem(int maBoNhiem, String lyDo) {
+        if (lyDo == null || lyDo.trim().isEmpty()) {
+            return ServiceResult.error("Lý do từ chối không được để trống.");
+        }
         boNhiemRepo.updateTrangThai(maBoNhiem, "tu_choi", null);
+        boNhiemRepo.updateLyDoTuChoi(maBoNhiem, lyDo.trim());
         return ServiceResult.success(null, "Đã từ chối bổ nhiệm.");
     }
 
@@ -158,5 +179,46 @@ public class BoNhiemService {
 
     public BoNhiem getBoNhiemChinhHieuLuc(int maNV) {
         return boNhiemRepo.findBoNhiemChinhHieuLuc(maNV);
+    }
+
+    // ============================
+    // autoTaoTaiKhoanVaVaiTro (private helper)
+    // ============================
+
+    private void autoTaoTaiKhoanVaVaiTro(BoNhiem bn) {
+        AuthService authService = AuthService.getInstance();
+        NhanVien nv = nvRepo.findById(bn.getMaNV());
+        if (nv == null) return;
+
+        // Bước 1: Xác định vai trò từ chức vụ
+        String maChucVu = bn.getMaChucVu();
+        Position pos = positionRepo.findById(maChucVu);
+        String roleCode = "ROLE_" + maChucVu.toUpperCase();
+        String roleName = (pos != null) ? pos.getTenChucVu() : maChucVu;
+
+        // Tạo vai trò nếu chưa có
+        if (authService.getRoleByCode(roleCode) == null) {
+            authService.createRole(roleCode, roleName, "Tu dong tao khi phe duyet bo nhiem");
+        }
+
+        // Bước 2: Kiểm tra tài khoản nhân viên
+        User existingUser = authService.findByMaNV(bn.getMaNV());
+
+        if (existingUser == null) {
+            // Tạo tài khoản mới
+            String username = nv.getMaNhanVien();
+            ThongTinCaNhan ttcn = ttcnRepo.findByMaNV(bn.getMaNV());
+            String password;
+            if (ttcn != null && ttcn.getNgaySinh() != null) {
+                password = ttcn.getNgaySinh().format(DateTimeFormatter.ofPattern("ddMMyyyy"));
+            } else {
+                password = nv.getMaNhanVien(); // fallback: dùng mã NV
+            }
+            String email = (ttcn != null) ? ttcn.getEmail() : null;
+            authService.createUser(username, password, bn.getMaNV(), roleCode, email);
+        } else {
+            // Tài khoản đã tồn tại: cập nhật vai trò
+            authService.assignRoleToUser(existingUser.getId(), roleCode);
+        }
     }
 }

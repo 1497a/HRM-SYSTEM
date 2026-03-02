@@ -2,7 +2,9 @@ package com.hrm.gui.contract;
 
 import com.hrm.gui.components.PurpleButton;
 import com.hrm.model.HopDongLaoDong;
+import com.hrm.model.NhanVien;
 import com.hrm.service.HopDongService;
+import com.hrm.service.NhanVienService;
 import com.hrm.service.ServiceResult;
 import com.hrm.util.UIColors;
 
@@ -26,8 +28,8 @@ public class ContractFormDialog extends JDialog {
     private final HopDongLaoDong hopDongHienThi;
 
     // Form fields
-    private JTextField txtSoHopDong;
-    private JTextField txtMaNV;
+    private JLabel lblSoHopDong;
+    private JComboBox<NhanVien> cboNhanVien;
     private JComboBox<String> cboLoaiHopDong;
     private JFormattedTextField txtLuongCoSo;
     private JSpinner spnNgayKy;
@@ -71,13 +73,30 @@ public class ContractFormDialog extends JDialog {
     // ============================
 
     private void initComponents() {
-        // Số hợp đồng
-        txtSoHopDong = new JTextField(20);
-        txtSoHopDong.setFont(new Font("Segoe UI", Font.PLAIN, 14));
+        // Số hợp đồng - tự động tạo
+        lblSoHopDong = new JLabel("(Tu dong tao khi luu)");
+        lblSoHopDong.setFont(new Font("Segoe UI", Font.ITALIC, 13));
+        lblSoHopDong.setForeground(new java.awt.Color(120, 120, 120));
 
-        // Mã nhân viên
-        txtMaNV = new JTextField(20);
-        txtMaNV.setFont(new Font("Segoe UI", Font.PLAIN, 14));
+        // Nhân viên từ danh sách
+        cboNhanVien = new JComboBox<>();
+        cboNhanVien.setFont(new Font("Segoe UI", Font.PLAIN, 14));
+        java.util.List<NhanVien> dsNV = NhanVienService.getInstance().getDangLamViec();
+        for (NhanVien nv : dsNV) {
+            cboNhanVien.addItem(nv);
+        }
+        cboNhanVien.setRenderer(new DefaultListCellRenderer() {
+            @Override
+            public Component getListCellRendererComponent(JList<?> list, Object value,
+                    int index, boolean isSelected, boolean cellHasFocus) {
+                super.getListCellRendererComponent(list, value, index, isSelected, cellHasFocus);
+                if (value instanceof NhanVien) {
+                    NhanVien nv = (NhanVien) value;
+                    setText("[" + nv.getMaNhanVien() + "] - " + (nv.getHoTen() != null ? nv.getHoTen() : ""));
+                }
+                return this;
+            }
+        });
 
         // Loại hợp đồng
         cboLoaiHopDong = new JComboBox<>(new String[]{
@@ -193,10 +212,10 @@ public class ContractFormDialog extends JDialog {
         gbc.gridwidth = 1;
         gbc.insets = new Insets(6, 8, 6, 8);
 
-        // Số hợp đồng
-        addFormRow(formPanel, gbc, 1, "Số hợp đồng (*)", txtSoHopDong);
-        // Mã NV
-        addFormRow(formPanel, gbc, 2, "Mã nhân viên (*)", txtMaNV);
+        // Số hợp đồng (read-only label)
+        addFormRow(formPanel, gbc, 1, "Số hợp đồng", lblSoHopDong);
+        // Nhân viên
+        addFormRow(formPanel, gbc, 2, "Nhân viên (*)", cboNhanVien);
         // Loại hợp đồng
         addFormRow(formPanel, gbc, 3, "Loại hợp đồng (*)", cboLoaiHopDong);
         // Lương cơ sở
@@ -275,8 +294,17 @@ public class ContractFormDialog extends JDialog {
     // ============================
 
     private void fillForm(HopDongLaoDong hd) {
-        txtSoHopDong.setText(hd.getSoHopDong() != null ? hd.getSoHopDong() : "");
-        txtMaNV.setText(String.valueOf(hd.getMaNV()));
+        lblSoHopDong.setText(hd.getSoHopDong() != null ? hd.getSoHopDong() : "(chua co)");
+        lblSoHopDong.setFont(new Font("Segoe UI", Font.PLAIN, 13));
+        lblSoHopDong.setForeground(java.awt.Color.BLACK);
+
+        // Pre-select nhân viên
+        for (int i = 0; i < cboNhanVien.getItemCount(); i++) {
+            if (cboNhanVien.getItemAt(i).getId() == hd.getMaNV()) {
+                cboNhanVien.setSelectedIndex(i);
+                break;
+            }
+        }
 
         // Loại hợp đồng - map DB value to combo items
         String loai = hd.getLoaiHopDong();
@@ -309,8 +337,7 @@ public class ContractFormDialog extends JDialog {
     }
 
     private void setReadOnly() {
-        txtSoHopDong.setEditable(false);
-        txtMaNV.setEditable(false);
+        cboNhanVien.setEnabled(false);
         cboLoaiHopDong.setEnabled(false);
         txtLuongCoSo.setEditable(false);
         spnNgayKy.setEnabled(false);
@@ -327,32 +354,14 @@ public class ContractFormDialog extends JDialog {
     // ============================
 
     private void luuHopDong() {
-        // Validate số hợp đồng
-        String soHopDong = txtSoHopDong.getText().trim();
-        if (soHopDong.isEmpty()) {
-            JOptionPane.showMessageDialog(this, "Số hợp đồng không được để trống.",
+        // Validate nhân viên
+        NhanVien selectedNV = (NhanVien) cboNhanVien.getSelectedItem();
+        if (selectedNV == null) {
+            JOptionPane.showMessageDialog(this, "Vui lòng chọn nhân viên.",
                     "Lỗi nhập liệu", JOptionPane.ERROR_MESSAGE);
-            txtSoHopDong.requestFocus();
             return;
         }
-
-        // Validate mã NV
-        String maNVStr = txtMaNV.getText().trim();
-        if (maNVStr.isEmpty()) {
-            JOptionPane.showMessageDialog(this, "Mã nhân viên không được để trống.",
-                    "Lỗi nhập liệu", JOptionPane.ERROR_MESSAGE);
-            txtMaNV.requestFocus();
-            return;
-        }
-        int maNV;
-        try {
-            maNV = Integer.parseInt(maNVStr);
-        } catch (NumberFormatException ex) {
-            JOptionPane.showMessageDialog(this, "Mã nhân viên phải là số nguyên.",
-                    "Lỗi nhập liệu", JOptionPane.ERROR_MESSAGE);
-            txtMaNV.requestFocus();
-            return;
-        }
+        int maNV = selectedNV.getId();
 
         // Lương cơ sở
         long luongCoSo = 0;
@@ -399,9 +408,8 @@ public class ContractFormDialog extends JDialog {
         // Ghi chú
         String ghiChu = txtGhiChu.getText().trim();
 
-        // Tạo HopDongLaoDong object
+        // Tạo HopDongLaoDong object (soHopDong tự động tạo trong service)
         HopDongLaoDong hd = new HopDongLaoDong();
-        hd.setSoHopDong(soHopDong);
         hd.setMaNV(maNV);
         hd.setLoaiHopDong(loaiHopDong);
         hd.setLuongCoSo(luongCoSo);

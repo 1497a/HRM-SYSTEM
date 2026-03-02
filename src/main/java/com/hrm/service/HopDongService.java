@@ -5,6 +5,7 @@ import com.hrm.model.NhanVien;
 import com.hrm.repo.HopDongRepository;
 import com.hrm.repo.NhanVienRepository;
 
+import java.time.LocalDate;
 import java.time.temporal.ChronoUnit;
 import java.util.List;
 
@@ -40,13 +41,11 @@ public class HopDongService {
             return ServiceResult.error("Không tìm thấy nhân viên.");
         }
 
-        // Validate số hợp đồng
-        if (hd.getSoHopDong() == null || hd.getSoHopDong().trim().isEmpty()) {
-            return ServiceResult.error("Số hợp đồng không được để trống.");
-        }
-        if (hopDongRepo.existsBySoHopDong(hd.getSoHopDong().trim(), 0)) {
-            return ServiceResult.error("Số hợp đồng '" + hd.getSoHopDong() + "' đã tồn tại.");
-        }
+        // Tự động tạo số hợp đồng
+        LocalDate today = LocalDate.now();
+        int seq = hopDongRepo.countByYearMonth(today.getYear(), today.getMonthValue()) + 1;
+        String soHopDong = String.format("HD-%04d%02d-%04d", today.getYear(), today.getMonthValue(), seq);
+        hd.setSoHopDong(soHopDong);
 
         // Validate ngày ký và ngày hiệu lực
         if (hd.getNgayKy() == null) {

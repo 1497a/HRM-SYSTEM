@@ -3,10 +3,12 @@ package com.hrm.gui.appointment;
 import com.hrm.gui.components.PurpleButton;
 import com.hrm.model.BoNhiem;
 import com.hrm.model.Department;
+import com.hrm.model.NhanVien;
 import com.hrm.model.Position;
 import com.hrm.repo.DepartmentRepository;
 import com.hrm.repo.PositionRepository;
 import com.hrm.service.BoNhiemService;
+import com.hrm.service.NhanVienService;
 import com.hrm.service.ServiceResult;
 import com.hrm.util.UIColors;
 
@@ -34,7 +36,7 @@ public class AppointmentFormDialog extends JDialog {
     private final PositionRepository positionRepo = new PositionRepository();
 
     // Form fields
-    private JTextField txtMaNV;
+    private JComboBox<NhanVien> cboNhanVien;
     private JComboBox<Department> cboPhongBan;
     private JComboBox<Position> cboChucVu;
     private JComboBox<String> cboLoaiBoNhiem;
@@ -75,8 +77,10 @@ public class AppointmentFormDialog extends JDialog {
     // ============================
 
     private void initComponents() {
-        txtMaNV = new JTextField(20);
-        txtMaNV.setFont(new Font("Segoe UI", Font.PLAIN, 14));
+        // Nhân viên
+        cboNhanVien = new JComboBox<>();
+        cboNhanVien.setFont(new Font("Segoe UI", Font.PLAIN, 14));
+        loadNhanVien();
 
         // Phòng ban
         cboPhongBan = new JComboBox<>();
@@ -172,6 +176,25 @@ public class AppointmentFormDialog extends JDialog {
         });
     }
 
+    private void loadNhanVien() {
+        List<NhanVien> list = NhanVienService.getInstance().getDangLamViec();
+        for (NhanVien nv : list) {
+            cboNhanVien.addItem(nv);
+        }
+        cboNhanVien.setRenderer(new DefaultListCellRenderer() {
+            @Override
+            public Component getListCellRendererComponent(JList<?> list, Object value,
+                    int index, boolean isSelected, boolean cellHasFocus) {
+                super.getListCellRendererComponent(list, value, index, isSelected, cellHasFocus);
+                if (value instanceof NhanVien) {
+                    NhanVien nv = (NhanVien) value;
+                    setText("[" + nv.getMaNhanVien() + "] - " + (nv.getHoTen() != null ? nv.getHoTen() : ""));
+                }
+                return this;
+            }
+        });
+    }
+
     // ============================
     // Layout
     // ============================
@@ -202,8 +225,8 @@ public class AppointmentFormDialog extends JDialog {
         gbc.gridwidth = 1;
         gbc.insets = new Insets(6, 8, 6, 8);
 
-        // Mã NV
-        addFormRow(formPanel, gbc, 1, "Mã nhân viên (*)", txtMaNV);
+        // Nhân viên
+        addFormRow(formPanel, gbc, 1, "Nhân viên (*)", cboNhanVien);
         // Phòng ban
         addFormRow(formPanel, gbc, 2, "Phòng ban (*)", cboPhongBan);
         // Chức vụ
@@ -265,7 +288,13 @@ public class AppointmentFormDialog extends JDialog {
     // ============================
 
     private void fillForm(BoNhiem bn) {
-        txtMaNV.setText(String.valueOf(bn.getMaNV()));
+        // Pre-select nhân viên
+        for (int i = 0; i < cboNhanVien.getItemCount(); i++) {
+            if (cboNhanVien.getItemAt(i).getId() == bn.getMaNV()) {
+                cboNhanVien.setSelectedIndex(i);
+                break;
+            }
+        }
 
         // Chọn phòng ban
         for (int i = 0; i < cboPhongBan.getItemCount(); i++) {
@@ -308,7 +337,7 @@ public class AppointmentFormDialog extends JDialog {
     }
 
     private void setReadOnly() {
-        txtMaNV.setEditable(false);
+        cboNhanVien.setEnabled(false);
         cboPhongBan.setEnabled(false);
         cboChucVu.setEnabled(false);
         cboLoaiBoNhiem.setEnabled(false);
@@ -324,24 +353,14 @@ public class AppointmentFormDialog extends JDialog {
     // ============================
 
     private void luuBoNhiem() {
-        // Validate mã NV
-        String maNVStr = txtMaNV.getText().trim();
-        if (maNVStr.isEmpty()) {
-            JOptionPane.showMessageDialog(this, "Mã nhân viên không được để trống.",
+        // Validate nhân viên
+        NhanVien selectedNV = (NhanVien) cboNhanVien.getSelectedItem();
+        if (selectedNV == null) {
+            JOptionPane.showMessageDialog(this, "Vui lòng chọn nhân viên.",
                     "Lỗi nhập liệu", JOptionPane.ERROR_MESSAGE);
-            txtMaNV.requestFocus();
             return;
         }
-
-        int maNV;
-        try {
-            maNV = Integer.parseInt(maNVStr);
-        } catch (NumberFormatException ex) {
-            JOptionPane.showMessageDialog(this, "Mã nhân viên phải là số nguyên.",
-                    "Lỗi nhập liệu", JOptionPane.ERROR_MESSAGE);
-            txtMaNV.requestFocus();
-            return;
-        }
+        int maNV = selectedNV.getId();
 
         // Validate phòng ban
         Department selectedDept = (Department) cboPhongBan.getSelectedItem();

@@ -402,6 +402,44 @@ public class AuthService {
     }
 
     /**
+     * Tìm tài khoản theo maNV nhân viên.
+     */
+    public com.hrm.model.User findByMaNV(int maNV) {
+        return taiKhoanRepo.findByMaNV(maNV);
+    }
+
+    /**
+     * Tìm vai trò theo mã.
+     */
+    public com.hrm.model.Role getRoleByCode(String code) {
+        return taiKhoanRepo.findRoleByCode(code);
+    }
+
+    /**
+     * Tạo vai trò và gán danh sách quyền.
+     */
+    public ServiceResult<Void> createRoleWithPermissions(String maVaiTro, String tenVaiTro, java.util.List<String> permissions) {
+        ServiceResult<Void> createResult = createRole(maVaiTro, tenVaiTro, null);
+        if (!createResult.isSuccess()) return createResult;
+        if (permissions != null && !permissions.isEmpty()) {
+            return setRolePermissions(maVaiTro, permissions);
+        }
+        return createResult;
+    }
+
+    /**
+     * Gán vai trò cho tài khoản (ghi đè vai trò cũ — single-role).
+     */
+    public ServiceResult<Void> assignRoleToUser(int maTaiKhoan, String maVaiTro) {
+        try {
+            taiKhoanRepo.updateRole(maTaiKhoan, maVaiTro);
+            return ServiceResult.success(null, "Gán vai trò thành công.");
+        } catch (Exception e) {
+            return ServiceResult.error("Không thể gán vai trò: " + e.getMessage());
+        }
+    }
+
+    /**
      * Tính quyền hiệu dụng theo công thức RBAC động:
      * Quyền hiệu dụng = (Quyền từ vai trò) ∪ (UserPermission choPhep=true) − (UserPermission choPhep=false)
      *

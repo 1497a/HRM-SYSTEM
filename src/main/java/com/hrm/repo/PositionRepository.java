@@ -74,6 +74,24 @@ public class PositionRepository {
     }
 
     /**
+     * Kiểm tra mã chức vụ đang hoạt động đã tồn tại chưa (chống tạo trùng).
+     */
+    public boolean existsActiveByCode(String maChucVu) {
+        String sql = "SELECT COUNT(*) FROM CHUCVU WHERE maChucVu = ? AND trangThai = 'hoat_dong'";
+        try (Connection conn = DatabaseConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setString(1, maChucVu);
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) return rs.getInt(1) > 0;
+            }
+        } catch (SQLException e) {
+            System.err.println("Lỗi PositionRepository.existsActiveByCode: " + e.getMessage());
+            e.printStackTrace();
+        }
+        return false;
+    }
+
+    /**
      * Kiểm tra mã chức vụ có tồn tại không.
      */
     public boolean existsById(String maChucVu) {

@@ -2,8 +2,10 @@ package com.hrm.gui.employee;
 
 import com.hrm.gui.components.PurpleButton;
 import com.hrm.gui.components.PurpleTable;
+import com.hrm.model.Department;
 import com.hrm.model.NhanVien;
 import com.hrm.model.ThongTinCaNhan;
+import com.hrm.service.DepartmentService;
 import com.hrm.service.NhanVienService;
 import com.hrm.service.ServiceResult;
 import com.hrm.util.SessionContext;
@@ -32,6 +34,7 @@ public class EmployeeListPanel extends JPanel {
 
     private JTextField txtSearch;
     private JComboBox<String> cboTrangThai;
+    private JComboBox<String> cboPhongBan;
 
     private PurpleButton btnThem;
     private PurpleButton btnXem;
@@ -76,6 +79,14 @@ public class EmployeeListPanel extends JPanel {
         panel.add(lblTitle, BorderLayout.NORTH);
 
         // Search + filter
+        JPanel searchWrap = new JPanel(new BorderLayout(0, 4));
+        searchWrap.setOpaque(false);
+
+        JLabel lblHint = new JLabel("Tim theo: Ma NV / Ho ten / Phong ban / Trang thai");
+        lblHint.setFont(new Font("Segoe UI", Font.ITALIC, 12));
+        lblHint.setForeground(UIColors.TEXT_DARK);
+        searchWrap.add(lblHint, BorderLayout.NORTH);
+
         JPanel searchPanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 8, 4));
         searchPanel.setOpaque(false);
 
@@ -86,6 +97,14 @@ public class EmployeeListPanel extends JPanel {
         txtSearch = new JTextField(20);
         txtSearch.setFont(new Font("Segoe UI", Font.PLAIN, 14));
         txtSearch.setPreferredSize(new Dimension(220, 32));
+
+        JLabel lblPhongBan = new JLabel("Phong ban:");
+        lblPhongBan.setFont(new Font("Segoe UI", Font.PLAIN, 14));
+        lblPhongBan.setForeground(UIColors.TEXT_DARK);
+
+        cboPhongBan = new JComboBox<>(new String[]{"Tat ca phong ban"});
+        cboPhongBan.setFont(new Font("Segoe UI", Font.PLAIN, 14));
+        cboPhongBan.setPreferredSize(new Dimension(180, 32));
 
         JLabel lblTrangThai = new JLabel("Trang thai:");
         lblTrangThai.setFont(new Font("Segoe UI", Font.PLAIN, 14));
@@ -103,13 +122,17 @@ public class EmployeeListPanel extends JPanel {
 
         searchPanel.add(lblSearch);
         searchPanel.add(txtSearch);
-        searchPanel.add(Box.createHorizontalStrut(8));
+        searchPanel.add(Box.createHorizontalStrut(4));
+        searchPanel.add(lblPhongBan);
+        searchPanel.add(cboPhongBan);
+        searchPanel.add(Box.createHorizontalStrut(4));
         searchPanel.add(lblTrangThai);
         searchPanel.add(cboTrangThai);
         searchPanel.add(Box.createHorizontalStrut(8));
         searchPanel.add(btnTimKiem);
 
-        panel.add(searchPanel, BorderLayout.CENTER);
+        searchWrap.add(searchPanel, BorderLayout.CENTER);
+        panel.add(searchWrap, BorderLayout.CENTER);
         return panel;
     }
 
@@ -168,6 +191,7 @@ public class EmployeeListPanel extends JPanel {
         });
 
         cboTrangThai.addActionListener(e -> applyFilter());
+        cboPhongBan.addActionListener(e -> applyFilter());
 
         table.addMouseListener(new java.awt.event.MouseAdapter() {
             @Override
@@ -212,33 +236,63 @@ public class EmployeeListPanel extends JPanel {
                 nv.getTrangThaiDisplay()
             });
         }
+        rebuildDeptCombo();
         applyFilter();
+    }
+
+    private void rebuildDeptCombo() {
+        String selected = (String) cboPhongBan.getSelectedItem();
+        cboPhongBan.removeActionListener(e -> applyFilter());
+        cboPhongBan.removeAllItems();
+        cboPhongBan.addItem("Tat ca phong ban");
+        try {
+            for (Department d : new DepartmentService().getActiveDepartments()) {
+                cboPhongBan.addItem(d.getTenPhongBan());
+            }
+        } catch (Exception ignored) {}
+        // Restore selection
+        if (selected != null) {
+            for (int i = 0; i < cboPhongBan.getItemCount(); i++) {
+                if (selected.equals(cboPhongBan.getItemAt(i))) {
+                    cboPhongBan.setSelectedIndex(i);
+                    break;
+                }
+            }
+        }
+        cboPhongBan.addActionListener(e -> applyFilter());
     }
 
     private void applyFilter() {
         String searchText = txtSearch.getText().toLowerCase().trim();
         String trangThaiFilter = (String) cboTrangThai.getSelectedItem();
+        String phongBanFilter = (String) cboPhongBan.getSelectedItem();
 
         RowFilter<DefaultTableModel, Object> rf = new RowFilter<DefaultTableModel, Object>() {
             @Override
             public boolean include(Entry<? extends DefaultTableModel, ? extends Object> entry) {
-                // Lọc theo tên hoặc mã (cột 1, 2)
+                // Lọc theo mã NV hoặc họ tên (cột 1, 2) — AND condition
                 String maNV = entry.getStringValue(1).toLowerCase();
                 String hoTen = entry.getStringValue(2).toLowerCase();
                 boolean matchSearch = searchText.isEmpty()
                         || maNV.contains(searchText) || hoTen.contains(searchText);
 
+                // Lọc theo phòng ban (cột 3)
+                String tenPhongBan = entry.getStringValue(3);
+                boolean matchDept = "Tat ca phong ban".equals(phongBanFilter)
+                        || phongBanFilter == null
+                        || phongBanFilter.equals(tenPhongBan);
+
                 // Lọc theo trạng thái (cột 7)
                 String trangThai = entry.getStringValue(7);
                 boolean matchStatus = true;
                 if ("Dang lam viec".equals(trangThaiFilter)) {
-                    matchStatus = "Dang lam viec".equals(trangThai);
+                    matchStatus = "Đang làm việc".equals(trangThai) || "Dang lam viec".equals(trangThai);
                 } else if ("Tam nghi".equals(trangThaiFilter)) {
-                    matchStatus = "Tam nghi".equals(trangThai);
+                    matchStatus = "Tạm nghỉ".equals(trangThai) || "Tam nghi".equals(trangThai);
                 } else if ("Nghi viec".equals(trangThaiFilter)) {
-                    matchStatus = "Nghi viec".equals(trangThai);
+                    matchStatus = "Nghỉ việc".equals(trangThai) || "Nghi viec".equals(trangThai);
                 }
-                return matchSearch && matchStatus;
+                return matchSearch && matchDept && matchStatus;
             }
         };
 

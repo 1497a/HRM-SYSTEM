@@ -188,6 +188,45 @@ public class TaiKhoanRepository {
     }
 
     /**
+     * Tìm tài khoản theo maNV (số nguyên trong bảng NHANVIEN).
+     */
+    public User findByMaNV(int maNV) {
+        String sql = "SELECT maTaiKhoan, tenDangNhap, matKhau, email, hoatDong, biKhoa, maNV "
+                   + "FROM TAIKHOAN WHERE maNV = ? LIMIT 1";
+        try (Connection conn = DatabaseConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setInt(1, maNV);
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    User user = mapRowToUser(rs);
+                    loadUserRoleAndPermissions(user, user.getId());
+                    return user;
+                }
+            }
+        } catch (SQLException e) {
+            System.err.println("Lỗi findByMaNV: " + e.getMessage());
+            e.printStackTrace();
+        }
+        return null;
+    }
+
+    /**
+     * Cập nhật vai trò cho tài khoản (gán role mới).
+     */
+    public void updateRole(int maTaiKhoan, String maVaiTro) {
+        String sql = "UPDATE TAIKHOAN SET maVaiTro = ?, ngayCapNhat = NOW() WHERE maTaiKhoan = ?";
+        try (Connection conn = DatabaseConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setString(1, maVaiTro);
+            ps.setInt(2, maTaiKhoan);
+            ps.executeUpdate();
+        } catch (SQLException e) {
+            System.err.println("Lỗi updateRole: " + e.getMessage());
+            e.printStackTrace();
+        }
+    }
+
+    /**
      * Vô hiệu hóa tài khoản liên kết với nhân viên (khi NV nghỉ việc).
      */
     public void deactivateByMaNV(int maNV) {
@@ -240,6 +279,13 @@ public class TaiKhoanRepository {
                         rs.getString("moTa")
                 );
                 role.setSystemRole(rs.getBoolean("laVaiTroHeThong"));
+                
+                // Nạp quyền của vai trò để bảng danh sách hiển thị đúng
+                List<Permission> perms = findPermissionsByRole(role.getCode());
+                for (Permission p : perms) {
+                    role.addPermission(p);
+                }
+                
                 list.add(role);
             }
         } catch (SQLException e) {

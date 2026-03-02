@@ -800,3 +800,11 @@ DELIMITER ;
 -- COMPLETION MESSAGE
 -- =====================================================
 SELECT 'Database HRM created successfully!' AS Message;
+
+-- =====================================================
+-- BANGLUONG: Add approve workflow columns
+-- =====================================================
+ALTER TABLE BANGLUONG
+  MODIFY COLUMN trangThai ENUM('dang_xu_ly','da_duyet','da_khoa') DEFAULT 'dang_xu_ly',
+  ADD COLUMN ngayDuyet DATETIME NULL AFTER ngayKhoa,
+  ADD COLUMN nguoiDuyet INT NULL AFTER ngayDuyet;
