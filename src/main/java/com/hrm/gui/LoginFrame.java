@@ -1,7 +1,7 @@
 package com.hrm.gui;
 
-import com.hrm.model.User;
-import com.hrm.service.AuthService;
+import com.hrm.model.TaiKhoan;
+import com.hrm.bus.XacThucBUS;
 import com.hrm.gui.components.PurpleButton;
 import com.hrm.util.UIColors;
 
@@ -14,7 +14,7 @@ import java.awt.event.KeyEvent;
 
 /**
  * LoginFrame - Split-panel login screen with purple theme
- * Uses Mock AuthService for authentication
+ * Uses Mock XacThucBUS for authentication
  */
 public class LoginFrame extends JFrame {
 
@@ -24,10 +24,10 @@ public class LoginFrame extends JFrame {
     private JLabel lblError;
     private JCheckBox chkShowPassword;
 
-    private final AuthService authService;
+    private final XacThucBUS authService;
 
     public LoginFrame() {
-        this.authService = AuthService.getInstance();
+        this.authService = XacThucBUS.getInstance();
         initComponents();
         setupLayout();
         setupEvents();
@@ -255,16 +255,16 @@ public class LoginFrame extends JFrame {
         btnLogin.setText("Dang xu ly...");
 
         // Use SwingWorker for login operation
-        SwingWorker<User, Void> worker = new SwingWorker<User, Void>() {
+        SwingWorker<TaiKhoan, Void> worker = new SwingWorker<TaiKhoan, Void>() {
             @Override
-            protected User doInBackground() {
+            protected TaiKhoan doInBackground() {
                 return authService.authenticate(username, password);
             }
 
             @Override
             protected void done() {
                 try {
-                    User user = get();
+                    TaiKhoan user = get();
                     if (user != null) {
                         // Success - open MainFrame
                         MainFrame mainFrame = new MainFrame();

@@ -3,9 +3,9 @@ package com.hrm.gui.contract;
 import com.hrm.gui.components.PurpleButton;
 import com.hrm.model.HopDongLaoDong;
 import com.hrm.model.NhanVien;
-import com.hrm.service.HopDongService;
-import com.hrm.service.NhanVienService;
-import com.hrm.service.ServiceResult;
+import com.hrm.bus.HopDongBUS;
+import com.hrm.bus.NhanVienBUS;
+import com.hrm.bus.KetQua;
 import com.hrm.util.UIColors;
 
 import javax.swing.*;
@@ -81,7 +81,7 @@ public class ContractFormDialog extends JDialog {
         // Nhân viên từ danh sách
         cboNhanVien = new JComboBox<>();
         cboNhanVien.setFont(new Font("Segoe UI", Font.PLAIN, 14));
-        java.util.List<NhanVien> dsNV = NhanVienService.getInstance().getDangLamViec();
+        java.util.List<NhanVien> dsNV = NhanVienBUS.getInstance().getDangLamViec();
         for (NhanVien nv : dsNV) {
             cboNhanVien.addItem(nv);
         }
@@ -419,7 +419,7 @@ public class ContractFormDialog extends JDialog {
         hd.setNoiDung(ghiChu.isEmpty() ? null : ghiChu);
 
         // Gọi service
-        ServiceResult<HopDongLaoDong> result = HopDongService.getInstance().taoHopDong(hd);
+        KetQua<HopDongLaoDong> result = HopDongBUS.getInstance().taoHopDong(hd);
 
         if (result.isSuccess()) {
             JOptionPane.showMessageDialog(this, result.getMessage(),

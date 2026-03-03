@@ -3,8 +3,8 @@ package com.hrm.gui.employee;
 import com.hrm.gui.components.PurpleButton;
 import com.hrm.model.NhanVien;
 import com.hrm.model.ThongTinCaNhan;
-import com.hrm.service.NhanVienService;
-import com.hrm.service.ServiceResult;
+import com.hrm.bus.NhanVienBUS;
+import com.hrm.bus.KetQua;
 import com.hrm.util.UIColors;
 
 import javax.swing.*;
@@ -20,7 +20,7 @@ import java.time.format.DateTimeParseException;
  */
 public class EmployeeFormDialog extends JDialog {
 
-    private final NhanVienService nvService = NhanVienService.getInstance();
+    private final NhanVienBUS nvService = NhanVienBUS.getInstance();
     private final DateTimeFormatter dtf = DateTimeFormatter.ofPattern("dd/MM/yyyy");
 
     private final boolean isEdit;
@@ -329,7 +329,7 @@ public class EmployeeFormDialog extends JDialog {
 
         if (isEdit) {
             // Update thông tin lao động (chỉ cho phép sửa một số trường)
-            ServiceResult<ThongTinCaNhan> result = nvService.capNhatThongTinCaNhan(thongTinCaNhan);
+            KetQua<ThongTinCaNhan> result = nvService.capNhatThongTinCaNhan(thongTinCaNhan);
             if (!result.isSuccess()) {
                 showError(result.getMessage());
                 return;
@@ -338,7 +338,7 @@ public class EmployeeFormDialog extends JDialog {
                     "Thanh cong", JOptionPane.INFORMATION_MESSAGE);
         } else {
             // Tạo mới
-            ServiceResult<NhanVien> result = nvService.taoHoSo(nhanVien, thongTinCaNhan);
+            KetQua<NhanVien> result = nvService.taoHoSo(nhanVien, thongTinCaNhan);
             if (!result.isSuccess()) {
                 showError(result.getMessage());
                 return;

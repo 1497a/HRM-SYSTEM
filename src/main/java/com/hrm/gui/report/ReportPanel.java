@@ -2,12 +2,12 @@ package com.hrm.gui.report;
 
 import com.hrm.gui.components.RoundedPanel;
 import com.hrm.model.BangLuong;
-import com.hrm.model.Department;
+import com.hrm.model.PhongBan;
 import com.hrm.model.NhanVien;
-import com.hrm.repo.BangLuongRepository;
-import com.hrm.repo.DepartmentRepository;
-import com.hrm.repo.LeaveRepository;
-import com.hrm.repo.NhanVienRepository;
+import com.hrm.dao.BangLuongDAO;
+import com.hrm.dao.PhongBanDAO;
+import com.hrm.dao.NghiPhepDAO;
+import com.hrm.dao.NhanVienDAO;
 import com.hrm.util.UIColors;
 import com.hrm.util.UIHelper;
 
@@ -28,16 +28,16 @@ import java.util.List;
  */
 public class ReportPanel extends JPanel {
 
-    private final NhanVienRepository nvRepo;
-    private final BangLuongRepository blRepo;
-    private final DepartmentRepository deptRepo;
+    private final NhanVienDAO nvRepo;
+    private final BangLuongDAO blRepo;
+    private final PhongBanDAO deptRepo;
 
     private static final NumberFormat MONEY_FORMAT = NumberFormat.getNumberInstance(new Locale("vi", "VN"));
 
     public ReportPanel() {
-        this.nvRepo = NhanVienRepository.getInstance();
-        this.blRepo = BangLuongRepository.getInstance();
-        this.deptRepo = new DepartmentRepository();
+        this.nvRepo = NhanVienDAO.getInstance();
+        this.blRepo = BangLuongDAO.getInstance();
+        this.deptRepo = new PhongBanDAO();
 
         setLayout(new BorderLayout());
         setBackground(UIColors.LIGHT_GRAY_BG);
@@ -145,14 +145,14 @@ public class ReportPanel extends JPanel {
         };
 
         try {
-            LeaveRepository leaveRepo = LeaveRepository.getInstance();
+            NghiPhepDAO leaveRepo = NghiPhepDAO.getInstance();
             List<NhanVien> allNV = nvRepo.findAll();
             int currentYear = java.time.LocalDate.now().getYear();
 
             for (NhanVien nv : allNV) {
                 // Lấy số dư phép nghỉ năm hiện tại
                 try {
-                    List<com.hrm.model.LeaveBalance> balances =
+                    List<com.hrm.model.SoDungPhep> balances =
                             leaveRepo.findByMaNVAndNam(nv.getId(), currentYear);
                     if (balances.isEmpty()) {
                         // Show row with zeros if no balance records
@@ -161,7 +161,7 @@ public class ReportPanel extends JPanel {
                                 0, 0, 0
                         });
                     } else {
-                        for (com.hrm.model.LeaveBalance bal : balances) {
+                        for (com.hrm.model.SoDungPhep bal : balances) {
                             model.addRow(new Object[]{
                                     (nv.getHoTen() != null ? nv.getHoTen() : nv.getMaNhanVien())
                                             + " (" + bal.getLeaveTypeCode() + ")",
@@ -212,11 +212,11 @@ public class ReportPanel extends JPanel {
         try {
             List<BangLuong> bangLuongList = blRepo.findAll();
             for (BangLuong bl : bangLuongList) {
-                int thang = bl.getNgayBD() != null ? bl.getNgayBD().getMonthValue() : 0;
-                int nam = bl.getNgayBD() != null ? bl.getNgayBD().getYear() : 0;
+                int thang = bl.getThang();
+                int nam = bl.getNam();
                 String thangNam = thang + "/" + nam;
                 String tenBL = "Bảng lương tháng " + thangNam;
-                String trangThai = bl.getTrangThai() != null ? bl.getTrangThai().getDisplayName() : "";
+                String trangThai = bl.getTrangThai() != null ? bl.getTrangThai().toString() : "";
 
                 // Tính tổng lương thực lãnh từ ChiTietLuong
                 double tongLuong = 0;

@@ -1,7 +1,7 @@
 package com.hrm.gui.admin;
 
-import com.hrm.model.Department;
-import com.hrm.service.DepartmentService;
+import com.hrm.model.PhongBan;
+import com.hrm.bus.PhongBanBUS;
 import com.hrm.util.SessionContext;
 
 import javax.swing.*;
@@ -12,7 +12,7 @@ import java.util.List;
 
 public class DepartmentPanel extends JPanel {
 
-    private DepartmentService service = new DepartmentService();
+    private PhongBanBUS service = new PhongBanBUS();
     private JTable table;
     private DefaultTableModel tableModel;
     private TableRowSorter<DefaultTableModel> sorter;
@@ -180,17 +180,17 @@ public class DepartmentPanel extends JPanel {
 
     private void refreshTable() {
         tableModel.setRowCount(0);
-        for (Department d : service.getAllDepartments()) {
+        for (PhongBan d : service.getAllDepartments()) {
             String tenCha = "— (goc)";
-            if (d.getPhongBanCha() != null) {
-                Department cha = service.getById(d.getPhongBanCha());
+            if (d.getPhongBanChaId() != null) {
+                PhongBan cha = service.getById(d.getPhongBanChaId());
                 if (cha != null) {
                     tenCha = cha.getTenPhongBan();
                 }
             }
 
             tableModel.addRow(new Object[] {
-                    d.getMaPhongBan(),
+                    d.getId(),
                     d.getTenPhongBan(),
                     tenCha,
                     d.getTrangThai()
@@ -208,7 +208,7 @@ public class DepartmentPanel extends JPanel {
         JTextField txtMa = new JTextField();
         JTextField txtTen = new JTextField();
 
-        List<Department> dsActive = service.getActiveDepartments();
+        List<PhongBan> dsActive = service.getActiveDepartments();
         JComboBox<String> comboCha = buildParentCombo(dsActive, null);
 
         Object[] fields = {
@@ -246,18 +246,18 @@ public class DepartmentPanel extends JPanel {
         int modelRow = table.convertRowIndexToModel(row);
         String ma = (String) tableModel.getValueAt(modelRow, 0);
 
-        Department dept = service.getById(ma);
+        PhongBan dept = service.getById(ma);
         if (dept == null) {
             return;
         }
 
-        JTextField txtMa = new JTextField(dept.getMaPhongBan());
+        JTextField txtMa = new JTextField(dept.getId());
         txtMa.setEnabled(false);
         JTextField txtTen = new JTextField(dept.getTenPhongBan());
 
-        List<Department> dsActive = service.getActiveDepartments();
-        dsActive.removeIf(d -> d.getMaPhongBan().equals(ma));
-        JComboBox<String> comboCha = buildParentCombo(dsActive, dept.getPhongBanCha());
+        List<PhongBan> dsActive = service.getActiveDepartments();
+        dsActive.removeIf(d -> d.getId().equals(ma));
+        JComboBox<String> comboCha = buildParentCombo(dsActive, dept.getPhongBanChaId());
 
         Object[] fields = {
                 "Ma phong ban:", txtMa,
@@ -317,14 +317,14 @@ public class DepartmentPanel extends JPanel {
         }
     }
 
-    private JComboBox<String> buildParentCombo(List<Department> dsActive, String maChaHienTai) {
+    private JComboBox<String> buildParentCombo(List<PhongBan> dsActive, String maChaHienTai) {
         String[] items = new String[dsActive.size() + 1];
         items[0] = "— Khong co (phong ban goc) —";
         int selectedIndex = 0;
 
         for (int i = 0; i < dsActive.size(); i++) {
             items[i + 1] = dsActive.get(i).toString();
-            if (dsActive.get(i).getMaPhongBan().equals(maChaHienTai)) {
+            if (dsActive.get(i).getId().equals(maChaHienTai)) {
                 selectedIndex = i + 1;
             }
         }
@@ -334,11 +334,11 @@ public class DepartmentPanel extends JPanel {
         return combo;
     }
 
-    private String getSelectedMa(JComboBox<String> combo, List<Department> dsActive) {
+    private String getSelectedMa(JComboBox<String> combo, List<PhongBan> dsActive) {
         if (combo.getSelectedIndex() == 0) {
             return null;
         }
         int idx = combo.getSelectedIndex() - 1;
-        return dsActive.get(idx).getMaPhongBan();
+        return dsActive.get(idx).getId();
     }
 }

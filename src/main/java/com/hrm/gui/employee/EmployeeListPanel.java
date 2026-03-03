@@ -2,12 +2,12 @@ package com.hrm.gui.employee;
 
 import com.hrm.gui.components.PurpleButton;
 import com.hrm.gui.components.PurpleTable;
-import com.hrm.model.Department;
+import com.hrm.model.PhongBan;
 import com.hrm.model.NhanVien;
 import com.hrm.model.ThongTinCaNhan;
-import com.hrm.service.DepartmentService;
-import com.hrm.service.NhanVienService;
-import com.hrm.service.ServiceResult;
+import com.hrm.bus.PhongBanBUS;
+import com.hrm.bus.NhanVienBUS;
+import com.hrm.bus.KetQua;
 import com.hrm.util.SessionContext;
 import com.hrm.util.UIColors;
 
@@ -25,7 +25,7 @@ import java.util.List;
  */
 public class EmployeeListPanel extends JPanel {
 
-    private final NhanVienService nvService = NhanVienService.getInstance();
+    private final NhanVienBUS nvService = NhanVienBUS.getInstance();
     private final DateTimeFormatter dtf = DateTimeFormatter.ofPattern("dd/MM/yyyy");
 
     private PurpleTable table;
@@ -246,7 +246,7 @@ public class EmployeeListPanel extends JPanel {
         cboPhongBan.removeAllItems();
         cboPhongBan.addItem("Tat ca phong ban");
         try {
-            for (Department d : new DepartmentService().getActiveDepartments()) {
+            for (PhongBan d : new PhongBanBUS().getActiveDepartments()) {
                 cboPhongBan.addItem(d.getTenPhongBan());
             }
         } catch (Exception ignored) {}
@@ -396,7 +396,7 @@ public class EmployeeListPanel extends JPanel {
             trangThaiMoi = "dang_lam_viec";
         }
 
-        ServiceResult<NhanVien> result = nvService.capNhatTrangThai(
+        KetQua<NhanVien> result = nvService.capNhatTrangThai(
                 selected.getId(), trangThaiMoi, txtLyDo.getText().trim());
 
         if (result.isSuccess()) {

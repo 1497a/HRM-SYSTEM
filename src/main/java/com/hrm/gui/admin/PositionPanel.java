@@ -1,9 +1,9 @@
 package com.hrm.gui.admin;
 
-import com.hrm.model.Position;
-import com.hrm.model.SalaryHistory;
-import com.hrm.repo.PositionRepository;
-import com.hrm.service.PositionService;
+import com.hrm.model.ChucVu;
+import com.hrm.model.LichSuHeSoLuong;
+import com.hrm.dao.ChucVuDAO;
+import com.hrm.bus.ChucVuBUS;
 import com.hrm.util.SessionContext;
 
 import javax.swing.*;
@@ -16,7 +16,7 @@ import java.util.Locale;
 
 public class PositionPanel extends JPanel {
 
-    private PositionService service = new PositionService();
+    private ChucVuBUS service = new ChucVuBUS();
     private JTable table;
     private DefaultTableModel tableModel;
     private TableRowSorter<DefaultTableModel> sorter;
@@ -188,9 +188,9 @@ public class PositionPanel extends JPanel {
 
     private void refreshTable() {
         tableModel.setRowCount(0);
-        for (Position p : service.getAllPositions()) {
+        for (ChucVu p : service.getAllPositions()) {
             tableModel.addRow(new Object[] {
-                    p.getMaChucVu(),
+                    p.getId(),
                     p.getTenChucVu(),
                     "Cap " + p.getCapBac(),
                     p.getHeSoLuong() + "x",
@@ -237,7 +237,7 @@ public class PositionPanel extends JPanel {
                 return;
             }
             // Kiểm tra trùng mã chức vụ đang hoạt động
-            if (new PositionRepository().existsActiveByCode(maChucVu)) {
+            if (new ChucVuDAO().existsActiveByCode(maChucVu)) {
                 JOptionPane.showMessageDialog(this,
                         "Ma chuc vu '" + maChucVu + "' da ton tai va dang hoat dong. Vui long dung ma khac.",
                         "Trung ma chuc vu", JOptionPane.ERROR_MESSAGE);
@@ -274,12 +274,12 @@ public class PositionPanel extends JPanel {
         int modelRow = table.convertRowIndexToModel(row);
         String ma = (String) tableModel.getValueAt(modelRow, 0);
 
-        Position pos = service.getById(ma);
+        ChucVu pos = service.getById(ma);
         if (pos == null) {
             return;
         }
 
-        JTextField txtMa = new JTextField(pos.getMaChucVu());
+        JTextField txtMa = new JTextField(pos.getId());
         txtMa.setEnabled(false);
 
         JTextField txtTen = new JTextField(pos.getTenChucVu());
@@ -371,7 +371,7 @@ public class PositionPanel extends JPanel {
         String ma = (String) tableModel.getValueAt(modelRow, 0);
         String ten = (String) tableModel.getValueAt(modelRow, 1);
 
-        List<SalaryHistory> danhSach = service.getHistoryByMaChucVu(ma);
+        List<LichSuHeSoLuong> danhSach = service.getHistoryByMaChucVu(ma);
 
         DefaultTableModel histModel = new DefaultTableModel(
                 new Object[] { "Ngay thay doi", "He so cu", "He so moi", "Phu cap cu (VND)", "Phu cap moi (VND)",
@@ -382,7 +382,7 @@ public class PositionPanel extends JPanel {
             }
         };
 
-        for (SalaryHistory h : danhSach) {
+        for (LichSuHeSoLuong h : danhSach) {
             histModel.addRow(new Object[] {
                     h.getNgayThayDoi(),
                     h.getHeSoLuongCu() + "x",

@@ -1,8 +1,8 @@
 package com.hrm.gui.admin;
 
-import com.hrm.model.User;
-import com.hrm.service.AuthService;
-import com.hrm.service.ServiceResult;
+import com.hrm.model.TaiKhoan;
+import com.hrm.bus.XacThucBUS;
+import com.hrm.bus.KetQua;
 import com.hrm.util.SessionContext;
 import com.hrm.util.UIColors;
 import com.hrm.util.UIHelper;
@@ -16,11 +16,11 @@ import java.awt.*;
 import java.util.List;
 
 /**
- * User Management Panel - CRUD operations for users
+ * TaiKhoan Management Panel - CRUD operations for users
  * Module 9: Phân quyền và bảo mật
  */
 public class UserManagementPanel extends JPanel {
-    private final AuthService authService;
+    private final XacThucBUS authService;
     private final SessionContext sessionContext;
 
     private JTable table;
@@ -32,7 +32,7 @@ public class UserManagementPanel extends JPanel {
     private JButton btnRefresh;
 
     public UserManagementPanel() {
-        this.authService = AuthService.getInstance();
+        this.authService = XacThucBUS.getInstance();
         this.sessionContext = SessionContext.getInstance();
 
         initComponents();
@@ -64,7 +64,7 @@ public class UserManagementPanel extends JPanel {
         btnRefresh.addActionListener(e -> loadData());
 
         // Table
-        String[] columns = {"ID", "Ten dang nhap", "Ho ten", "Email", "Vai tro", "Trang thai"};
+        String[] columns = {"ID nhan vien", "Ten dang nhap", "Ho ten", "Email", "Vai tro", "Trang thai"};
         tableModel = new DefaultTableModel(columns, 0) {
             @Override
             public boolean isCellEditable(int row, int column) {
@@ -139,16 +139,16 @@ public class UserManagementPanel extends JPanel {
 
     private void loadData() {
         tableModel.setRowCount(0);
-        List<User> users = authService.getAllUsers();
+        List<TaiKhoan> users = authService.getAllUsers();
 
-        for (User user : users) {
+        for (TaiKhoan user : users) {
             String status = user.isLocked() ? "Khoa" : (user.isActive() ? "Hoat dong" : "Ngung");
             Object[] row = {
                 user.getId(),
                 user.getUsername(),
                 user.getFullName(),
                 user.getEmail(),
-                user.getRoleNames(),
+                user.getVaiTros().toString(),
                 status
             };
             tableModel.addRow(row);
@@ -158,9 +158,9 @@ public class UserManagementPanel extends JPanel {
     private void searchUsers() {
         String keyword = txtSearch.getText().toLowerCase().trim();
         tableModel.setRowCount(0);
-        List<User> users = authService.getAllUsers();
+        List<TaiKhoan> users = authService.getAllUsers();
 
-        for (User user : users) {
+        for (TaiKhoan user : users) {
             if (user.getUsername().toLowerCase().contains(keyword) ||
                 user.getFullName().toLowerCase().contains(keyword)) {
                 String status = user.isLocked() ? "Khoa" : (user.isActive() ? "Hoat dong" : "Ngung");
@@ -169,7 +169,7 @@ public class UserManagementPanel extends JPanel {
                     user.getUsername(),
                     user.getFullName(),
                     user.getEmail(),
-                    user.getRoleNames(),
+                    user.getVaiTros().toString(),
                     status
                 };
                 tableModel.addRow(row);
@@ -197,7 +197,7 @@ public class UserManagementPanel extends JPanel {
         }
 
         int userId = (int) tableModel.getValueAt(selectedRow, 0);
-        User user = authService.getAllUsers().stream()
+        TaiKhoan user = authService.getAllUsers().stream()
                 .filter(u -> u.getId() == userId)
                 .findFirst()
                 .orElse(null);
@@ -231,7 +231,7 @@ public class UserManagementPanel extends JPanel {
                 JOptionPane.WARNING_MESSAGE);
 
         if (confirm == JOptionPane.YES_OPTION) {
-            ServiceResult<Void> result = authService.deleteUser(userId);
+            KetQua<Void> result = authService.deleteUser(userId);
             if (result.isSuccess()) {
                 JOptionPane.showMessageDialog(this,
                         "Da xoa tai khoan thanh cong!",

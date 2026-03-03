@@ -35,3 +35,6 @@ bin/
 
 # Invalid files
 nul
+
+*.py
+*.txt

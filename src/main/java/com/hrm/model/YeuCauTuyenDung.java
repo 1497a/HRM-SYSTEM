@@ -41,11 +41,11 @@ public class YeuCauTuyenDung {
         this.maYeuCau = maYeuCau;
     }
 
-    public String getMaPhongBan() {
+    public String getId() {
         return maPhongBan;
     }
 
-    public void setMaPhongBan(String maPhongBan) {
+    public void setId(String maPhongBan) {
         this.maPhongBan = maPhongBan;
     }
 

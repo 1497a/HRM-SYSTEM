@@ -1,7 +1,7 @@
 package com.hrm.gui.evaluation;
 
-import com.hrm.model.EvalCriteria;
-import com.hrm.service.EvaluationService;
+import com.hrm.model.TieuChiDanhGia;
+import com.hrm.bus.DanhGiaBUS;
 import com.hrm.util.UIHelper;
 
 import javax.swing.*;
@@ -15,7 +15,7 @@ import java.util.List;
  * Evaluation Configuration Dialog - manage criteria
  */
 public class EvalConfigDialog extends JDialog {
-    private final EvaluationService evalService;
+    private final DanhGiaBUS evalService;
 
     private JTable table;
     private DefaultTableModel tableModel;
@@ -31,7 +31,7 @@ public class EvalConfigDialog extends JDialog {
 
     public EvalConfigDialog(Frame parent) {
         super(parent, "Cau Hinh Tieu Chi Danh Gia", true);
-        this.evalService = EvaluationService.getInstance();
+        this.evalService = DanhGiaBUS.getInstance();
 
         initComponents();
         setupLayout();
@@ -163,10 +163,10 @@ public class EvalConfigDialog extends JDialog {
 
     private void loadData() {
         tableModel.setRowCount(0);
-        List<EvalCriteria> criteriaList = evalService.getAllCriteria();
+        List<TieuChiDanhGia> criteriaList = evalService.getAllCriteria();
 
-        for (EvalCriteria c : criteriaList) {
-            Object[] row = {c.getId(), c.getName(), c.getDescription(), c.getWeight()};
+        for (TieuChiDanhGia c : criteriaList) {
+            Object[] row = {c.getId(), c.getName(), c.getDescription(), c.getDiemToiDa()};
             tableModel.addRow(row);
         }
 
@@ -199,7 +199,7 @@ public class EvalConfigDialog extends JDialog {
         String description = txtDescription.getText().trim();
         int weight = (int) spnWeight.getValue();
 
-        EvaluationService.ServiceResult<?> result = evalService.saveCriteria(name, description, weight);
+        DanhGiaBUS.KetQua<?> result = evalService.saveCriteria(name, description, weight);
 
         if (result.isSuccess()) {
             loadData();
@@ -218,7 +218,7 @@ public class EvalConfigDialog extends JDialog {
         String description = txtDescription.getText().trim();
         int weight = (int) spnWeight.getValue();
 
-        EvaluationService.ServiceResult<?> result = evalService.updateCriteria(
+        DanhGiaBUS.KetQua<?> result = evalService.updateCriteria(
                 selectedId, name, description, weight);
 
         if (result.isSuccess()) {
@@ -240,7 +240,7 @@ public class EvalConfigDialog extends JDialog {
                 JOptionPane.YES_NO_OPTION);
 
         if (confirm == JOptionPane.YES_OPTION) {
-            EvaluationService.ServiceResult<?> result = evalService.deleteCriteria(selectedId);
+            DanhGiaBUS.KetQua<?> result = evalService.deleteCriteria(selectedId);
             if (result.isSuccess()) {
                 loadData();
             }

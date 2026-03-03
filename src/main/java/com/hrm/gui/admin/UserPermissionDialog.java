@@ -1,9 +1,9 @@
 package com.hrm.gui.admin;
 
-import com.hrm.model.Permission;
-import com.hrm.model.Role;
-import com.hrm.model.User;
-import com.hrm.service.AuthService;
+import com.hrm.model.Quyen;
+import com.hrm.model.VaiTro;
+import com.hrm.model.TaiKhoan;
+import com.hrm.bus.XacThucBUS;
 import com.hrm.util.UIHelper;
 
 import javax.swing.*;
@@ -17,21 +17,21 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 /**
- * User Permission Dialog - Manage per-user permission exceptions
- * Implements dynamic RBAC: Effective = (Role Permissions) ∪ (Granted) -
+ * TaiKhoan Quyen Dialog - Manage per-user permission exceptions
+ * Implements dynamic RBAC: Effective = (VaiTro Permissions) ∪ (Granted) -
  * (Denied)
  */
 public class UserPermissionDialog extends JDialog {
-    private final AuthService authService;
-    private User user;
+    private final XacThucBUS authService;
+    private TaiKhoan user;
 
     private JTable table;
     private DefaultTableModel tableModel;
     private JComboBox<String> cboModule;
 
-    public UserPermissionDialog(Frame parent, User user) {
+    public UserPermissionDialog(Frame parent, TaiKhoan user) {
         super(parent, "Phan quyen cho: " + user.getFullName(), true);
-        this.authService = AuthService.getInstance();
+        this.authService = XacThucBUS.getInstance();
         this.user = user;
 
         initComponents();
@@ -46,9 +46,9 @@ public class UserPermissionDialog extends JDialog {
         // Module filter - derive distinct modules from all permissions
         cboModule = new JComboBox<>();
         cboModule.addItem("Tat ca");
-        List<Permission> allPermissions = authService.getAllPermissions();
+        List<Quyen> allPermissions = authService.getAllPermissions();
         List<String> modules = allPermissions.stream()
-                .map(Permission::getModule)
+                .map(Quyen::getModule)
                 .distinct()
                 .sorted()
                 .collect(Collectors.toList());
@@ -113,7 +113,7 @@ public class UserPermissionDialog extends JDialog {
         JPanel infoPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
         infoPanel.add(new JLabel("Tai khoan: " + user.getUsername()));
         infoPanel.add(Box.createHorizontalStrut(20));
-        infoPanel.add(new JLabel("Vai tro: " + user.getRoleNames()));
+        infoPanel.add(new JLabel("Vai tro: " + user.getVaiTros().toString()));
 
         JPanel filterPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
         filterPanel.add(new JLabel("Nhom quyen:"));
@@ -171,19 +171,19 @@ public class UserPermissionDialog extends JDialog {
 
         tableModel.setRowCount(0);
         String selectedModule = (String) cboModule.getSelectedItem();
-        List<Permission> permissions = authService.getAllPermissions();
+        List<Quyen> permissions = authService.getAllPermissions();
 
         // Fetch user-specific permission overrides fresh from DB
         Map<String, Boolean> userOverrides = authService.getUserPermissions(user.getId());
 
-        for (Permission perm : permissions) {
+        for (Quyen perm : permissions) {
             if (!"Tat ca".equals(selectedModule) && !perm.getModule().equals(selectedModule)) {
                 continue;
             }
 
             // Check if user has this permission from their roles
             boolean fromRole = false;
-            for (Role role : user.getRoles()) {
+            for (VaiTro role : user.getRoles()) {
                 if (role.hasPermission(perm.getCode())) {
                     fromRole = true;
                     break;

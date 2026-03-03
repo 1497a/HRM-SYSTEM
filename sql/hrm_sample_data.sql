@@ -1,72 +1,68 @@
 -- =====================================================
--- HRM SAMPLE DATA - Dữ liệu mẫu đầy đủ
--- Chạy sau hrm_database.sql
+-- HRM SAMPLE DATA - Du lieu mau day du
+-- Chay sau hrm_database.sql
 -- =====================================================
 USE hrm_db;
 
 -- =====================================================
--- 1. NHANVIEN (15 nhân viên mẫu)
+-- 1. NHANVIEN (15 nhan vien mau)
 -- =====================================================
 INSERT INTO NHANVIEN (maNhanVien, loaiHopDong, ngayVaoLam, trangThai, ghiChu) VALUES
-('NV001', 'khong_xac_dinh',  '2020-01-15', 'dang_lam_viec', 'Nhân viên lâu năm'),
-('NV002', 'khong_xac_dinh',  '2020-03-01', 'dang_lam_viec', NULL),
+('NV001', 'khong_xac_dinh',   '2020-01-15', 'dang_lam_viec', 'Nhan vien lau nam'),
+('NV002', 'khong_xac_dinh',   '2020-03-01', 'dang_lam_viec', NULL),
 ('NV003', 'xac_dinh_thoi_han','2021-06-01', 'dang_lam_viec', NULL),
-('NV004', 'khong_xac_dinh',  '2019-08-15', 'dang_lam_viec', NULL),
+('NV004', 'khong_xac_dinh',   '2019-08-15', 'dang_lam_viec', NULL),
 ('NV005', 'xac_dinh_thoi_han','2022-01-10', 'dang_lam_viec', NULL),
 ('NV006', 'xac_dinh_thoi_han','2022-04-01', 'dang_lam_viec', NULL),
-('NV007', 'khong_xac_dinh',  '2018-11-20', 'dang_lam_viec', 'Trưởng phòng IT'),
+('NV007', 'khong_xac_dinh',   '2018-11-20', 'dang_lam_viec', 'Truong phong IT'),
 ('NV008', 'xac_dinh_thoi_han','2023-02-01', 'dang_lam_viec', NULL),
-('NV009', 'thu_viec',         '2025-11-01', 'dang_lam_viec', 'Đang thử việc'),
+('NV009', 'thu_viec',         '2025-11-01', 'dang_lam_viec', 'Dang thu viec'),
 ('NV010', 'xac_dinh_thoi_han','2021-09-15', 'dang_lam_viec', NULL),
-('NV011', 'khong_xac_dinh',  '2020-07-01', 'dang_lam_viec', NULL),
+('NV011', 'khong_xac_dinh',   '2020-07-01', 'dang_lam_viec', NULL),
 ('NV012', 'xac_dinh_thoi_han','2022-10-01', 'dang_lam_viec', NULL),
 ('NV013', 'xac_dinh_thoi_han','2023-05-15', 'dang_lam_viec', NULL),
-('NV014', 'thu_viec',         '2025-12-01', 'dang_lam_viec', 'Đang thử việc'),
-('NV015', 'xac_dinh_thoi_han','2021-03-01', 'tam_nghi',      'Đang nghỉ thai sản');
+('NV014', 'thu_viec',         '2025-12-01', 'dang_lam_viec', 'Dang thu viec'),
+('NV015', 'xac_dinh_thoi_han','2021-03-01', 'tam_nghi',      'Dang nghi thai san');
 
 -- =====================================================
 -- 2. THONGTINCANHAN
 -- =====================================================
-INSERT INTO THONGTINCANHAN (maNV, hoTen, ngaySinh, gioiTinh, CCCD, dienThoai, email, diaChi, diaChiThuongTru, queQuan, danToc, tonGiao, tinhTrangHonNhan) VALUES
-(1,  'Nguyễn Văn An',      '1985-04-20', 'nam', '001085004201', '0901234501', 'an.nguyen@abc.com',     '12 Lê Lợi, Q1, TP.HCM',          '12 Lê Lợi, Q1, TP.HCM',          'Hà Nội',      'Kinh', 'Không', 'da_ket_hon'),
-(2,  'Trần Thị Bình',      '1988-09-15', 'nu',  '079088009151', '0901234502', 'binh.tran@abc.com',     '45 Hai Bà Trưng, Q3, TP.HCM',    '45 Hai Bà Trưng, Q3, TP.HCM',    'TP.HCM',     'Kinh', 'Không', 'da_ket_hon'),
-(3,  'Lê Minh Cường',      '1990-12-05', 'nam', '079090012051', '0901234503', 'cuong.le@abc.com',      '78 Đinh Tiên Hoàng, BT, TP.HCM', '78 Đinh Tiên Hoàng, BT, TP.HCM', 'Đà Nẵng',    'Kinh', 'Không', 'da_ket_hon'),
-(4,  'Phạm Thị Dung',      '1982-07-30', 'nu',  '079082007301', '0901234504', 'dung.pham@abc.com',     '23 Nguyễn Huệ, Q1, TP.HCM',      '23 Nguyễn Huệ, Q1, TP.HCM',      'Cần Thơ',    'Kinh', 'Không', 'da_ket_hon'),
-(5,  'Hoàng Văn Em',       '1993-03-18', 'nam', '079093003181', '0901234505', 'em.hoang@abc.com',      '56 Phan Đình Phùng, PN, TP.HCM', '56 Phan Đình Phùng, PN, TP.HCM', 'Nghệ An',    'Kinh', 'Không', 'doc_than'),
-(6,  'Ngô Thị Phương',     '1991-11-22', 'nu',  '079091011221', '0901234506', 'phuong.ngo@abc.com',    '34 Lý Tự Trọng, Q1, TP.HCM',     '34 Lý Tự Trọng, Q1, TP.HCM',     'Bình Định',  'Kinh', 'Không', 'da_ket_hon'),
-(7,  'Vũ Thanh Giang',     '1980-06-10', 'nam', '079080006101', '0901234507', 'giang.vu@abc.com',      '90 CMT8, Q3, TP.HCM',            '90 CMT8, Q3, TP.HCM',            'Hải Phòng',  'Kinh', 'Không', 'da_ket_hon'),
-(8,  'Đặng Thị Hoa',       '1995-02-14', 'nu',  '079095002141', '0901234508', 'hoa.dang@abc.com',      '67 Trần Hưng Đạo, Q5, TP.HCM',   '67 Trần Hưng Đạo, Q5, TP.HCM',   'TP.HCM',     'Kinh', 'Không', 'doc_than'),
-(9,  'Bùi Quốc Hùng',      '1998-08-25', 'nam', '079098008251', '0901234509', 'hung.bui@abc.com',      '15 Võ Văn Tần, Q3, TP.HCM',      '15 Võ Văn Tần, Q3, TP.HCM',      'Hà Nội',     'Kinh', 'Không', 'doc_than'),
-(10, 'Trịnh Thị Kim',      '1990-05-07', 'nu',  '079090005071', '0901234510', 'kim.trinh@abc.com',     '88 Nguyễn Trãi, Q5, TP.HCM',     '88 Nguyễn Trãi, Q5, TP.HCM',     'Huế',        'Kinh', 'Không', 'da_ket_hon'),
-(11, 'Đinh Văn Long',      '1987-01-19', 'nam', '079087001191', '0901234511', 'long.dinh@abc.com',     '22 Hoàng Diệu, Q4, TP.HCM',      '22 Hoàng Diệu, Q4, TP.HCM',      'Quảng Nam',  'Kinh', 'Không', 'da_ket_hon'),
-(12, 'Phan Thị Mai',       '1994-10-03', 'nu',  '079094010031', '0901234512', 'mai.phan@abc.com',      '11 Bùi Viện, Q1, TP.HCM',        '11 Bùi Viện, Q1, TP.HCM',        'Vĩnh Long',  'Kinh', 'Không', 'doc_than'),
-(13, 'Lý Văn Nhân',        '1996-07-28', 'nam', '079096007281', '0901234513', 'nhan.ly@abc.com',       '33 Pasteur, Q1, TP.HCM',         '33 Pasteur, Q1, TP.HCM',         'Tiền Giang', 'Kinh', 'Không', 'doc_than'),
-(14, 'Cao Thị Oanh',       '2000-04-15', 'nu',  '079100004151', '0901234514', 'oanh.cao@abc.com',      '77 Nam Kỳ Khởi Nghĩa, Q3',       '77 Nam Kỳ Khởi Nghĩa, Q3',       'TP.HCM',     'Kinh', 'Không', 'doc_than'),
-(15, 'Nguyễn Thị Phúc',    '1992-12-20', 'nu',  '079092012201', '0901234515', 'phuc.nguyen@abc.com',   '99 Lê Văn Sỹ, Q3, TP.HCM',       '99 Lê Văn Sỹ, Q3, TP.HCM',       'Bến Tre',    'Kinh', 'Không', 'da_ket_hon');
+INSERT INTO THONGTINCANHAN (maNV, hoTen, ngaySinh, gioiTinh, cccd, dienThoai, email, diaChi, diaChiThuongTru, queQuan, danToc, tonGiao, tinhTrangHonNhan) VALUES
+(1,  'Nguyen Van An',    '1985-04-20', 'nam', '001085004201', '0901234501', 'an.nguyen@abc.com',     '12 Le Loi, Q1, TP.HCM',          '12 Le Loi, Q1, TP.HCM',          'Ha Noi',      'Kinh', 'Khong', 'da_ket_hon'),
+(2,  'Tran Thi Binh',    '1988-09-15', 'nu',  '079088009151', '0901234502', 'binh.tran@abc.com',     '45 Hai Ba Trung, Q3, TP.HCM',    '45 Hai Ba Trung, Q3, TP.HCM',    'TP.HCM',     'Kinh', 'Khong', 'da_ket_hon'),
+(3,  'Le Minh Cuong',    '1990-12-05', 'nam', '079090012051', '0901234503', 'cuong.le@abc.com',      '78 Dinh Tien Hoang, BT, TP.HCM', '78 Dinh Tien Hoang, BT, TP.HCM', 'Da Nang',    'Kinh', 'Khong', 'da_ket_hon'),
+(4,  'Pham Thi Dung',    '1982-07-30', 'nu',  '079082007301', '0901234504', 'dung.pham@abc.com',     '23 Nguyen Hue, Q1, TP.HCM',      '23 Nguyen Hue, Q1, TP.HCM',      'Can Tho',    'Kinh', 'Khong', 'da_ket_hon'),
+(5,  'Hoang Van Em',     '1993-03-18', 'nam', '079093003181', '0901234505', 'em.hoang@abc.com',      '56 Phan Dinh Phung, PN, TP.HCM', '56 Phan Dinh Phung, PN, TP.HCM', 'Nghe An',    'Kinh', 'Khong', 'doc_than'),
+(6,  'Ngo Thi Phuong',   '1991-11-22', 'nu',  '079091011221', '0901234506', 'phuong.ngo@abc.com',    '34 Ly Tu Trong, Q1, TP.HCM',     '34 Ly Tu Trong, Q1, TP.HCM',     'Binh Dinh',  'Kinh', 'Khong', 'da_ket_hon'),
+(7,  'Vu Thanh Giang',   '1980-06-10', 'nam', '079080006101', '0901234507', 'giang.vu@abc.com',      '90 CMT8, Q3, TP.HCM',            '90 CMT8, Q3, TP.HCM',            'Hai Phong',  'Kinh', 'Khong', 'da_ket_hon'),
+(8,  'Dang Thi Hoa',     '1995-02-14', 'nu',  '079095002141', '0901234508', 'hoa.dang@abc.com',      '67 Tran Hung Dao, Q5, TP.HCM',   '67 Tran Hung Dao, Q5, TP.HCM',   'TP.HCM',     'Kinh', 'Khong', 'doc_than'),
+(9,  'Bui Quoc Hung',    '1998-08-25', 'nam', '079098008251', '0901234509', 'hung.bui@abc.com',      '15 Vo Van Tan, Q3, TP.HCM',      '15 Vo Van Tan, Q3, TP.HCM',      'Ha Noi',     'Kinh', 'Khong', 'doc_than'),
+(10, 'Trinh Thi Kim',    '1990-05-07', 'nu',  '079090005071', '0901234510', 'kim.trinh@abc.com',     '88 Nguyen Trai, Q5, TP.HCM',     '88 Nguyen Trai, Q5, TP.HCM',     'Hue',        'Kinh', 'Khong', 'da_ket_hon'),
+(11, 'Dinh Van Long',    '1987-01-19', 'nam', '079087001191', '0901234511', 'long.dinh@abc.com',     '22 Hoang Dieu, Q4, TP.HCM',      '22 Hoang Dieu, Q4, TP.HCM',      'Quang Nam',  'Kinh', 'Khong', 'da_ket_hon'),
+(12, 'Phan Thi Mai',     '1994-10-03', 'nu',  '079094010031', '0901234512', 'mai.phan@abc.com',      '11 Bui Vien, Q1, TP.HCM',        '11 Bui Vien, Q1, TP.HCM',        'Vinh Long',  'Kinh', 'Khong', 'doc_than'),
+(13, 'Ly Van Nhan',      '1996-07-28', 'nam', '079096007281', '0901234513', 'nhan.ly@abc.com',       '33 Pasteur, Q1, TP.HCM',         '33 Pasteur, Q1, TP.HCM',         'Tien Giang', 'Kinh', 'Khong', 'doc_than'),
+(14, 'Cao Thi Oanh',     '2000-04-15', 'nu',  '079100004151', '0901234514', 'oanh.cao@abc.com',      '77 Nam Ky Khoi Nghia, Q3',       '77 Nam Ky Khoi Nghia, Q3',       'TP.HCM',     'Kinh', 'Khong', 'doc_than'),
+(15, 'Nguyen Thi Phuc',  '1992-12-20', 'nu',  '079092012201', '0901234515', 'phuc.nguyen@abc.com',   '99 Le Van Sy, Q3, TP.HCM',       '99 Le Van Sy, Q3, TP.HCM',       'Ben Tre',    'Kinh', 'Khong', 'da_ket_hon');
 
 -- =====================================================
--- 3. BONHIEM (Bổ nhiệm hiện tại cho từng NV)
--- NV1=TP Nhân sự, NV2=PP Nhân sự, NV4=GĐ, NV7=TP IT
--- NV3,5,6=NV Nhân sự; NV8,9,10=NV IT; NV11,12=NV Kế toán
--- NV13,14=NV Kinh doanh; NV15=NV Nhân sự
+-- 3. BONHIEM
 -- =====================================================
 INSERT INTO BONHIEM (maNV, maPhongBan, maChucVu, loaiBoNhiem, tyLeHuongLuong, maQuanLy, tuNgay, trangThai, lyDo) VALUES
-(4,  'CONGTY',   'GD',  'chinh', 100.00, NULL, '2019-08-15', 'hieu_luc', 'Bổ nhiệm Giám đốc'),
-(1,  'PHONGNS',  'TP',  'chinh', 100.00, 4,    '2020-01-15', 'hieu_luc', 'Bổ nhiệm Trưởng phòng Nhân sự'),
-(2,  'PHONGNS',  'PP',  'chinh', 100.00, 1,    '2020-03-01', 'hieu_luc', 'Bổ nhiệm Phó phòng Nhân sự'),
-(3,  'PHONGNS',  'NV',  'chinh', 100.00, 1,    '2021-06-01', 'hieu_luc', 'Nhân viên Nhân sự'),
-(5,  'PHONGNS',  'NV',  'chinh', 100.00, 1,    '2022-01-10', 'hieu_luc', 'Nhân viên Nhân sự'),
-(6,  'PHONGNS',  'NV',  'chinh', 100.00, 1,    '2022-04-01', 'hieu_luc', 'Nhân viên Nhân sự'),
-(15, 'PHONGNS',  'NV',  'chinh', 100.00, 1,    '2021-03-01', 'hieu_luc', 'Nhân viên Nhân sự'),
-(7,  'PHONGIT',  'TP',  'chinh', 100.00, 4,    '2018-11-20', 'hieu_luc', 'Bổ nhiệm Trưởng phòng IT'),
-(8,  'PHONGIT',  'NV',  'chinh', 100.00, 7,    '2023-02-01', 'hieu_luc', 'Nhân viên IT'),
-(9,  'PHONGIT',  'NV',  'chinh', 100.00, 7,    '2025-11-01', 'hieu_luc', 'Nhân viên IT thử việc'),
-(10, 'PHONGIT',  'NV',  'chinh', 100.00, 7,    '2021-09-15', 'hieu_luc', 'Nhân viên IT'),
-(11, 'PHONGKT',  'TP',  'chinh', 100.00, 4,    '2020-07-01', 'hieu_luc', 'Trưởng phòng Kế toán'),
-(12, 'PHONGKT',  'NV',  'chinh', 100.00, 11,   '2022-10-01', 'hieu_luc', 'Nhân viên Kế toán'),
-(13, 'PHONGKD',  'NV',  'chinh', 100.00, 4,    '2023-05-15', 'hieu_luc', 'Nhân viên Kinh doanh'),
-(14, 'PHONGKD',  'NV',  'chinh', 100.00, 4,    '2025-12-01', 'hieu_luc', 'Nhân viên Kinh doanh thử việc');
-
+(4,  'CONGTY',   'GD',  'chinh', 100.00, NULL, '2019-08-15', 'hieu_luc', 'Bo nhiem Giam doc'),
+(1,  'PHONGNS',  'TP',  'chinh', 100.00, 4,    '2020-01-15', 'hieu_luc', 'Bo nhiem Truong phong Nhan su'),
+(2,  'PHONGNS',  'PP',  'chinh', 100.00, 1,    '2020-03-01', 'hieu_luc', 'Bo nhiem Pho phong Nhan su'),
+(3,  'PHONGNS',  'NV',  'chinh', 100.00, 1,    '2021-06-01', 'hieu_luc', 'Nhan vien Nhan su'),
+(5,  'PHONGNS',  'NV',  'chinh', 100.00, 1,    '2022-01-10', 'hieu_luc', 'Nhan vien Nhan su'),
+(6,  'PHONGNS',  'NV',  'chinh', 100.00, 1,    '2022-04-01', 'hieu_luc', 'Nhan vien Nhan su'),
+(15, 'PHONGNS',  'NV',  'chinh', 100.00, 1,    '2021-03-01', 'hieu_luc', 'Nhan vien Nhan su'),
+(7,  'PHONGIT',  'TP',  'chinh', 100.00, 4,    '2018-11-20', 'hieu_luc', 'Bo nhiem Truong phong IT'),
+(8,  'PHONGIT',  'NV',  'chinh', 100.00, 7,    '2023-02-01', 'hieu_luc', 'Nhan vien IT'),
+(9,  'PHONGIT',  'NV',  'chinh', 100.00, 7,    '2025-11-01', 'hieu_luc', 'Nhan vien IT thu viec'),
+(10, 'PHONGIT',  'NV',  'chinh', 100.00, 7,    '2021-09-15', 'hieu_luc', 'Nhan vien IT'),
+(11, 'PHONGKT',  'TP',  'chinh', 100.00, 4,    '2020-07-01', 'hieu_luc', 'Truong phong Ke toan'),
+(12, 'PHONGKT',  'NV',  'chinh', 100.00, 11,   '2022-10-01', 'hieu_luc', 'Nhan vien Ke toan'),
+(13, 'PHONGKD',  'NV',  'chinh', 100.00, 4,    '2023-05-15', 'hieu_luc', 'Nhan vien Kinh doanh'),
+(14, 'PHONGKD',  'NV',  'chinh', 100.00, 4,    '2025-12-01', 'hieu_luc', 'Nhan vien Kinh doanh thu viec');
 
 -- =====================================================
 -- 4. TAIKHOAN
@@ -174,9 +170,9 @@ INSERT INTO CHAMCONG (maNV, ngay, maCaLam, gioVao, gioRa, soGioLam, gioLamThem, 
 (11,'2026-02-06','HANH_CHINH','2026-02-06 08:00:00','2026-02-06 17:00:00',8.00,0.00,'dung_gio','the_tu');
 
 -- =====================================================
--- 7. DANGKYLAMTHEM
+-- 7. DANGKY_LAMTHEM
 -- =====================================================
-INSERT INTO DANGKYLAMTHEM (maNV, ngay, soGio, lyDo, nguoiDuyet, ngayDuyet, trangThai) VALUES
+INSERT INTO DANGKY_LAMTHEM (maNV, ngay, soGio, lyDo, nguoiDuyet, ngayDuyet, trangThai) VALUES
 (1, '2026-02-06', 2.0, 'Hoan thien bao cao nhan su thang 2', 4, '2026-02-05 16:00:00', 'da_duyet'),
 (1, '2026-02-20', 2.5, 'Xu ly ho so nhan vien moi',          4, '2026-02-19 17:00:00', 'da_duyet'),
 (7, '2026-02-06', 3.0, 'Deploy he thong len production',     4, '2026-02-05 17:00:00', 'da_duyet'),
@@ -220,7 +216,6 @@ INSERT INTO DONXINNGHIPHEP (maNV, maLoaiPhep, tuNgay, denNgay, soNgayNghi, lyDo,
 -- =====================================================
 -- 10. BANGLUONG + CHITIETLUONG + THANHPHANLUONG
 -- =====================================================
--- Xoa du lieu cu truoc khi insert (de file co the chay lai nhieu lan)
 DELETE FROM BANGLUONG WHERE (thang = 1 AND nam = 2026) OR (thang = 2 AND nam = 2026);
 
 INSERT INTO BANGLUONG (thang, nam, tenBangLuong, nguoiTao, trangThai) VALUES
@@ -319,26 +314,26 @@ INSERT INTO THONGBAO (tieuDe, noiDung, loaiThongBao, maTaiKhoanGui, maTaiKhoanNh
 -- =====================================================
 -- 14. LOG_AUDIT
 -- =====================================================
-INSERT INTO LOG_AUDIT (maTaiKhoan, hanhDong, bangDuLieu, maBanGhi, diaChi_IP) VALUES
-(4,'LOGIN',  NULL,           NULL, '192.168.1.10'),
-(4,'CREATE', 'NHANVIEN',     '14', '192.168.1.10'),
+INSERT INTO LOG_AUDIT (maTaiKhoan, hanhDong, bangDuLieu, maBanGhi, diaChiIP) VALUES
+(4,'LOGIN',  NULL,              NULL, '192.168.1.10'),
+(4,'CREATE', 'NHANVIEN',      '14', '192.168.1.10'),
 (4,'CREATE', 'TINTUYENDUNG', '1',  '192.168.1.10'),
 (4,'CREATE', 'TINTUYENDUNG', '2',  '192.168.1.10'),
-(1,'LOGIN',  NULL,           NULL, '192.168.1.11'),
-(1,'CREATE', 'BANGLUONG',    '1',  '192.168.1.11'),
-(1,'UPDATE', 'BANGLUONG',    '1',  '192.168.1.11'),
+(1,'LOGIN',  NULL,              NULL, '192.168.1.11'),
+(1,'CREATE', 'BANGLUONG',     '1',  '192.168.1.11'),
+(1,'UPDATE', 'BANGLUONG',     '1',  '192.168.1.11'),
 (1,'UPDATE', 'DONXINNGHIPHEP','1', '192.168.1.11'),
-(7,'LOGIN',  NULL,           NULL, '192.168.1.12'),
+(7,'LOGIN',  NULL,              NULL, '192.168.1.12'),
 (7,'UPDATE', 'DONXINNGHIPHEP','4', '192.168.1.12'),
-(3,'LOGIN',  NULL,           NULL, '192.168.1.13'),
+(3,'LOGIN',  NULL,              NULL, '192.168.1.13'),
 (3,'CREATE', 'DONXINNGHIPHEP','3', '192.168.1.13'),
-(8,'LOGIN',  NULL,           NULL, '192.168.1.14'),
+(8,'LOGIN',  NULL,              NULL, '192.168.1.14'),
 (8,'CREATE', 'DONXINNGHIPHEP','4', '192.168.1.14');
 
 -- =====================================================
--- CAUHINHPHUCAP (Phu cap & Khau tru mac dinh)
+-- CAUHINH_PHUCAP
 -- =====================================================
-INSERT INTO CAUHINHPHUCAP (loai, tenKhoan, kieuTinh, giaTri, nguon, hoatDong) VALUES
+INSERT INTO CAUHINH_PHUCAP (loai, tenKhoan, kieuTinh, giaTri, nguon, hoatDong) VALUES
 ('phu_cap', 'Phu cap an trua',    'co_dinh',  500000, 'CongTy',  1),
 ('phu_cap', 'Phu cap dien thoai','co_dinh',  300000, 'CongTy',  1),
 ('phu_cap', 'Phu cap di lai',    'co_dinh',  400000, 'CongTy',  1),
@@ -346,5 +341,4 @@ INSERT INTO CAUHINHPHUCAP (loai, tenKhoan, kieuTinh, giaTri, nguon, hoatDong) VA
 ('khau_tru','BHYT (1.5%)',       'phan_tram', 1.5,   'LuatDinh',1),
 ('khau_tru','BHTN (1%)',         'phan_tram', 1,     'LuatDinh',1);
 
-SELECT '=== HRM Sample Data Inserted Successfully! ===' AS Message,
-       '15 NhanVien | 26 HopDong | 49 ChamCong | 6 DangKyLamThem | 8 DonNghiPhep | 2 BangLuong | 3 DotDanhGia | 3 TinTuyenDung | 5 UngVien | 13 ThongBao' AS Summary;
+SELECT '=== HRM Sample Data Inserted Successfully! ===' AS Message;

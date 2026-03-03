@@ -1,9 +1,9 @@
 package com.hrm.gui.leave;
 
-import com.hrm.model.LeaveBalance;
-import com.hrm.model.LeaveRequest;
-import com.hrm.model.User;
-import com.hrm.service.LeaveService;
+import com.hrm.model.SoDungPhep;
+import com.hrm.model.DonXinNghiPhep;
+import com.hrm.model.TaiKhoan;
+import com.hrm.bus.NghiPhepBUS;
 import com.hrm.util.SessionContext;
 import com.hrm.util.UIHelper;
 
@@ -20,8 +20,8 @@ import java.util.List;
  * Leave List Panel - displays leave requests
  */
 public class LeaveListPanel extends JPanel {
-    private final LeaveService leaveService;
-    private final User currentUser;
+    private final NghiPhepBUS leaveService;
+    private final TaiKhoan currentUser;
     private final boolean isManager;
 
     private JTable table;
@@ -35,7 +35,7 @@ public class LeaveListPanel extends JPanel {
     private static final DateTimeFormatter DATE_FORMAT = DateTimeFormatter.ofPattern("dd/MM/yyyy");
 
     public LeaveListPanel() {
-        this.leaveService = LeaveService.getInstance();
+        this.leaveService = NghiPhepBUS.getInstance();
         this.currentUser = SessionContext.getInstance().getCurrentUser();
         this.isManager = currentUser.hasRole("MANAGER") || currentUser.hasRole("HR")
                 || currentUser.hasRole("ADMIN") || currentUser.hasRole("DIRECTOR");
@@ -60,7 +60,7 @@ public class LeaveListPanel extends JPanel {
         btnCreate = UIHelper.createSuccessButton("Tao don moi");
         btnCreate.addActionListener(e -> createRequest());
 
-        btnApprove = UIHelper.createPrimaryButton("Duyet don");
+        btnApprove = UIHelper.createPrimaryButton("Xu ly don");
         btnApprove.setEnabled(isManager);
         btnApprove.addActionListener(e -> approveRequest());
 
@@ -92,11 +92,11 @@ public class LeaveListPanel extends JPanel {
                 Component c = super.getTableCellRendererComponent(table, value, isSelected, hasFocus, row, column);
                 if (!isSelected) {
                     String status = (String) value;
-                    if ("Da duyet".equals(status)) {
+                    if (com.hrm.model.DonXinNghiPhep.TrangThai.DA_DUYET.getTenHienThi().equals(status)) {
                         c.setBackground(new Color(200, 255, 200));
-                    } else if ("Tu choi".equals(status)) {
+                    } else if (com.hrm.model.DonXinNghiPhep.TrangThai.TU_CHOI.getTenHienThi().equals(status)) {
                         c.setBackground(new Color(255, 200, 200));
-                    } else if ("Cho duyet".equals(status)) {
+                    } else if (com.hrm.model.DonXinNghiPhep.TrangThai.CHO_DUYET.getTenHienThi().equals(status)) {
                         c.setBackground(new Color(255, 255, 200));
                     } else {
                         c.setBackground(Color.WHITE);
@@ -143,7 +143,7 @@ public class LeaveListPanel extends JPanel {
         tableModel.setRowCount(0);
         String filter = (String) cboFilter.getSelectedItem();
 
-        List<LeaveRequest> requests;
+        List<DonXinNghiPhep> requests;
         if ("Cho duyet".equals(filter)) {
             requests = leaveService.getPendingRequests();
         } else if ("Tat ca".equals(filter)) {
@@ -152,7 +152,7 @@ public class LeaveListPanel extends JPanel {
             requests = leaveService.getMyRequests(currentUser.getId());
         }
 
-        for (LeaveRequest req : requests) {
+        for (DonXinNghiPhep req : requests) {
             Object[] row = {
                 req.getId(),
                 req.getEmployeeName(),
@@ -161,7 +161,7 @@ public class LeaveListPanel extends JPanel {
                 req.getEndDate().format(DATE_FORMAT),
                 req.getTotalDays(),
                 req.getReason(),
-                req.getStatus().getDisplayName(),
+                req.getTrangThai().getTenHienThi(),
                 req.getApproverName() != null ? req.getApproverName() : "-"
             };
             tableModel.addRow(row);
@@ -173,8 +173,8 @@ public class LeaveListPanel extends JPanel {
 
     private void updateBalanceDisplay() {
         balancePanel.removeAll();
-        List<LeaveBalance> balances = leaveService.getBalances(currentUser.getId());
-        for (LeaveBalance balance : balances) {
+        List<SoDungPhep> balances = leaveService.getBalances(currentUser.getId());
+        for (SoDungPhep balance : balances) {
             JLabel lbl = new JLabel(getLeaveTypeName(balance.getLeaveTypeCode()) +
                     ": " + balance.getRemainingDays() + "/" + balance.getTotalDays() + " ngay");
             lbl.setFont(new Font("Segoe UI", Font.BOLD, 12));
@@ -217,7 +217,7 @@ public class LeaveListPanel extends JPanel {
         int requestId = (int) tableModel.getValueAt(selectedRow, 0);
         String status = (String) tableModel.getValueAt(selectedRow, 7);
 
-        if (!"Cho duyet".equals(status)) {
+        if (!com.hrm.model.DonXinNghiPhep.TrangThai.CHO_DUYET.getTenHienThi().equals(status)) {
             JOptionPane.showMessageDialog(this,
                     "Chi co the duyet don dang cho duyet",
                     "Thong bao",

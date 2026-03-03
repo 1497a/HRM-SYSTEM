@@ -3,8 +3,8 @@ package com.hrm.gui.contract;
 import com.hrm.gui.components.PurpleButton;
 import com.hrm.gui.components.PurpleTable;
 import com.hrm.model.HopDongLaoDong;
-import com.hrm.service.HopDongService;
-import com.hrm.service.ServiceResult;
+import com.hrm.bus.HopDongBUS;
+import com.hrm.bus.KetQua;
 import com.hrm.util.SessionContext;
 import com.hrm.util.UIColors;
 
@@ -22,7 +22,7 @@ import java.util.List;
  */
 public class ContractListPanel extends JPanel {
 
-    private final HopDongService hopDongService = HopDongService.getInstance();
+    private final HopDongBUS hopDongService = HopDongBUS.getInstance();
     private final DateTimeFormatter dtf = DateTimeFormatter.ofPattern("dd/MM/yyyy");
 
     private PurpleTable table;
@@ -118,6 +118,7 @@ public class ContractListPanel extends JPanel {
 
         btnTao = new PurpleButton("+ Tạo hợp đồng");
         btnThanhLy = PurpleButton.warning("Thanh lý");
+        btnThanhLy.setToolTipText("Thanh lý: Hai bên thỏa thuận chấm dứt hợp đồng trước thời hạn. Hợp đồng vẫn được lưu với trạng thái 'Thanh lý'.");
         btnHuy = PurpleButton.danger("Hủy hợp đồng");
         btnLamMoi = PurpleButton.secondary("Làm mới");
 
@@ -125,6 +126,13 @@ public class ContractListPanel extends JPanel {
         panel.add(btnThanhLy);
         panel.add(btnHuy);
         panel.add(btnLamMoi);
+
+        // Ghi chú giải thích các trạng thái
+        JLabel lblNote = new JLabel(
+                "<html><i>💡 <b>Thanh lý hợp đồng:</b> Hai bên thỏa thuận chấm dứt hợp đồng lao động trước thời hạn theo quy định pháp luật.</i></html>");
+        lblNote.setForeground(new Color(100, 100, 100));
+        lblNote.setFont(new Font("Segoe UI", Font.PLAIN, 12));
+        panel.add(lblNote);
 
         return panel;
     }
@@ -246,7 +254,7 @@ public class ContractListPanel extends JPanel {
                 "Xác nhận thanh lý", JOptionPane.YES_NO_OPTION);
         if (confirm != JOptionPane.YES_OPTION) return;
 
-        ServiceResult<Void> result = hopDongService.thanhLyHopDong(selected.getMaHopDong());
+        KetQua<Void> result = hopDongService.thanhLyHopDong(selected.getMaHopDong());
 
         if (result.isSuccess()) {
             JOptionPane.showMessageDialog(this, result.getMessage(),
@@ -272,7 +280,7 @@ public class ContractListPanel extends JPanel {
                 "Xác nhận hủy hợp đồng", JOptionPane.YES_NO_OPTION, JOptionPane.WARNING_MESSAGE);
         if (confirm != JOptionPane.YES_OPTION) return;
 
-        ServiceResult<Void> result = hopDongService.huyHopDong(selected.getMaHopDong());
+        KetQua<Void> result = hopDongService.huyHopDong(selected.getMaHopDong());
 
         if (result.isSuccess()) {
             JOptionPane.showMessageDialog(this, result.getMessage(),

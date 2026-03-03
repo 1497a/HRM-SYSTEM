@@ -1,14 +1,14 @@
 package com.hrm.model;
 
 /**
- * Model cấu hình phụ cấp / khấu trừ mặc định.
+ * Model cau hinh phu cap / khau tru mac dinh.
  *
- * Admin quản lý danh sách này. Khi tính lương,
- * hệ thống tự động áp dụng các khoản này cho mỗi NV.
+ * Admin quan ly danh sach nay. Khi tinh luong,
+ * he thong tu dong ap dung cac khoan nay cho moi NV.
  *
- * Có 2 kiểu tính:
- *   CO_DINH  → số tiền cố định (VD: phụ cấp ăn trưa = 500,000đ)
- *   PHAN_TRAM → % trên lương cơ bản (VD: BHXH = 8% lương CB)
+ * Co 2 kieu tinh:
+ *   CO_DINH  -> so tien co dinh (VD: phu cap an trua = 500,000d)
+ *   PHAN_TRAM -> % tren luong co ban (VD: BHXH = 8% luong CB)
  */
 public class CauHinhPhuCap {
 
@@ -28,11 +28,11 @@ public class CauHinhPhuCap {
         public String getDisplayName() { return displayName; }
     }
 
-    private int maPC;
-    private ThanhPhanLuong.Loai loai;   // PHU_CAP hoặc KHAU_TRU
+    private int id;
+    private ThanhPhanLuong.Loai loai;   // PHU_CAP hoac KHAU_TRU
     private String tenKhoan;
     private KieuTinh kieuTinh;
-    private double giaTri;              // Số tiền (nếu cố định) hoặc % (nếu phần trăm)
+    private double giaTri;              // So tien (neu co dinh) hoac % (neu phan tram)
     private String nguon;               // CongTy, LuatDinh, ChucVu...
     private boolean hoatDong;
 
@@ -52,9 +52,9 @@ public class CauHinhPhuCap {
     }
 
     /**
-     * Tính số tiền thực tế dựa trên lương cơ bản.
-     * - Cố định: trả về giaTri
-     * - Phần trăm: trả về luongCoBan × giaTri / 100
+     * Tinh so tien thuc te dua tren luong co ban.
+     * - Co dinh: tra ve giaTri
+     * - Phan tram: tra ve luongCoBan x giaTri / 100
      */
     public double tinhSoTien(double luongCoBan) {
         if (kieuTinh == KieuTinh.PHAN_TRAM) {
@@ -63,7 +63,7 @@ public class CauHinhPhuCap {
         return giaTri;
     }
 
-    /** Hiển thị giá trị (500,000đ hoặc 8%) */
+    /** Hien thi gia tri (500,000d hoac 8%) */
     public String hienThiGiaTri() {
         if (kieuTinh == KieuTinh.PHAN_TRAM) {
             return giaTri % 1 == 0 ? (int) giaTri + "%" : giaTri + "%";
@@ -72,8 +72,12 @@ public class CauHinhPhuCap {
     }
 
     // Getters & Setters
-    public int getMaPC() { return maPC; }
-    public void setMaPC(int maPC) { this.maPC = maPC; }
+    public int getId() { return id; }
+    public void setId(int id) { this.id = id; }
+
+    // Legacy compatibility
+    public int getMaPC() { return id; }
+    public void setMaPC(int maPC) { this.id = maPC; }
 
     public ThanhPhanLuong.Loai getLoai() { return loai; }
     public void setLoai(ThanhPhanLuong.Loai loai) { this.loai = loai; }
@@ -95,6 +99,6 @@ public class CauHinhPhuCap {
 
     @Override
     public String toString() {
-        return loai.getDisplayName() + ": " + tenKhoan + " = " + hienThiGiaTri();
+        return loai.toString() + ": " + tenKhoan + " = " + hienThiGiaTri();
     }
 }

@@ -1,8 +1,8 @@
 package com.hrm.gui.leave;
 
-import com.hrm.model.LeaveType;
-import com.hrm.model.User;
-import com.hrm.service.LeaveService;
+import com.hrm.model.LoaiPhep;
+import com.hrm.model.TaiKhoan;
+import com.hrm.bus.NghiPhepBUS;
 import com.hrm.util.SessionContext;
 import com.hrm.util.UIHelper;
 
@@ -17,10 +17,10 @@ import java.util.Date;
  * Leave Create Dialog
  */
 public class LeaveCreateDialog extends JDialog {
-    private final LeaveService leaveService;
-    private final User currentUser;
+    private final NghiPhepBUS leaveService;
+    private final TaiKhoan currentUser;
 
-    private JComboBox<LeaveType> cboLeaveType;
+    private JComboBox<LoaiPhep> cboLeaveType;
     private JSpinner spnStartDate;
     private JSpinner spnEndDate;
     private JLabel lblTotalDays;
@@ -32,7 +32,7 @@ public class LeaveCreateDialog extends JDialog {
 
     public LeaveCreateDialog(Frame parent) {
         super(parent, "Tao Don Nghi Phep", true);
-        this.leaveService = LeaveService.getInstance();
+        this.leaveService = NghiPhepBUS.getInstance();
         this.currentUser = SessionContext.getInstance().getCurrentUser();
 
         initComponents();
@@ -47,7 +47,7 @@ public class LeaveCreateDialog extends JDialog {
     private void initComponents() {
         // Leave type combo
         cboLeaveType = new JComboBox<>();
-        for (LeaveType type : leaveService.getAllLeaveTypes()) {
+        for (LoaiPhep type : leaveService.getAllLeaveTypes()) {
             cboLeaveType.addItem(type);
         }
 
@@ -169,7 +169,7 @@ public class LeaveCreateDialog extends JDialog {
     }
 
     private void submitRequest() {
-        LeaveType leaveType = (LeaveType) cboLeaveType.getSelectedItem();
+        LoaiPhep leaveType = (LoaiPhep) cboLeaveType.getSelectedItem();
         Date startDate = (Date) spnStartDate.getValue();
         Date endDate = (Date) spnEndDate.getValue();
         String reason = txtReason.getText().trim();
@@ -186,7 +186,7 @@ public class LeaveCreateDialog extends JDialog {
         LocalDate start = startDate.toInstant().atZone(ZoneId.systemDefault()).toLocalDate();
         LocalDate end = endDate.toInstant().atZone(ZoneId.systemDefault()).toLocalDate();
 
-        LeaveService.ServiceResult<?> result = leaveService.createRequest(
+        NghiPhepBUS.KetQua<?> result = leaveService.createRequest(
                 currentUser.getId(),
                 currentUser.getFullName(),
                 leaveType.getCode(),

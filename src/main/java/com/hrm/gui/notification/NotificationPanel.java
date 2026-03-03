@@ -1,16 +1,16 @@
 package com.hrm.gui.notification;
 
-import com.hrm.model.Department;
+import com.hrm.model.PhongBan;
 import com.hrm.model.NhanVien;
-import com.hrm.model.Position;
+import com.hrm.model.ChucVu;
 import com.hrm.model.ThongBao;
-import com.hrm.model.User;
-import com.hrm.repo.ThongBaoRepository;
-import com.hrm.service.DepartmentService;
-import com.hrm.service.NhanVienService;
-import com.hrm.service.PositionService;
-import com.hrm.service.ServiceResult;
-import com.hrm.service.ThongBaoService;
+import com.hrm.model.TaiKhoan;
+import com.hrm.dao.ThongBaoDAO;
+import com.hrm.bus.PhongBanBUS;
+import com.hrm.bus.NhanVienBUS;
+import com.hrm.bus.ChucVuBUS;
+import com.hrm.bus.KetQua;
+import com.hrm.bus.ThongBaoBUS;
 import com.hrm.util.SessionContext;
 import com.hrm.util.UIColors;
 import com.hrm.util.UIHelper;
@@ -31,9 +31,9 @@ import java.util.List;
  */
 public class NotificationPanel extends JPanel {
 
-    private final ThongBaoService thongBaoService;
-    private final ThongBaoRepository thongBaoRepo;
-    private final User currentUser;
+    private final ThongBaoBUS thongBaoService;
+    private final ThongBaoDAO thongBaoRepo;
+    private final TaiKhoan currentUser;
     private final boolean canSend;
 
     // Tab 1
@@ -50,8 +50,8 @@ public class NotificationPanel extends JPanel {
     private JComboBox<String> cboRecipientType;
     private JPanel recipientDetailPanel;
     private JComboBox<NhanVien> cboNhanVien;
-    private JComboBox<Department> cboPhongBan;
-    private JComboBox<Position> cboChucVu;
+    private JComboBox<PhongBan> cboPhongBan;
+    private JComboBox<ChucVu> cboChucVu;
     private JButton btnGui;
 
     private List<ThongBao> danhSachThongBao;
@@ -59,8 +59,8 @@ public class NotificationPanel extends JPanel {
     private static final DateTimeFormatter DATE_FORMAT = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm");
 
     public NotificationPanel() {
-        this.thongBaoService = ThongBaoService.getInstance();
-        this.thongBaoRepo = ThongBaoRepository.getInstance();
+        this.thongBaoService = ThongBaoBUS.getInstance();
+        this.thongBaoRepo = ThongBaoDAO.getInstance();
         this.currentUser = SessionContext.getInstance().getCurrentUser();
 
         SessionContext sc = SessionContext.getInstance();
@@ -262,7 +262,7 @@ public class NotificationPanel extends JPanel {
         cboNhanVien = new JComboBox<>();
         cboNhanVien.setFont(new Font("Segoe UI", Font.PLAIN, 13));
         cboNhanVien.setPreferredSize(new Dimension(300, 32));
-        for (NhanVien nv : NhanVienService.getInstance().getDangLamViec()) {
+        for (NhanVien nv : NhanVienBUS.getInstance().getDangLamViec()) {
             cboNhanVien.addItem(nv);
         }
         cboNhanVien.setRenderer(new DefaultListCellRenderer() {
@@ -286,7 +286,7 @@ public class NotificationPanel extends JPanel {
         cboPhongBan = new JComboBox<>();
         cboPhongBan.setFont(new Font("Segoe UI", Font.PLAIN, 13));
         cboPhongBan.setPreferredSize(new Dimension(300, 32));
-        for (Department d : new DepartmentService().getActiveDepartments()) {
+        for (PhongBan d : new PhongBanBUS().getActiveDepartments()) {
             cboPhongBan.addItem(d);
         }
         cboPhongBan.setRenderer(new DefaultListCellRenderer() {
@@ -294,7 +294,7 @@ public class NotificationPanel extends JPanel {
             public Component getListCellRendererComponent(JList<?> list, Object value,
                     int index, boolean isSelected, boolean cellHasFocus) {
                 super.getListCellRendererComponent(list, value, index, isSelected, cellHasFocus);
-                if (value instanceof Department) setText(((Department) value).getTenPhongBan());
+                if (value instanceof PhongBan) setText(((PhongBan) value).getTenPhongBan());
                 return this;
             }
         });
@@ -307,7 +307,7 @@ public class NotificationPanel extends JPanel {
         cboChucVu = new JComboBox<>();
         cboChucVu.setFont(new Font("Segoe UI", Font.PLAIN, 13));
         cboChucVu.setPreferredSize(new Dimension(300, 32));
-        for (Position p : new PositionService().getAllPositions()) {
+        for (ChucVu p : new ChucVuBUS().getAllPositions()) {
             cboChucVu.addItem(p);
         }
         cboChucVu.setRenderer(new DefaultListCellRenderer() {
@@ -315,7 +315,7 @@ public class NotificationPanel extends JPanel {
             public Component getListCellRendererComponent(JList<?> list, Object value,
                     int index, boolean isSelected, boolean cellHasFocus) {
                 super.getListCellRendererComponent(list, value, index, isSelected, cellHasFocus);
-                if (value instanceof Position) setText(((Position) value).getTenChucVu());
+                if (value instanceof ChucVu) setText(((ChucVu) value).getTenChucVu());
                 return this;
             }
         });
@@ -387,7 +387,7 @@ public class NotificationPanel extends JPanel {
         }
         int maThongBao = (int) modelThongBao.getValueAt(row, 0);
         try {
-            ServiceResult<Void> result = thongBaoService.danhDauDaDoc(maThongBao);
+            KetQua<Void> result = thongBaoService.danhDauDaDoc(maThongBao);
             if (result.isSuccess()) {
                 loadThongBao();
             } else {
@@ -403,7 +403,7 @@ public class NotificationPanel extends JPanel {
     private void danhDauTatCa() {
         if (currentUser == null) return;
         try {
-            ServiceResult<Void> result = thongBaoService.danhDauTatCaDaDoc(currentUser.getId());
+            KetQua<Void> result = thongBaoService.danhDauTatCaDaDoc(currentUser.getId());
             if (result.isSuccess()) {
                 loadThongBao();
                 JOptionPane.showMessageDialog(this,
@@ -490,9 +490,9 @@ public class NotificationPanel extends JPanel {
             NhanVien nv = (NhanVien) cboNhanVien.getSelectedItem();
             target = nv.getMaNhanVien() + " - " + nv.getHoTen();
         } else if ("Phong ban".equals(recipientType)) {
-            target = "phong ban: " + ((Department) cboPhongBan.getSelectedItem()).getTenPhongBan();
+            target = "phong ban: " + ((PhongBan) cboPhongBan.getSelectedItem()).getTenPhongBan();
         } else {
-            target = "chuc vu: " + ((Position) cboChucVu.getSelectedItem()).getTenChucVu();
+            target = "chuc vu: " + ((ChucVu) cboChucVu.getSelectedItem()).getTenChucVu();
         }
 
         int confirm = JOptionPane.showConfirmDialog(this,
@@ -507,11 +507,11 @@ public class NotificationPanel extends JPanel {
                 NhanVien nv = (NhanVien) cboNhanVien.getSelectedItem();
                 thongBaoService.guiThongBaoCaNhan(currentUser.getId(), nv.getId(), tieuDe, noiDung);
             } else if ("Phong ban".equals(recipientType)) {
-                Department dept = (Department) cboPhongBan.getSelectedItem();
-                thongBaoService.guiThongBaoPhongBan(currentUser.getId(), dept.getMaPhongBan(), tieuDe, noiDung);
+                PhongBan dept = (PhongBan) cboPhongBan.getSelectedItem();
+                thongBaoService.guiThongBaoPhongBan(currentUser.getId(), dept.getId(), tieuDe, noiDung);
             } else if ("Chuc vu".equals(recipientType)) {
-                Position pos = (Position) cboChucVu.getSelectedItem();
-                thongBaoService.guiThongBaoChucVu(currentUser.getId(), pos.getMaChucVu(), tieuDe, noiDung);
+                ChucVu pos = (ChucVu) cboChucVu.getSelectedItem();
+                thongBaoService.guiThongBaoChucVu(currentUser.getId(), pos.getId(), tieuDe, noiDung);
             }
 
             JOptionPane.showMessageDialog(this,

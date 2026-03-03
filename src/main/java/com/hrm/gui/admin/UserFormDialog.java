@@ -1,9 +1,11 @@
 package com.hrm.gui.admin;
 
-import com.hrm.model.Role;
-import com.hrm.model.User;
-import com.hrm.service.AuthService;
-import com.hrm.service.ServiceResult;
+import com.hrm.model.NhanVien;
+import com.hrm.model.VaiTro;
+import com.hrm.model.TaiKhoan;
+import com.hrm.bus.NhanVienBUS;
+import com.hrm.bus.XacThucBUS;
+import com.hrm.bus.KetQua;
 import com.hrm.util.UIHelper;
 
 import javax.swing.*;
@@ -12,25 +14,33 @@ import java.awt.*;
 import java.util.List;
 
 /**
- * User Form Dialog - Create/Edit user accounts
+ * TaiKhoan Form Dialog - Create/Edit user accounts
+ * Khi tao moi: chon nhan vien tu danh sach, chi duoc 1 tai khoan/NV
  */
 public class UserFormDialog extends JDialog {
-    private final AuthService authService;
-    private final User editingUser;
+    private final XacThucBUS authService;
+    private final NhanVienBUS nhanVienService;
+    private final TaiKhoan editingUser;
     private boolean successful = false;
 
+    // For create mode
+    private JComboBox<NhanVien> cboNhanVien;
+
+    // For edit mode
     private JTextField txtUsername;
-    private JPasswordField txtPassword;
     private JTextField txtFullName;
     private JTextField txtEmail;
+
+    private JPasswordField txtPassword;
     private JPanel rolesPanel;
     private ButtonGroup roleGroup;
     private JCheckBox chkActive;
     private JCheckBox chkLocked;
 
-    public UserFormDialog(Frame parent, User user) {
+    public UserFormDialog(Frame parent, TaiKhoan user) {
         super(parent, user == null ? "Tao tai khoan moi" : "Sua tai khoan", true);
-        this.authService = AuthService.getInstance();
+        this.authService = XacThucBUS.getInstance();
+        this.nhanVienService = NhanVienBUS.getInstance();
         this.editingUser = user;
 
         initComponents();
@@ -39,42 +49,63 @@ public class UserFormDialog extends JDialog {
             loadUserData();
         }
 
-        setSize(450, 520);
+        setSize(480, user == null ? 560 : 520);
         setLocationRelativeTo(parent);
     }
 
     private void initComponents() {
-        txtUsername = new JTextField(20);
         txtPassword = new JPasswordField(20);
-        txtFullName = new JTextField(20);
-        txtEmail = new JTextField(20);
         chkActive = new JCheckBox("Hoat dong");
         chkActive.setSelected(true);
         chkLocked = new JCheckBox("Khoa tai khoan");
 
-        // Roles panel with radio buttons (single role per account)
+        if (editingUser == null) {
+            // CREATE mode: dropdown nhan vien
+            List<NhanVien> dsNV = nhanVienService.getDangLamViec();
+            cboNhanVien = new JComboBox<>();
+            for (NhanVien nv : dsNV) {
+                cboNhanVien.addItem(nv);
+            }
+            cboNhanVien.setRenderer((list, value, index, isSelected, cellHasFocus) -> {
+                JLabel label = new JLabel();
+                if (value != null) {
+                    String hoTen = value.getHoTen() != null ? value.getHoTen() : "";
+                    String ma = value.getMaNhanVien() != null ? value.getMaNhanVien() : "";
+                    label.setText(hoTen + " (" + ma + ")");
+                }
+                if (isSelected) {
+                    label.setBackground(list.getSelectionBackground());
+                    label.setForeground(list.getSelectionForeground());
+                    label.setOpaque(true);
+                }
+                return label;
+            });
+        } else {
+            // EDIT mode: text fields
+            txtUsername = new JTextField(20);
+            txtUsername.setEditable(false);
+            txtFullName = new JTextField(20);
+            txtEmail = new JTextField(20);
+        }
+
+        // Roles panel
         rolesPanel = new JPanel();
         rolesPanel.setLayout(new BoxLayout(rolesPanel, BoxLayout.Y_AXIS));
         roleGroup = new ButtonGroup();
 
-        List<Role> roles = authService.getAllRoles();
-        for (Role role : roles) {
+        List<VaiTro> roles = authService.getAllRoles();
+        for (VaiTro role : roles) {
             JRadioButton rb = new JRadioButton(role.getName() + " (" + role.getCode() + ")");
             rb.setActionCommand(role.getCode());
             roleGroup.add(rb);
             rolesPanel.add(rb);
         }
 
-        // Select first role by default when creating
         if (editingUser == null && rolesPanel.getComponentCount() > 0) {
             Component first = rolesPanel.getComponent(0);
             if (first instanceof JRadioButton) {
                 ((JRadioButton) first).setSelected(true);
             }
-        }
-
-        if (editingUser != null) {
-            txtUsername.setEditable(false);
         }
     }
 
@@ -82,54 +113,78 @@ public class UserFormDialog extends JDialog {
         JPanel mainPanel = new JPanel(new BorderLayout(10, 10));
         mainPanel.setBorder(new EmptyBorder(15, 15, 15, 15));
 
-        // Form panel
         JPanel formPanel = new JPanel(new GridBagLayout());
         GridBagConstraints gbc = new GridBagConstraints();
         gbc.insets = new Insets(5, 5, 5, 5);
         gbc.anchor = GridBagConstraints.WEST;
 
-        // Username
-        gbc.gridx = 0; gbc.gridy = 0;
-        formPanel.add(new JLabel("Ten dang nhap:"), gbc);
-        gbc.gridx = 1; gbc.fill = GridBagConstraints.HORIZONTAL;
-        formPanel.add(txtUsername, gbc);
+        int row = 0;
 
-        // Password
-        gbc.gridx = 0; gbc.gridy = 1; gbc.fill = GridBagConstraints.NONE;
-        formPanel.add(new JLabel(editingUser == null ? "Mat khau:" : "Mat khau moi:"), gbc);
-        gbc.gridx = 1; gbc.fill = GridBagConstraints.HORIZONTAL;
-        formPanel.add(txtPassword, gbc);
+        if (editingUser == null) {
+            // CREATE: show employee dropdown
+            gbc.gridx = 0; gbc.gridy = row;
+            gbc.anchor = GridBagConstraints.NORTHWEST;
+            formPanel.add(new JLabel("Nhan vien:"), gbc);
+            gbc.gridx = 1; gbc.fill = GridBagConstraints.HORIZONTAL;
+            cboNhanVien.setPreferredSize(new Dimension(280, 28));
+            formPanel.add(cboNhanVien, gbc);
+            row++;
 
-        // Full name
-        gbc.gridx = 0; gbc.gridy = 2; gbc.fill = GridBagConstraints.NONE;
-        formPanel.add(new JLabel("Ho ten:"), gbc);
-        gbc.gridx = 1; gbc.fill = GridBagConstraints.HORIZONTAL;
-        formPanel.add(txtFullName, gbc);
+            // Password
+            gbc.gridx = 0; gbc.gridy = row; gbc.fill = GridBagConstraints.NONE;
+            gbc.anchor = GridBagConstraints.WEST;
+            formPanel.add(new JLabel("Mat khau:"), gbc);
+            gbc.gridx = 1; gbc.fill = GridBagConstraints.HORIZONTAL;
+            formPanel.add(txtPassword, gbc);
+            row++;
+        } else {
+            // EDIT: show editable fields
+            gbc.gridx = 0; gbc.gridy = row;
+            formPanel.add(new JLabel("Ten dang nhap:"), gbc);
+            gbc.gridx = 1; gbc.fill = GridBagConstraints.HORIZONTAL;
+            formPanel.add(txtUsername, gbc);
+            row++;
 
-        // Email
-        gbc.gridx = 0; gbc.gridy = 3; gbc.fill = GridBagConstraints.NONE;
-        formPanel.add(new JLabel("Email:"), gbc);
-        gbc.gridx = 1; gbc.fill = GridBagConstraints.HORIZONTAL;
-        formPanel.add(txtEmail, gbc);
+            gbc.gridx = 0; gbc.gridy = row; gbc.fill = GridBagConstraints.NONE;
+            formPanel.add(new JLabel("Mat khau moi:"), gbc);
+            gbc.gridx = 1; gbc.fill = GridBagConstraints.HORIZONTAL;
+            formPanel.add(txtPassword, gbc);
+            row++;
+
+            gbc.gridx = 0; gbc.gridy = row; gbc.fill = GridBagConstraints.NONE;
+            formPanel.add(new JLabel("Ho ten:"), gbc);
+            gbc.gridx = 1; gbc.fill = GridBagConstraints.HORIZONTAL;
+            formPanel.add(txtFullName, gbc);
+            row++;
+
+            gbc.gridx = 0; gbc.gridy = row; gbc.fill = GridBagConstraints.NONE;
+            formPanel.add(new JLabel("Email:"), gbc);
+            gbc.gridx = 1; gbc.fill = GridBagConstraints.HORIZONTAL;
+            formPanel.add(txtEmail, gbc);
+            row++;
+        }
 
         // Roles
-        gbc.gridx = 0; gbc.gridy = 4; gbc.fill = GridBagConstraints.NONE;
+        gbc.gridx = 0; gbc.gridy = row; gbc.fill = GridBagConstraints.NONE;
         gbc.anchor = GridBagConstraints.NORTHWEST;
         formPanel.add(new JLabel("Vai tro:"), gbc);
         gbc.gridx = 1; gbc.fill = GridBagConstraints.HORIZONTAL;
         JScrollPane rolesScroll = new JScrollPane(rolesPanel);
         rolesScroll.setPreferredSize(new Dimension(250, 120));
         formPanel.add(rolesScroll, gbc);
+        row++;
 
-        // Status
-        gbc.gridx = 0; gbc.gridy = 5; gbc.fill = GridBagConstraints.NONE;
-        gbc.anchor = GridBagConstraints.WEST;
-        formPanel.add(new JLabel("Trang thai:"), gbc);
-        gbc.gridx = 1;
-        JPanel statusPanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 10, 0));
-        statusPanel.add(chkActive);
-        statusPanel.add(chkLocked);
-        formPanel.add(statusPanel, gbc);
+        // Status (edit only)
+        if (editingUser != null) {
+            gbc.gridx = 0; gbc.gridy = row; gbc.fill = GridBagConstraints.NONE;
+            gbc.anchor = GridBagConstraints.WEST;
+            formPanel.add(new JLabel("Trang thai:"), gbc);
+            gbc.gridx = 1;
+            JPanel statusPanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 10, 0));
+            statusPanel.add(chkActive);
+            statusPanel.add(chkLocked);
+            formPanel.add(statusPanel, gbc);
+        }
 
         // Buttons
         JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT));
@@ -147,18 +202,17 @@ public class UserFormDialog extends JDialog {
     }
 
     private void loadUserData() {
+        if (editingUser == null) return;
         txtUsername.setText(editingUser.getUsername());
         txtFullName.setText(editingUser.getFullName());
         txtEmail.setText(editingUser.getEmail());
         chkActive.setSelected(editingUser.isActive());
         chkLocked.setSelected(editingUser.isLocked());
 
-        // Select the radio button matching user's current role
         String currentRoleCode = null;
         if (editingUser.getRoles() != null && !editingUser.getRoles().isEmpty()) {
             currentRoleCode = editingUser.getRoles().get(0).getCode();
         }
-
         for (Component comp : rolesPanel.getComponents()) {
             if (comp instanceof JRadioButton) {
                 JRadioButton rb = (JRadioButton) comp;
@@ -171,26 +225,8 @@ public class UserFormDialog extends JDialog {
     }
 
     private void save() {
-        String username = txtUsername.getText().trim();
         String password = new String(txtPassword.getPassword());
-        String fullName = txtFullName.getText().trim();
-        String email = txtEmail.getText().trim();
 
-        // Validation
-        if (username.isEmpty()) {
-            JOptionPane.showMessageDialog(this, "Vui long nhap ten dang nhap", "Loi", JOptionPane.ERROR_MESSAGE);
-            return;
-        }
-        if (fullName.isEmpty()) {
-            JOptionPane.showMessageDialog(this, "Vui long nhap ho ten", "Loi", JOptionPane.ERROR_MESSAGE);
-            return;
-        }
-        if (editingUser == null && password.isEmpty()) {
-            JOptionPane.showMessageDialog(this, "Vui long nhap mat khau", "Loi", JOptionPane.ERROR_MESSAGE);
-            return;
-        }
-
-        // Get selected role code from radio buttons
         String selectedRoleCode = null;
         ButtonModel selectedModel = roleGroup.getSelection();
         if (selectedModel != null) {
@@ -202,28 +238,54 @@ public class UserFormDialog extends JDialog {
         }
 
         if (editingUser == null) {
-            // Create new user
-            ServiceResult<Integer> result = authService.createUser(username, password, null, selectedRoleCode, email);
+            // CREATE: lay thong tin tu NV duoc chon
+            NhanVien selectedNV = (NhanVien) cboNhanVien.getSelectedItem();
+            if (selectedNV == null) {
+                JOptionPane.showMessageDialog(this, "Vui long chon nhan vien", "Loi", JOptionPane.ERROR_MESSAGE);
+                return;
+            }
+            if (password.isEmpty()) {
+                JOptionPane.showMessageDialog(this, "Vui long nhap mat khau", "Loi", JOptionPane.ERROR_MESSAGE);
+                return;
+            }
+
+            // Username = ma nhan vien
+            String username = selectedNV.getMaNhanVien();
+            String email = null;
+            // Try to get email from ThongTinCaNhan
+            try {
+                com.hrm.model.ThongTinCaNhan ttcn = nhanVienService.getThongTinCaNhan(selectedNV.getId());
+                if (ttcn != null) email = ttcn.getEmail();
+            } catch (Exception ex) {
+                // ignore
+            }
+
+            KetQua<Integer> result = authService.createUser(username, password, selectedNV.getId(), selectedRoleCode, email);
             if (!result.isSuccess()) {
                 JOptionPane.showMessageDialog(this, result.getMessage(), "Loi", JOptionPane.ERROR_MESSAGE);
                 return;
             }
             successful = true;
             JOptionPane.showMessageDialog(this,
-                    "Da tao tai khoan thanh cong!",
-                    "Thong bao",
-                    JOptionPane.INFORMATION_MESSAGE);
+                    "Da tao tai khoan thanh cong!\nTen dang nhap: " + username,
+                    "Thong bao", JOptionPane.INFORMATION_MESSAGE);
             dispose();
         } else {
-            // Update existing user
-            editingUser.setFullName(fullName);
-            editingUser.setEmail(email);
-            editingUser.setActive(chkActive.isSelected());
-            editingUser.setLocked(chkLocked.isSelected());
+            // UPDATE
+            String fullName = txtFullName.getText().trim();
+            String email = txtEmail.getText().trim();
+            if (fullName.isEmpty()) {
+                JOptionPane.showMessageDialog(this, "Vui long nhap ho ten", "Loi", JOptionPane.ERROR_MESSAGE);
+                return;
+            }
 
-            // Update role: find the selected Role object and replace current roles list
+            editingUser.setHoTen(fullName);
+            editingUser.setEmail(email);
+            editingUser.setHoatDong(chkActive.isSelected());
+            editingUser.setBiKhoa(chkLocked.isSelected());
+
             final String roleCode = selectedRoleCode;
-            Role selectedRole = authService.getAllRoles().stream()
+            VaiTro selectedRole = authService.getAllRoles().stream()
                     .filter(r -> r.getCode().equals(roleCode))
                     .findFirst()
                     .orElse(null);
@@ -232,23 +294,20 @@ public class UserFormDialog extends JDialog {
                 editingUser.getRoles().add(selectedRole);
             }
 
-            ServiceResult<Void> result = authService.updateUser(editingUser);
+            KetQua<Void> result = authService.updateUser(editingUser);
             if (!result.isSuccess()) {
                 JOptionPane.showMessageDialog(this, result.getMessage(), "Loi", JOptionPane.ERROR_MESSAGE);
                 return;
             }
 
-            // If a new password was provided, inform the user that password change is done via Settings
             if (!password.isEmpty()) {
                 JOptionPane.showMessageDialog(this,
-                        "Thong tin tai khoan da duoc cap nhat.\nDe doi mat khau, vui long su dung chuc nang Doi mat khau trong Cai dat.",
-                        "Thong bao",
-                        JOptionPane.INFORMATION_MESSAGE);
+                        "Thong tin tai khoan da duoc cap nhat.\nDe doi mat khau, su dung chuc nang Doi mat khau trong Cai dat.",
+                        "Thong bao", JOptionPane.INFORMATION_MESSAGE);
             } else {
                 JOptionPane.showMessageDialog(this,
                         "Da cap nhat tai khoan thanh cong!",
-                        "Thong bao",
-                        JOptionPane.INFORMATION_MESSAGE);
+                        "Thong bao", JOptionPane.INFORMATION_MESSAGE);
             }
 
             successful = true;

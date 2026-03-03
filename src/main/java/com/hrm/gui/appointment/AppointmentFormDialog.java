@@ -2,14 +2,14 @@ package com.hrm.gui.appointment;
 
 import com.hrm.gui.components.PurpleButton;
 import com.hrm.model.BoNhiem;
-import com.hrm.model.Department;
+import com.hrm.model.PhongBan;
 import com.hrm.model.NhanVien;
-import com.hrm.model.Position;
-import com.hrm.repo.DepartmentRepository;
-import com.hrm.repo.PositionRepository;
-import com.hrm.service.BoNhiemService;
-import com.hrm.service.NhanVienService;
-import com.hrm.service.ServiceResult;
+import com.hrm.model.ChucVu;
+import com.hrm.dao.PhongBanDAO;
+import com.hrm.dao.ChucVuDAO;
+import com.hrm.bus.BoNhiemBUS;
+import com.hrm.bus.NhanVienBUS;
+import com.hrm.bus.KetQua;
 import com.hrm.util.UIColors;
 
 import javax.swing.*;
@@ -32,13 +32,13 @@ public class AppointmentFormDialog extends JDialog {
     private final BoNhiem boNhiemHienThi;
 
     // Repositories
-    private final DepartmentRepository departmentRepo = new DepartmentRepository();
-    private final PositionRepository positionRepo = new PositionRepository();
+    private final PhongBanDAO departmentRepo = new PhongBanDAO();
+    private final ChucVuDAO positionRepo = new ChucVuDAO();
 
     // Form fields
     private JComboBox<NhanVien> cboNhanVien;
-    private JComboBox<Department> cboPhongBan;
-    private JComboBox<Position> cboChucVu;
+    private JComboBox<PhongBan> cboPhongBan;
+    private JComboBox<ChucVu> cboChucVu;
     private JComboBox<String> cboLoaiBoNhiem;
     private JSpinner spnTyLe;
     private JSpinner spnTuNgay;
@@ -141,8 +141,8 @@ public class AppointmentFormDialog extends JDialog {
     }
 
     private void loadDepartments() {
-        List<Department> departments = departmentRepo.findActive();
-        for (Department dept : departments) {
+        List<PhongBan> departments = departmentRepo.findActive();
+        for (PhongBan dept : departments) {
             cboPhongBan.addItem(dept);
         }
         cboPhongBan.setRenderer(new DefaultListCellRenderer() {
@@ -150,8 +150,8 @@ public class AppointmentFormDialog extends JDialog {
             public Component getListCellRendererComponent(JList<?> list, Object value,
                     int index, boolean isSelected, boolean cellHasFocus) {
                 super.getListCellRendererComponent(list, value, index, isSelected, cellHasFocus);
-                if (value instanceof Department) {
-                    setText(((Department) value).getTenPhongBan());
+                if (value instanceof PhongBan) {
+                    setText(((PhongBan) value).getTenPhongBan());
                 }
                 return this;
             }
@@ -159,8 +159,8 @@ public class AppointmentFormDialog extends JDialog {
     }
 
     private void loadPositions() {
-        List<Position> positions = positionRepo.findActive();
-        for (Position pos : positions) {
+        List<ChucVu> positions = positionRepo.findActive();
+        for (ChucVu pos : positions) {
             cboChucVu.addItem(pos);
         }
         cboChucVu.setRenderer(new DefaultListCellRenderer() {
@@ -168,8 +168,8 @@ public class AppointmentFormDialog extends JDialog {
             public Component getListCellRendererComponent(JList<?> list, Object value,
                     int index, boolean isSelected, boolean cellHasFocus) {
                 super.getListCellRendererComponent(list, value, index, isSelected, cellHasFocus);
-                if (value instanceof Position) {
-                    setText(((Position) value).getTenChucVu());
+                if (value instanceof ChucVu) {
+                    setText(((ChucVu) value).getTenChucVu());
                 }
                 return this;
             }
@@ -177,7 +177,7 @@ public class AppointmentFormDialog extends JDialog {
     }
 
     private void loadNhanVien() {
-        List<NhanVien> list = NhanVienService.getInstance().getDangLamViec();
+        List<NhanVien> list = NhanVienBUS.getInstance().getDangLamViec();
         for (NhanVien nv : list) {
             cboNhanVien.addItem(nv);
         }
@@ -298,8 +298,8 @@ public class AppointmentFormDialog extends JDialog {
 
         // Chọn phòng ban
         for (int i = 0; i < cboPhongBan.getItemCount(); i++) {
-            Department dept = cboPhongBan.getItemAt(i);
-            if (dept.getMaPhongBan().equals(bn.getMaPhongBan())) {
+            PhongBan dept = cboPhongBan.getItemAt(i);
+            if (dept.getId() == bn.getPhongBanId()) {
                 cboPhongBan.setSelectedIndex(i);
                 break;
             }
@@ -307,8 +307,8 @@ public class AppointmentFormDialog extends JDialog {
 
         // Chọn chức vụ
         for (int i = 0; i < cboChucVu.getItemCount(); i++) {
-            Position pos = cboChucVu.getItemAt(i);
-            if (pos.getMaChucVu().equals(bn.getMaChucVu())) {
+            ChucVu pos = cboChucVu.getItemAt(i);
+            if (pos.getId().equals(bn.getChucVuId())) {
                 cboChucVu.setSelectedIndex(i);
                 break;
             }
@@ -363,7 +363,7 @@ public class AppointmentFormDialog extends JDialog {
         int maNV = selectedNV.getId();
 
         // Validate phòng ban
-        Department selectedDept = (Department) cboPhongBan.getSelectedItem();
+        PhongBan selectedDept = (PhongBan) cboPhongBan.getSelectedItem();
         if (selectedDept == null) {
             JOptionPane.showMessageDialog(this, "Vui lòng chọn phòng ban.",
                     "Lỗi nhập liệu", JOptionPane.ERROR_MESSAGE);
@@ -371,7 +371,7 @@ public class AppointmentFormDialog extends JDialog {
         }
 
         // Validate chức vụ
-        Position selectedPos = (Position) cboChucVu.getSelectedItem();
+        ChucVu selectedPos = (ChucVu) cboChucVu.getSelectedItem();
         if (selectedPos == null) {
             JOptionPane.showMessageDialog(this, "Vui lòng chọn chức vụ.",
                     "Lỗi nhập liệu", JOptionPane.ERROR_MESSAGE);
@@ -395,15 +395,15 @@ public class AppointmentFormDialog extends JDialog {
         // Tạo BoNhiem object
         BoNhiem bn = new BoNhiem();
         bn.setMaNV(maNV);
-        bn.setMaPhongBan(selectedDept.getMaPhongBan());
-        bn.setMaChucVu(selectedPos.getMaChucVu());
+        bn.setPhongBanId(selectedDept.getId());
+        bn.setChucVuId(selectedPos.getId());
         bn.setLoaiBoNhiem(loaiBoNhiem);
         bn.setTyLeHuongLuong(tyLe);
         bn.setTuNgay(tuNgay);
         bn.setLyDo(ghiChu.isEmpty() ? null : ghiChu);
 
         // Gọi service
-        ServiceResult<BoNhiem> result = BoNhiemService.getInstance().taoBoNhiem(bn);
+        KetQua<BoNhiem> result = BoNhiemBUS.getInstance().taoBoNhiem(bn);
 
         if (result.isSuccess()) {
             JOptionPane.showMessageDialog(this, result.getMessage(),

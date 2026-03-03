@@ -142,7 +142,7 @@ public class SalaryDetailDialog extends JDialog {
         List<ThanhPhanLuong> danhSach = chiTiet.getDanhSachThanhPhan();
         if (danhSach != null) {
             for (ThanhPhanLuong tp : danhSach) {
-                String loaiDisplay = tp.getLoai() != null ? tp.getLoai().getDisplayName() : "";
+                String loaiDisplay = tp.getLoai() != null ? tp.getLoai().toString() : "";
                 model.addRow(new Object[]{
                         tp.getTenKhoan(),
                         loaiDisplay,

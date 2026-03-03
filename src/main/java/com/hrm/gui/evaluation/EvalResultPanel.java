@@ -1,9 +1,9 @@
 package com.hrm.gui.evaluation;
 
-import com.hrm.model.EvalScore;
-import com.hrm.model.EvalSubmission;
-import com.hrm.model.User;
-import com.hrm.service.EvaluationService;
+import com.hrm.model.ChiTietDanhGia;
+import com.hrm.model.DanhGiaHieuSuat;
+import com.hrm.model.TaiKhoan;
+import com.hrm.bus.DanhGiaBUS;
 import com.hrm.util.SessionContext;
 import com.hrm.util.UIHelper;
 
@@ -20,8 +20,8 @@ import java.util.List;
  * Evaluation Result Panel - view evaluation results
  */
 public class EvalResultPanel extends JPanel {
-    private final EvaluationService evalService;
-    private final User currentUser;
+    private final DanhGiaBUS evalService;
+    private final TaiKhoan currentUser;
     private final boolean isAdmin;
 
     private JTable submissionTable;
@@ -34,7 +34,7 @@ public class EvalResultPanel extends JPanel {
     private static final DateTimeFormatter DT_FORMAT = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm");
 
     public EvalResultPanel() {
-        this.evalService = EvaluationService.getInstance();
+        this.evalService = DanhGiaBUS.getInstance();
         this.currentUser = SessionContext.getInstance().getCurrentUser();
         this.isAdmin = currentUser.hasRole("ADMIN") || currentUser.hasRole("HR")
                 || currentUser.hasRole("MANAGER") || currentUser.hasRole("DIRECTOR");
@@ -156,7 +156,7 @@ public class EvalResultPanel extends JPanel {
         txtComment.setText("");
 
         String filter = (String) cboFilter.getSelectedItem();
-        List<EvalSubmission> submissions;
+        List<DanhGiaHieuSuat> submissions;
 
         if ("Tat ca".equals(filter)) {
             submissions = evalService.getAllSubmissions();
@@ -164,14 +164,14 @@ public class EvalResultPanel extends JPanel {
             submissions = evalService.getSubmissionsByEmployee(currentUser.getId());
         }
 
-        for (EvalSubmission sub : submissions) {
+        for (DanhGiaHieuSuat sub : submissions) {
             Object[] row = {
                 sub.getId(),
-                sub.getCycleName(),
+                sub.getTenDot(),
                 sub.getEmployeeName(),
-                sub.getEvaluatorName(),
+                sub.getTenNguoiDanhGia(),
                 String.format("%.2f", sub.getOverallScore()),
-                sub.getRating().getDisplayName(),
+                sub.getXepLoai().toString(),
                 sub.getSubmittedAt().format(DT_FORMAT)
             };
             submissionModel.addRow(row);
@@ -190,17 +190,17 @@ public class EvalResultPanel extends JPanel {
 
         // Find the submission
         String filter = (String) cboFilter.getSelectedItem();
-        List<EvalSubmission> submissions = "Tat ca".equals(filter)
+        List<DanhGiaHieuSuat> submissions = "Tat ca".equals(filter)
                 ? evalService.getAllSubmissions()
                 : evalService.getSubmissionsByEmployee(currentUser.getId());
 
         if (row < submissions.size()) {
-            EvalSubmission sub = submissions.get(row);
+            DanhGiaHieuSuat sub = submissions.get(row);
 
-            for (EvalScore score : sub.getScores()) {
+            for (ChiTietDanhGia score : sub.getScores()) {
                 Object[] detailRow = {
                     score.getCriteriaName(),
-                    score.getWeight() + "%",
+                    score.getDiem() + "%",
                     String.format("%.1f", score.getScore()),
                     String.format("%.2f", score.getWeightedScore()),
                     score.getComment() != null ? score.getComment() : ""
@@ -212,7 +212,7 @@ public class EvalResultPanel extends JPanel {
             detailModel.addRow(new Object[]{
                 "TONG CONG", "100%", "",
                 String.format("%.2f", sub.getOverallScore()),
-                sub.getRating().getDisplayName()
+                sub.getXepLoai().toString()
             });
 
             txtComment.setText(sub.getGeneralComment() != null ? sub.getGeneralComment() : "");

@@ -1,8 +1,8 @@
 package com.hrm.gui.admin;
 
-import com.hrm.model.Role;
-import com.hrm.service.AuthService;
-import com.hrm.service.ServiceResult;
+import com.hrm.model.VaiTro;
+import com.hrm.bus.XacThucBUS;
+import com.hrm.bus.KetQua;
 import com.hrm.util.SessionContext;
 import com.hrm.util.UIColors;
 import com.hrm.util.UIHelper;
@@ -16,11 +16,11 @@ import java.awt.*;
 import java.util.List;
 
 /**
- * Role Management Panel - CRUD operations for roles with permission assignment
+ * VaiTro Management Panel - CRUD operations for roles with permission assignment
  * Module 9: Phân quyền và bảo mật
  */
 public class RoleManagementPanel extends JPanel {
-    private final AuthService authService;
+    private final XacThucBUS authService;
     private final SessionContext sessionContext;
 
     private JTable table;
@@ -31,7 +31,7 @@ public class RoleManagementPanel extends JPanel {
     private JButton btnRefresh;
 
     public RoleManagementPanel() {
-        this.authService = AuthService.getInstance();
+        this.authService = XacThucBUS.getInstance();
         this.sessionContext = SessionContext.getInstance();
 
         initComponents();
@@ -134,15 +134,15 @@ public class RoleManagementPanel extends JPanel {
 
     private void loadData() {
         tableModel.setRowCount(0);
-        List<Role> roles = authService.getAllRoles();
+        List<VaiTro> roles = authService.getAllRoles();
 
-        for (Role role : roles) {
+        for (VaiTro role : roles) {
             Object[] row = {
                 role.getCode(),
                 role.getName(),
-                role.getDescription(),
-                role.getPermissions().size(),
-                role.isSystemRole() ? "Co" : "-"
+                role.getMoTa(),
+                role.getQuyens().size(),
+                role.isLaHeThong() ? "Co" : "-"
             };
             tableModel.addRow(row);
         }
@@ -168,7 +168,7 @@ public class RoleManagementPanel extends JPanel {
         }
 
         String roleCode = (String) tableModel.getValueAt(selectedRow, 0);
-        Role role = authService.getRoleByCode(roleCode);
+        VaiTro role = authService.getRoleByCode(roleCode);
         if (role != null) {
             RoleFormDialog dialog = new RoleFormDialog(
                     (Frame) SwingUtilities.getWindowAncestor(this), role);
@@ -198,7 +198,7 @@ public class RoleManagementPanel extends JPanel {
                 JOptionPane.WARNING_MESSAGE);
 
         if (confirm == JOptionPane.YES_OPTION) {
-            ServiceResult<Void> result = authService.deleteRole(roleCode);
+            KetQua<Void> result = authService.deleteRole(roleCode);
             if (result.isSuccess()) {
                 JOptionPane.showMessageDialog(this,
                         "Da xoa vai tro thanh cong!",

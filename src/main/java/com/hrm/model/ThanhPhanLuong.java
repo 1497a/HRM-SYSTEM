@@ -65,6 +65,6 @@ public class ThanhPhanLuong {
 
     @Override
     public String toString() {
-        return loai.getDisplayName() + ": " + tenKhoan + " = " + soTien;
+        return loai.toString() + ": " + tenKhoan + " = " + soTien;
     }
 }

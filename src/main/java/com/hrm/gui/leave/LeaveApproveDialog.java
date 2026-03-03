@@ -1,8 +1,8 @@
 package com.hrm.gui.leave;
 
-import com.hrm.model.LeaveRequest;
-import com.hrm.model.User;
-import com.hrm.service.LeaveService;
+import com.hrm.model.DonXinNghiPhep;
+import com.hrm.model.TaiKhoan;
+import com.hrm.bus.NghiPhepBUS;
 import com.hrm.util.SessionContext;
 import com.hrm.util.UIHelper;
 
@@ -16,10 +16,10 @@ import java.time.format.DateTimeFormatter;
  * Leave Approve Dialog
  */
 public class LeaveApproveDialog extends JDialog {
-    private final LeaveService leaveService;
-    private final User currentUser;
+    private final NghiPhepBUS leaveService;
+    private final TaiKhoan currentUser;
     private final int requestId;
-    private LeaveRequest request;
+    private DonXinNghiPhep request;
 
     private JTextArea txtNote;
     private JButton btnApprove;
@@ -30,7 +30,7 @@ public class LeaveApproveDialog extends JDialog {
 
     public LeaveApproveDialog(Frame parent, int requestId) {
         super(parent, "Duyet Don Nghi Phep", true);
-        this.leaveService = LeaveService.getInstance();
+        this.leaveService = NghiPhepBUS.getInstance();
         this.currentUser = SessionContext.getInstance().getCurrentUser();
         this.requestId = requestId;
         this.request = leaveService.getRequest(requestId);
@@ -95,8 +95,8 @@ public class LeaveApproveDialog extends JDialog {
         infoPanel.add(createValueLabel(request.getTotalDays() + " ngay"));
 
         infoPanel.add(new JLabel("Trang thai:"));
-        JLabel lblStatus = createValueLabel(request.getStatus().getDisplayName());
-        if (request.getStatus() == LeaveRequest.Status.PENDING) {
+        JLabel lblStatus = createValueLabel(request.getTrangThai().toString());
+        if (request.getTrangThai() == DonXinNghiPhep.TrangThai.CHO_DUYET) {
             lblStatus.setForeground(new Color(230, 126, 34));
         }
         infoPanel.add(lblStatus);
@@ -171,7 +171,7 @@ public class LeaveApproveDialog extends JDialog {
             return;
         }
 
-        LeaveService.ServiceResult<?> result = leaveService.processRequest(
+        NghiPhepBUS.KetQua<?> result = leaveService.processRequest(
                 requestId,
                 approve,
                 currentUser.getId(),

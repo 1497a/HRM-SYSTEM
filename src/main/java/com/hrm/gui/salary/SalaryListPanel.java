@@ -2,8 +2,8 @@ package com.hrm.gui.salary;
 
 import com.hrm.model.BangLuong;
 import com.hrm.model.ChiTietLuong;
-import com.hrm.service.SalaryService;
-import com.hrm.service.ServiceResult;
+import com.hrm.bus.LuongBUS;
+import com.hrm.bus.KetQua;
 import com.hrm.util.UIColors;
 import com.hrm.util.UIHelper;
 
@@ -25,7 +25,7 @@ import java.util.Locale;
  */
 public class SalaryListPanel extends JPanel {
 
-    private final SalaryService salaryService;
+    private final LuongBUS salaryService;
 
     // Tab 1 - Bảng lương
     private JTable tblBangLuong;
@@ -50,7 +50,7 @@ public class SalaryListPanel extends JPanel {
     private static final NumberFormat MONEY_FORMAT = NumberFormat.getNumberInstance(new Locale("vi", "VN"));
 
     public SalaryListPanel() {
-        this.salaryService = SalaryService.getInstance();
+        this.salaryService = LuongBUS.getInstance();
         setLayout(new BorderLayout());
         setBackground(UIColors.LIGHT_GRAY_BG);
 
@@ -215,13 +215,13 @@ public class SalaryListPanel extends JPanel {
         try {
             danhSachBL = salaryService.getAll();
             for (BangLuong bl : danhSachBL) {
-                int thang = bl.getNgayBD() != null ? bl.getNgayBD().getMonthValue() : 0;
-                int nam = bl.getNgayBD() != null ? bl.getNgayBD().getYear() : 0;
+                int thang = bl.getThang();
+                int nam = bl.getNam();
                 String tenBL = "Bảng lương tháng " + thang + "/" + nam;
                 String ngayTao = bl.getNgayTao() != null
                         ? bl.getNgayTao().format(DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm"))
                         : "";
-                String trangThai = bl.getTrangThai() != null ? bl.getTrangThai().getDisplayName() : "";
+                String trangThai = bl.getTrangThai() != null ? bl.getTrangThai().toString() : "";
                 modelBangLuong.addRow(new Object[]{
                         bl.getMaBL(), thang, nam, tenBL, ngayTao, trangThai
                 });
@@ -283,7 +283,7 @@ public class SalaryListPanel extends JPanel {
         int nam = (int) spinNam.getValue();
 
         try {
-            ServiceResult<BangLuong> sr = salaryService.tinhLuong(thang, nam);
+            KetQua<BangLuong> sr = salaryService.tinhLuong(thang, nam);
             if (sr.isSuccess()) {
                 JOptionPane.showMessageDialog(this,
                         "Tính lương tháng " + thang + "/" + nam + " thành công!",
@@ -316,7 +316,7 @@ public class SalaryListPanel extends JPanel {
         if (confirm != JOptionPane.YES_OPTION) return;
 
         try {
-            ServiceResult<Void> sr = salaryService.duyetBangLuong(maBL);
+            KetQua<Void> sr = salaryService.duyetBangLuong(maBL);
             if (sr.isSuccess()) {
                 JOptionPane.showMessageDialog(this,
                         "Đã duyệt bảng lương thành công.",
@@ -349,7 +349,7 @@ public class SalaryListPanel extends JPanel {
         if (confirm != JOptionPane.YES_OPTION) return;
 
         try {
-            ServiceResult<Void> sr = salaryService.khoaBangLuong(maBL);
+            KetQua<Void> sr = salaryService.khoaBangLuong(maBL);
             if (sr.isSuccess()) {
                 JOptionPane.showMessageDialog(this,
                         "Đã khóa bảng lương thành công.",

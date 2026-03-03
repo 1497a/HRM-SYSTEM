@@ -3,8 +3,12 @@ package com.hrm.gui.recruitment;
 import com.hrm.model.TinTuyenDung;
 import com.hrm.model.UngVien;
 import com.hrm.model.YeuCauTuyenDung;
-import com.hrm.service.RecruitmentService;
-import com.hrm.service.ServiceResult;
+import com.hrm.model.PhongBan;
+import com.hrm.model.ChucVu;
+import com.hrm.bus.TuyenDungBUS;
+import com.hrm.bus.PhongBanBUS;
+import com.hrm.bus.ChucVuBUS;
+import com.hrm.bus.KetQua;
 import com.hrm.util.UIColors;
 import com.hrm.util.UIHelper;
 
@@ -25,7 +29,7 @@ import java.util.List;
  */
 public class RecruitmentPanel extends JPanel {
 
-    private final RecruitmentService recruitmentService;
+    private final TuyenDungBUS recruitmentService;
 
     // Tab 1 - Yêu cầu tuyển dụng
     private JTable tblYeuCau;
@@ -47,6 +51,7 @@ public class RecruitmentPanel extends JPanel {
     private DefaultTableModel modelUngVien;
     private JButton btnChuyenTrangThai;
     private JButton btnChuyenNV;
+    private JButton btnTaoUngVien;
     private JButton btnLamMoiUV;
 
     private List<YeuCauTuyenDung> danhSachYC;
@@ -56,7 +61,7 @@ public class RecruitmentPanel extends JPanel {
     private static final DateTimeFormatter DATE_FORMAT = DateTimeFormatter.ofPattern("dd/MM/yyyy");
 
     public RecruitmentPanel() {
-        this.recruitmentService = RecruitmentService.getInstance();
+        this.recruitmentService = TuyenDungBUS.getInstance();
         setLayout(new BorderLayout());
         setBackground(UIColors.LIGHT_GRAY_BG);
 
@@ -102,7 +107,7 @@ public class RecruitmentPanel extends JPanel {
         toolbar.add(btnLamMoiYC);
 
         // Table
-        String[] cols = {"Mã YC", "Vị trí", "Phòng ban", "Số lượng", "Ngày tạo", "Trạng thái"};
+        String[] cols = {"Mã YC", "Vị trí", "Phòng ban", "Số lượng", "Hạn tuyển dụng", "Trạng thái"};
         modelYeuCau = new DefaultTableModel(cols, 0) {
             @Override
             public boolean isCellEditable(int row, int col) { return false; }
@@ -179,14 +184,17 @@ public class RecruitmentPanel extends JPanel {
         JPanel toolbar = new JPanel(new FlowLayout(FlowLayout.LEFT, 8, 4));
         toolbar.setOpaque(false);
 
-        btnChuyenTrangThai = UIHelper.createPrimaryButton("Chuyển trạng thái");
-        btnChuyenNV = UIHelper.createSuccessButton("Chuyển thành nhân viên");
-        btnLamMoiUV = UIHelper.createDefaultButton("Làm mới");
+        btnChuyenTrangThai = UIHelper.createPrimaryButton("Chuyen trang thai");
+        btnChuyenNV = UIHelper.createSuccessButton("Chuyen thanh nhan vien");
+        btnTaoUngVien = UIHelper.createDefaultButton("+ Tao ung vien");
+        btnLamMoiUV = UIHelper.createDefaultButton("Lam moi");
 
         btnChuyenTrangThai.addActionListener(e -> chuyenTrangThaiUV());
         btnChuyenNV.addActionListener(e -> chuyenUVThanhNV());
+        btnTaoUngVien.addActionListener(e -> taoUngVien());
         btnLamMoiUV.addActionListener(e -> loadUngVien());
 
+        toolbar.add(btnTaoUngVien);
         toolbar.add(btnChuyenTrangThai);
         toolbar.add(btnChuyenNV);
         toolbar.add(btnLamMoiUV);
@@ -229,8 +237,8 @@ public class RecruitmentPanel extends JPanel {
                 String ngayTao = yc.getHanTuyenDung() != null ? yc.getHanTuyenDung().format(DATE_FORMAT) : "";
                 modelYeuCau.addRow(new Object[]{
                         yc.getMaYeuCau(),
-                        yc.getTenChucVu() != null ? yc.getTenChucVu() : yc.getMaChucVu(),
-                        yc.getTenPhongBan() != null ? yc.getTenPhongBan() : yc.getMaPhongBan(),
+                        yc.getTenChucVu() != null ? yc.getTenChucVu() : yc.getId(),
+                        yc.getTenPhongBan() != null ? yc.getTenPhongBan() : yc.getId(),
                         yc.getSoLuong(),
                         ngayTao,
                         yc.getTrangThaiDisplay()
@@ -288,56 +296,75 @@ public class RecruitmentPanel extends JPanel {
     // =======================
 
     private void taoYeuCau() {
-        JTextField txtViTri = new JTextField(20);
-        JTextField txtPhongBan = new JTextField(20);
+        PhongBanBUS pbBUS = new PhongBanBUS();
+        ChucVuBUS cvBUS = new ChucVuBUS();
+        java.util.List<PhongBan> dsPhongBan = pbBUS.getActiveDepartments();
+        java.util.List<ChucVu> dsChucVu = cvBUS.getActivePositions();
+
+        JComboBox<PhongBan> cboPhongBan = new JComboBox<>();
+        for (PhongBan pb : dsPhongBan) cboPhongBan.addItem(pb);
+        cboPhongBan.setRenderer((list, value, index, sel, focus) ->
+            new JLabel(value != null ? value.getTenPhongBan() : ""));
+
+        JComboBox<ChucVu> cboChucVu = new JComboBox<>();
+        for (ChucVu cv : dsChucVu) cboChucVu.addItem(cv);
+        cboChucVu.setRenderer((list, value, index, sel, focus) ->
+            new JLabel(value != null ? value.getTenChucVu() : ""));
+
         JSpinner spinSoLuong = new JSpinner(new SpinnerNumberModel(1, 1, 100, 1));
+
+        SpinnerDateModel dateModel = new SpinnerDateModel(
+                java.util.Date.from(java.time.LocalDate.now().plusMonths(1)
+                        .atStartOfDay(java.time.ZoneId.systemDefault()).toInstant()),
+                null, null, java.util.Calendar.DAY_OF_MONTH);
+        JSpinner spinHan = new JSpinner(dateModel);
+        spinHan.setEditor(new JSpinner.DateEditor(spinHan, "dd/MM/yyyy"));
+
         JTextField txtLyDo = new JTextField(20);
+        txtLyDo.setFont(new Font("Segoe UI", Font.PLAIN, 13));
 
-        txtViTri.setFont(new Font("Segoe UI", Font.PLAIN, 14));
-        txtPhongBan.setFont(new Font("Segoe UI", Font.PLAIN, 14));
-        txtLyDo.setFont(new Font("Segoe UI", Font.PLAIN, 14));
-
-        JPanel form = new JPanel(new GridLayout(4, 2, 8, 8));
-        form.add(new JLabel("Vị trí tuyển dụng:"));
-        form.add(txtViTri);
-        form.add(new JLabel("Phòng ban (mã):"));
-        form.add(txtPhongBan);
-        form.add(new JLabel("Số lượng:"));
-        form.add(spinSoLuong);
-        form.add(new JLabel("Lý do:"));
-        form.add(txtLyDo);
+        JPanel form = new JPanel(new GridLayout(5, 2, 8, 8));
+        form.add(new JLabel("Phong ban (*):")); form.add(cboPhongBan);
+        form.add(new JLabel("Chuc vu / Vi tri (*):")); form.add(cboChucVu);
+        form.add(new JLabel("So luong:")); form.add(spinSoLuong);
+        form.add(new JLabel("Han tuyen dung:")); form.add(spinHan);
+        form.add(new JLabel("Ly do:")); form.add(txtLyDo);
 
         int result = JOptionPane.showConfirmDialog(this, form,
-                "Tạo yêu cầu tuyển dụng", JOptionPane.OK_CANCEL_OPTION, JOptionPane.PLAIN_MESSAGE);
+                "Tao yeu cau tuyen dung", JOptionPane.OK_CANCEL_OPTION, JOptionPane.PLAIN_MESSAGE);
         if (result != JOptionPane.OK_OPTION) return;
 
-        String viTri = txtViTri.getText().trim();
-        String phongBan = txtPhongBan.getText().trim();
-        if (viTri.isEmpty() || phongBan.isEmpty()) {
-            JOptionPane.showMessageDialog(this,
-                    "Vui lòng nhập vị trí và phòng ban.",
-                    "Lỗi", JOptionPane.WARNING_MESSAGE);
+        PhongBan pb = (PhongBan) cboPhongBan.getSelectedItem();
+        ChucVu cv = (ChucVu) cboChucVu.getSelectedItem();
+        if (pb == null || cv == null) {
+            JOptionPane.showMessageDialog(this, "Vui long chon phong ban va chuc vu.",
+                    "Loi", JOptionPane.WARNING_MESSAGE);
             return;
         }
 
+        java.util.Date selectedDate = (java.util.Date) spinHan.getValue();
+        java.time.LocalDate hanTuyenDung = selectedDate.toInstant()
+                .atZone(java.time.ZoneId.systemDefault()).toLocalDate();
+
         try {
             YeuCauTuyenDung yc = new YeuCauTuyenDung();
-            yc.setMaChucVu(viTri);
-            yc.setMaPhongBan(phongBan);
+            yc.setId(pb.getId());
+            yc.setMaChucVu(cv.getId());
             yc.setSoLuong((int) spinSoLuong.getValue());
+            yc.setHanTuyenDung(hanTuyenDung);
             yc.setLyDo(txtLyDo.getText().trim());
             yc.setTrangThai("cho_duyet");
 
-            ServiceResult<?> sr = recruitmentService.taoYeuCau(yc);
+            KetQua<?> sr = recruitmentService.taoYeuCau(yc);
             if (sr.isSuccess()) {
-                JOptionPane.showMessageDialog(this, "Tạo yêu cầu thành công!",
-                        "Thành công", JOptionPane.INFORMATION_MESSAGE);
+                JOptionPane.showMessageDialog(this, "Tao yeu cau thanh cong!",
+                        "Thanh cong", JOptionPane.INFORMATION_MESSAGE);
                 loadYeuCau();
             } else {
                 showError(sr.getMessage());
             }
         } catch (Exception ex) {
-            showError("Lỗi tạo yêu cầu: " + ex.getMessage());
+            showError("Loi tao yeu cau: " + ex.getMessage());
         }
     }
 
@@ -350,7 +377,7 @@ public class RecruitmentPanel extends JPanel {
         }
         int maYC = (int) modelYeuCau.getValueAt(row, 0);
         try {
-            ServiceResult<?> sr = recruitmentService.duyetYeuCau(maYC);
+            KetQua<?> sr = recruitmentService.duyetYeuCau(maYC);
             if (sr.isSuccess()) {
                 JOptionPane.showMessageDialog(this, "Đã phê duyệt yêu cầu.",
                         "Thành công", JOptionPane.INFORMATION_MESSAGE);
@@ -377,7 +404,7 @@ public class RecruitmentPanel extends JPanel {
         if (confirm != JOptionPane.YES_OPTION) return;
 
         try {
-            ServiceResult<?> sr = recruitmentService.tuChoiYeuCau(maYC);
+            KetQua<?> sr = recruitmentService.tuChoiYeuCau(maYC);
             if (sr.isSuccess()) {
                 JOptionPane.showMessageDialog(this, "Đã từ chối yêu cầu.",
                         "Thành công", JOptionPane.INFORMATION_MESSAGE);
@@ -395,49 +422,97 @@ public class RecruitmentPanel extends JPanel {
     // =======================
 
     private void dangTin() {
-        JTextField txtTieuDe = new JTextField(25);
-        JSpinner spinMaYC = new JSpinner(new SpinnerNumberModel(1, 1, 9999, 1));
-        JTextField txtMucLuong = new JTextField(20);
+        // Ch? ch?n YeuCau da duyet
+        java.util.List<YeuCauTuyenDung> dsYCDaDuyet = recruitmentService.getAllYeuCau().stream()
+                .filter(yc -> "da_duyet".equals(yc.getTrangThai()))
+                .collect(java.util.stream.Collectors.toList());
 
+        if (dsYCDaDuyet.isEmpty()) {
+            JOptionPane.showMessageDialog(this,
+                    "Khong co yeu cau tuyen dung nao da duoc duyet. Vui long duyet yeu cau truoc.",
+                    "Thong bao", JOptionPane.WARNING_MESSAGE);
+            return;
+        }
+
+        JTextField txtTieuDe = new JTextField(25);
         txtTieuDe.setFont(new Font("Segoe UI", Font.PLAIN, 14));
+
+        JComboBox<YeuCauTuyenDung> cboYeuCau = new JComboBox<>();
+        for (YeuCauTuyenDung yc : dsYCDaDuyet) cboYeuCau.addItem(yc);
+        cboYeuCau.setRenderer((list, value, index, sel, focus) -> {
+            if (value == null) return new JLabel("");
+            String pb = value.getTenPhongBan() != null ? value.getTenPhongBan() : value.getId();
+            String cv = value.getTenChucVu() != null ? value.getTenChucVu() : value.getMaChucVu();
+            return new JLabel("#" + value.getMaYeuCau() + " - " + pb + " - " + cv);
+        });
+
+        JTextField txtMucLuong = new JTextField(20);
         txtMucLuong.setFont(new Font("Segoe UI", Font.PLAIN, 14));
 
-        JPanel form = new JPanel(new GridLayout(3, 2, 8, 8));
-        form.add(new JLabel("Tiêu đề tin:"));
+        JTextField txtDiaDiem = new JTextField(20);
+        txtDiaDiem.setFont(new Font("Segoe UI", Font.PLAIN, 14));
+
+        // Date picker for hanNopHoSo
+        SpinnerDateModel dateModel = new SpinnerDateModel(
+                java.util.Date.from(java.time.LocalDate.now().plusMonths(1)
+                        .atStartOfDay(java.time.ZoneId.systemDefault()).toInstant()),
+                null, null, java.util.Calendar.DAY_OF_MONTH);
+        JSpinner spinHanNop = new JSpinner(dateModel);
+        spinHanNop.setEditor(new JSpinner.DateEditor(spinHanNop, "dd/MM/yyyy"));
+
+        JPanel form = new JPanel(new GridLayout(5, 2, 8, 8));
+        form.add(new JLabel("Yeu cau tuyen dung:"));
+        form.add(cboYeuCau);
+        form.add(new JLabel("Tieu de tin:"));
         form.add(txtTieuDe);
-        form.add(new JLabel("Mã yêu cầu (maYC):"));
-        form.add(spinMaYC);
-        form.add(new JLabel("Mức lương:"));
+        form.add(new JLabel("Muc luong:"));
         form.add(txtMucLuong);
+        form.add(new JLabel("Dia diem:"));
+        form.add(txtDiaDiem);
+        form.add(new JLabel("Han nop ho so:"));
+        form.add(spinHanNop);
 
         int result = JOptionPane.showConfirmDialog(this, form,
-                "Đăng tin tuyển dụng", JOptionPane.OK_CANCEL_OPTION, JOptionPane.PLAIN_MESSAGE);
+                "Dang tin tuyen dung", JOptionPane.OK_CANCEL_OPTION, JOptionPane.PLAIN_MESSAGE);
         if (result != JOptionPane.OK_OPTION) return;
 
         String tieuDe = txtTieuDe.getText().trim();
         if (tieuDe.isEmpty()) {
-            JOptionPane.showMessageDialog(this, "Vui lòng nhập tiêu đề.",
-                    "Lỗi", JOptionPane.WARNING_MESSAGE);
+            JOptionPane.showMessageDialog(this, "Vui long nhap tieu de.",
+                    "Loi", JOptionPane.WARNING_MESSAGE);
             return;
         }
+
+        YeuCauTuyenDung selectedYC = (YeuCauTuyenDung) cboYeuCau.getSelectedItem();
+        if (selectedYC == null) {
+            JOptionPane.showMessageDialog(this, "Vui long chon yeu cau tuyen dung.",
+                    "Loi", JOptionPane.WARNING_MESSAGE);
+            return;
+        }
+
+        java.util.Date selectedDate = (java.util.Date) spinHanNop.getValue();
+        java.time.LocalDate hanNop = selectedDate.toInstant()
+                .atZone(java.time.ZoneId.systemDefault()).toLocalDate();
 
         try {
             TinTuyenDung tin = new TinTuyenDung();
             tin.setTieuDe(tieuDe);
-            tin.setMaYeuCau((int) spinMaYC.getValue());
+            tin.setMaYeuCau(selectedYC.getMaYeuCau());
             tin.setMucLuong(txtMucLuong.getText().trim());
+            tin.setDiaDiem(txtDiaDiem.getText().trim());
+            tin.setHanNopHoSo(hanNop);
             tin.setTrangThai("dang_tuyen");
 
-            ServiceResult<?> sr = recruitmentService.taoTin(tin);
+            KetQua<?> sr = recruitmentService.taoTin(tin);
             if (sr.isSuccess()) {
-                JOptionPane.showMessageDialog(this, "Đã đăng tin tuyển dụng!",
-                        "Thành công", JOptionPane.INFORMATION_MESSAGE);
+                JOptionPane.showMessageDialog(this, "Da dang tin tuyen dung!",
+                        "Thanh cong", JOptionPane.INFORMATION_MESSAGE);
                 loadTin();
             } else {
                 showError(sr.getMessage());
             }
         } catch (Exception ex) {
-            showError("Lỗi đăng tin: " + ex.getMessage());
+            showError("Loi dang tin: " + ex.getMessage());
         }
     }
 
@@ -455,7 +530,7 @@ public class RecruitmentPanel extends JPanel {
         if (confirm != JOptionPane.YES_OPTION) return;
 
         try {
-            ServiceResult<?> sr = recruitmentService.dongTin(maTin);
+            KetQua<?> sr = recruitmentService.dongTin(maTin);
             if (sr.isSuccess()) {
                 JOptionPane.showMessageDialog(this, "Đã đóng tin tuyển dụng.",
                         "Thành công", JOptionPane.INFORMATION_MESSAGE);
@@ -471,6 +546,15 @@ public class RecruitmentPanel extends JPanel {
     // =======================
     // Actions - Tab 3
     // =======================
+
+    private void taoUngVien() {
+        HopThoaiTaoUngVien dialog = new HopThoaiTaoUngVien(
+                SwingUtilities.getWindowAncestor(this), recruitmentService);
+        dialog.setVisible(true);
+        if (dialog.isThanhCong()) {
+            loadUngVien();
+        }
+    }
 
     private void chuyenTrangThaiUV() {
         int row = tblUngVien.getSelectedRow();
@@ -495,7 +579,7 @@ public class RecruitmentPanel extends JPanel {
         String trangThaiMoi = options[cbo.getSelectedIndex()];
 
         try {
-            ServiceResult<?> sr = recruitmentService.capNhatTrangThaiUV(maUV, trangThaiMoi);
+            KetQua<?> sr = recruitmentService.capNhatTrangThaiUV(maUV, trangThaiMoi);
             if (sr.isSuccess()) {
                 JOptionPane.showMessageDialog(this, "Đã cập nhật trạng thái ứng viên.",
                         "Thành công", JOptionPane.INFORMATION_MESSAGE);
@@ -533,7 +617,7 @@ public class RecruitmentPanel extends JPanel {
         if (confirm != JOptionPane.YES_OPTION) return;
 
         try {
-            ServiceResult<?> sr = recruitmentService.chuyenUVThanhNV(maUV);
+            KetQua<?> sr = recruitmentService.chuyenUVThanhNV(maUV);
             if (sr.isSuccess()) {
                 JOptionPane.showMessageDialog(this,
                         "Đã chuyển ứng viên \"" + hoTen + "\" thành nhân viên thành công!",

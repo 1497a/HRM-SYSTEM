@@ -4,8 +4,8 @@ import com.hrm.gui.leave.LeaveListPanel;
 import com.hrm.gui.leave.LeaveCreateDialog;
 import com.hrm.gui.evaluation.EvalCycleListPanel;
 import com.hrm.gui.evaluation.EvalResultPanel;
-import com.hrm.model.User;
-import com.hrm.service.AuthService;
+import com.hrm.model.TaiKhoan;
+import com.hrm.bus.XacThucBUS;
 import com.hrm.util.SessionContext;
 import com.hrm.util.UIHelper;
 
@@ -18,7 +18,7 @@ import java.awt.*;
  * Shows user info and role-based menu
  */
 public class DashboardFrame extends JFrame {
-    private User currentUser;
+    private TaiKhoan currentUser;
     private JPanel contentPanel;
     private JPanel mainContentArea;
     private JLabel lblStatus;
@@ -191,7 +191,7 @@ public class DashboardFrame extends JFrame {
         JPanel mainPanel = new JPanel(new BorderLayout(0, 0));
         mainPanel.setBackground(new Color(245, 245, 245));
 
-        // Header Panel - User Info
+        // Header Panel - TaiKhoan Info
         JPanel headerPanel = createHeaderPanel();
 
         // Main Content Area with CardLayout
@@ -277,14 +277,14 @@ public class DashboardFrame extends JFrame {
         lblWelcome.setFont(new Font("Segoe UI", Font.BOLD, 20));
         lblWelcome.setForeground(Color.WHITE);
 
-        JLabel lblRole = new JLabel("Vai trò: " + currentUser.getRoleNames());
+        JLabel lblRole = new JLabel("Vai trò: " + currentUser.getVaiTros().toString());
         lblRole.setFont(new Font("Segoe UI", Font.PLAIN, 14));
         lblRole.setForeground(new Color(200, 220, 240));
 
         welcomePanel.add(lblWelcome);
         welcomePanel.add(lblRole);
 
-        // User Avatar/Icon
+        // TaiKhoan Avatar/Icon
         JLabel lblAvatar = new JLabel();
         lblAvatar.setPreferredSize(new Dimension(60, 60));
         lblAvatar.setOpaque(true);
@@ -375,7 +375,7 @@ public class DashboardFrame extends JFrame {
     }
 
     private void applyRolePermissions() {
-        AuthService auth = AuthService.getInstance();
+        XacThucBUS auth = XacThucBUS.getInstance();
 
         // Employee Menu
         mnuEmployeeList.setEnabled(auth.hasPermission("EMPLOYEE_VIEW") || auth.hasPermission("VIEW_SELF"));
@@ -404,7 +404,7 @@ public class DashboardFrame extends JFrame {
     private void updateStatus() {
         String permissions = currentUser.hasRole("ADMIN") ? "Toàn quyền" :
             "Quyền hạn theo vai trò";
-        lblStatus.setText("Vai trò: " + currentUser.getRoleNames() + " | " + permissions);
+        lblStatus.setText("Vai trò: " + currentUser.getVaiTros().toString() + " | " + permissions);
     }
 
     private String getInitials(String fullName) {
@@ -419,7 +419,7 @@ public class DashboardFrame extends JFrame {
     // Navigation methods
     private void showDashboard() {
         cardLayout.show(mainContentArea, CARD_DASHBOARD);
-        lblStatus.setText("Trang chủ | Vai trò: " + currentUser.getRoleNames());
+        lblStatus.setText("Trang chủ | Vai trò: " + currentUser.getVaiTros().toString());
     }
 
     private void showLeavePanel() {
@@ -428,7 +428,7 @@ public class DashboardFrame extends JFrame {
         LeaveListPanel newLeavePanel = new LeaveListPanel();
         mainContentArea.add(newLeavePanel, CARD_LEAVE, 1);
         cardLayout.show(mainContentArea, CARD_LEAVE);
-        lblStatus.setText("Quản lý nghỉ phép | Vai trò: " + currentUser.getRoleNames());
+        lblStatus.setText("Quản lý nghỉ phép | Vai trò: " + currentUser.getVaiTros().toString());
     }
 
     private void showEvaluationPanel() {
@@ -437,7 +437,7 @@ public class DashboardFrame extends JFrame {
         EvalCycleListPanel newEvalPanel = new EvalCycleListPanel();
         mainContentArea.add(newEvalPanel, CARD_EVAL, 2);
         cardLayout.show(mainContentArea, CARD_EVAL);
-        lblStatus.setText("Quản lý đánh giá | Vai trò: " + currentUser.getRoleNames());
+        lblStatus.setText("Quản lý đánh giá | Vai trò: " + currentUser.getVaiTros().toString());
     }
 
     private void createLeaveRequest() {
@@ -464,12 +464,12 @@ public class DashboardFrame extends JFrame {
         info.append("Họ tên: ").append(currentUser.getFullName()).append("\n");
         info.append("Tên đăng nhập: ").append(currentUser.getUsername()).append("\n");
         info.append("Email: ").append(currentUser.getEmail()).append("\n");
-        info.append("Vai trò: ").append(currentUser.getRoleNames()).append("\n\n");
+        info.append("Vai trò: ").append(currentUser.getVaiTros().toString()).append("\n\n");
         info.append("QUYỀN HẠN:\n");
         info.append("---------\n");
 
         currentUser.getRoles().forEach(role -> {
-            role.getPermissions().forEach(p -> {
+            role.getQuyens().forEach(p -> {
                 info.append("- ").append(p.getName()).append("\n");
             });
         });
@@ -512,7 +512,7 @@ public class DashboardFrame extends JFrame {
             JOptionPane.QUESTION_MESSAGE);
 
         if (confirm == JOptionPane.YES_OPTION) {
-            AuthService.getInstance().logout();
+            XacThucBUS.getInstance().logout();
             LoginFrame loginFrame = new LoginFrame();
             loginFrame.setVisible(true);
             this.dispose();

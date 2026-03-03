@@ -1,10 +1,10 @@
 package com.hrm.gui.admin;
 
 import com.hrm.gui.components.CheckboxTree;
-import com.hrm.model.Permission;
-import com.hrm.model.Role;
-import com.hrm.service.AuthService;
-import com.hrm.service.ServiceResult;
+import com.hrm.model.Quyen;
+import com.hrm.model.VaiTro;
+import com.hrm.bus.XacThucBUS;
+import com.hrm.bus.KetQua;
 import com.hrm.util.UIHelper;
 
 import javax.swing.*;
@@ -21,8 +21,8 @@ import java.util.stream.Collectors;
  * Đã nâng cấp sử dụng CheckboxTree để hiển thị toàn bộ chi tiết quyền rõ ràng.
  */
 public class RoleFormDialog extends JDialog {
-    private final AuthService authService;
-    private final Role editingRole;
+    private final XacThucBUS authService;
+    private final VaiTro editingRole;
     private boolean successful = false;
 
     private JTextField txtCode;
@@ -33,8 +33,8 @@ public class RoleFormDialog extends JDialog {
     private CheckboxTree permissionTree;
     private CheckboxTree.CheckboxTreeNode rooTreeNode;
 
-    // Tất cả permission (code -> Permission)
-    private final Map<String, Permission> allPermMap = new HashMap<>();
+    // Tất cả permission (code -> Quyen)
+    private final Map<String, Quyen> allPermMap = new HashMap<>();
 
     private static final Map<String, String> MODULE_VI;
     static {
@@ -42,8 +42,8 @@ public class RoleFormDialog extends JDialog {
         MODULE_VI.put("Employee",     "Nhân viên");
         MODULE_VI.put("Leave",        "Nghỉ phép");
         MODULE_VI.put("Evaluation",   "Đánh giá");
-        MODULE_VI.put("User",         "Tài khoản");
-        MODULE_VI.put("Role",         "Vai trò");
+        MODULE_VI.put("TaiKhoan",         "Tài khoản");
+        MODULE_VI.put("VaiTro",         "Vai trò");
         MODULE_VI.put("Report",       "Báo cáo");
         MODULE_VI.put("Settings",     "Cài đặt");
         MODULE_VI.put("Organization", "Tổ chức");
@@ -54,9 +54,9 @@ public class RoleFormDialog extends JDialog {
         MODULE_VI.put("Recruitment",  "Tuyển dụng");
     }
 
-    public RoleFormDialog(Frame parent, Role role) {
+    public RoleFormDialog(Frame parent, VaiTro role) {
         super(parent, role == null ? "Tạo vai trò mới" : "Sửa vai trò", true);
-        this.authService = AuthService.getInstance();
+        this.authService = XacThucBUS.getInstance();
         this.editingRole = role;
 
         initComponents();
@@ -71,9 +71,9 @@ public class RoleFormDialog extends JDialog {
 
     /** Tạo mã vai trò tự động dạng VT001, VT002, ... */
     private String generateRoleCode() {
-        List<Role> roles = authService.getAllRoles();
+        List<VaiTro> roles = authService.getAllRoles();
         int maxNum = 0;
-        for (Role r : roles) {
+        for (VaiTro r : roles) {
             String code = r.getCode();
             if (code != null && code.matches("VT\\d+")) {
                 try {
@@ -101,15 +101,15 @@ public class RoleFormDialog extends JDialog {
         }
 
         // Tải tất cả quyền
-        List<Permission> allPermissions = authService.getAllPermissions();
-        for (Permission p : allPermissions) {
+        List<Quyen> allPermissions = authService.getAllPermissions();
+        for (Quyen p : allPermissions) {
             allPermMap.put(p.getCode(), p);
         }
 
         // Nhóm các quyền theo module
-        Map<String, List<Permission>> permsByModule = allPermissions.stream()
+        Map<String, List<Quyen>> permsByModule = allPermissions.stream()
                 .filter(p -> p.getModule() != null)
-                .collect(Collectors.groupingBy(Permission::getModule));
+                .collect(Collectors.groupingBy(Quyen::getModule));
 
         // Xây dựng cây quyền
         rooTreeNode = new CheckboxTree.CheckboxTreeNode("Tất cả quyền hạn");
@@ -120,11 +120,11 @@ public class RoleFormDialog extends JDialog {
             CheckboxTree.CheckboxTreeNode moduleNode = new CheckboxTree.CheckboxTreeNode(moduleName);
             rooTreeNode.add(moduleNode);
 
-            List<Permission> modulePerms = permsByModule.get(module);
+            List<Quyen> modulePerms = permsByModule.get(module);
             // Sắp xếp theo tên quyền để dễ nhìn
-            modulePerms.sort(Comparator.comparing(Permission::getName));
+            modulePerms.sort(Comparator.comparing(Quyen::getName));
             
-            for (Permission p : modulePerms) {
+            for (Quyen p : modulePerms) {
                 CheckboxTree.CheckboxTreeNode permNode = new CheckboxTree.CheckboxTreeNode(p.getName(), p.getCode());
                 moduleNode.add(permNode);
             }
@@ -186,10 +186,10 @@ public class RoleFormDialog extends JDialog {
     private void loadRoleData() {
         txtCode.setText(editingRole.getCode());
         txtName.setText(editingRole.getName());
-        txtDescription.setText(editingRole.getDescription() != null ? editingRole.getDescription() : "");
+        txtDescription.setText(editingRole.getMoTa() != null ? editingRole.getMoTa() : "");
 
-        Set<String> roleCodes = editingRole.getPermissions().stream()
-                .map(Permission::getCode).collect(Collectors.toSet());
+        Set<String> roleCodes = editingRole.getQuyens().stream()
+                .map(Quyen::getCode).collect(Collectors.toSet());
 
         // Đệ quy để chọn các node trong cây
         checkNodesByCodes(rooTreeNode, roleCodes);
@@ -251,26 +251,26 @@ public class RoleFormDialog extends JDialog {
         }
 
         if (editingRole == null) {
-            ServiceResult<Void> createResult = authService.createRole(code, name, description.isEmpty() ? null : description);
+            KetQua<Void> createResult = authService.createRole(code, name, description.isEmpty() ? null : description);
             if (!createResult.isSuccess()) {
                 JOptionPane.showMessageDialog(this, createResult.getMessage(), "Lỗi", JOptionPane.ERROR_MESSAGE);
                 return;
             }
-            ServiceResult<Void> permResult = authService.setRolePermissions(code, selectedCodes);
+            KetQua<Void> permResult = authService.setRolePermissions(code, selectedCodes);
             if (!permResult.isSuccess()) {
                 JOptionPane.showMessageDialog(this,
                         "Đã tạo vai trò nhưng không thể gán quyền: " + permResult.getMessage(),
                         "Cảnh báo", JOptionPane.WARNING_MESSAGE);
             }
         } else {
-            editingRole.setName(name);
-            editingRole.setDescription(description);
-            ServiceResult<Void> updateResult = authService.updateRole(editingRole);
+            editingRole.setTenVaiTro(name);
+            editingRole.setMoTa(description);
+            KetQua<Void> updateResult = authService.updateRole(editingRole);
             if (!updateResult.isSuccess()) {
                 JOptionPane.showMessageDialog(this, updateResult.getMessage(), "Lỗi", JOptionPane.ERROR_MESSAGE);
                 return;
             }
-            ServiceResult<Void> permResult = authService.setRolePermissions(editingRole.getCode(), selectedCodes);
+            KetQua<Void> permResult = authService.setRolePermissions(editingRole.getCode(), selectedCodes);
             if (!permResult.isSuccess()) {
                 JOptionPane.showMessageDialog(this,
                         "Đã cập nhật vai trò nhưng không thể cập nhật quyền: " + permResult.getMessage(),

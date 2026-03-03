@@ -3,8 +3,8 @@ package com.hrm.gui.appointment;
 import com.hrm.gui.components.PurpleButton;
 import com.hrm.gui.components.PurpleTable;
 import com.hrm.model.BoNhiem;
-import com.hrm.service.BoNhiemService;
-import com.hrm.service.ServiceResult;
+import com.hrm.bus.BoNhiemBUS;
+import com.hrm.bus.KetQua;
 import com.hrm.util.SessionContext;
 import com.hrm.util.UIColors;
 
@@ -22,7 +22,7 @@ import java.util.List;
  */
 public class AppointmentListPanel extends JPanel {
 
-    private final BoNhiemService boNhiemService = BoNhiemService.getInstance();
+    private final BoNhiemBUS boNhiemService = BoNhiemBUS.getInstance();
     private final DateTimeFormatter dtf = DateTimeFormatter.ofPattern("dd/MM/yyyy");
 
     private PurpleTable table;
@@ -178,8 +178,8 @@ public class AppointmentListPanel extends JPanel {
                 bn.getMaBoNhiem(),
                 bn.getMaNV(),
                 bn.getTenNV() != null ? bn.getTenNV() : "",
-                bn.getTenPhongBan() != null ? bn.getTenPhongBan() : bn.getMaPhongBan(),
-                bn.getTenChucVu() != null ? bn.getTenChucVu() : bn.getMaChucVu(),
+                bn.getTenPhongBan() != null ? bn.getTenPhongBan() : bn.getId(),
+                bn.getTenChucVu() != null ? bn.getTenChucVu() : bn.getChucVuId(),
                 bn.getLoaiBoNhiemDisplay(),
                 String.format("%.0f%%", bn.getTyLeHuongLuong()),
                 bn.getTuNgay() != null ? bn.getTuNgay().format(dtf) : "",
@@ -260,7 +260,7 @@ public class AppointmentListPanel extends JPanel {
             userId = SessionContext.getInstance().getCurrentUser().getId();
         }
 
-        ServiceResult<BoNhiem> result = boNhiemService.pheDuyetBoNhiem(
+        KetQua<BoNhiem> result = boNhiemService.pheDuyetBoNhiem(
                 selected.getMaBoNhiem(), userId);
 
         if (result.isSuccess()) {
@@ -297,7 +297,7 @@ public class AppointmentListPanel extends JPanel {
                 JOptionPane.OK_CANCEL_OPTION, JOptionPane.PLAIN_MESSAGE);
         if (confirm != JOptionPane.OK_OPTION) return;
 
-        ServiceResult<BoNhiem> result = boNhiemService.tuChoiBoNhiem(
+        KetQua<BoNhiem> result = boNhiemService.tuChoiBoNhiem(
                 selected.getMaBoNhiem(), txtLyDo.getText().trim());
 
         if (result.isSuccess()) {

@@ -3,8 +3,8 @@ package com.hrm.model;
 import java.time.LocalDate;
 
 /**
- * Model cho bảng NHANVIEN trong cơ sở dữ liệu.
- * Lưu thông tin hợp đồng và trạng thái làm việc của nhân viên.
+ * Model cho bang nhan_viens trong co so du lieu.
+ * Luu thong tin hop dong va trang thai lam viec cua nhan vien.
  */
 public class NhanVien {
 
@@ -15,9 +15,9 @@ public class NhanVien {
     private String trangThai;   // "dang_lam_viec", "tam_nghi", "nghi_viec"
     private String ghiChu;
 
-    // Transient - dùng để hiển thị, không lưu trực tiếp trong bảng NHANVIEN
+    // Transient - dung de hien thi, khong luu truc tiep trong bang nhan_viens
     private transient String hoTen;
-    private transient String maPhongBanHienTai;
+    private transient String phongBanHienTaiId;
     private transient String tenPhongBanHienTai;
     private transient String tenChucVuHienTai;
 
@@ -97,12 +97,21 @@ public class NhanVien {
         this.hoTen = hoTen;
     }
 
+    public String getPhongBanHienTaiId() {
+        return phongBanHienTaiId;
+    }
+
+    public void setPhongBanHienTaiId(String phongBanHienTaiId) {
+        this.phongBanHienTaiId = phongBanHienTaiId;
+    }
+
+    // Legacy compatibility
     public String getMaPhongBanHienTai() {
-        return maPhongBanHienTai;
+        return phongBanHienTaiId;
     }
 
     public void setMaPhongBanHienTai(String maPhongBanHienTai) {
-        this.maPhongBanHienTai = maPhongBanHienTai;
+        this.phongBanHienTaiId = maPhongBanHienTai;
     }
 
     public String getTenPhongBanHienTai() {
@@ -128,9 +137,9 @@ public class NhanVien {
     public String getTrangThaiDisplay() {
         if (trangThai == null) return "";
         switch (trangThai) {
-            case "dang_lam_viec": return "Đang làm việc";
-            case "tam_nghi":      return "Tạm nghỉ";
-            case "nghi_viec":     return "Nghỉ việc";
+            case "dang_lam_viec": return "Dang lam viec";
+            case "tam_nghi":      return "Tam nghi";
+            case "nghi_viec":     return "Nghi viec";
             default:              return trangThai;
         }
     }
@@ -138,9 +147,9 @@ public class NhanVien {
     public String getLoaiHopDongDisplay() {
         if (loaiHopDong == null) return "";
         switch (loaiHopDong) {
-            case "thu_viec":          return "Thử việc";
-            case "xac_dinh_thoi_han": return "Xác định thời hạn";
-            case "khong_xac_dinh":    return "Không xác định";
+            case "thu_viec":          return "Thu viec";
+            case "xac_dinh_thoi_han": return "Xac dinh thoi han";
+            case "khong_xac_dinh":    return "Khong xac dinh";
             default:                  return loaiHopDong;
         }
     }

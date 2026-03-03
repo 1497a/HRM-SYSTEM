@@ -6,10 +6,10 @@ import com.hrm.model.ChamCong;
 import com.hrm.model.HopDongLaoDong;
 import com.hrm.model.NhanVien;
 import com.hrm.model.ThongTinCaNhan;
-import com.hrm.service.AttendanceService;
-import com.hrm.service.BoNhiemService;
-import com.hrm.service.HopDongService;
-import com.hrm.service.NhanVienService;
+import com.hrm.bus.ChamCongBUS;
+import com.hrm.bus.BoNhiemBUS;
+import com.hrm.bus.HopDongBUS;
+import com.hrm.bus.NhanVienBUS;
 import com.hrm.util.UIColors;
 
 import javax.swing.*;
@@ -37,10 +37,10 @@ public class EmployeeDetailPanel extends JDialog {
     // =====================================================================
     // Services
     // =====================================================================
-    private final NhanVienService nvService       = NhanVienService.getInstance();
-    private final BoNhiemService  boNhiemService  = BoNhiemService.getInstance();
-    private final HopDongService  hopDongService  = HopDongService.getInstance();
-    private final AttendanceService attendanceSvc = AttendanceService.getInstance();
+    private final NhanVienBUS nvService       = NhanVienBUS.getInstance();
+    private final BoNhiemBUS  boNhiemService  = BoNhiemBUS.getInstance();
+    private final HopDongBUS  hopDongService  = HopDongBUS.getInstance();
+    private final ChamCongBUS attendanceSvc = ChamCongBUS.getInstance();
 
     // =====================================================================
     // Data
@@ -309,10 +309,10 @@ public class EmployeeDetailPanel extends JDialog {
         if (boNhiemHienTai != null) {
             String tenPB = boNhiemHienTai.getTenPhongBan() != null
                     ? boNhiemHienTai.getTenPhongBan()
-                    : safe(boNhiemHienTai.getMaPhongBan());
+                    : safe(String.valueOf(boNhiemHienTai.getId()));
             String tenCV = boNhiemHienTai.getTenChucVu() != null
                     ? boNhiemHienTai.getTenChucVu()
-                    : safe(boNhiemHienTai.getMaChucVu());
+                    : safe(String.valueOf(boNhiemHienTai.getId()));
 
             addInfoRow(detailGrid, 0, "Phong ban:",         tenPB);
             addInfoRow(detailGrid, 1, "Chuc vu:",           tenCV);
@@ -456,9 +456,9 @@ public class EmployeeDetailPanel extends JDialog {
             if (list == null || list.isEmpty()) return;
             for (BoNhiem bn : list) {
                 String tenPB = bn.getTenPhongBan() != null
-                        ? bn.getTenPhongBan() : safe(bn.getMaPhongBan());
+                        ? bn.getTenPhongBan() : safe(bn.getChucVuId());
                 String tenCV = bn.getTenChucVu() != null
-                        ? bn.getTenChucVu() : safe(bn.getMaChucVu());
+                        ? bn.getTenChucVu() : safe(bn.getChucVuId());
                 boNhiemTableModel.addRow(new Object[]{
                     tenPB,
                     tenCV,
@@ -488,7 +488,7 @@ public class EmployeeDetailPanel extends JDialog {
                 String soGio  = cc.getSoGioLam() > 0
                         ? String.format("%.2f", cc.getSoGioLam()) : "";
                 String trangThai = cc.getTrangThai() != null
-                        ? cc.getTrangThai().getDisplayName() : "";
+                        ? cc.getTrangThai().toString() : "";
                 chamCongTableModel.addRow(new Object[]{
                     cc.getNgay() != null ? cc.getNgay().format(DATE_FMT) : "",
                     safe(cc.getTenCaLam()),

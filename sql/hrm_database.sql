@@ -1,46 +1,41 @@
 -- =====================================================
 -- HRM DATABASE SCHEMA - MySQL (XAMPP Compatible)
--- Based on HRM_Business_Specification.md
+-- Refactored: Vietnamese naming, snake_case columns, id PKs
 -- =====================================================
--- Created for: XAMPP MySQL 5.7+ / MariaDB 10.x
 -- Encoding: UTF-8 (Vietnamese support)
 -- =====================================================
 
--- Drop database if exists and create new
 DROP DATABASE IF EXISTS hrm_db;
 CREATE DATABASE hrm_db CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 USE hrm_db;
 
 -- =====================================================
--- NGHIỆP VỤ 2: CƠ CẤU TỔ CHỨC (Create first - referenced by others)
+-- NGHIEP VU 2: CO CAU TO CHUC
 -- =====================================================
 
--- Bảng PHONGBAN (Phòng ban)
 CREATE TABLE PHONGBAN (
     maPhongBan VARCHAR(20) PRIMARY KEY,
     tenPhongBan NVARCHAR(100) NOT NULL,
     phongBanCha VARCHAR(20) NULL,
     moTa NVARCHAR(500),
-    trangThai ENUM('hoat_dong', 'ngung_hoat_dong') DEFAULT 'hoat_dong',
+    trangThai ENUM('hoatDong', 'ngung_hoat_dong') DEFAULT 'hoatDong',
     ngayTao DATETIME DEFAULT CURRENT_TIMESTAMP,
     ngayCapNhat DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     FOREIGN KEY (phongBanCha) REFERENCES PHONGBAN(maPhongBan) ON DELETE SET NULL
 ) ENGINE=InnoDB;
 
--- Bảng CHUCVU (Chức vụ)
 CREATE TABLE CHUCVU (
     maChucVu VARCHAR(20) PRIMARY KEY,
     tenChucVu NVARCHAR(100) NOT NULL,
-    capBac INT NOT NULL DEFAULT 10, -- 1 = cao nhất
+    capBac INT NOT NULL DEFAULT 10,
     heSoLuong DECIMAL(5,2) NOT NULL DEFAULT 1.00,
     phuCapChucVu DECIMAL(15,2) DEFAULT 0,
     moTa NVARCHAR(500),
-    trangThai ENUM('hoat_dong', 'ngung_hoat_dong') DEFAULT 'hoat_dong',
+    trangThai ENUM('hoatDong', 'ngung_hoat_dong') DEFAULT 'hoatDong',
     ngayTao DATETIME DEFAULT CURRENT_TIMESTAMP,
     ngayCapNhat DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 ) ENGINE=InnoDB;
 
--- Bảng LICHSU_HESOLUONG (Lịch sử thay đổi hệ số lương chức vụ)
 CREATE TABLE LICHSU_HESOLUONG (
     maLichSu INT AUTO_INCREMENT PRIMARY KEY,
     maChucVu VARCHAR(20) NOT NULL,
@@ -55,13 +50,12 @@ CREATE TABLE LICHSU_HESOLUONG (
 ) ENGINE=InnoDB;
 
 -- =====================================================
--- NGHIỆP VỤ 1: QUẢN LÝ HỒ SƠ NHÂN VIÊN
+-- NGHIEP VU 1: QUAN LY HO SO NHAN VIEN
 -- =====================================================
 
--- Bảng NHANVIEN (Nhân viên)
 CREATE TABLE NHANVIEN (
     maNV INT AUTO_INCREMENT PRIMARY KEY,
-    maNhanVien VARCHAR(20) UNIQUE NOT NULL, -- Mã định danh hiển thị
+    maNhanVien VARCHAR(20) UNIQUE NOT NULL,
     loaiHopDong ENUM('thu_viec', 'xac_dinh_thoi_han', 'khong_xac_dinh') DEFAULT 'thu_viec',
     ngayVaoLam DATE NOT NULL,
     trangThai ENUM('dang_lam_viec', 'tam_nghi', 'nghi_viec') DEFAULT 'dang_lam_viec',
@@ -70,13 +64,12 @@ CREATE TABLE NHANVIEN (
     ngayCapNhat DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 ) ENGINE=InnoDB;
 
--- Bảng THONGTINCANHAN (Thông tin cá nhân - Dữ liệu nhạy cảm)
 CREATE TABLE THONGTINCANHAN (
     maNV INT PRIMARY KEY,
     hoTen NVARCHAR(100) NOT NULL,
     ngaySinh DATE,
     gioiTinh ENUM('nam', 'nu', 'khac'),
-    CCCD VARCHAR(12) UNIQUE,
+    cccd VARCHAR(12) UNIQUE,
     dienThoai VARCHAR(15),
     email VARCHAR(100),
     diaChi NVARCHAR(255),
@@ -92,21 +85,20 @@ CREATE TABLE THONGTINCANHAN (
 ) ENGINE=InnoDB;
 
 -- =====================================================
--- NGHIỆP VỤ 3: BỔ NHIỆM VÀ ĐIỀU CHUYỂN
+-- NGHIEP VU 3: BO NHIEM VA DIEU CHUYEN
 -- =====================================================
 
--- Bảng BONHIEM (Bổ nhiệm)
 CREATE TABLE BONHIEM (
     maBoNhiem INT AUTO_INCREMENT PRIMARY KEY,
     maNV INT NOT NULL,
     maPhongBan VARCHAR(20) NOT NULL,
     maChucVu VARCHAR(20) NOT NULL,
     loaiBoNhiem ENUM('chinh', 'kiem_nhiem') DEFAULT 'chinh',
-    tyLeHuongLuong DECIMAL(5,2) DEFAULT 100.00, -- % lương chức vụ
-    maQuanLy INT NULL, -- Nhân viên quản lý trực tiếp
+    tyLeHuongLuong DECIMAL(5,2) DEFAULT 100.00,
+    maQuanLy INT NULL,
     nguoiDuyet INT NULL,
     tuNgay DATE NOT NULL,
-    denNgay DATE NULL, -- NULL = vô thời hạn
+    denNgay DATE NULL,
     ngayPheDuyet DATETIME NULL,
     lyDo NVARCHAR(500),
     trangThai ENUM('cho_duyet', 'hieu_luc', 'het_hieu_luc', 'tu_choi') DEFAULT 'cho_duyet',
@@ -119,10 +111,9 @@ CREATE TABLE BONHIEM (
 ) ENGINE=InnoDB;
 
 -- =====================================================
--- NGHIỆP VỤ 4: CHẤM CÔNG VÀ LÀM THÊM GIỜ
+-- NGHIEP VU 4: CHAM CONG VA LAM THEM GIO
 -- =====================================================
 
--- Bảng CALAM (Ca làm việc)
 CREATE TABLE CALAM (
     maCaLam VARCHAR(20) PRIMARY KEY,
     tenCaLam NVARCHAR(100) NOT NULL,
@@ -131,11 +122,10 @@ CREATE TABLE CALAM (
     soGioChuan DECIMAL(4,2) DEFAULT 8.00,
     choPhepLamThem BOOLEAN DEFAULT TRUE,
     moTa NVARCHAR(255),
-    trangThai ENUM('hoat_dong', 'ngung_hoat_dong') DEFAULT 'hoat_dong',
+    trangThai ENUM('hoatDong', 'ngung_hoat_dong') DEFAULT 'hoatDong',
     ngayTao DATETIME DEFAULT CURRENT_TIMESTAMP
 ) ENGINE=InnoDB;
 
--- Bảng CHAMCONG (Chấm công)
 CREATE TABLE CHAMCONG (
     maChamCong INT AUTO_INCREMENT PRIMARY KEY,
     maNV INT NOT NULL,
@@ -151,11 +141,10 @@ CREATE TABLE CHAMCONG (
     ngayTao DATETIME DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (maNV) REFERENCES NHANVIEN(maNV) ON DELETE CASCADE,
     FOREIGN KEY (maCaLam) REFERENCES CALAM(maCaLam),
-    UNIQUE KEY uk_nv_ngay (maNV, ngay) -- Mỗi NV chỉ có 1 bản ghi/ngày
+    UNIQUE KEY uk_nv_ngay (maNV, ngay)
 ) ENGINE=InnoDB;
 
--- Bảng DANGKYLAMTHEM (Đăng ký làm thêm giờ)
-CREATE TABLE DANGKYLAMTHEM (
+CREATE TABLE DANGKY_LAMTHEM (
     maDK INT AUTO_INCREMENT PRIMARY KEY,
     maNV INT NOT NULL,
     ngay DATE NOT NULL,
@@ -171,10 +160,9 @@ CREATE TABLE DANGKYLAMTHEM (
 ) ENGINE=InnoDB;
 
 -- =====================================================
--- NGHIỆP VỤ 5: HỢP ĐỒNG LAO ĐỘNG
+-- NGHIEP VU 5: HOP DONG LAO DONG
 -- =====================================================
 
--- Bảng HOPDONGLAODONG
 CREATE TABLE HOPDONGLAODONG (
     maHopDong INT AUTO_INCREMENT PRIMARY KEY,
     soHopDong VARCHAR(50) UNIQUE NOT NULL,
@@ -183,7 +171,7 @@ CREATE TABLE HOPDONGLAODONG (
     luongCoSo DECIMAL(15,2) NOT NULL,
     ngayKy DATE NOT NULL,
     ngayHieuLuc DATE NOT NULL,
-    ngayHetHieuLuc DATE NULL, -- NULL = không xác định thời hạn
+    ngayHetHieuLuc DATE NULL,
     fileDinhKem VARCHAR(255),
     noiDung TEXT,
     trangThai ENUM('hieu_luc', 'het_han', 'thanh_ly', 'huy') DEFAULT 'hieu_luc',
@@ -193,10 +181,9 @@ CREATE TABLE HOPDONGLAODONG (
 ) ENGINE=InnoDB;
 
 -- =====================================================
--- NGHIỆP VỤ 6: TÍNH LƯƠNG
+-- NGHIEP VU 6: TINH LUONG
 -- =====================================================
 
--- Bảng BANGLUONG (Bảng lương theo kỳ)
 CREATE TABLE BANGLUONG (
     maBangLuong INT AUTO_INCREMENT PRIMARY KEY,
     thang INT NOT NULL,
@@ -204,26 +191,24 @@ CREATE TABLE BANGLUONG (
     tenBangLuong NVARCHAR(100),
     ngayTao DATETIME DEFAULT CURRENT_TIMESTAMP,
     ngayKhoa DATETIME NULL,
+    ngayDuyet DATETIME NULL,
     nguoiTao INT,
     nguoiKhoa INT,
-    trangThai ENUM('dang_xu_ly', 'da_khoa') DEFAULT 'dang_xu_ly',
+    nguoiDuyet INT,
+    trangThai ENUM('dang_xu_ly', 'da_duyet', 'da_khoa') DEFAULT 'dang_xu_ly',
     UNIQUE KEY uk_thang_nam (thang, nam)
 ) ENGINE=InnoDB;
 
--- Bảng CHITIETLUONG (Chi tiết lương - SNAPSHOT)
 CREATE TABLE CHITIETLUONG (
     maChiTiet INT AUTO_INCREMENT PRIMARY KEY,
     maBangLuong INT NOT NULL,
     maNV INT NOT NULL,
-    -- Snapshot data at calculation time
     luongCoSo DECIMAL(15,2) NOT NULL,
     tongLuongChucVu DECIMAL(15,2) DEFAULT 0,
     luongLamThem DECIMAL(15,2) DEFAULT 0,
-    -- Tổng hợp
     tongThuNhap DECIMAL(15,2) DEFAULT 0,
     tongKhauTru DECIMAL(15,2) DEFAULT 0,
     luongThucLanh DECIMAL(15,2) DEFAULT 0,
-    -- Thông tin thêm
     soNgayCong DECIMAL(4,1) DEFAULT 0,
     soGioLamThem DECIMAL(5,2) DEFAULT 0,
     ghiChu NVARCHAR(500),
@@ -233,7 +218,6 @@ CREATE TABLE CHITIETLUONG (
     UNIQUE KEY uk_bangluong_nv (maBangLuong, maNV)
 ) ENGINE=InnoDB;
 
--- Bảng THANHPHANLUONG (Chi tiết từng khoản lương)
 CREATE TABLE THANHPHANLUONG (
     maThanhPhan INT AUTO_INCREMENT PRIMARY KEY,
     maChiTiet INT NOT NULL,
@@ -245,23 +229,21 @@ CREATE TABLE THANHPHANLUONG (
 ) ENGINE=InnoDB;
 
 -- =====================================================
--- NGHIỆP VỤ 7: QUẢN LÝ NGHỈ PHÉP
+-- NGHIEP VU 7: QUAN LY NGHI PHEP
 -- =====================================================
 
--- Bảng LOAIPHEP (Loại nghỉ phép)
 CREATE TABLE LOAIPHEP (
     maLoaiPhep VARCHAR(20) PRIMARY KEY,
     tenLoaiPhep NVARCHAR(100) NOT NULL,
     coLuong BOOLEAN DEFAULT TRUE,
     canChungTu BOOLEAN DEFAULT FALSE,
-    soNgayToiDa INT DEFAULT 0, -- 0 = không giới hạn
+    soNgayToiDa INT DEFAULT 0,
     moTa NVARCHAR(255),
-    trangThai ENUM('hoat_dong', 'ngung_hoat_dong') DEFAULT 'hoat_dong'
+    trangThai ENUM('hoatDong', 'ngung_hoat_dong') DEFAULT 'hoatDong'
 ) ENGINE=InnoDB;
 
--- Bảng SODUNGPHEP (Số dư phép năm)
 CREATE TABLE SODUNGPHEP (
-    maSoDung INT AUTO_INCREMENT PRIMARY KEY,
+    maSoDu INT AUTO_INCREMENT PRIMARY KEY,
     maNV INT NOT NULL,
     nam INT NOT NULL,
     maLoaiPhep VARCHAR(20) NOT NULL,
@@ -275,7 +257,6 @@ CREATE TABLE SODUNGPHEP (
     UNIQUE KEY uk_nv_nam_loai (maNV, nam, maLoaiPhep)
 ) ENGINE=InnoDB;
 
--- Bảng DONXINNGHIPHEP (Đơn xin nghỉ phép)
 CREATE TABLE DONXINNGHIPHEP (
     maDon INT AUTO_INCREMENT PRIMARY KEY,
     maNV INT NOT NULL,
@@ -284,7 +265,7 @@ CREATE TABLE DONXINNGHIPHEP (
     denNgay DATE NOT NULL,
     soNgayNghi DECIMAL(4,1) NOT NULL,
     lyDo NVARCHAR(500),
-    fileDinhKem VARCHAR(255), -- Chứng từ nếu cần
+    fileDinhKem VARCHAR(255),
     nguoiDuyet INT,
     ngayDuyet DATETIME,
     lyDoTuChoi NVARCHAR(500),
@@ -297,10 +278,9 @@ CREATE TABLE DONXINNGHIPHEP (
 ) ENGINE=InnoDB;
 
 -- =====================================================
--- NGHIỆP VỤ 8: ĐÁNH GIÁ HIỆU SUẤT
+-- NGHIEP VU 8: DANH GIA HIEU SUAT
 -- =====================================================
 
--- Bảng DOTDANHGIA (Đợt đánh giá)
 CREATE TABLE DOTDANHGIA (
     maDot INT AUTO_INCREMENT PRIMARY KEY,
     tenDot NVARCHAR(100) NOT NULL,
@@ -313,34 +293,31 @@ CREATE TABLE DOTDANHGIA (
     ngayTao DATETIME DEFAULT CURRENT_TIMESTAMP
 ) ENGINE=InnoDB;
 
--- Bảng TIEUCHIDANHGIA (Tiêu chí đánh giá)
 CREATE TABLE TIEUCHIDANHGIA (
     maTieuChi INT AUTO_INCREMENT PRIMARY KEY,
     tenTieuChi NVARCHAR(100) NOT NULL,
     moTa NVARCHAR(500),
-    nhomTieuChi NVARCHAR(50), -- Năng lực, Thái độ, Kết quả...
+    nhomTieuChi NVARCHAR(50),
     diemToiDa DECIMAL(5,2) DEFAULT 10,
-    trangThai ENUM('hoat_dong', 'ngung_hoat_dong') DEFAULT 'hoat_dong',
+    trangThai ENUM('hoatDong', 'ngung_hoat_dong') DEFAULT 'hoatDong',
     ngayTao DATETIME DEFAULT CURRENT_TIMESTAMP
 ) ENGINE=InnoDB;
 
--- Bảng DOTDANHGIA_TIEUCHI (Cấu hình tiêu chí cho đợt)
 CREATE TABLE DOTDANHGIA_TIEUCHI (
     maDot INT NOT NULL,
     maTieuChi INT NOT NULL,
-    trongSo DECIMAL(5,2) DEFAULT 1.00, -- Trọng số của tiêu chí trong đợt
+    trongSo DECIMAL(5,2) DEFAULT 1.00,
     batBuoc BOOLEAN DEFAULT TRUE,
     PRIMARY KEY (maDot, maTieuChi),
     FOREIGN KEY (maDot) REFERENCES DOTDANHGIA(maDot) ON DELETE CASCADE,
     FOREIGN KEY (maTieuChi) REFERENCES TIEUCHIDANHGIA(maTieuChi) ON DELETE CASCADE
 ) ENGINE=InnoDB;
 
--- Bảng DANHGIAHIEUSUAT (Kết quả đánh giá tổng thể)
 CREATE TABLE DANHGIAHIEUSUAT (
     maDanhGia INT AUTO_INCREMENT PRIMARY KEY,
     maDot INT NOT NULL,
-    maNV INT NOT NULL, -- Nhân viên được đánh giá
-    nguoiDanhGia INT NOT NULL, -- Quản lý đánh giá
+    maNV INT NOT NULL,
+    nguoiDanhGia INT NOT NULL,
     tongDiem DECIMAL(5,2) DEFAULT 0,
     xepLoai ENUM('xuat_sac', 'tot', 'kha', 'trung_binh', 'yeu') DEFAULT 'trung_binh',
     nhanXetChung NVARCHAR(1000),
@@ -353,7 +330,6 @@ CREATE TABLE DANHGIAHIEUSUAT (
     UNIQUE KEY uk_dot_nv (maDot, maNV)
 ) ENGINE=InnoDB;
 
--- Bảng CHITIETDANHGIA (Chi tiết điểm từng tiêu chí)
 CREATE TABLE CHITIETDANHGIA (
     maChiTiet INT AUTO_INCREMENT PRIMARY KEY,
     maDanhGia INT NOT NULL,
@@ -366,29 +342,26 @@ CREATE TABLE CHITIETDANHGIA (
 ) ENGINE=InnoDB;
 
 -- =====================================================
--- NGHIỆP VỤ 9: PHÂN QUYỀN VÀ BẢO MẬT
+-- NGHIEP VU 9: PHAN QUYEN VA BAO MAT
 -- =====================================================
 
--- Bảng VAITRO (Vai trò)
 CREATE TABLE VAITRO (
     maVaiTro VARCHAR(20) PRIMARY KEY,
     tenVaiTro NVARCHAR(100) NOT NULL,
     moTa NVARCHAR(255),
-    laVaiTroHeThong BOOLEAN DEFAULT FALSE, -- Không thể xóa
-    trangThai ENUM('hoat_dong', 'ngung_hoat_dong') DEFAULT 'hoat_dong',
+    laVaiTroHeThong BOOLEAN DEFAULT FALSE,
+    trangThai ENUM('hoatDong', 'ngung_hoat_dong') DEFAULT 'hoatDong',
     ngayTao DATETIME DEFAULT CURRENT_TIMESTAMP
 ) ENGINE=InnoDB;
 
--- Bảng QUYEN (Quyền)
 CREATE TABLE QUYEN (
     maQuyen VARCHAR(50) PRIMARY KEY,
     tenQuyen NVARCHAR(100) NOT NULL,
-    nhomQuyen VARCHAR(50), -- Module: Employee, Leave, Payroll...
+    nhomQuyen VARCHAR(50),
     moTa NVARCHAR(255),
     ngayTao DATETIME DEFAULT CURRENT_TIMESTAMP
 ) ENGINE=InnoDB;
 
--- Bảng VAITRO_QUYEN (N-N: Vai trò - Quyền)
 CREATE TABLE VAITRO_QUYEN (
     maVaiTro VARCHAR(20) NOT NULL,
     maQuyen VARCHAR(50) NOT NULL,
@@ -397,12 +370,11 @@ CREATE TABLE VAITRO_QUYEN (
     FOREIGN KEY (maQuyen) REFERENCES QUYEN(maQuyen) ON DELETE CASCADE
 ) ENGINE=InnoDB;
 
--- Bảng TAIKHOAN (Tài khoản đăng nhập)
 CREATE TABLE TAIKHOAN (
     maTaiKhoan INT AUTO_INCREMENT PRIMARY KEY,
     tenDangNhap VARCHAR(50) UNIQUE NOT NULL,
-    matKhau VARCHAR(255) NOT NULL, -- Hashed password
-    maNV INT UNIQUE, -- 0..1 với NHANVIEN
+    matKhau VARCHAR(255) NOT NULL,
+    maNV INT UNIQUE,
     maVaiTro VARCHAR(20) NOT NULL,
     email VARCHAR(100),
     hoatDong BOOLEAN DEFAULT TRUE,
@@ -415,11 +387,10 @@ CREATE TABLE TAIKHOAN (
     FOREIGN KEY (maVaiTro) REFERENCES VAITRO(maVaiTro)
 ) ENGINE=InnoDB;
 
--- Bảng TAIKHOAN_QUYEN (Quyền ngoại lệ cho tài khoản)
 CREATE TABLE TAIKHOAN_QUYEN (
     maTaiKhoan INT NOT NULL,
     maQuyen VARCHAR(50) NOT NULL,
-    choPhep BOOLEAN NOT NULL, -- TRUE = cấp thêm, FALSE = thu hồi
+    choPhep BOOLEAN NOT NULL,
     ghiChu NVARCHAR(255),
     ngayTao DATETIME DEFAULT CURRENT_TIMESTAMP,
     PRIMARY KEY (maTaiKhoan, maQuyen),
@@ -428,30 +399,28 @@ CREATE TABLE TAIKHOAN_QUYEN (
 ) ENGINE=InnoDB;
 
 -- =====================================================
--- NGHIỆP VỤ 10: THÔNG BÁO NỘI BỘ
+-- NGHIEP VU 10: THONG BAO NOI BO
 -- =====================================================
 
--- Bảng THONGBAO
 CREATE TABLE THONGBAO (
     maThongBao INT AUTO_INCREMENT PRIMARY KEY,
     tieuDe NVARCHAR(200) NOT NULL,
     noiDung TEXT,
     loaiThongBao ENUM('he_thong', 'don_tu', 'thong_bao_chung') DEFAULT 'he_thong',
-    maTaiKhoanGui INT NULL, -- NULL = từ hệ thống
+    maTaiKhoanGui INT NULL,
     maTaiKhoanNhan INT NOT NULL,
     daDoc BOOLEAN DEFAULT FALSE,
     ngayDoc DATETIME,
-    linkLienQuan VARCHAR(255), -- Link đến đối tượng liên quan
+    linkLienQuan VARCHAR(255),
     ngayTao DATETIME DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (maTaiKhoanGui) REFERENCES TAIKHOAN(maTaiKhoan) ON DELETE SET NULL,
     FOREIGN KEY (maTaiKhoanNhan) REFERENCES TAIKHOAN(maTaiKhoan) ON DELETE CASCADE
 ) ENGINE=InnoDB;
 
 -- =====================================================
--- NGHIỆP VỤ 11: TUYỂN DỤNG
+-- NGHIEP VU 11: TUYEN DUNG
 -- =====================================================
 
--- Bảng YEUCAUTUYENDUNG (Yêu cầu tuyển dụng)
 CREATE TABLE YEUCAUTUYENDUNG (
     maYeuCau INT AUTO_INCREMENT PRIMARY KEY,
     maPhongBan VARCHAR(20) NOT NULL,
@@ -471,7 +440,6 @@ CREATE TABLE YEUCAUTUYENDUNG (
     FOREIGN KEY (maChucVu) REFERENCES CHUCVU(maChucVu)
 ) ENGINE=InnoDB;
 
--- Bảng TINTUYENDUNG (Tin tuyển dụng công khai)
 CREATE TABLE TINTUYENDUNG (
     maTin INT AUTO_INCREMENT PRIMARY KEY,
     maYeuCau INT NOT NULL,
@@ -487,7 +455,6 @@ CREATE TABLE TINTUYENDUNG (
     FOREIGN KEY (maYeuCau) REFERENCES YEUCAUTUYENDUNG(maYeuCau) ON DELETE CASCADE
 ) ENGINE=InnoDB;
 
--- Bảng UNGVIEN (Ứng viên)
 CREATE TABLE UNGVIEN (
     maUngVien INT AUTO_INCREMENT PRIMARY KEY,
     maTin INT NOT NULL,
@@ -499,11 +466,11 @@ CREATE TABLE UNGVIEN (
     diaChi NVARCHAR(255),
     trinhDoHocVan NVARCHAR(100),
     kinhNghiem NVARCHAR(500),
-    fileCv VARCHAR(255),
-    nguonUngTuyen NVARCHAR(100), -- Website, facebook, giới thiệu...
+    fileCV VARCHAR(255),
+    nguonUngTuyen NVARCHAR(100),
     trangThai ENUM('moi', 'dang_phong_van', 'trung_tuyen', 'tu_choi') DEFAULT 'moi',
     nhanXet NVARCHAR(1000),
-    maNV INT NULL, -- Liên kết khi trúng tuyển
+    maNV INT NULL,
     ngayTao DATETIME DEFAULT CURRENT_TIMESTAMP,
     ngayCapNhat DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     FOREIGN KEY (maTin) REFERENCES TINTUYENDUNG(maTin) ON DELETE CASCADE,
@@ -511,218 +478,173 @@ CREATE TABLE UNGVIEN (
 ) ENGINE=InnoDB;
 
 -- =====================================================
--- BẢNG PHỤ TRỢ: AUDIT LOG
+-- BANG PHU TRO
 -- =====================================================
 
--- Bảng CAUHINHPHUCAP (Cấu hình phụ cấp & khấu trừ)
-CREATE TABLE CAUHINHPHUCAP (
-    maPC INT AUTO_INCREMENT PRIMARY KEY,
-    loai ENUM('phu_cap','khau_tru') NOT NULL DEFAULT 'phu_cap',
+CREATE TABLE CAUHINH_PHUCAP (
+    maCauHinh INT AUTO_INCREMENT PRIMARY KEY,
+    loai ENUM('phu_cap', 'khau_tru') NOT NULL DEFAULT 'phu_cap',
     tenKhoan VARCHAR(100) NOT NULL,
-    kieuTinh ENUM('co_dinh','phan_tram') NOT NULL DEFAULT 'co_dinh',
+    kieuTinh ENUM('co_dinh', 'phan_tram') NOT NULL DEFAULT 'co_dinh',
     giaTri DOUBLE NOT NULL DEFAULT 0,
     nguon VARCHAR(50) DEFAULT 'CongTy',
     hoatDong TINYINT(1) NOT NULL DEFAULT 1,
     ngayTao DATETIME DEFAULT CURRENT_TIMESTAMP
 ) ENGINE=InnoDB;
 
--- Bảng LOG_AUDIT (Ghi nhận hoạt động hệ thống)
 CREATE TABLE LOG_AUDIT (
     maLog INT AUTO_INCREMENT PRIMARY KEY,
     maTaiKhoan INT,
-    hanhDong VARCHAR(50) NOT NULL, -- CREATE, UPDATE, DELETE, LOGIN, LOGOUT
-    bangDuLieu VARCHAR(50), -- Tên bảng bị ảnh hưởng
-    maBanGhi VARCHAR(50), -- ID bản ghi bị ảnh hưởng
-    duLieuCu TEXT, -- JSON data cũ
-    duLieuMoi TEXT, -- JSON data mới
-    diaChi_IP VARCHAR(45),
+    hanhDong VARCHAR(50) NOT NULL,
+    bangDuLieu VARCHAR(50),
+    maBanGhi VARCHAR(50),
+    duLieuCu TEXT,
+    duLieuMoi TEXT,
+    diaChiIP VARCHAR(45),
     userAgent VARCHAR(255),
     ngayTao DATETIME DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (maTaiKhoan) REFERENCES TAIKHOAN(maTaiKhoan) ON DELETE SET NULL
 ) ENGINE=InnoDB;
 
 -- =====================================================
--- INDEXES FOR PERFORMANCE
+-- INDEXES
 -- =====================================================
 
--- Indexes cho NHANVIEN
 CREATE INDEX idx_nv_trangthai ON NHANVIEN(trangThai);
 CREATE INDEX idx_nv_ngayvaolam ON NHANVIEN(ngayVaoLam);
-
--- Indexes cho BONHIEM
 CREATE INDEX idx_bonhiem_nv ON BONHIEM(maNV);
 CREATE INDEX idx_bonhiem_trangthai ON BONHIEM(trangThai);
 CREATE INDEX idx_bonhiem_tungay ON BONHIEM(tuNgay);
-
--- Indexes cho CHAMCONG
 CREATE INDEX idx_chamcong_ngay ON CHAMCONG(ngay);
 CREATE INDEX idx_chamcong_nv_thang ON CHAMCONG(maNV, ngay);
-
--- Indexes cho DONXINNGHIPHEP
 CREATE INDEX idx_don_nv ON DONXINNGHIPHEP(maNV);
 CREATE INDEX idx_don_trangthai ON DONXINNGHIPHEP(trangThai);
-
--- Indexes cho THONGBAO
 CREATE INDEX idx_thongbao_nguoinhan ON THONGBAO(maTaiKhoanNhan);
 CREATE INDEX idx_thongbao_dadoc ON THONGBAO(daDoc);
-
--- Indexes cho LOG_AUDIT
 CREATE INDEX idx_audit_taikhoan ON LOG_AUDIT(maTaiKhoan);
 CREATE INDEX idx_audit_ngay ON LOG_AUDIT(ngayTao);
 CREATE INDEX idx_audit_bang ON LOG_AUDIT(bangDuLieu);
 
 -- =====================================================
--- INSERT DỮ LIỆU MẪU
+-- DU LIEU MAC DINH
 -- =====================================================
 
--- Vai trò mặc định
 INSERT INTO VAITRO (maVaiTro, tenVaiTro, moTa, laVaiTroHeThong) VALUES
-('ADMIN', 'Quản trị viên', 'Toàn quyền quản trị hệ thống', TRUE),
-('HR', 'Nhân sự', 'Quản lý nhân viên, hợp đồng, nghỉ phép', FALSE),
-('MANAGER', 'Quản lý', 'Quản lý team, duyệt phép, đánh giá nhân viên', FALSE),
-('EMPLOYEE', 'Nhân viên', 'Xem thông tin cá nhân, đăng ký nghỉ phép', FALSE);
+('ADMIN', 'Quan tri vien', 'Toan quyen quan tri he thong', TRUE),
+('HR', 'Nhan su', 'Quan ly nhan vien, hop dong, nghi phep', FALSE),
+('MANAGER', 'Quan ly', 'Quan ly team, duyet phep, danh gia nhan vien', FALSE),
+('EMPLOYEE', 'Nhan vien', 'Xem thong tin ca nhan, dang ky nghi phep', FALSE);
 
--- Quyền mặc định
 INSERT INTO QUYEN (maQuyen, tenQuyen, nhomQuyen) VALUES
--- Employee
-('VIEW_SELF', 'Xem thông tin cá nhân', 'Employee'),
-('EMPLOYEE_VIEW', 'Xem danh sách nhân viên', 'Employee'),
-('EMPLOYEE_CREATE', 'Tạo nhân viên', 'Employee'),
-('EMPLOYEE_UPDATE', 'Cập nhật nhân viên', 'Employee'),
-('EMPLOYEE_DELETE', 'Xóa nhân viên', 'Employee'),
--- Leave
-('LEAVE_CREATE', 'Tạo đơn nghỉ phép', 'Leave'),
-('LEAVE_VIEW_SELF', 'Xem nghỉ phép cá nhân', 'Leave'),
-('LEAVE_VIEW_ALL', 'Xem tất cả nghỉ phép', 'Leave'),
-('LEAVE_APPROVE', 'Duyệt nghỉ phép', 'Leave'),
-('LEAVE_MANAGE', 'Quản lý nghỉ phép', 'Leave'),
--- Evaluation
-('EVAL_VIEW_SELF', 'Xem đánh giá cá nhân', 'Evaluation'),
-('EVAL_VIEW_ALL', 'Xem tất cả đánh giá', 'Evaluation'),
-('EVAL_REVIEW', 'Đánh giá nhân viên', 'Evaluation'),
-('EVAL_MANAGE', 'Quản lý đánh giá', 'Evaluation'),
--- User
-('USER_VIEW', 'Xem danh sách tài khoản', 'User'),
-('USER_CREATE', 'Tạo tài khoản', 'User'),
-('USER_UPDATE', 'Cập nhật tài khoản', 'User'),
-('USER_DELETE', 'Xóa tài khoản', 'User'),
--- Role
-('ROLE_VIEW', 'Xem vai trò', 'Role'),
-('ROLE_CREATE', 'Tạo vai trò', 'Role'),
-('ROLE_UPDATE', 'Cập nhật vai trò', 'Role'),
-('ROLE_DELETE', 'Xóa vai trò', 'Role'),
--- Report
-('REPORT_VIEW', 'Xem báo cáo', 'Report'),
-('REPORT_EXPORT', 'Xuất báo cáo', 'Report'),
--- Settings
-('SETTINGS_VIEW', 'Xem cài đặt', 'Settings'),
-('SETTINGS_UPDATE', 'Cập nhật cài đặt', 'Settings'),
-    
--- Organization (NV2)
-('DEPARTMENT_VIEW', 'Xem phòng ban', 'Organization'),
-('DEPARTMENT_MANAGE', 'Quản lý phòng ban', 'Organization'),
-('POSITION_VIEW', 'Xem chức vụ', 'Organization'),
-('POSITION_MANAGE', 'Quản lý chức vụ', 'Organization'),
+('VIEW_SELF', 'Xem thong tin ca nhan', 'Employee'),
+('EMPLOYEE_VIEW', 'Xem danh sach nhan vien', 'Employee'),
+('EMPLOYEE_CREATE', 'Tao nhan vien', 'Employee'),
+('EMPLOYEE_UPDATE', 'Cap nhat nhan vien', 'Employee'),
+('EMPLOYEE_DELETE', 'Xoa nhan vien', 'Employee'),
+('LEAVE_CREATE', 'Tao don nghi phep', 'Leave'),
+('LEAVE_VIEW_SELF', 'Xem nghi phep ca nhan', 'Leave'),
+('LEAVE_VIEW_ALL', 'Xem tat ca nghi phep', 'Leave'),
+('LEAVE_APPROVE', 'Duyet nghi phep', 'Leave'),
+('LEAVE_MANAGE', 'Quan ly nghi phep', 'Leave'),
+('EVAL_VIEW_SELF', 'Xem danh gia ca nhan', 'Evaluation'),
+('EVAL_VIEW_ALL', 'Xem tat ca danh gia', 'Evaluation'),
+('EVAL_REVIEW', 'Danh gia nhan vien', 'Evaluation'),
+('EVAL_MANAGE', 'Quan ly danh gia', 'Evaluation'),
+('USER_VIEW', 'Xem danh sach tai khoan', 'User'),
+('USER_CREATE', 'Tao tai khoan', 'User'),
+('USER_UPDATE', 'Cap nhat tai khoan', 'User'),
+('USER_DELETE', 'Xoa tai khoan', 'User'),
+('ROLE_VIEW', 'Xem vai tro', 'Role'),
+('ROLE_CREATE', 'Tao vai tro', 'Role'),
+('ROLE_UPDATE', 'Cap nhat vai tro', 'Role'),
+('ROLE_DELETE', 'Xoa vai tro', 'Role'),
+('REPORT_VIEW', 'Xem bao cao', 'Report'),
+('REPORT_EXPORT', 'Xuat bao cao', 'Report'),
+('SETTINGS_VIEW', 'Xem cai dat', 'Settings'),
+('SETTINGS_UPDATE', 'Cap nhat cai dat', 'Settings'),
+('DEPARTMENT_VIEW', 'Xem phong ban', 'Organization'),
+('DEPARTMENT_MANAGE', 'Quan ly phong ban', 'Organization'),
+('POSITION_VIEW', 'Xem chuc vu', 'Organization'),
+('POSITION_MANAGE', 'Quan ly chuc vu', 'Organization'),
+('APPOINTMENT_VIEW', 'Xem bo nhiem', 'Appointment'),
+('APPOINTMENT_CREATE', 'Tao bo nhiem', 'Appointment'),
+('APPOINTMENT_APPROVE', 'Duyet bo nhiem', 'Appointment'),
+('ATTENDANCE_VIEW', 'Xem cham cong', 'Attendance'),
+('ATTENDANCE_MANAGE', 'Quan ly cham cong', 'Attendance'),
+('CONTRACT_VIEW', 'Xem hop dong', 'Contract'),
+('CONTRACT_MANAGE', 'Quan ly hop dong', 'Contract'),
+('PAYROLL_VIEW', 'Xem luong', 'Payroll'),
+('PAYROLL_CALCULATE', 'Tinh luong', 'Payroll'),
+('RECRUITMENT_VIEW', 'Xem tuyen dung', 'Recruitment'),
+('RECRUITMENT_MANAGE', 'Quan ly tuyen dung', 'Recruitment');
 
--- Appointments (NV3)
-('APPOINTMENT_VIEW', 'Xem bổ nhiệm', 'Appointment'),
-('APPOINTMENT_CREATE', 'Tạo bổ nhiệm', 'Appointment'),
-('APPOINTMENT_APPROVE', 'Duyệt bổ nhiệm', 'Appointment'),
-
--- Attendance (NV4)
-('ATTENDANCE_VIEW', 'Xem chấm công', 'Attendance'),
-('ATTENDANCE_MANAGE', 'Quản lý chấm công', 'Attendance'),
-
--- Contracts (NV5)
-('CONTRACT_VIEW', 'Xem hợp đồng', 'Contract'),
-('CONTRACT_MANAGE', 'Quản lý hợp đồng', 'Contract'),
-
--- Payroll (NV6)
-('PAYROLL_VIEW', 'Xem lương', 'Payroll'),
-('PAYROLL_CALCULATE', 'Tính lương', 'Payroll'),
-
--- Recruitment (NV11)
-('RECRUITMENT_VIEW', 'Xem tuyển dụng', 'Recruitment'),
-('RECRUITMENT_MANAGE', 'Quản lý tuyển dụng', 'Recruitment');
-
--- Gán quyền cho vai trò ADMIN (tất cả quyền)
 INSERT INTO VAITRO_QUYEN (maVaiTro, maQuyen)
 SELECT 'ADMIN', maQuyen FROM QUYEN;
 
--- Gán quyền cho vai trò HR
 INSERT INTO VAITRO_QUYEN (maVaiTro, maQuyen) VALUES
 ('HR', 'VIEW_SELF'), ('HR', 'EMPLOYEE_VIEW'), ('HR', 'EMPLOYEE_CREATE'), ('HR', 'EMPLOYEE_UPDATE'),
 ('HR', 'LEAVE_CREATE'), ('HR', 'LEAVE_VIEW_SELF'), ('HR', 'LEAVE_VIEW_ALL'), ('HR', 'LEAVE_APPROVE'), ('HR', 'LEAVE_MANAGE'),
 ('HR', 'EVAL_VIEW_SELF'), ('HR', 'EVAL_VIEW_ALL'), ('HR', 'EVAL_MANAGE'),
 ('HR', 'REPORT_VIEW');
 
--- Gán quyền cho vai trò MANAGER
 INSERT INTO VAITRO_QUYEN (maVaiTro, maQuyen) VALUES
 ('MANAGER', 'VIEW_SELF'), ('MANAGER', 'EMPLOYEE_VIEW'),
 ('MANAGER', 'LEAVE_CREATE'), ('MANAGER', 'LEAVE_VIEW_SELF'), ('MANAGER', 'LEAVE_VIEW_ALL'), ('MANAGER', 'LEAVE_APPROVE'),
 ('MANAGER', 'EVAL_VIEW_SELF'), ('MANAGER', 'EVAL_VIEW_ALL'), ('MANAGER', 'EVAL_REVIEW'),
 ('MANAGER', 'REPORT_VIEW');
 
--- Gán quyền cho vai trò EMPLOYEE
 INSERT INTO VAITRO_QUYEN (maVaiTro, maQuyen) VALUES
 ('EMPLOYEE', 'VIEW_SELF'),
 ('EMPLOYEE', 'LEAVE_CREATE'), ('EMPLOYEE', 'LEAVE_VIEW_SELF'),
 ('EMPLOYEE', 'EVAL_VIEW_SELF');
 
--- Loại phép mặc định
 INSERT INTO LOAIPHEP (maLoaiPhep, tenLoaiPhep, coLuong, canChungTu, soNgayToiDa) VALUES
-('PHEP_NAM', 'Nghỉ phép năm', TRUE, FALSE, 12),
-('PHEP_OM', 'Nghỉ ốm', TRUE, TRUE, 30),
-('PHEP_CUOI', 'Nghỉ cưới', TRUE, TRUE, 3),
-('PHEP_TANG', 'Nghỉ tang', TRUE, TRUE, 3),
-('PHEP_THAI_SAN', 'Nghỉ thai sản', TRUE, TRUE, 180),
-('PHEP_KHONG_LUONG', 'Nghỉ không lương', FALSE, FALSE, 0);
+('PHEP_NAM', 'Nghi phep nam', TRUE, FALSE, 12),
+('PHEP_OM', 'Nghi om', TRUE, TRUE, 30),
+('PHEP_CUOI', 'Nghi cuoi', TRUE, TRUE, 3),
+('PHEP_TANG', 'Nghi tang', TRUE, TRUE, 3),
+('PHEP_THAI_SAN', 'Nghi thai san', TRUE, TRUE, 180),
+('PHEP_KHONG_LUONG', 'Nghi khong luong', FALSE, FALSE, 0);
 
--- Ca làm việc mặc định
 INSERT INTO CALAM (maCaLam, tenCaLam, gioBatDau, gioKetThuc, soGioChuan) VALUES
-('HANH_CHINH', 'Ca hành chính', '08:00:00', '17:00:00', 8.00),
-('CA_SANG', 'Ca sáng', '06:00:00', '14:00:00', 8.00),
-('CA_CHIEU', 'Ca chiều', '14:00:00', '22:00:00', 8.00),
-('CA_DEM', 'Ca đêm', '22:00:00', '06:00:00', 8.00);
+('HANH_CHINH', 'Ca hanh chinh', '08:00:00', '17:00:00', 8.00),
+('CA_SANG', 'Ca sang', '06:00:00', '14:00:00', 8.00),
+('CA_CHIEU', 'Ca chieu', '14:00:00', '22:00:00', 8.00),
+('CA_DEM', 'Ca dem', '22:00:00', '06:00:00', 8.00);
 
--- Phòng ban mẫu
 INSERT INTO PHONGBAN (maPhongBan, tenPhongBan, phongBanCha, moTa) VALUES
-('CONGTY', 'Công ty ABC', NULL, 'Công ty mẹ'),
-('PHONGNS', 'Phòng Nhân sự', 'CONGTY', 'Quản lý nhân sự'),
-('PHONGKT', 'Phòng Kế toán', 'CONGTY', 'Quản lý tài chính'),
-('PHONGKD', 'Phòng Kinh doanh', 'CONGTY', 'Kinh doanh và bán hàng'),
-('PHONGIT', 'Phòng IT', 'CONGTY', 'Công nghệ thông tin');
+('CONGTY', 'Cong ty ABC', NULL, 'Cong ty me'),
+('PHONGNS', 'Phong Nhan su', 'CONGTY', 'Quan ly nhan su'),
+('PHONGKT', 'Phong Ke toan', 'CONGTY', 'Quan ly tai chinh'),
+('PHONGKD', 'Phong Kinh doanh', 'CONGTY', 'Kinh doanh va ban hang'),
+('PHONGIT', 'Phong IT', 'CONGTY', 'Cong nghe thong tin');
 
--- Chức vụ mẫu
 INSERT INTO CHUCVU (maChucVu, tenChucVu, capBac, heSoLuong, phuCapChucVu) VALUES
-('GD', 'Giám đốc', 1, 5.00, 10000000),
-('PGD', 'Phó Giám đốc', 2, 4.00, 7000000),
-('TP', 'Trưởng phòng', 3, 3.00, 5000000),
-('PP', 'Phó phòng', 4, 2.50, 3000000),
-('TT', 'Trưởng team', 5, 2.00, 2000000),
-('NV', 'Nhân viên', 10, 1.00, 0);
+('GD', 'Giam doc', 1, 5.00, 10000000),
+('PGD', 'Pho Giam doc', 2, 4.00, 7000000),
+('TP', 'Truong phong', 3, 3.00, 5000000),
+('PP', 'Pho phong', 4, 2.50, 3000000),
+('TT', 'Truong team', 5, 2.00, 2000000),
+('NV', 'Nhan vien', 10, 1.00, 0);
 
--- Tiêu chí đánh giá mẫu
 INSERT INTO TIEUCHIDANHGIA (tenTieuChi, moTa, nhomTieuChi, diemToiDa) VALUES
-('Chất lượng công việc', 'Đánh giá chất lượng output', 'Kết quả', 10),
-('Tiến độ hoàn thành', 'Đánh giá việc hoàn thành đúng hạn', 'Kết quả', 10),
-('Sáng tạo & Cải tiến', 'Khả năng đưa ra giải pháp mới', 'Năng lực', 10),
-('Kỹ năng chuyên môn', 'Kiến thức và kỹ năng nghề', 'Năng lực', 10),
-('Tinh thần hợp tác', 'Khả năng làm việc nhóm', 'Thái độ', 10),
-('Tuân thủ nội quy', 'Chấp hành quy định công ty', 'Thái độ', 10);
+('Chat luong cong viec', 'Danh gia chat luong output', 'Ket qua', 25),
+('Tien do hoan thanh', 'Danh gia viec hoan thanh dung han', 'Ket qua', 20),
+('Sang tao & Cai tien', 'Kha nang dua ra giai phap moi', 'Nang luc', 15),
+('Ky nang chuyen mon', 'Kien thuc va ky nang nghe', 'Nang luc', 20),
+('Tinh than hop tac', 'Kha nang lam viec nhom', 'Thai do', 10),
+('Tuan thu noi quy', 'Chap hanh quy dinh cong ty', 'Thai do', 10);
 
--- Tài khoản admin mặc định (password: 123 - cần hash trong thực tế)
 INSERT INTO TAIKHOAN (tenDangNhap, matKhau, maNV, maVaiTro, email) VALUES
 ('admin', '123', NULL, 'ADMIN', 'admin@hrm.local');
 
 -- =====================================================
--- STORED PROCEDURES & TRIGGERS
+-- TRIGGERS & PROCEDURES
 -- =====================================================
 
 DELIMITER //
 
--- Trigger: Ghi log khi thay đổi hệ số lương chức vụ
-CREATE TRIGGER trg_lichsu_hesoluong
+CREATE TRIGGER trg_lich_su_he_so_luong
 BEFORE UPDATE ON CHUCVU
 FOR EACH ROW
 BEGIN
@@ -732,79 +654,61 @@ BEGIN
     END IF;
 END //
 
--- Trigger: Cập nhật số ngày phép đã dùng khi đơn được duyệt
 CREATE TRIGGER trg_cap_nhat_so_phep
 AFTER UPDATE ON DONXINNGHIPHEP
 FOR EACH ROW
 BEGIN
     IF NEW.trangThai = 'da_duyet' AND OLD.trangThai != 'da_duyet' THEN
-        UPDATE SODUNGPHEP 
+        UPDATE SODUNGPHEP
         SET soNgayDaDung = soNgayDaDung + NEW.soNgayNghi
-        WHERE maNV = NEW.maNV 
-          AND nam = YEAR(NEW.tuNgay) 
+        WHERE maNV = NEW.maNV
+          AND nam = YEAR(NEW.tuNgay)
           AND maLoaiPhep = NEW.maLoaiPhep;
     END IF;
 END //
 
--- Procedure: Tạo số dư phép năm cho nhân viên mới
-CREATE PROCEDURE sp_tao_so_du_phep(IN p_maNV INT, IN p_nam INT)
+CREATE PROCEDURE sp_tao_so_du_phep(IN p_nhan_vien_id INT, IN p_nam INT)
 BEGIN
     INSERT INTO SODUNGPHEP (maNV, nam, maLoaiPhep, soNgayDuocCap)
-    SELECT p_maNV, p_nam, maLoaiPhep, 
-           CASE maLoaiPhep 
-               WHEN 'PHEP_NAM' THEN 12 
-               ELSE 0 
+    SELECT p_nhan_vien_id, p_nam, maLoaiPhep,
+           CASE maLoaiPhep
+               WHEN 'PHEP_NAM' THEN 12
+               ELSE 0
            END
     FROM LOAIPHEP
-    WHERE trangThai = 'hoat_dong';
+    WHERE trangThai = 'hoatDong';
 END //
 
--- Procedure: Tính xếp loại đánh giá
-CREATE PROCEDURE sp_tinh_xep_loai(IN p_maDanhGia INT)
+CREATE PROCEDURE sp_tinh_xep_loai(IN p_danh_gia_id INT)
 BEGIN
-    DECLARE v_tongDiem DECIMAL(5,2);
-    DECLARE v_diemToiDa DECIMAL(5,2);
-    DECLARE v_tyLe DECIMAL(5,2);
-    DECLARE v_xepLoai VARCHAR(20);
-    
-    -- Tính tổng điểm
-    SELECT SUM(ct.diem * dt.trongSo), SUM(tc.diemToiDa * dt.trongSo)
-    INTO v_tongDiem, v_diemToiDa
+    DECLARE v_tong_diem DECIMAL(5,2);
+    DECLARE v_diem_toi_da DECIMAL(5,2);
+    DECLARE v_ty_le DECIMAL(5,2);
+    DECLARE v_xep_loai VARCHAR(20);
+
+    SELECT SUM(ct.diem * ddtc.trongSo), SUM(tc.diemToiDa * ddtc.trongSo)
+    INTO v_tong_diem, v_diem_toi_da
     FROM CHITIETDANHGIA ct
     JOIN TIEUCHIDANHGIA tc ON ct.maTieuChi = tc.maTieuChi
     JOIN DANHGIAHIEUSUAT dg ON ct.maDanhGia = dg.maDanhGia
-    JOIN DOTDANHGIA_TIEUCHI dt ON dg.maDot = dt.maDot AND ct.maTieuChi = dt.maTieuChi
-    WHERE ct.maDanhGia = p_maDanhGia;
-    
-    -- Tính tỷ lệ %
-    SET v_tyLe = (v_tongDiem / v_diemToiDa) * 100;
-    
-    -- Xếp loại
-    SET v_xepLoai = CASE
-        WHEN v_tyLe >= 90 THEN 'xuat_sac'
-        WHEN v_tyLe >= 80 THEN 'tot'
-        WHEN v_tyLe >= 65 THEN 'kha'
-        WHEN v_tyLe >= 50 THEN 'trung_binh'
+    JOIN DOTDANHGIA_TIEUCHI ddtc ON dg.maDot = ddtc.maDot AND ct.maTieuChi = ddtc.maTieuChi
+    WHERE ct.maDanhGia = p_danh_gia_id;
+
+    SET v_ty_le = (v_tong_diem / v_diem_toi_da) * 100;
+
+    SET v_xep_loai = CASE
+        WHEN v_ty_le >= 90 THEN 'xuat_sac'
+        WHEN v_ty_le >= 80 THEN 'tot'
+        WHEN v_ty_le >= 65 THEN 'kha'
+        WHEN v_ty_le >= 50 THEN 'trung_binh'
         ELSE 'yeu'
     END;
-    
-    -- Cập nhật
-    UPDATE DANHGIAHIEUSUAT 
-    SET tongDiem = v_tongDiem, xepLoai = v_xepLoai
-    WHERE maDanhGia = p_maDanhGia;
+
+    UPDATE DANHGIAHIEUSUAT
+    SET tongDiem = v_tong_diem, xepLoai = v_xep_loai
+    WHERE maDanhGia = p_danh_gia_id;
 END //
 
 DELIMITER ;
 
--- =====================================================
--- COMPLETION MESSAGE
--- =====================================================
 SELECT 'Database HRM created successfully!' AS Message;
-
--- =====================================================
--- BANGLUONG: Add approve workflow columns
--- =====================================================
-ALTER TABLE BANGLUONG
-  MODIFY COLUMN trangThai ENUM('dang_xu_ly','da_duyet','da_khoa') DEFAULT 'dang_xu_ly',
-  ADD COLUMN ngayDuyet DATETIME NULL AFTER ngayKhoa,
-  ADD COLUMN nguoiDuyet INT NULL AFTER ngayDuyet;

@@ -1,6 +1,6 @@
 package com.hrm.util;
 
-import com.hrm.model.User;
+import com.hrm.model.TaiKhoan;
 
 /**
  * Session Context - Manages current user session
@@ -8,7 +8,7 @@ import com.hrm.model.User;
  */
 public class SessionContext {
     private static SessionContext instance;
-    private User currentUser;
+    private TaiKhoan currentUser;
 
     private SessionContext() {
     }
@@ -20,11 +20,11 @@ public class SessionContext {
         return instance;
     }
 
-    public User getCurrentUser() {
+    public TaiKhoan getCurrentUser() {
         return currentUser;
     }
 
-    public void setCurrentUser(User user) {
+    public void setCurrentUser(TaiKhoan user) {
         this.currentUser = user;
     }
 

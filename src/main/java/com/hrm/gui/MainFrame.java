@@ -1,7 +1,7 @@
 package com.hrm.gui;
 
-import com.hrm.service.AuthService;
-import com.hrm.service.ServiceResult;
+import com.hrm.bus.XacThucBUS;
+import com.hrm.bus.KetQua;
 import com.hrm.gui.components.PurpleButton;
 import com.hrm.gui.components.RoundedPanel;
 import com.hrm.gui.leave.LeaveListPanel;
@@ -15,7 +15,7 @@ import com.hrm.gui.salary.SalaryListPanel;
 import com.hrm.gui.notification.NotificationPanel;
 import com.hrm.gui.recruitment.RecruitmentPanel;
 import com.hrm.gui.report.ReportPanel;
-import com.hrm.model.User;
+import com.hrm.model.TaiKhoan;
 import com.hrm.util.SessionContext;
 import com.hrm.util.UIColors;
 import com.hrm.gui.admin.DepartmentPanel;
@@ -61,10 +61,10 @@ public class MainFrame extends JFrame {
     private JButton btnLogout;
 
     private JButton currentActiveButton;
-    private final AuthService authService;
+    private final XacThucBUS authService;
 
     public MainFrame() {
-        this.authService = AuthService.getInstance();
+        this.authService = XacThucBUS.getInstance();
 
         if (!authService.isLoggedIn()) {
             JOptionPane.showMessageDialog(null, "Phiên làm việc không hợp lệ");
@@ -194,9 +194,9 @@ public class MainFrame extends JFrame {
     private void setupLayout() {
         setLayout(new BorderLayout());
 
-        User user = SessionContext.getInstance().getCurrentUser();
+        TaiKhoan user = SessionContext.getInstance().getCurrentUser();
         String displayName = user != null ? user.getFullName() : "Guest";
-        String roleName = user != null ? user.getRoleNames() : "";
+        String roleName = user != null ? user.getVaiTros().toString() : "";
 
         // ========================
         // HEADER PANEL
@@ -212,16 +212,16 @@ public class MainFrame extends JFrame {
         lblLogo.setForeground(Color.WHITE);
         logoSection.add(lblLogo);
 
-        // Right - User info + Logout
+        // Right - TaiKhoan info + Logout
         JPanel userSection = new JPanel(new FlowLayout(FlowLayout.RIGHT, 15, 0));
         userSection.setOpaque(false);
 
-        // User name in header
+        // TaiKhoan name in header
         JLabel lblHeaderUser = new JLabel(displayName);
         lblHeaderUser.setFont(new Font("Segoe UI", Font.PLAIN, 14));
         lblHeaderUser.setForeground(Color.WHITE);
 
-        // Role badge
+        // VaiTro badge
         JLabel lblHeaderRole = new JLabel(roleName);
         lblHeaderRole.setFont(new Font("Segoe UI", Font.PLAIN, 12));
         lblHeaderRole.setForeground(new Color(255, 255, 255, 180));
@@ -461,7 +461,7 @@ public class MainFrame extends JFrame {
         welcomePanel.setOpaque(false);
         welcomePanel.setBorder(new EmptyBorder(30, 0, 0, 0));
 
-        User currentUser = SessionContext.getInstance().getCurrentUser();
+        TaiKhoan currentUser = SessionContext.getInstance().getCurrentUser();
         String displayName = currentUser != null ? currentUser.getFullName() : "Guest";
         JLabel lblWelcome = new JLabel("Chào mừng " + displayName + " đến với HRM System!");
         lblWelcome.setFont(new Font("Segoe UI", Font.PLAIN, 16));
@@ -562,9 +562,9 @@ public class MainFrame extends JFrame {
                 return;
             }
 
-            User currentUser = authService.getCurrentUser();
+            TaiKhoan currentUser = authService.getCurrentUser();
             if (currentUser != null) {
-                ServiceResult<Void> result = authService.changePassword(currentUser.getId(), currentPass, newPass);
+                KetQua<Void> result = authService.changePassword(currentUser.getId(), currentPass, newPass);
                 if (result.isSuccess()) {
                     JOptionPane.showMessageDialog(this, "Đổi mật khẩu thành công!",
                             "Thong bao", JOptionPane.INFORMATION_MESSAGE);
