@@ -425,7 +425,7 @@ INSERT INTO TAIKHOAN (tenDangNhap, matKhau, maNV, maVaiTro, email, hoatDong) VAL
 -- =====================================================
 -- 7. HOP DONG LAO DONG
 -- =====================================================
-INSERT INTO HOPDONGLAODONG (soHopDong, maNV, loaiHopDong, luongCoSo, ngàyKy, ngàyHieuLuc, ngàyHetHieuLuc, trangThai, noiDung) VALUES
+INSERT INTO HOPDONGLAODONG (soHopDong, maNV, loaiHopDong, luongCoSo, ngayKy, ngayHieuLuc, ngayHetHieuLuc, trangThai, noiDung) VALUES
 -- Lãnh đạo (khong xac dinh)
 ('HD2015-GD-001',   1,  'khong_xac_dinh',    80000000, '2015-01-03', '2015-01-05', NULL,         'hieu_luc', 'Hop dong lao dong khong xac dinh thoi han - Giám đốc'),
 ('HD2015-PGD-001',  2,  'khong_xac_dinh',    60000000, '2015-05-28', '2015-06-01', NULL,         'hieu_luc', 'Hop dong lao dong khong xac dinh thoi han - Pho GD'),
@@ -498,7 +498,7 @@ INSERT INTO HOPDONGLAODONG (soHopDong, maNV, loaiHopDong, luongCoSo, ngàyKy, ng
 -- =====================================================
 -- 8. CA LAM
 -- =====================================================
-INSERT INTO CALAM (maCaLam, tenCaLam, giờBatDau, giờKetThuc, soGioChuan, choPhepLamThem, moTa, trangThai) VALUES
+INSERT INTO CALAM (maCaLam, tenCaLam, gioBatDau, gioKetThuc, soGioChuan, choPhepLamThem, moTa, trangThai) VALUES
 ('HANH_CHINH', 'Ca hanh chinh', '08:00:00', '17:00:00', 8.00, TRUE,  'Ca lam viec hanh chinh van phong', 'hoatDong'),
 ('CA_SANG',    'Ca sáng',       '06:00:00', '14:00:00', 8.00, TRUE,  'Ca sáng cho bo phan san xuat',     'hoatDong'),
 ('CA_CHIEU',   'Ca chieu',      '14:00:00', '22:00:00', 8.00, TRUE,  'Ca chieu cho bo phan san xuat',    'hoatDong'),
@@ -518,7 +518,7 @@ INSERT INTO CALAM (maCaLam, tenCaLam, giờBatDau, giờKetThuc, soGioChuan, cho
 -- Tao du lieu cham cong cho cac nhan vien chinh (bo qua nhan vien tam nghi NV035)
 -- Format: maNV, ngày, maCaLam, giờVao, giờRa, soGioLam, giờLamThem, trangThai, phuongThucChamCong
 
-INSERT INTO CHAMCONG (maNV, ngày, maCaLam, giờVao, giờRa, soGioLam, giờLamThem, trangThai, phuongThucChamCong, ghiChu) VALUES
+INSERT INTO CHAMCONG (maNV, ngay, maCaLam, gioVao, gioRa, soGioLam, gioLamThem, trangThai, phuongThucChamCong, ghiChu) VALUES
 -- NV001 (GD) - tháng 1
 (1,'2026-01-02','HANH_CHINH','2026-01-02 08:00','2026-01-02 17:30',8.00,0.50,'dung_giờ','the_tu',NULL),
 (1,'2026-01-05','HANH_CHINH','2026-01-05 08:00','2026-01-05 17:00',8.00,0.00,'dung_giờ','the_tu',NULL),
@@ -675,7 +675,7 @@ INSERT INTO CHAMCONG (maNV, ngày, maCaLam, giờVao, giờRa, soGioLam, giờLa
 (15,'2026-01-30','HANH_CHINH','2026-01-30 08:00','2026-01-30 17:00',8.00,0.00,'dung_giờ','gps',NULL);
 
 -- *** CHAM CONG THANG 2/2026 (Thang 2 ngày lam viec: 2,3,4,5,6,9,10,11,12,13,16,17,18,19,20,23,24,25,26,27) ***
-INSERT INTO CHAMCONG (maNV, ngày, maCaLam, giờVao, giờRa, soGioLam, giờLamThem, trangThai, phuongThucChamCong, ghiChu) VALUES
+INSERT INTO CHAMCONG (maNV, ngay, maCaLam, gioVao, gioRa, soGioLam, gioLamThem, trangThai, phuongThucChamCong, ghiChu) VALUES
 -- NV001 tháng 2
 (1,'2026-02-02','HANH_CHINH','2026-02-02 08:00','2026-02-02 17:00',8.00,0.00,'dung_giờ','the_tu',NULL),
 (1,'2026-02-03','HANH_CHINH','2026-02-03 07:55','2026-02-03 17:00',8.00,0.00,'dung_giờ','the_tu',NULL),
@@ -785,7 +785,7 @@ INSERT INTO CHAMCONG (maNV, ngày, maCaLam, giờVao, giờRa, soGioLam, giờLa
 -- =====================================================
 -- 10. DANG KY LAM THEM
 -- =====================================================
-INSERT INTO DANGKY_LAMTHEM (maNV, ngày, soGio, heSoOT, lyDo, nguoiDuyet, ngayDuyet, trangThai) VALUES
+INSERT INTO DANGKY_LAMTHEM (maNV, ngay, soGio, heSoOT, lyDo, nguoiDuyet, ngayDuyet, trangThai) VALUES
 -- Thang 1
 (1,  '2026-01-02', 0.50, 1.50, 'Chuan bi bao cao nhân sự dau nam',               2,  '2026-01-02 17:30:00', 'da_duyet'),
 (1,  '2026-01-07', 1.00, 1.50, 'Hop tong ket nam 2025 ngoai giờ',                2,  '2026-01-07 16:00:00', 'da_duyet'),
@@ -925,7 +925,7 @@ INSERT INTO DONXINNGHIPHEP (maNV, maLoaiPhep, tuNgay, denNgay, soNgayNghi, lyDo,
 -- =====================================================
 -- 13. BANG LUONG + CHI TIET LUONG + THANH PHAN LUONG
 -- =====================================================
-INSERT INTO BANGLUONG (tháng, nam, tenBangLuong, nguoiTao, nguoiDuyet, ngayDuyet, trangThai) VALUES
+INSERT INTO BANGLUONG (thang, nam, tenBangLuong, nguoiTao, nguoiDuyet, ngayDuyet, trangThai) VALUES
 (11, 2025, 'Bảng lương tháng 11-2025', 5, 2, '2025-12-03 10:00:00', 'da_khoa'),
 (12, 2025, 'Bảng lương tháng 12-2025', 5, 2, '2026-01-05 10:00:00', 'da_khoa'),
 ( 1, 2026, 'Bảng lương tháng 01-2026', 5, 2, '2026-02-05 09:00:00', 'da_khoa'),
@@ -1045,7 +1045,7 @@ INSERT INTO DOTDANHGIA_TIEUCHI (maDot, maTieuChi, trongSo, batBuoc) VALUES
 (6,1,20.0,TRUE),(6,2,20.0,TRUE),(6,3,10.0,FALSE),(6,4,20.0,TRUE),(6,5,15.0,TRUE),(6,6,10.0,TRUE),(6,7,5.0,FALSE);
 
 -- Danh gia hieu suat dot 5 (Nam 2025) - day du nhieu nhan vien
-INSERT INTO DANHGIAHIEUSUAT (maDot, maNV, nguoiDanhGia, tongDiem, xepLoai, nhanXetChung, ngàyDanhGia, trangThai) VALUES
+INSERT INTO DANHGIAHIEUSUAT (maDot, maNV, nguoiDanhGia, tongDiem, xepLoai, nhanXetChung, ngayDanhGia, trangThai) VALUES
 -- Dot 1 (Q4/2024)
 (1,23, 22, 8.60,'tot',      'Khoa Nguyen hoan thanh tot muc tieu ky, team van hanh on dinh.',        '2025-01-10 10:00:00','da_xac_nhan'),
 (1,24, 23, 8.90,'tot',      'Mai Trang duy tri chat luong ky thuat cao, dong gop lon cho dự án.',     '2025-01-10 11:00:00','da_xac_nhan'),
@@ -1247,6 +1247,7 @@ SELECT CONCAT('Tổng số hợp đồng: ', COUNT(*)) AS Info FROM HOPDONGLAODO
 SELECT CONCAT('Tổng số chấm công: ', COUNT(*)) AS Info FROM CHAMCONG;
 SELECT CONCAT('Tổng số đơn nghỉ phép: ', COUNT(*)) AS Info FROM DONXINNGHIPHEP;
 SELECT CONCAT('Tong so ứng viên: ', COUNT(*)) AS Info FROM UNGVIEN;
+
 
 
 

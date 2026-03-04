@@ -564,6 +564,21 @@ public class RecruitmentPanel extends JPanel {
             return;
         }
         int maUV = (int) modelUngVien.getValueAt(row, 0);
+        UngVien uv = null;
+        if (danhSachUV != null) {
+            for (UngVien item : danhSachUV) {
+                if (item.getMaUngVien() == maUV) {
+                    uv = item;
+                    break;
+                }
+            }
+        }
+        if (uv != null && uv.getMaNV() > 0) {
+            JOptionPane.showMessageDialog(this,
+                    "Ung vien nay da duoc chuyen thanh nhan vien, khong the doi trang thai tuyen dung.",
+                    "Thong bao", JOptionPane.WARNING_MESSAGE);
+            return;
+        }
 
         String[] options = {"moi", "dang_phong_van", "trung_tuyen", "tu_choi"};
         String[] displayOptions = {"Mới", "Đang phỏng vấn", "Trúng tuyển", "Từ chối"};
@@ -669,7 +684,7 @@ public class RecruitmentPanel extends JPanel {
             setHorizontalAlignment(SwingConstants.CENTER);
             if (!isSelected && value != null) {
                 String v = value.toString();
-                if (v.contains("Đã duyệt") || v.contains("Trúng tuyển") || v.contains("Đang tuyển")) {
+                if (v.contains("Đã duyệt") || v.contains("Trúng tuyển") || v.contains("Đang tuyển") || v.contains("Da chuyen thanh nhan vien")) {
                     c.setForeground(UIColors.SUCCESS_GREEN);
                 } else if (v.contains("Từ chối") || v.contains("Đã đóng")) {
                     c.setForeground(UIColors.DANGER_RED);
@@ -684,3 +699,4 @@ public class RecruitmentPanel extends JPanel {
         }
     }
 }
+

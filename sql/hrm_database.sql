@@ -460,7 +460,7 @@ CREATE TABLE UNGVIEN (
     kinhNghiem NVARCHAR(500),
     fileCV VARCHAR(255),
     nguonUngTuyen NVARCHAR(100),
-    trangThai ENUM('moi', 'dang_phong_van', 'trung_tuyen', 'tu_choi') DEFAULT 'moi',
+    trangThai ENUM('moi', 'dang_phong_van', 'trung_tuyen', 'da_chuyen_nhan_vien', 'tu_choi') DEFAULT 'moi',
     nhanXet NVARCHAR(1000),
     maNV INT NULL,
     ngayTao DATETIME DEFAULT CURRENT_TIMESTAMP,

@@ -213,20 +213,24 @@ public class TuyenDungBUS {
     /**
      * Cập nhật trạng thái ứng viên.
      */
-    public KetQua<Void> capNhatTrangThaiUV(int maUV, String trangThai) {
+        public KetQua<Void> capNhatTrangThaiUV(int maUV, String trangThai) {
         UngVien uv = recruitmentRepo.findById(maUV);
         if (uv == null) {
-            return KetQua.error("Không tìm thấy ứng viên.");
+            return KetQua.error("Khong tim thay ung vien.");
+        }
+        if (uv.getMaNV() > 0) {
+            return KetQua.error("Ung vien da duoc chuyen thanh nhan vien, khong the cap nhat trang thai tuyen dung.");
         }
 
         uv.setTrangThai(trangThai);
         try {
             recruitmentRepo.updateUngVien(uv);
-            return KetQua.success(null, "Cập nhật trạng thái ứng viên thành công.");
+            return KetQua.success(null, "Cap nhat trang thai ung vien thanh cong.");
         } catch (Exception e) {
-            return KetQua.error("Lỗi cập nhật trạng thái ứng viên: " + e.getMessage());
+            return KetQua.error("Loi cap nhat trang thai ung vien: " + e.getMessage());
         }
     }
+
 
     /**
      * Chuyển ứng viên trúng tuyển thành nhân viên chính thức.
@@ -305,7 +309,7 @@ public class TuyenDungBUS {
 
             // Lien ket ung vien voi nhan vien va cap nhat trang thai
             uv.setMaNV(ketQua.getData().getId());
-            uv.setTrangThai("trung_tuyen");
+            uv.setTrangThai("da_chuyen_nhan_vien");
             recruitmentRepo.updateUngVien(uv);
 
             com.hrm.model.TaiKhoan tk = XacThucBUS.getInstance().findByMaNV(ketQua.getData().getId());
@@ -321,4 +325,6 @@ public class TuyenDungBUS {
         }
     }
 }
+
+
 
