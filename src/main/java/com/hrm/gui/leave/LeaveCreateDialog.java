@@ -92,7 +92,7 @@ public class LeaveCreateDialog extends JDialog {
         gbc.gridx = 0; gbc.gridy = row;
         formPanel.add(new JLabel("Nhan vien:"), gbc);
         gbc.gridx = 1;
-        JLabel lblEmployee = new JLabel(currentUser.getFullName());
+        JLabel lblEmployee = new JLabel(currentUser.getHoTen());
         lblEmployee.setFont(new Font("Segoe UI", Font.BOLD, 12));
         formPanel.add(lblEmployee, gbc);
 
@@ -187,9 +187,9 @@ public class LeaveCreateDialog extends JDialog {
         LocalDate end = endDate.toInstant().atZone(ZoneId.systemDefault()).toLocalDate();
 
         NghiPhepBUS.KetQua<?> result = leaveService.createRequest(
-                currentUser.getId(),
-                currentUser.getFullName(),
-                leaveType.getCode(),
+                currentUser.getNhanVienId(),
+                currentUser.getHoTen(),
+                leaveType.getId(),
                 start,
                 end,
                 reason);

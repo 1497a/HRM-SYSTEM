@@ -50,7 +50,7 @@ public class AttendancePanel extends JPanel {
     public AttendancePanel() {
         svc = ChamCongBUS.getInstance();
         currentUser = SessionContext.getInstance().getCurrentUser();
-        isAdmin = SessionContext.getInstance().hasRole("ADMIN");
+        isAdmin = SessionContext.getInstance().coQuyen("ATTENDANCE_MANAGE");
         moneyFmt = NumberFormat.getInstance(new Locale("vi", "VN"));
         setLayout(new BorderLayout()); setBackground(UIColors.LIGHT_GRAY_BG);
         initTabs();
@@ -97,7 +97,8 @@ public class AttendancePanel extends JPanel {
         modelCC.setRowCount(0);
         int th=Integer.parseInt((String)cboThang.getSelectedItem());
         int nm=Integer.parseInt((String)cboNam.getSelectedItem());
-        List<ChamCong>ds=svc.getChamCongTheoThang(th,nm);
+        int currentUserId = currentUser.getId();
+        List<ChamCong>ds=svc.getChamCongTatCaTheoThangByScope(th,nm,currentUserId);
         DateTimeFormatter fN=DateTimeFormatter.ofPattern("dd/MM"),fG=DateTimeFormatter.ofPattern("HH:mm");
         for(ChamCong cc:ds) modelCC.addRow(new Object[]{cc.getMaNV(),
             cc.getEmployeeName()!=null?cc.getEmployeeName():"NV-"+cc.getMaNV(),
@@ -123,7 +124,7 @@ public class AttendancePanel extends JPanel {
         GridBagConstraints g=gbc();
         g.gridx=0;g.gridy=0;f.add(new JLabel("Nhan vien:"),g);
         JComboBox<String>cNV=new JComboBox<>();
-        for(TaiKhoan u:XacThucBUS.getInstance().getAllUsers())if(!u.hasRole("ADMIN"))cNV.addItem(u.getId()+" - "+u.getFullName());
+        for(TaiKhoan u:XacThucBUS.getInstance().getAllUsers())if(!u.coVaiTro("ADMIN"))cNV.addItem(u.getId()+" - "+u.getHoTen());
         g.gridx=1;g.weightx=1;f.add(cNV,g);
         g.gridx=0;g.gridy=1;g.weightx=0;f.add(new JLabel("Ca lam:"),g);
         JComboBox<String>cCa=new JComboBox<>();
@@ -148,7 +149,7 @@ public class AttendancePanel extends JPanel {
             cc.setGioRa(LocalDate.now().atTime(Integer.parseInt(r[0]),Integer.parseInt(r[1])));
             cc.setSoGioLam(cc.tinhSoGioLam());cc.setPhuongThucChamCong(ChamCong.PhuongThuc.THU_CONG);
             TaiKhoan nv=XacThucBUS.getInstance().getAllUsers().stream().filter(u->u.getId()==maNV).findFirst().orElse(null);
-            cc.setEmployeeName(nv!=null?nv.getFullName():"NV-"+maNV);
+            cc.setEmployeeName(nv!=null?nv.getHoTen():"NV-"+maNV);
             ChamCong.TrangThai[]tts={ChamCong.TrangThai.DUNG_GIO,ChamCong.TrangThai.DI_MUON,
                 ChamCong.TrangThai.VE_SOM,ChamCong.TrangThai.VANG_MAT};
             cc.setTrangThai(tts[cTT.getSelectedIndex()]);
@@ -247,7 +248,8 @@ public class AttendancePanel extends JPanel {
         info.add(lbl("He so:","x1.5 (thuong), x2.0 (cuoi tuan), x3.0 (le)",UIColors.TEXT_DARK));
         p.add(info,BorderLayout.SOUTH);return p;}
     private void loadOT(){modelOT.setRowCount(0);DateTimeFormatter f=DateTimeFormatter.ofPattern("dd/MM/yyyy");
-        for(DangKyLamThem don:svc.getDonLamThemTatCa())
+        int currentUserId = currentUser.getId();
+        for(DangKyLamThem don:svc.getDonLamThemTatCaByScope(currentUserId))
             modelOT.addRow(new Object[]{don.getMaDK(),don.getMaNV(),
                 don.getNgay()!=null?don.getNgay().format(f):"-",String.format("%.1f",don.getSoGio()),
                 "x"+don.getHeSoOT(),don.getLyDo(),don.getTrangThai().toString(),

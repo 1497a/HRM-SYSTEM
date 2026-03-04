@@ -194,7 +194,7 @@ public class TuyenDungBUS {
         }
 
         // Thiết lập trạng thái và ngày nộp
-        uv.setTrangThai("nop_ho_so");
+        uv.setTrangThai("moi");
         uv.setNgayTao(LocalDate.now());
 
         try {
@@ -253,6 +253,9 @@ public class TuyenDungBUS {
             ttcn.setNgaySinh(uv.getNgaySinh());
             ttcn.setGioiTinh(uv.getGioiTinh());
             ttcn.setDiaChi(uv.getDiaChi());
+            ttcn.setTrinhDoHocVan(uv.getTrinhDoHocVan());
+            ttcn.setKinhNghiem(uv.getKinhNghiem());
+            ttcn.setFileCV(uv.getFileCV());
 
             KetQua<NhanVien> ketQua = NhanVienBUS.getInstance().taoHoSo(nv, ttcn);
             if (!ketQua.isSuccess()) {
@@ -261,7 +264,7 @@ public class TuyenDungBUS {
 
             // Liên kết ứng viên với nhân viên và cập nhật trạng thái
             uv.setMaNV(ketQua.getData().getId());
-            uv.setTrangThai("da_tuyen");
+            uv.setTrangThai("trung_tuyen");
             recruitmentRepo.updateUngVien(uv);
 
             return KetQua.success(null,

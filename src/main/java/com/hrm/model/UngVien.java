@@ -118,6 +118,10 @@ public class UngVien {
         return fileCv;
     }
 
+    public String getFileCV() {
+        return fileCv;
+    }
+
     public void setFileCv(String fileCv) {
         this.fileCv = fileCv;
     }

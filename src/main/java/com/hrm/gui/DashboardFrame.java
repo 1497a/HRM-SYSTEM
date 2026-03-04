@@ -273,7 +273,7 @@ public class DashboardFrame extends JFrame {
         JPanel welcomePanel = new JPanel(new GridLayout(2, 1));
         welcomePanel.setOpaque(false);
 
-        JLabel lblWelcome = new JLabel("Xin chào, " + currentUser.getFullName());
+        JLabel lblWelcome = new JLabel("Xin chào, " + currentUser.getHoTen());
         lblWelcome.setFont(new Font("Segoe UI", Font.BOLD, 20));
         lblWelcome.setForeground(Color.WHITE);
 
@@ -290,7 +290,7 @@ public class DashboardFrame extends JFrame {
         lblAvatar.setOpaque(true);
         lblAvatar.setBackground(new Color(0, 80, 120));
         lblAvatar.setHorizontalAlignment(SwingConstants.CENTER);
-        lblAvatar.setText(getInitials(currentUser.getFullName()));
+        lblAvatar.setText(getInitials(currentUser.getHoTen()));
         lblAvatar.setFont(new Font("Segoe UI", Font.BOLD, 24));
         lblAvatar.setForeground(Color.WHITE);
 
@@ -378,31 +378,31 @@ public class DashboardFrame extends JFrame {
         XacThucBUS auth = XacThucBUS.getInstance();
 
         // Employee Menu
-        mnuEmployeeList.setEnabled(auth.hasPermission("EMPLOYEE_VIEW") || auth.hasPermission("VIEW_SELF"));
-        mnuEmployeeCreate.setEnabled(auth.hasPermission("EMPLOYEE_CREATE"));
+        mnuEmployeeList.setEnabled(auth.coQuyen("EMPLOYEE_VIEW_ALL") || auth.coQuyen("EMPLOYEE_VIEW_TEAM") || auth.coQuyen("EMPLOYEE_VIEW_SELF"));
+        mnuEmployeeCreate.setEnabled(auth.coQuyen("EMPLOYEE_CREATE"));
 
         // Leave Menu - all users can view their own
         mnuLeaveList.setEnabled(true);
-        mnuLeaveRequest.setEnabled(auth.hasPermission("LEAVE_CREATE"));
-        mnuLeaveApprove.setEnabled(auth.hasPermission("LEAVE_APPROVE"));
+        mnuLeaveRequest.setEnabled(auth.coQuyen("LEAVE_CREATE"));
+        mnuLeaveApprove.setEnabled(auth.coQuyen("LEAVE_APPROVE_ALL") || auth.coQuyen("LEAVE_APPROVE_TEAM"));
 
         // Evaluation Menu
         mnuEvalList.setEnabled(true);
-        mnuEvalSelf.setEnabled(auth.hasPermission("EVAL_VIEW_SELF"));
-        mnuEvalReview.setEnabled(auth.hasPermission("EVAL_REVIEW"));
-        mnuEvalManage.setEnabled(auth.hasPermission("EVAL_MANAGE"));
+        mnuEvalSelf.setEnabled(auth.coQuyen("EVAL_VIEW_SELF"));
+        mnuEvalReview.setEnabled(auth.coQuyen("EVAL_REVIEW_ALL") || auth.coQuyen("EVAL_REVIEW_TEAM"));
+        mnuEvalManage.setEnabled(auth.coQuyen("EVAL_MANAGE"));
 
         // Admin Menu
-        mnuUserManage.setEnabled(auth.hasPermission("USER_VIEW"));
-        mnuRoleManage.setEnabled(auth.hasPermission("ROLE_VIEW"));
-        mnuReports.setEnabled(auth.hasPermission("REPORT_VIEW"));
-        mnuSettings.setEnabled(auth.hasPermission("SETTINGS_VIEW"));
+        mnuUserManage.setEnabled(auth.coQuyen("USER_VIEW"));
+        mnuRoleManage.setEnabled(auth.coQuyen("ROLE_VIEW"));
+        mnuReports.setEnabled(auth.coQuyen("REPORT_VIEW"));
+        mnuSettings.setEnabled(auth.coQuyen("SETTINGS_VIEW"));
 
         updateStatus();
     }
 
     private void updateStatus() {
-        String permissions = currentUser.hasRole("ADMIN") ? "Toàn quyền" :
+        String permissions = currentUser.coVaiTro("ADMIN") ? "Toàn quyền" :
             "Quyền hạn theo vai trò";
         lblStatus.setText("Vai trò: " + currentUser.getVaiTros().toString() + " | " + permissions);
     }
@@ -461,16 +461,16 @@ public class DashboardFrame extends JFrame {
         StringBuilder info = new StringBuilder();
         info.append("THÔNG TIN TÀI KHOẢN\n");
         info.append("==================\n\n");
-        info.append("Họ tên: ").append(currentUser.getFullName()).append("\n");
-        info.append("Tên đăng nhập: ").append(currentUser.getUsername()).append("\n");
+        info.append("Họ tên: ").append(currentUser.getHoTen()).append("\n");
+        info.append("Tên đăng nhập: ").append(currentUser.getTenDangNhap()).append("\n");
         info.append("Email: ").append(currentUser.getEmail()).append("\n");
         info.append("Vai trò: ").append(currentUser.getVaiTros().toString()).append("\n\n");
         info.append("QUYỀN HẠN:\n");
         info.append("---------\n");
 
-        currentUser.getRoles().forEach(role -> {
+        currentUser.getVaiTros().forEach(role -> {
             role.getQuyens().forEach(p -> {
-                info.append("- ").append(p.getName()).append("\n");
+                info.append("- ").append(p.getTenQuyen()).append("\n");
             });
         });
 

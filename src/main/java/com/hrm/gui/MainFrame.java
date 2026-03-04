@@ -195,7 +195,7 @@ public class MainFrame extends JFrame {
         setLayout(new BorderLayout());
 
         TaiKhoan user = SessionContext.getInstance().getCurrentUser();
-        String displayName = user != null ? user.getFullName() : "Guest";
+        String displayName = user != null ? user.getHoTen() : "Guest";
         String roleName = user != null ? user.getVaiTros().toString() : "";
 
         // ========================
@@ -400,31 +400,45 @@ public class MainFrame extends JFrame {
     }
 
     private void setupPermissions() {
-        // Show/hide menu items based on permissions from SessionContext
         SessionContext sc = SessionContext.getInstance();
-        boolean isAdmin = sc.hasRole("ADMIN");
 
-        // Nhan su - visible to HR and managers
-        btnEmployees.setVisible(isAdmin || sc.hasPermission("EMPLOYEE_VIEW") || sc.hasPermission("VIEW_SELF"));
-        btnOrganization.setVisible(isAdmin || sc.hasPermission("DEPARTMENT_VIEW") || sc.hasPermission("POSITION_VIEW"));
-        btnAppointments.setVisible(isAdmin || sc.hasPermission("APPOINTMENT_VIEW"));
-        btnRecruitment.setVisible(isAdmin || sc.hasPermission("RECRUITMENT_VIEW"));
+        Object[][] menuPermissions = {
+            // Nhan su
+            { btnEmployees,    new String[]{"EMPLOYEE_VIEW_ALL", "EMPLOYEE_VIEW_TEAM", "EMPLOYEE_VIEW_SELF"} },
+            { btnOrganization, new String[]{"DEPARTMENT_VIEW", "POSITION_VIEW"} },
+            { btnAppointments, new String[]{"APPOINTMENT_VIEW_ALL", "APPOINTMENT_VIEW_TEAM", "APPOINTMENT_VIEW_SELF"} },
+            { btnRecruitment,  new String[]{"RECRUITMENT_VIEW_ALL", "RECRUITMENT_VIEW_TEAM", "RECRUITMENT_VIEW_SELF"} },
+            // Cham cong & Luong
+            { btnAttendance,   new String[]{"ATTENDANCE_VIEW_ALL", "ATTENDANCE_VIEW_TEAM", "ATTENDANCE_VIEW_SELF"} },
+            { btnContracts,    new String[]{"CONTRACT_VIEW_ALL", "CONTRACT_VIEW_TEAM", "CONTRACT_VIEW_SELF"} },
+            { btnPayroll,      new String[]{"PAYROLL_VIEW_ALL", "PAYROLL_VIEW_TEAM", "PAYROLL_VIEW_SELF"} },
+            // Chinh sach
+            { btnLeave,        new String[]{"LEAVE_VIEW_ALL", "LEAVE_VIEW_TEAM", "LEAVE_VIEW_SELF"} },
+            { btnPerformance,  new String[]{"EVAL_VIEW_ALL", "EVAL_VIEW_TEAM", "EVAL_VIEW_SELF"} },
+            // He thong
+            { btnUsers,        new String[]{"USER_VIEW"} },
+            { btnRoles,        new String[]{"ROLE_VIEW"} },
+            { btnReports,      new String[]{"REPORT_VIEW"} },
+            { btnSettings,     new String[]{"SETTINGS_VIEW"} },
+        };
 
-        // Cham cong & Luong
-        btnAttendance.setVisible(isAdmin || sc.hasPermission("ATTENDANCE_VIEW") || sc.hasPermission("VIEW_SELF"));
-        btnContracts.setVisible(isAdmin || sc.hasPermission("CONTRACT_VIEW"));
-        btnPayroll.setVisible(isAdmin || sc.hasPermission("PAYROLL_VIEW"));
+        for (Object[] config : menuPermissions) {
+            JButton btn = (JButton) config[0];
+            String[] perms = (String[]) config[1];
+            boolean hasAccess = false;
+            for (String perm : perms) {
+                if (sc.coQuyen(perm)) {
+                    hasAccess = true;
+                    break;
+                }
+            }
+            btn.setVisible(hasAccess);
+        }
 
-        // Chinh sach
-        btnLeave.setVisible(isAdmin || sc.hasPermission("LEAVE_VIEW_ALL") || sc.hasPermission("LEAVE_VIEW_SELF"));
-        btnPerformance.setVisible(isAdmin || sc.hasPermission("EVAL_VIEW_ALL") || sc.hasPermission("EVAL_VIEW_SELF"));
-
-        // He thong
-        btnUsers.setVisible(isAdmin || sc.hasPermission("USER_VIEW") || sc.hasPermission("USER_CREATE"));
-        btnRoles.setVisible(isAdmin || sc.hasPermission("ROLE_VIEW") || sc.hasPermission("ROLE_CREATE"));
-        btnNotifications.setVisible(true); // Everyone can see notifications
-        btnReports.setVisible(isAdmin || sc.hasPermission("REPORT_VIEW"));
+        // Everyone can see notifications
+        btnNotifications.setVisible(true);
     }
+
 
     private void showDashboard() {
         setActiveButton(btnDashboard);
@@ -462,7 +476,7 @@ public class MainFrame extends JFrame {
         welcomePanel.setBorder(new EmptyBorder(30, 0, 0, 0));
 
         TaiKhoan currentUser = SessionContext.getInstance().getCurrentUser();
-        String displayName = currentUser != null ? currentUser.getFullName() : "Guest";
+        String displayName = currentUser != null ? currentUser.getHoTen() : "Guest";
         JLabel lblWelcome = new JLabel("Chào mừng " + displayName + " đến với HRM System!");
         lblWelcome.setFont(new Font("Segoe UI", Font.PLAIN, 16));
         lblWelcome.setForeground(UIColors.TEXT_GRAY);

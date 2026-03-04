@@ -175,7 +175,7 @@ public class LeaveApproveDialog extends JDialog {
                 requestId,
                 approve,
                 currentUser.getId(),
-                currentUser.getFullName(),
+                currentUser.getHoTen(),
                 note);
 
         if (result.isSuccess()) {

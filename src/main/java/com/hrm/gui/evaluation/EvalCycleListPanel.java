@@ -50,8 +50,8 @@ public class EvalCycleListPanel extends JPanel {
     public EvalCycleListPanel() {
         this.evalService  = DanhGiaBUS.getInstance();
         this.currentUser  = SessionContext.getInstance().getCurrentUser();
-        this.isAdmin   = currentUser.hasRole("ADMIN") || currentUser.hasRole("HR");
-        this.isManager = currentUser.hasRole("MANAGER") || currentUser.hasRole("DIRECTOR") || isAdmin;
+        this.isAdmin   = currentUser.coQuyen("EVAL_MANAGE");
+        this.isManager = currentUser.coQuyen("EVAL_REVIEW_ALL") || currentUser.coQuyen("EVAL_REVIEW_TEAM") || isAdmin;
 
         initComponents();
         setupLayout();
@@ -235,31 +235,103 @@ public class EvalCycleListPanel extends JPanel {
         JSpinner spinKT = new JSpinner(mdKT);
         spinKT.setEditor(new JSpinner.DateEditor(spinKT, "dd/MM/yyyy"));
 
-        JPanel form = new JPanel(new GridLayout(5, 2, 8, 8));
-        form.add(new JLabel("Ten dot danh gia (*):")); form.add(txtTen);
-        form.add(new JLabel("Ky danh gia:"));          form.add(cboKy);
-        form.add(new JLabel("Nam:"));                  form.add(spinNam);
-        form.add(new JLabel("Ngay bat dau:"));         form.add(spinBD);
-        form.add(new JLabel("Ngay ket thuc:"));        form.add(spinKT);
+        JPanel formInfo = new JPanel(new GridLayout(5, 2, 8, 8));
+        formInfo.add(new JLabel("Ten dot danh gia (*):")); formInfo.add(txtTen);
+        formInfo.add(new JLabel("Ky danh gia:"));          formInfo.add(cboKy);
+        formInfo.add(new JLabel("Nam:"));                  formInfo.add(spinNam);
+        formInfo.add(new JLabel("Ngay bat dau:"));         formInfo.add(spinBD);
+        formInfo.add(new JLabel("Ngay ket thuc:"));        formInfo.add(spinKT);
 
-        int res = JOptionPane.showConfirmDialog(this, form,
-                "Tao dot danh gia moi", JOptionPane.OK_CANCEL_OPTION, JOptionPane.PLAIN_MESSAGE);
-        if (res != JOptionPane.OK_OPTION) return;
+        List<com.hrm.model.TieuChiDanhGia> allCriteria = evalService.getAllCriteria();
+        JPanel criteriaPanel = new JPanel(new GridLayout(0, 1, 4, 4));
+        criteriaPanel.setBorder(new TitledBorder("Chon cac tieu chi"));
+        List<JCheckBox> checkBoxes = new java.util.ArrayList<>();
+        
+        JLabel lblTotal = new JLabel("Tong trong so: 0%");
+        lblTotal.setFont(new Font("Segoe UI", Font.BOLD, 13));
+        lblTotal.setForeground(UIColors.DANGER_RED);
 
-        String ten = txtTen.getText().trim();
-        if (ten.isEmpty()) {
-            JOptionPane.showMessageDialog(this, "Vui long nhap ten dot danh gia.", "Loi", JOptionPane.WARNING_MESSAGE);
-            return;
+        java.awt.event.ActionListener calcTotalAction = e -> {
+            int total = 0;
+            for (JCheckBox cb : checkBoxes) {
+                if (cb.isSelected()) {
+                    com.hrm.model.TieuChiDanhGia c = (com.hrm.model.TieuChiDanhGia) cb.getClientProperty("criteria");
+                    total += c.getDiemToiDa();
+                }
+            }
+            lblTotal.setText("Tong trong so (Bat buoc 100%): " + total + "%");
+            if (total == 100) {
+                lblTotal.setForeground(UIColors.SUCCESS_GREEN);
+            } else {
+                lblTotal.setForeground(UIColors.DANGER_RED);
+            }
+            criteriaPanel.repaint();
+        };
+
+        for (com.hrm.model.TieuChiDanhGia c : allCriteria) {
+            JCheckBox cb = new JCheckBox(c.getName() + " (" + (int)c.getDiemToiDa() + "%)");
+            cb.putClientProperty("criteria", c);
+            cb.addActionListener(calcTotalAction);
+            checkBoxes.add(cb);
+            criteriaPanel.add(cb);
         }
+        
+        int initialTotal = checkBoxes.stream().mapToInt(cb -> (int)((com.hrm.model.TieuChiDanhGia) cb.getClientProperty("criteria")).getDiemToiDa()).sum();
+        if (initialTotal == 100) {
+            for (JCheckBox cb : checkBoxes) cb.setSelected(true);
+        }
+        calcTotalAction.actionPerformed(null);
 
-        LocalDate tuNgay = toLocalDate((java.util.Date) spinBD.getValue());
-        LocalDate denNgay = toLocalDate((java.util.Date) spinKT.getValue());
-        int kyIdx = cboKy.getSelectedIndex();
+        JPanel scrollCriteriaPanel = new JPanel(new BorderLayout());
+        JScrollPane scrollPane = new JScrollPane(criteriaPanel);
+        scrollPane.setPreferredSize(new Dimension(300, 150));
+        scrollCriteriaPanel.add(scrollPane, BorderLayout.CENTER);
+        scrollCriteriaPanel.add(lblTotal, BorderLayout.SOUTH);
 
-        DanhGiaBUS.KetQua<?> kq = evalService.taoDotDanhGia(
-                ten, (int) spinNam.getValue(), kyValues[kyIdx], tuNgay, denNgay);
-        showResult(kq);
-        if (kq.isSuccess()) loadData();
+        JPanel mainForm = new JPanel(new BorderLayout(0, 10));
+        mainForm.add(formInfo, BorderLayout.NORTH);
+        mainForm.add(scrollCriteriaPanel, BorderLayout.CENTER);
+
+        // Loop until successful input or cancel
+        while (true) {
+            int res = JOptionPane.showConfirmDialog(this, mainForm,
+                    "Tao dot danh gia moi", JOptionPane.OK_CANCEL_OPTION, JOptionPane.PLAIN_MESSAGE);
+            if (res != JOptionPane.OK_OPTION) return;
+
+            String ten = txtTen.getText().trim();
+            if (ten.isEmpty()) {
+                JOptionPane.showMessageDialog(this, "Vui long nhap ten dot danh gia.", "Loi", JOptionPane.WARNING_MESSAGE);
+                continue;
+            }
+
+            List<com.hrm.model.TieuChiDanhGia> selectedCriteria = new java.util.ArrayList<>();
+            int totalWeight = 0;
+            for (JCheckBox cb : checkBoxes) {
+                if (cb.isSelected()) {
+                    com.hrm.model.TieuChiDanhGia c = (com.hrm.model.TieuChiDanhGia) cb.getClientProperty("criteria");
+                    selectedCriteria.add(c);
+                    totalWeight += c.getDiemToiDa();
+                }
+            }
+            
+            if (totalWeight != 100) {
+                JOptionPane.showMessageDialog(this, "Tong trong so cac tieu chi duoc chon phai chinh xac 100%.", "Loi trong so", JOptionPane.WARNING_MESSAGE);
+                continue;
+            }
+
+            LocalDate tuNgay = toLocalDate((java.util.Date) spinBD.getValue());
+            LocalDate denNgay = toLocalDate((java.util.Date) spinKT.getValue());
+            int kyIdx = cboKy.getSelectedIndex();
+
+            DanhGiaBUS.KetQua<?> kq = evalService.taoDotDanhGia(
+                    ten, (int) spinNam.getValue(), kyValues[kyIdx], tuNgay, denNgay, selectedCriteria);
+            
+            showResult(kq);
+            if (kq.isSuccess()) {
+                loadData();
+                break;
+            }
+        }
     }
 
     private void openCycle() {

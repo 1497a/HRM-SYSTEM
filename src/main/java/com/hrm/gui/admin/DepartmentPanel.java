@@ -134,9 +134,7 @@ public class DepartmentPanel extends JPanel {
         SessionContext sc = SessionContext.getInstance();
 
         // Admin hoặc có quyền DEPARTMENT_CREATE/EDIT
-        boolean canEdit = sc.hasRole("ADMIN")
-                || sc.hasPermission("DEPARTMENT_CREATE")
-                || sc.hasPermission("DEPARTMENT_EDIT");
+        boolean canEdit = sc.coQuyen("DEPARTMENT_MANAGE");
 
         // Nếu không có quyền → Ẩn/Disable các nút
         btnThem.setVisible(canEdit);

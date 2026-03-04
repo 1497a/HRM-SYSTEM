@@ -67,7 +67,8 @@ public class DanhGiaBUS {
     }
 
     public KetQua<DotDanhGia> taoDotDanhGia(String tenDot, int nam, String kyDanhGia,
-                                              java.time.LocalDate tuNgay, java.time.LocalDate denNgay) {
+                                              java.time.LocalDate tuNgay, java.time.LocalDate denNgay,
+                                              List<TieuChiDanhGia> selectedCriteria) {
         if (tenDot == null || tenDot.trim().isEmpty()) {
             return KetQua.error("Ten dot danh gia khong duoc de trong");
         }
@@ -77,6 +78,14 @@ public class DanhGiaBUS {
         if (!denNgay.isAfter(tuNgay)) {
             return KetQua.error("Ngay ket thuc phai sau ngay bat dau");
         }
+        if (selectedCriteria == null || selectedCriteria.isEmpty()) {
+            return KetQua.error("Vui long chon it nhat mot tieu chi danh gia");
+        }
+        int totalWeight = selectedCriteria.stream().mapToInt(c -> (int) c.getDiemToiDa()).sum();
+        if (totalWeight != 100) {
+            return KetQua.error("Tong trong so cua cac tieu chi duoc chon phai bang 100% (hien tai: " + totalWeight + "%)");
+        }
+
         DotDanhGia dot = new DotDanhGia();
         dot.setTenDot(tenDot.trim());
         dot.setNam(nam);
@@ -84,7 +93,10 @@ public class DanhGiaBUS {
         dot.setTuNgay(tuNgay);
         dot.setDenNgay(denNgay);
         dot.setTrangThai(DotDanhGia.TrangThai.CHUA_BAT_DAU);
+        
         repository.insertCycle(dot);
+        repository.setCriteriasForDot(dot.getId(), selectedCriteria);
+        
         return KetQua.success(dot, "Da tao dot danh gia thanh cong");
     }
 
@@ -192,26 +204,105 @@ public class DanhGiaBUS {
         submission.tinhTong();
 
         repository.saveSubmission(submission);
+
+        // CRITICAL: save per-criterion scores to CHITIETDANHGIA
+        if (submission.getId() > 0) {
+            repository.saveScores(submission.getId(), scores);
+        }
+
         return KetQua.success(submission, "Da luu danh gia. Diem tong: " +
                 String.format("%.2f", submission.getOverallScore()) + " - " +
                 submission.getXepLoai().toString());
     }
 
+
     // Query methods
     public List<DanhGiaHieuSuat> getSubmissionsByCycle(int cycleId) {
-        return repository.getSubmissionsByCycle(cycleId);
+        List<DanhGiaHieuSuat> list = repository.getSubmissionsByCycle(cycleId);
+        if (list != null) {
+            for (DanhGiaHieuSuat s : list) {
+                s.setChiTietDanhGias(repository.findScoresByDanhGia(s.getId()));
+            }
+        }
+        return list;
     }
 
     public List<DanhGiaHieuSuat> getSubmissionsByEmployee(int employeeId) {
-        return repository.getSubmissionsByEmployee(employeeId);
+        List<DanhGiaHieuSuat> list = repository.getSubmissionsByEmployee(employeeId);
+        if (list != null) {
+            for (DanhGiaHieuSuat s : list) {
+                s.setChiTietDanhGias(repository.findScoresByDanhGia(s.getId()));
+            }
+        }
+        return list;
+    }
+
+    public List<DanhGiaHieuSuat> getSubmissionsRelatedToUser(int userId) {
+        List<DanhGiaHieuSuat> list = repository.getSubmissionsRelatedToUser(userId);
+        if (list != null) {
+            for (DanhGiaHieuSuat s : list) {
+                s.setChiTietDanhGias(repository.findScoresByDanhGia(s.getId()));
+            }
+        }
+        return list;
+    }
+
+    public List<DanhGiaHieuSuat> getSubmissionsForManagedEmployees(int managerMaNV) {
+        List<DanhGiaHieuSuat> list = repository.getSubmissionsForManagedEmployees(managerMaNV);
+        if (list != null) {
+            for (DanhGiaHieuSuat s : list) {
+                s.setChiTietDanhGias(repository.findScoresByDanhGia(s.getId()));
+            }
+        }
+        return list;
+    }
+
+    public List<DanhGiaHieuSuat> getSubmissionsForDepartment(String maPhongBan) {
+        List<DanhGiaHieuSuat> list = repository.getSubmissionsForDepartment(maPhongBan);
+        if (list != null) {
+            for (DanhGiaHieuSuat s : list) {
+                s.setChiTietDanhGias(repository.findScoresByDanhGia(s.getId()));
+            }
+        }
+        return list;
+    }
+
+    public List<Integer> getEvaluatedMaNVInCycle(int cycleId) {
+        return repository.getEvaluatedMaNVInCycle(cycleId);
+    }
+
+    /** Load detail scores for a specific evaluation (lazy load). */
+    public java.util.List<ChiTietDanhGia> loadScores(int maDanhGia) {
+        return repository.findScoresByDanhGia(maDanhGia);
     }
 
     public DanhGiaHieuSuat getSubmission(int cycleId, int employeeId) {
-        return repository.findSubmission(cycleId, employeeId);
+        DanhGiaHieuSuat sub = repository.findSubmission(cycleId, employeeId);
+        if (sub != null) {
+            sub.setChiTietDanhGias(repository.findScoresByDanhGia(sub.getId()));
+        }
+        return sub;
     }
 
     public List<DanhGiaHieuSuat> getAllSubmissions() {
-        return repository.getAllSubmissions();
+        List<DanhGiaHieuSuat> list = repository.getAllSubmissions();
+        if (list != null) {
+            for (DanhGiaHieuSuat s : list) {
+                s.setChiTietDanhGias(repository.findScoresByDanhGia(s.getId()));
+            }
+        }
+        return list;
+    }
+
+    public List<DanhGiaHieuSuat> getAllSubmissionsByScope(int currentUserId) {
+        com.hrm.model.DataScope scope = com.hrm.bus.XacThucBUS.getInstance().getScopeForAction("EVAL_VIEW");
+        List<DanhGiaHieuSuat> list = repository.findAllByScope(scope, currentUserId);
+        if (list != null) {
+            for (DanhGiaHieuSuat s : list) {
+                s.setChiTietDanhGias(repository.findScoresByDanhGia(s.getId()));
+            }
+        }
+        return list;
     }
 
     /**

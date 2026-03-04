@@ -209,8 +209,8 @@ public class EmployeeListPanel extends JPanel {
 
     private void setupPermissions() {
         SessionContext sc = SessionContext.getInstance();
-        boolean canCreate = sc.hasRole("ADMIN") || sc.hasPermission("EMPLOYEE_CREATE");
-        boolean canUpdate = sc.hasRole("ADMIN") || sc.hasPermission("EMPLOYEE_UPDATE");
+        boolean canCreate = sc.coVaiTro("ADMIN") || sc.coQuyen("EMPLOYEE_CREATE");
+        boolean canUpdate = sc.coVaiTro("ADMIN") || sc.coQuyen("EMPLOYEE_UPDATE");
 
         btnThem.setVisible(canCreate);
         btnDoiTrangThai.setVisible(canUpdate);
@@ -221,7 +221,9 @@ public class EmployeeListPanel extends JPanel {
     // ============================
 
     public void refreshTable() {
-        danhSachHienThi = nvService.getAll();
+        com.hrm.model.TaiKhoan currentUser = SessionContext.getInstance().getCurrentUser();
+        int userId = (currentUser != null && currentUser.getMaNV() != null) ? currentUser.getMaNV() : -1;
+        danhSachHienThi = nvService.getAllByScope(userId);
         tableModel.setRowCount(0);
         int stt = 1;
         for (NhanVien nv : danhSachHienThi) {

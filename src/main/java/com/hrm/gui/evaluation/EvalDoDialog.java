@@ -111,13 +111,21 @@ public class EvalDoDialog extends JDialog {
     private void loadEmployees() {
         BoNhiemDAO boNhiemDAO = BoNhiemDAO.getInstance();
         List<TaiKhoan> users = XacThucBUS.getInstance().getAllUsers();
+
+        // Get list of employees already evaluated in this cycle to prevent duplicates
+        List<Integer> alreadyEvaluated = evalService.getEvaluatedMaNVInCycle(cycleId);
+
         for (TaiKhoan user : users) {
             if (user.getMaNV() == null || user.getMaNV() == 0) continue;
             if (user.getId() == currentUser.getId()) continue;  // can't self-evaluate
-            if (!user.isActive()) continue;
+            if (!user.isHoatDong()) continue;
 
             int maNV = user.getMaNV();
-            String hoTen = user.getFullName() != null ? user.getFullName() : user.getUsername();
+
+            // Skip employees already evaluated in this cycle
+            if (alreadyEvaluated.contains(maNV)) continue;
+
+            String hoTen = user.getHoTen() != null ? user.getHoTen() : user.getTenDangNhap();
             String tenChucVu = "";
             String tenPhongBan = "";
             try {
@@ -129,6 +137,12 @@ public class EvalDoDialog extends JDialog {
             } catch (Exception ignored) {}
 
             cboEmployee.addItem(new NhanVienItem(maNV, hoTen, tenChucVu, tenPhongBan));
+        }
+
+        if (cboEmployee.getItemCount() == 0) {
+            JOptionPane.showMessageDialog(null,
+                    "Tat ca nhan vien trong dot nay da duoc danh gia.",
+                    "Thong bao", JOptionPane.INFORMATION_MESSAGE);
         }
     }
 
@@ -312,7 +326,7 @@ public class EvalDoDialog extends JDialog {
                 selected.maNV,        // employee maNV (not taiKhoan.id!)
                 selected.hoTen,
                 currentUser.getMaNV() != null ? currentUser.getMaNV() : currentUser.getId(),
-                currentUser.getFullName(),
+                currentUser.getHoTen(),
                 scores,
                 txtNhanXetChung.getText().trim()
         );

@@ -36,24 +36,6 @@ public class RoleFormDialog extends JDialog {
     // Tất cả permission (code -> Quyen)
     private final Map<String, Quyen> allPermMap = new HashMap<>();
 
-    private static final Map<String, String> MODULE_VI;
-    static {
-        MODULE_VI = new LinkedHashMap<>();
-        MODULE_VI.put("Employee",     "Nhân viên");
-        MODULE_VI.put("Leave",        "Nghỉ phép");
-        MODULE_VI.put("Evaluation",   "Đánh giá");
-        MODULE_VI.put("TaiKhoan",         "Tài khoản");
-        MODULE_VI.put("VaiTro",         "Vai trò");
-        MODULE_VI.put("Report",       "Báo cáo");
-        MODULE_VI.put("Settings",     "Cài đặt");
-        MODULE_VI.put("Organization", "Tổ chức");
-        MODULE_VI.put("Appointment",  "Bổ nhiệm");
-        MODULE_VI.put("Attendance",   "Chấm công");
-        MODULE_VI.put("Contract",     "Hợp đồng");
-        MODULE_VI.put("Payroll",      "Lương");
-        MODULE_VI.put("Recruitment",  "Tuyển dụng");
-    }
-
     public RoleFormDialog(Frame parent, VaiTro role) {
         super(parent, role == null ? "Tạo vai trò mới" : "Sửa vai trò", true);
         this.authService = XacThucBUS.getInstance();
@@ -74,7 +56,7 @@ public class RoleFormDialog extends JDialog {
         List<VaiTro> roles = authService.getAllRoles();
         int maxNum = 0;
         for (VaiTro r : roles) {
-            String code = r.getCode();
+            String code = r.getId();
             if (code != null && code.matches("VT\\d+")) {
                 try {
                     int num = Integer.parseInt(code.substring(2));
@@ -103,12 +85,12 @@ public class RoleFormDialog extends JDialog {
         // Tải tất cả quyền
         List<Quyen> allPermissions = authService.getAllPermissions();
         for (Quyen p : allPermissions) {
-            allPermMap.put(p.getCode(), p);
+            allPermMap.put(p.getId(), p);
         }
 
         // Nhóm các quyền theo module
         Map<String, List<Quyen>> permsByModule = allPermissions.stream()
-                .filter(p -> p.getModule() != null)
+                .filter(p -> p.getNhomQuyen() != null)
                 .collect(Collectors.groupingBy(Quyen::getModule));
 
         // Xây dựng cây quyền
@@ -116,8 +98,7 @@ public class RoleFormDialog extends JDialog {
         
         List<String> modules = permsByModule.keySet().stream().sorted().collect(Collectors.toList());
         for (String module : modules) {
-            String moduleName = MODULE_VI.getOrDefault(module, module);
-            CheckboxTree.CheckboxTreeNode moduleNode = new CheckboxTree.CheckboxTreeNode(moduleName);
+            CheckboxTree.CheckboxTreeNode moduleNode = new CheckboxTree.CheckboxTreeNode(module);
             rooTreeNode.add(moduleNode);
 
             List<Quyen> modulePerms = permsByModule.get(module);
@@ -125,7 +106,7 @@ public class RoleFormDialog extends JDialog {
             modulePerms.sort(Comparator.comparing(Quyen::getName));
             
             for (Quyen p : modulePerms) {
-                CheckboxTree.CheckboxTreeNode permNode = new CheckboxTree.CheckboxTreeNode(p.getName(), p.getCode());
+                CheckboxTree.CheckboxTreeNode permNode = new CheckboxTree.CheckboxTreeNode(p.getTenQuyen(), p.getId());
                 moduleNode.add(permNode);
             }
         }
@@ -184,8 +165,8 @@ public class RoleFormDialog extends JDialog {
     }
 
     private void loadRoleData() {
-        txtCode.setText(editingRole.getCode());
-        txtName.setText(editingRole.getName());
+        txtCode.setText(editingRole.getId());
+        txtName.setText(editingRole.getTenVaiTro());
         txtDescription.setText(editingRole.getMoTa() != null ? editingRole.getMoTa() : "");
 
         Set<String> roleCodes = editingRole.getQuyens().stream()
@@ -270,7 +251,7 @@ public class RoleFormDialog extends JDialog {
                 JOptionPane.showMessageDialog(this, updateResult.getMessage(), "Lỗi", JOptionPane.ERROR_MESSAGE);
                 return;
             }
-            KetQua<Void> permResult = authService.setRolePermissions(editingRole.getCode(), selectedCodes);
+            KetQua<Void> permResult = authService.setRolePermissions(editingRole.getId(), selectedCodes);
             if (!permResult.isSuccess()) {
                 JOptionPane.showMessageDialog(this,
                         "Đã cập nhật vai trò nhưng không thể cập nhật quyền: " + permResult.getMessage(),

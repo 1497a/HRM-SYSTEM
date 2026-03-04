@@ -116,13 +116,13 @@ public class UserManagementPanel extends JPanel {
 
         JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT, 10, 0));
         buttonPanel.setOpaque(false);
-        if (sessionContext.hasPermission("USER_CREATE")) {
+        if (sessionContext.coQuyen("USER_CREATE")) {
             buttonPanel.add(btnCreate);
         }
-        if (sessionContext.hasPermission("USER_UPDATE")) {
+        if (sessionContext.coQuyen("USER_UPDATE")) {
             buttonPanel.add(btnEdit);
         }
-        if (sessionContext.hasPermission("USER_DELETE")) {
+        if (sessionContext.coQuyen("USER_DELETE")) {
             buttonPanel.add(btnDelete);
         }
 
@@ -142,11 +142,11 @@ public class UserManagementPanel extends JPanel {
         List<TaiKhoan> users = authService.getAllUsers();
 
         for (TaiKhoan user : users) {
-            String status = user.isLocked() ? "Khoa" : (user.isActive() ? "Hoat dong" : "Ngung");
+            String status = user.isBiKhoa() ? "Khoa" : (user.isHoatDong() ? "Hoat dong" : "Ngung");
             Object[] row = {
                 user.getId(),
-                user.getUsername(),
-                user.getFullName(),
+                user.getTenDangNhap(),
+                user.getHoTen(),
                 user.getEmail(),
                 user.getVaiTros().toString(),
                 status
@@ -161,13 +161,13 @@ public class UserManagementPanel extends JPanel {
         List<TaiKhoan> users = authService.getAllUsers();
 
         for (TaiKhoan user : users) {
-            if (user.getUsername().toLowerCase().contains(keyword) ||
-                user.getFullName().toLowerCase().contains(keyword)) {
-                String status = user.isLocked() ? "Khoa" : (user.isActive() ? "Hoat dong" : "Ngung");
+            if (user.getTenDangNhap().toLowerCase().contains(keyword) ||
+                user.getHoTen().toLowerCase().contains(keyword)) {
+                String status = user.isBiKhoa() ? "Khoa" : (user.isHoatDong() ? "Hoat dong" : "Ngung");
                 Object[] row = {
                     user.getId(),
-                    user.getUsername(),
-                    user.getFullName(),
+                    user.getTenDangNhap(),
+                    user.getHoTen(),
                     user.getEmail(),
                     user.getVaiTros().toString(),
                     status

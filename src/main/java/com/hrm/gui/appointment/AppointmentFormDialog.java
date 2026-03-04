@@ -40,6 +40,7 @@ public class AppointmentFormDialog extends JDialog {
     private JComboBox<PhongBan> cboPhongBan;
     private JComboBox<ChucVu> cboChucVu;
     private JComboBox<String> cboLoaiBoNhiem;
+    private JComboBox<Object> cboQuanLy;   // cap tren truc tiep (nullable)
     private JSpinner spnTyLe;
     private JSpinner spnTuNgay;
     private JTextArea txtGhiChu;
@@ -92,8 +93,14 @@ public class AppointmentFormDialog extends JDialog {
         cboChucVu.setFont(new Font("Segoe UI", Font.PLAIN, 14));
         loadPositions();
 
+        // Cấp trên trực tiếp
+        cboQuanLy = new JComboBox<>();
+        cboQuanLy.setFont(new Font("Segoe UI", Font.PLAIN, 14));
+        loadQuanLy();
+
         // Loại bổ nhiệm
-        cboLoaiBoNhiem = new JComboBox<>(new String[]{"chinh_thuc", "phu", "kiem_nhiem"});
+        // DB ENUM: 'chinh', 'kiem_nhiem'
+        cboLoaiBoNhiem = new JComboBox<>(new String[]{"chinh", "kiem_nhiem"});
         cboLoaiBoNhiem.setFont(new Font("Segoe UI", Font.PLAIN, 14));
         cboLoaiBoNhiem.setRenderer(new DefaultListCellRenderer() {
             @Override
@@ -102,8 +109,7 @@ public class AppointmentFormDialog extends JDialog {
                 super.getListCellRendererComponent(list, value, index, isSelected, cellHasFocus);
                 if (value != null) {
                     switch (value.toString()) {
-                        case "chinh_thuc": setText("Chính thức"); break;
-                        case "phu":        setText("Phụ");         break;
+                        case "chinh":      setText("Chính thức");  break;
                         case "kiem_nhiem": setText("Kiêm nhiệm");  break;
                         default:           setText(value.toString());
                     }
@@ -181,7 +187,7 @@ public class AppointmentFormDialog extends JDialog {
         for (NhanVien nv : list) {
             cboNhanVien.addItem(nv);
         }
-        cboNhanVien.setRenderer(new DefaultListCellRenderer() {
+        DefaultListCellRenderer nvRenderer = new DefaultListCellRenderer() {
             @Override
             public Component getListCellRendererComponent(JList<?> list, Object value,
                     int index, boolean isSelected, boolean cellHasFocus) {
@@ -189,6 +195,29 @@ public class AppointmentFormDialog extends JDialog {
                 if (value instanceof NhanVien) {
                     NhanVien nv = (NhanVien) value;
                     setText("[" + nv.getMaNhanVien() + "] - " + (nv.getHoTen() != null ? nv.getHoTen() : ""));
+                }
+                return this;
+            }
+        };
+        cboNhanVien.setRenderer(nvRenderer);
+    }
+
+    private void loadQuanLy() {
+        cboQuanLy.addItem("(Khong co)");
+        List<NhanVien> list = NhanVienBUS.getInstance().getDangLamViec();
+        for (NhanVien nv : list) {
+            cboQuanLy.addItem(nv);
+        }
+        cboQuanLy.setRenderer(new DefaultListCellRenderer() {
+            @Override
+            public Component getListCellRendererComponent(JList<?> list, Object value,
+                    int index, boolean isSelected, boolean cellHasFocus) {
+                super.getListCellRendererComponent(list, value, index, isSelected, cellHasFocus);
+                if (value instanceof NhanVien) {
+                    NhanVien nv = (NhanVien) value;
+                    setText("[" + nv.getMaNhanVien() + "] - " + (nv.getHoTen() != null ? nv.getHoTen() : ""));
+                } else if (value != null) {
+                    setText(value.toString());
                 }
                 return this;
             }
@@ -231,21 +260,23 @@ public class AppointmentFormDialog extends JDialog {
         addFormRow(formPanel, gbc, 2, "Phòng ban (*)", cboPhongBan);
         // Chức vụ
         addFormRow(formPanel, gbc, 3, "Chức vụ (*)", cboChucVu);
+        // Cấp trên trực tiếp
+        addFormRow(formPanel, gbc, 4, "Cấp trên trực tiếp", cboQuanLy);
         // Loại bổ nhiệm
-        addFormRow(formPanel, gbc, 4, "Loại bổ nhiệm (*)", cboLoaiBoNhiem);
+        addFormRow(formPanel, gbc, 5, "Loại bổ nhiệm (*)", cboLoaiBoNhiem);
         // Tỷ lệ lương
-        addFormRow(formPanel, gbc, 5, "Tỷ lệ hưởng lương (%)", spnTyLe);
+        addFormRow(formPanel, gbc, 6, "Tỷ lệ hưởng lương (%)", spnTyLe);
         // Từ ngày
-        addFormRow(formPanel, gbc, 6, "Từ ngày (*)", spnTuNgay);
+        addFormRow(formPanel, gbc, 7, "Từ ngày (*)", spnTuNgay);
 
         // Ghi chú
-        gbc.gridx = 0; gbc.gridy = 7;
+        gbc.gridx = 0; gbc.gridy = 8;
         JLabel lblGhiChu = new JLabel("Ghi chú:");
         lblGhiChu.setFont(new Font("Segoe UI", Font.PLAIN, 14));
         lblGhiChu.setForeground(UIColors.TEXT_DARK);
         formPanel.add(lblGhiChu, gbc);
 
-        gbc.gridx = 1; gbc.gridy = 7;
+        gbc.gridx = 1; gbc.gridy = 8;
         gbc.fill = GridBagConstraints.BOTH;
         gbc.weightx = 1.0;
         JScrollPane scrollGhiChu = new JScrollPane(txtGhiChu);
@@ -332,6 +363,17 @@ public class AppointmentFormDialog extends JDialog {
             spnTuNgay.setValue(date);
         }
 
+        // Cấp trên trực tiếp
+        if (bn.getMaQuanLy() > 0) {
+            for (int i = 1; i < cboQuanLy.getItemCount(); i++) {
+                Object item = cboQuanLy.getItemAt(i);
+                if (item instanceof NhanVien && ((NhanVien) item).getId() == bn.getMaQuanLy()) {
+                    cboQuanLy.setSelectedIndex(i);
+                    break;
+                }
+            }
+        }
+
         // Ghi chú
         txtGhiChu.setText(bn.getLyDo() != null ? bn.getLyDo() : "");
     }
@@ -340,6 +382,7 @@ public class AppointmentFormDialog extends JDialog {
         cboNhanVien.setEnabled(false);
         cboPhongBan.setEnabled(false);
         cboChucVu.setEnabled(false);
+        cboQuanLy.setEnabled(false);
         cboLoaiBoNhiem.setEnabled(false);
         spnTyLe.setEnabled(false);
         spnTuNgay.setEnabled(false);
@@ -378,9 +421,8 @@ public class AppointmentFormDialog extends JDialog {
             return;
         }
 
-        // Lấy loại bổ nhiệm (map display -> db value)
+        // Lấy loại bổ nhiệm (giá trị đã là DB value: 'chinh', 'kiem_nhiem')
         String loaiBoNhiem = (String) cboLoaiBoNhiem.getSelectedItem();
-        if ("chinh_thuc".equals(loaiBoNhiem)) loaiBoNhiem = "chinh";
 
         // Tỷ lệ hưởng lương
         int tyLe = (int) spnTyLe.getValue();
@@ -392,11 +434,19 @@ public class AppointmentFormDialog extends JDialog {
         // Ghi chú / lý do
         String ghiChu = txtGhiChu.getText().trim();
 
+        // Cấp trên trực tiếp
+        int maQuanLy = 0;
+        Object quanLyItem = cboQuanLy.getSelectedItem();
+        if (quanLyItem instanceof NhanVien) {
+            maQuanLy = ((NhanVien) quanLyItem).getId();
+        }
+
         // Tạo BoNhiem object
         BoNhiem bn = new BoNhiem();
         bn.setMaNV(maNV);
         bn.setPhongBanId(selectedDept.getId());
         bn.setChucVuId(selectedPos.getId());
+        bn.setMaQuanLy(maQuanLy);
         bn.setLoaiBoNhiem(loaiBoNhiem);
         bn.setTyLeHuongLuong(tyLe);
         bn.setTuNgay(tuNgay);

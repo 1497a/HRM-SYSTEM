@@ -44,11 +44,6 @@ public class VaiTro {
         return quyens.stream().anyMatch(q -> q.getId().equals(maQuyen));
     }
 
-    // Legacy compatibility methods
-    public String getCode() { return id; }
-    public String getName() { return tenVaiTro; }
-    public boolean hasPermission(String permissionCode) { return coQuyen(permissionCode); }
-
     @Override
     public String toString() { return tenVaiTro + " (" + id + ")"; }
 }

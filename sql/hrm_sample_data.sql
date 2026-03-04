@@ -65,7 +65,124 @@ INSERT INTO BONHIEM (maNV, maPhongBan, maChucVu, loaiBoNhiem, tyLeHuongLuong, ma
 (14, 'PHONGKD',  'NV',  'chinh', 100.00, 4,    '2025-12-01', 'hieu_luc', 'Nhan vien Kinh doanh thu viec');
 
 -- =====================================================
--- 4. TAIKHOAN
+-- 4. VAITRO & QUYEN (phai insert truoc TAIKHOAN vi co FK)
+-- =====================================================
+INSERT IGNORE INTO VAITRO (maVaiTro, tenVaiTro, moTa, laVaiTroHeThong, trangThai) VALUES
+('ADMIN',    'Quan tri vien',        'Toan quyen tren he thong',              TRUE,  'hoatDong'),
+('HR',       'Nhan su',              'Quan ly nhan vien, tuyen dung, phep',   TRUE,  'hoatDong'),
+('MANAGER',  'Quan ly',              'Truong/pho phong, quan ly nhom',        TRUE,  'hoatDong'),
+('EMPLOYEE', 'Nhan vien',            'Nhan vien thong thuong',                TRUE,  'hoatDong'),
+('DIRECTOR', 'Giam doc',             'Giam doc / Ban lanh dao',               FALSE, 'hoatDong');
+
+INSERT IGNORE INTO QUYEN (maQuyen, tenQuyen, nhomQuyen) VALUES
+-- Nhan vien
+('EMPLOYEE_VIEW',      'Xem hồ sơ nhân viên',         'Nhân sự'),
+('EMPLOYEE_CREATE',    'Tạo nhân viên mới',            'Nhân sự'),
+('EMPLOYEE_UPDATE',    'Cập nhật hồ sơ nhân viên',     'Nhân sự'),
+('VIEW_SELF',          'Xem thông tin cá nhân',        'Nhân sự'),
+-- Phong ban & Chuc vu
+('DEPARTMENT_VIEW',    'Xem phòng ban',                'Cơ cấu tổ chức'),
+('DEPARTMENT_CREATE',  'Thêm phòng ban',               'Cơ cấu tổ chức'),
+('DEPARTMENT_EDIT',    'Sửa phòng ban',                'Cơ cấu tổ chức'),
+('DEPARTMENT_HEAD',    'Trưởng phòng',                 'Cơ cấu tổ chức'),
+('POSITION_VIEW',      'Xem chức vụ',                  'Cơ cấu tổ chức'),
+('POSITION_CREATE',    'Thêm chức vụ',                 'Cơ cấu tổ chức'),
+('POSITION_EDIT',      'Sửa chức vụ',                  'Cơ cấu tổ chức'),
+-- Bo nhiem
+('APPOINTMENT_VIEW',   'Xem bổ nhiệm',                 'Bổ nhiệm'),
+('APPOINTMENT_CREATE', 'Tạo bổ nhiệm',                 'Bổ nhiệm'),
+('APPOINTMENT_APPROVE','Phê duyệt bổ nhiệm',           'Bổ nhiệm'),
+-- Cham cong
+('ATTENDANCE_VIEW',    'Xem chấm công',                'Chấm công'),
+-- Hop dong
+('CONTRACT_VIEW',      'Xem hợp đồng',                 'Hợp đồng'),
+('CONTRACT_CREATE',    'Tạo hợp đồng',                 'Hợp đồng'),
+('CONTRACT_UPDATE',    'Cập nhật hợp đồng',            'Hợp đồng'),
+-- Luong
+('PAYROLL_VIEW',       'Xem bảng lương',               'Quản lý lương'),
+-- Nghi phep
+('LEAVE_VIEW_ALL',     'Xem tất cả đơn nghỉ phép',    'Nghỉ phép'),
+('LEAVE_VIEW_SELF',    'Xem đơn nghỉ phép cá nhân',   'Nghỉ phép'),
+('LEAVE_CREATE',       'Tạo đơn nghỉ phép',            'Nghỉ phép'),
+('LEAVE_APPROVE',      'Duyệt đơn nghỉ phép',          'Nghỉ phép'),
+-- Danh gia
+('EVAL_VIEW_ALL',      'Xem tất cả đánh giá',         'Đánh giá'),
+('EVAL_VIEW_SELF',     'Xem đánh giá cá nhân',        'Đánh giá'),
+('EVAL_MANAGE',        'Quản lý đợt đánh giá',         'Đánh giá'),
+('EVAL_REVIEW',        'Thực hiện đánh giá',           'Đánh giá'),
+-- Tuyen dung
+('RECRUITMENT_VIEW',   'Xem tuyển dụng',               'Tuyển dụng'),
+-- Bao cao
+('REPORT_VIEW',        'Xem báo cáo',                  'Báo cáo'),
+-- Thong bao
+('NOTIFICATION_SEND',  'Gửi thông báo',                'Thông báo'),
+-- Quan tri
+('USER_VIEW',          'Xem tài khoản',                'Quản trị hệ thống'),
+('USER_CREATE',        'Tạo tài khoản',                'Quản trị hệ thống'),
+('USER_UPDATE',        'Cập nhật tài khoản',           'Quản trị hệ thống'),
+('USER_DELETE',        'Xóa tài khoản',                'Quản trị hệ thống'),
+('ROLE_VIEW',          'Xem vai trò',                  'Quản trị hệ thống'),
+('ROLE_CREATE',        'Tạo vai trò',                  'Quản trị hệ thống'),
+('ROLE_UPDATE',        'Cập nhật vai trò',             'Quản trị hệ thống'),
+('ROLE_DELETE',        'Xóa vai trò',                  'Quản trị hệ thống'),
+('SETTINGS_VIEW',      'Xem cài đặt',                  'Quản trị hệ thống');
+
+-- Quyen cua ADMIN: tat ca
+INSERT IGNORE INTO VAITRO_QUYEN (maVaiTro, maQuyen)
+SELECT 'ADMIN', maQuyen FROM QUYEN;
+
+-- Quyen cua HR
+INSERT IGNORE INTO VAITRO_QUYEN (maVaiTro, maQuyen) VALUES
+('HR', 'EMPLOYEE_VIEW'), ('HR', 'EMPLOYEE_CREATE'), ('HR', 'EMPLOYEE_UPDATE'),
+('HR', 'DEPARTMENT_VIEW'), ('HR', 'POSITION_VIEW'),
+('HR', 'APPOINTMENT_VIEW'), ('HR', 'APPOINTMENT_CREATE'), ('HR', 'APPOINTMENT_APPROVE'),
+('HR', 'ATTENDANCE_VIEW'),
+('HR', 'CONTRACT_VIEW'), ('HR', 'CONTRACT_CREATE'), ('HR', 'CONTRACT_UPDATE'),
+('HR', 'PAYROLL_VIEW'),
+('HR', 'LEAVE_VIEW_ALL'), ('HR', 'LEAVE_APPROVE'),
+('HR', 'RECRUITMENT_VIEW'),
+('HR', 'REPORT_VIEW'),
+('HR', 'NOTIFICATION_SEND'),
+('HR', 'USER_VIEW'), ('HR', 'USER_CREATE'), ('HR', 'USER_UPDATE'),
+('HR', 'ROLE_VIEW'),
+('HR', 'VIEW_SELF'), ('HR', 'LEAVE_CREATE'), ('HR', 'LEAVE_VIEW_SELF'),
+('HR', 'EVAL_VIEW_ALL'), ('HR', 'EVAL_MANAGE'), ('HR', 'EVAL_REVIEW');
+
+-- Quyen cua MANAGER
+INSERT IGNORE INTO VAITRO_QUYEN (maVaiTro, maQuyen) VALUES
+('MANAGER', 'EMPLOYEE_VIEW'),
+('MANAGER', 'DEPARTMENT_VIEW'), ('MANAGER', 'DEPARTMENT_HEAD'),
+('MANAGER', 'APPOINTMENT_VIEW'),
+('MANAGER', 'ATTENDANCE_VIEW'),
+('MANAGER', 'CONTRACT_VIEW'),
+('MANAGER', 'PAYROLL_VIEW'),
+('MANAGER', 'LEAVE_VIEW_ALL'), ('MANAGER', 'LEAVE_APPROVE'),
+('MANAGER', 'EVAL_VIEW_ALL'), ('MANAGER', 'EVAL_REVIEW'),
+('MANAGER', 'REPORT_VIEW'),
+('MANAGER', 'RECRUITMENT_VIEW'),
+('MANAGER', 'VIEW_SELF'), ('MANAGER', 'LEAVE_CREATE'), ('MANAGER', 'LEAVE_VIEW_SELF');
+
+-- Quyen cua EMPLOYEE
+INSERT IGNORE INTO VAITRO_QUYEN (maVaiTro, maQuyen) VALUES
+('EMPLOYEE', 'VIEW_SELF'),
+('EMPLOYEE', 'ATTENDANCE_VIEW'),
+('EMPLOYEE', 'LEAVE_VIEW_SELF'), ('EMPLOYEE', 'LEAVE_CREATE'),
+('EMPLOYEE', 'EVAL_VIEW_SELF');
+
+-- Quyen cua DIRECTOR
+INSERT IGNORE INTO VAITRO_QUYEN (maVaiTro, maQuyen) VALUES
+('DIRECTOR', 'EMPLOYEE_VIEW'),
+('DIRECTOR', 'DEPARTMENT_VIEW'), ('DIRECTOR', 'POSITION_VIEW'),
+('DIRECTOR', 'APPOINTMENT_VIEW'), ('DIRECTOR', 'APPOINTMENT_APPROVE'),
+('DIRECTOR', 'CONTRACT_VIEW'), ('DIRECTOR', 'PAYROLL_VIEW'),
+('DIRECTOR', 'LEAVE_VIEW_ALL'), ('DIRECTOR', 'LEAVE_APPROVE'),
+('DIRECTOR', 'EVAL_VIEW_ALL'), ('DIRECTOR', 'EVAL_MANAGE'),
+('DIRECTOR', 'REPORT_VIEW'), ('DIRECTOR', 'RECRUITMENT_VIEW'),
+('DIRECTOR', 'USER_VIEW'), ('DIRECTOR', 'ROLE_VIEW'),
+('DIRECTOR', 'VIEW_SELF'), ('DIRECTOR', 'LEAVE_CREATE'), ('DIRECTOR', 'LEAVE_VIEW_SELF');
+
+-- =====================================================
+-- 5. TAIKHOAN
 -- =====================================================
 INSERT INTO TAIKHOAN (tenDangNhap, matKhau, maNV, maVaiTro, email, hoatDong) VALUES
 ('an.nguyen',   'Password@123', 1,  'HR',       'an.nguyen@abc.com',   TRUE),
@@ -249,30 +366,165 @@ INSERT INTO THANHPHANLUONG (maChiTiet, tenThanhPhan, loai, soTien) VALUES
 -- =====================================================
 -- 11. DOTDANHGIA + DANHGIAHIEUSUAT + CHITIETDANHGIA
 -- =====================================================
+-- 3 ky da va dang ton tai (trong so phai tong = 100%)
 INSERT INTO DOTDANHGIA (tenDot, nam, kyDanhGia, tuNgay, denNgay, trangThai) VALUES
+('Danh gia Quy 4 nam 2024', 2024, 'quy_4', '2025-01-02', '2025-01-15', 'da_ket_thuc'),
 ('Danh gia Quy 4 nam 2025', 2025, 'quy_4', '2026-01-02', '2026-01-15', 'da_ket_thuc'),
 ('Danh gia nam 2025',        2025, 'nam',   '2026-01-16', '2026-01-31', 'da_ket_thuc'),
 ('Danh gia Quy 1 nam 2026',  2026, 'quy_1', '2026-04-01', '2026-04-15', 'chua_bat_dau');
 
+-- Trong so tieu chi cho moi ky (tong = 100%)
+-- Ky 1 (maDot=1): Quy4/2024
 INSERT INTO DOTDANHGIA_TIEUCHI (maDot, maTieuChi, trongSo, batBuoc) VALUES
-(1,1,1.00,TRUE),(1,2,1.00,TRUE),(1,3,0.50,FALSE),(1,4,1.00,TRUE),(1,5,0.75,TRUE),(1,6,0.75,TRUE),
-(2,1,2.00,TRUE),(2,2,2.00,TRUE),(2,3,1.00,FALSE),(2,4,1.50,TRUE),(2,5,1.00,TRUE),(2,6,1.50,TRUE);
+(1,1,30,TRUE),(1,2,25,TRUE),(1,3,15,FALSE),(1,4,20,TRUE),(1,5,10,TRUE);
 
+-- Ky 2 (maDot=2): Quy4/2025
+INSERT INTO DOTDANHGIA_TIEUCHI (maDot, maTieuChi, trongSo, batBuoc) VALUES
+(2,1,30,TRUE),(2,2,25,TRUE),(2,3,15,FALSE),(2,4,20,TRUE),(2,5,10,TRUE);
+
+-- Ky 3 (maDot=3): Nam 2025
+INSERT INTO DOTDANHGIA_TIEUCHI (maDot, maTieuChi, trongSo, batBuoc) VALUES
+(3,1,25,TRUE),(3,2,25,TRUE),(3,3,10,FALSE),(3,4,25,TRUE),(3,5,15,TRUE);
+
+-- Ky 4 (maDot=4): Quy1/2026 - chua bat dau, co the tao tieu chi truoc
+INSERT INTO DOTDANHGIA_TIEUCHI (maDot, maTieuChi, trongSo, batBuoc) VALUES
+(4,1,30,TRUE),(4,2,20,TRUE),(4,3,15,FALSE),(4,4,20,TRUE),(4,5,15,TRUE);
+
+-- ==========================================
+-- DANHGIAHIEUSUAT - Ky 1 (maDot=1: Quy4/2024)
+-- ==========================================
 INSERT INTO DANHGIAHIEUSUAT (maDot, maNV, nguoiDanhGia, tongDiem, xepLoai, nhanXetChung, ngayDanhGia, trangThai) VALUES
-(1,3,  1,8.20,'tot',      'Nhan vien co gang, hoan thanh tot cong viec',      '2026-01-10 09:00:00','da_xac_nhan'),
-(1,5,  1,7.50,'kha',      'Can cai thien ky nang chuyen mon',                 '2026-01-10 10:00:00','da_xac_nhan'),
-(1,6,  1,9.00,'xuat_sac', 'Xuat sac, vuot chi tieu',                          '2026-01-10 11:00:00','da_xac_nhan'),
-(1,8,  7,7.80,'kha',      'Hoan thanh tot cac nhiem vu duoc giao',            '2026-01-11 09:00:00','da_xac_nhan'),
-(1,10, 7,8.50,'tot',      'Nhan vien tich cuc, ky nang tot',                  '2026-01-11 10:00:00','da_xac_nhan'),
-(1,12,11,7.20,'kha',      'Can nang cao hieu suat',                           '2026-01-12 09:00:00','da_xac_nhan');
+(1,3, 1, 7.80,'kha',      'Le Minh Cuong co gang, can phat trien them ky nang',  '2025-01-08 09:00:00','da_xac_nhan'),
+(1,5, 1, 8.40,'tot',      'Hoang Van Em hoan thanh tot cac nhiem vu duoc giao',  '2025-01-08 10:00:00','da_xac_nhan'),
+(1,6, 1, 9.10,'xuat_sac', 'Ngo Thi Phuong xuat sac, vuot ca chi tieu',           '2025-01-08 11:00:00','da_xac_nhan'),
+(1,8, 7, 7.60,'kha',      'Dang Thi Hoa lam viec kha on, can co gang hon',       '2025-01-09 09:00:00','da_xac_nhan'),
+(1,10,7, 8.80,'tot',      'Trinh Thi Kim tich cuc, ky nang tot',                 '2025-01-09 10:00:00','da_xac_nhan'),
+(1,12,11,7.00,'kha',      'Phan Thi Mai can nang cao hieu suat lam viec',        '2025-01-10 09:00:00','da_xac_nhan'),
+(1,13,4, 8.00,'tot',      'Ly Van Nhan nhan vien moi co nhieu tiem nang',        '2025-01-10 10:00:00','da_xac_nhan');
 
+-- Chi tiet danh gia ky 1 (maDanhGia 1-7)
+-- Danh gia #1: Le Minh Cuong (maDanhGia=1)
 INSERT INTO CHITIETDANHGIA (maDanhGia, maTieuChi, diem, nhanXet) VALUES
-(1,1,8.5,'Chat luong tot'),(1,2,8.0,'Dung tien do'),(1,3,7.5,'Co sang tao'),
-(1,4,8.0,'Ky nang on'),   (1,5,8.5,'Hop tac tot'), (1,6,9.0,'Chap hanh noi quy'),
-(2,1,7.0,'Can co gang'),  (2,2,7.5,'Tuong doi dung han'),(2,3,8.0,'Co sang kien'),
-(2,4,7.5,'Ky nang kha'),  (2,5,8.0,'Lam viec nhom tot'),(2,6,7.5,'Tuong doi chap hanh'),
-(3,1,9.5,'Rat tot'),      (3,2,9.0,'Luon hoan thanh som'),(3,3,8.5,'Sang tao xuat sac'),
-(3,4,9.0,'Chuyen mon gioi'),(3,5,9.0,'Tinh than nhom cao'),(3,6,9.0,'Chap hanh tot');
+(1,1,8.0,'Chat luong on'),(1,2,7.5,'Dung tien do'),(1,3,8.5,'Co sang kien'),
+(1,4,7.0,'Can cai thien ky nang'),(1,5,8.0,'Hop tac tot');
+-- Danh gia #2: Hoang Van Em
+INSERT INTO CHITIETDANHGIA (maDanhGia, maTieuChi, diem, nhanXet) VALUES
+(2,1,8.5,'Chat luong cao'),(2,2,8.0,'Hoan thanh dung han'),(2,3,9.0,'Sang tao tot'),
+(2,4,8.5,'Ky nang kha'),(2,5,8.0,'Lam viec nhom tot');
+-- Danh gia #3: Ngo Thi Phuong
+INSERT INTO CHITIETDANHGIA (maDanhGia, maTieuChi, diem, nhanXet) VALUES
+(3,1,9.5,'Rat xuat sac'),(3,2,9.0,'Luon hoan thanh som'),(3,3,9.0,'Sang tao xuat sac'),
+(3,4,9.0,'Chuyen mon gioi'),(3,5,9.0,'Tinh than nhom cao');
+-- Danh gia #4: Dang Thi Hoa
+INSERT INTO CHITIETDANHGIA (maDanhGia, maTieuChi, diem, nhanXet) VALUES
+(4,1,7.5,'Chat luong on'),(4,2,7.5,'Tuong doi dung han'),(4,3,8.0,'Co sang kien'),
+(4,4,7.0,'Can phat trien ky nang'),(4,5,8.0,'Lam viec nhom kha');
+-- Danh gia #5: Trinh Thi Kim
+INSERT INTO CHITIETDANHGIA (maDanhGia, maTieuChi, diem, nhanXet) VALUES
+(5,1,9.0,'Chat luong tot'),(5,2,8.5,'Dung tien do'),(5,3,9.0,'Co sang kien hay'),
+(5,4,8.5,'Ky nang tot'),(5,5,9.0,'Tinh than doi nhom cao');
+-- Danh gia #6: Phan Thi Mai
+INSERT INTO CHITIETDANHGIA (maDanhGia, maTieuChi, diem, nhanXet) VALUES
+(6,1,7.0,'Can co gang them'),(6,2,7.0,'Doi khi cham han'),(6,3,7.5,'Co sang kien'),
+(6,4,6.5,'Ky nang can phat trien'),(6,5,7.0,'Hop tac kha');
+-- Danh gia #7: Ly Van Nhan
+INSERT INTO CHITIETDANHGIA (maDanhGia, maTieuChi, diem, nhanXet) VALUES
+(7,1,8.0,'Tiem nang tot'),(7,2,8.0,'Hoan thanh tot'),(7,3,8.5,'Ham hoc hoi'),
+(7,4,7.5,'Dang phat trien ky nang'),(7,5,8.5,'Hoa dong voi doi nhom');
+
+-- ==========================================
+-- DANHGIAHIEUSUAT - Ky 2 (maDot=2: Quy4/2025)
+-- ==========================================
+INSERT INTO DANHGIAHIEUSUAT (maDot, maNV, nguoiDanhGia, tongDiem, xepLoai, nhanXetChung, ngayDanhGia, trangThai) VALUES
+(2,3, 1, 8.20,'tot',      'Le Minh Cuong da co nhieu tien bo trong nam',          '2026-01-10 09:00:00','da_xac_nhan'),
+(2,5, 1, 7.50,'kha',      'Hoang Van Em can cai thien ky nang chuyen mon',        '2026-01-10 10:00:00','da_xac_nhan'),
+(2,6, 1, 9.00,'xuat_sac', 'Ngo Thi Phuong tiep tuc xuat sac trong nhieu quy',     '2026-01-10 11:00:00','da_xac_nhan'),
+(2,8, 7, 7.80,'kha',      'Dang Thi Hoa hoan thanh tot cac nhiem vu duoc giao',   '2026-01-11 09:00:00','da_xac_nhan'),
+(2,10,7, 8.50,'tot',      'Trinh Thi Kim nhan vien tich cuc, ky nang tot',        '2026-01-11 10:00:00','da_xac_nhan'),
+(2,12,11,7.20,'kha',      'Phan Thi Mai can nang cao hieu suat',                  '2026-01-12 09:00:00','da_xac_nhan'),
+(2,9, 7, 7.00,'kha',      'Bui Quoc Hung thu viec, tiem nang tot',               '2026-01-12 10:00:00','da_xac_nhan');
+
+-- Chi tiet danh gia ky 2 (maDanhGia 8-14)
+-- Danh gia #8: Le Minh Cuong
+INSERT INTO CHITIETDANHGIA (maDanhGia, maTieuChi, diem, nhanXet) VALUES
+(8,1,8.5,'Chat luong tot'),(8,2,8.0,'Dung tien do'),(8,3,7.5,'Co sang tao'),
+(8,4,8.0,'Ky nang on'),(8,5,8.5,'Hop tac tot');
+-- Danh gia #9: Hoang Van Em
+INSERT INTO CHITIETDANHGIA (maDanhGia, maTieuChi, diem, nhanXet) VALUES
+(9,1,7.0,'Can co gang'),(9,2,7.5,'Tuong doi dung han'),(9,3,8.0,'Co sang kien'),
+(9,4,7.5,'Ky nang kha'),(9,5,8.0,'Lam viec nhom tot');
+-- Danh gia #10: Ngo Thi Phuong
+INSERT INTO CHITIETDANHGIA (maDanhGia, maTieuChi, diem, nhanXet) VALUES
+(10,1,9.5,'Rat tot'),(10,2,9.0,'Luon hoan thanh som'),(10,3,8.5,'Sang tao xuat sac'),
+(10,4,9.0,'Chuyen mon gioi'),(10,5,9.0,'Tinh than nhom cao');
+-- Danh gia #11: Dang Thi Hoa
+INSERT INTO CHITIETDANHGIA (maDanhGia, maTieuChi, diem, nhanXet) VALUES
+(11,1,8.0,'Cai thien ro ret'),(11,2,7.5,'Dung tien do'),(11,3,8.0,'Co sang kien'),
+(11,4,7.5,'Dang phat trien'),(11,5,8.0,'Hop tac tot hon');
+-- Danh gia #12: Trinh Thi Kim
+INSERT INTO CHITIETDANHGIA (maDanhGia, maTieuChi, diem, nhanXet) VALUES
+(12,1,9.0,'Chat luong cao'),(12,2,8.5,'Hoan thanh dung han'),(12,3,8.0,'Sang tao'),
+(12,4,8.5,'Ky nang tot'),(12,5,8.5,'Tinh than doi nhom cao');
+-- Danh gia #13: Phan Thi Mai
+INSERT INTO CHITIETDANHGIA (maDanhGia, maTieuChi, diem, nhanXet) VALUES
+(13,1,7.5,'On dinh hon'),(13,2,6.5,'Can co gang dung han'),(13,3,7.0,'It sang kien'),
+(13,4,7.5,'Dang hoc hoi'),(13,5,7.5,'Hop tac tot hon');
+-- Danh gia #14: Bui Quoc Hung (NV thu viec)
+INSERT INTO CHITIETDANHGIA (maDanhGia, maTieuChi, diem, nhanXet) VALUES
+(14,1,7.0,'Tiem nang tot'),(14,2,7.0,'Hoan thanh co ban'),(14,3,7.5,'Ham hoc hoi'),
+(14,4,6.5,'Dang phat trien ky nang'),(14,5,7.5,'Hoa dong voi doi nhom');
+
+-- ==========================================
+-- DANHGIAHIEUSUAT - Ky 3 (maDot=3: Nam 2025)
+-- ==========================================
+INSERT INTO DANHGIAHIEUSUAT (maDot, maNV, nguoiDanhGia, tongDiem, xepLoai, nhanXetChung, ngayDanhGia, trangThai) VALUES
+(3,3, 1, 8.00,'tot',      'Nam 2025: Le Minh Cuong on dinh, co tien bo ro ret',   '2026-01-20 09:00:00','da_xac_nhan'),
+(3,5, 1, 7.70,'kha',      'Nam 2025: Hoang Van Em can co gang chuyen mon hon',    '2026-01-20 10:00:00','da_xac_nhan'),
+(3,6, 1, 9.20,'xuat_sac', 'Nam 2025: Ngo Thi Phuong - nhan vien xuat sac nhat',  '2026-01-20 11:00:00','da_xac_nhan'),
+(3,8, 7, 8.00,'tot',      'Nam 2025: Dang Thi Hoa co tien bo tot',                '2026-01-21 09:00:00','da_xac_nhan'),
+(3,10,7, 8.70,'tot',      'Nam 2025: Trinh Thi Kim lien tuc hoan thanh tot',      '2026-01-21 10:00:00','da_xac_nhan'),
+(3,12,11,7.50,'kha',      'Nam 2025: Phan Thi Mai co tien bo trong nua sau nam',  '2026-01-22 09:00:00','da_xac_nhan'),
+(3,13,4, 8.20,'tot',      'Nam 2025: Ly Van Nhan nhan vien tiem nang cao',        '2026-01-22 10:00:00','da_xac_nhan'),
+(3,7, 4, 9.10,'xuat_sac', 'Nam 2025: Vu Thanh Giang quan ly xuat sac, giang day tot nhiệm vu', '2026-01-23 09:00:00','da_xac_nhan'),
+(3,11,4, 8.90,'tot',      'Nam 2025: Dinh Van Long quan ly ke toan hieu qua',     '2026-01-23 10:00:00','da_xac_nhan');
+
+-- Chi tiet danh gia ky 3 (maDanhGia 15-23)
+-- #15: Le Minh Cuong
+INSERT INTO CHITIETDANHGIA (maDanhGia, maTieuChi, diem, nhanXet) VALUES
+(15,1,8.0,'Kha tot'),(15,2,8.0,'Dung tien do'),(15,3,8.0,'Co sang kien'),
+(15,4,8.0,'Ky nang on'),(15,5,8.5,'Hop tac tot');
+-- #16: Hoang Van Em
+INSERT INTO CHITIETDANHGIA (maDanhGia, maTieuChi, diem, nhanXet) VALUES
+(16,1,7.5,'On dinh'),(16,2,7.5,'Dung han'),(16,3,8.5,'Ham sang tao'),
+(16,4,8.0,'Dang phat trien'),(16,5,7.5,'Nhom hoa dong');
+-- #17: Ngo Thi Phuong
+INSERT INTO CHITIETDANHGIA (maDanhGia, maTieuChi, diem, nhanXet) VALUES
+(17,1,9.5,'Rat xuat sac'),(17,2,9.0,'Luon som han'),(17,3,9.0,'Sang tao xuat sac'),
+(17,4,9.0,'Chuyen mon gioi'),(17,5,9.5,'Nguyen tau nhom');
+-- #18: Dang Thi Hoa
+INSERT INTO CHITIETDANHGIA (maDanhGia, maTieuChi, diem, nhanXet) VALUES
+(18,1,8.0,'Cai thien tot'),(18,2,8.5,'Dung han tot hon'),(18,3,7.5,'Co sang kien'),
+(18,4,7.5,'Dang hoc them'),(18,5,8.5,'Cong tac nhom tot');
+-- #19: Trinh Thi Kim
+INSERT INTO CHITIETDANHGIA (maDanhGia, maTieuChi, diem, nhanXet) VALUES
+(19,1,9.0,'Chat luong cao'),(19,2,9.0,'Hoan thanh dung han'),(19,3,8.0,'Co sang kien hay'),
+(19,4,8.5,'Ky nang cao cap'),(19,5,9.0,'Dau tau nhom');
+-- #20: Phan Thi Mai
+INSERT INTO CHITIETDANHGIA (maDanhGia, maTieuChi, diem, nhanXet) VALUES
+(20,1,7.5,'On hon'),(20,2,7.5,'Co gang dung han'),(20,3,7.0,'It sang kien'),
+(20,4,8.0,'Hoc them ky nang'),(20,5,7.5,'Cong tac on');
+-- #21: Ly Van Nhan
+INSERT INTO CHITIETDANHGIA (maDanhGia, maTieuChi, diem, nhanXet) VALUES
+(21,1,8.5,'Tiem nang tot'),(21,2,8.0,'Hoan thanh tot'),(21,3,8.5,'Ham hoc hoi'),
+(21,4,8.0,'Phat trien ky nang nhanh'),(21,5,8.5,'Hoa dong nhom tot');
+-- #22: Vu Thanh Giang (Truong phong IT)
+INSERT INTO CHITIETDANHGIA (maDanhGia, maTieuChi, diem, nhanXet) VALUES
+(22,1,9.5,'Chat luong quan ly cao'),(22,2,9.0,'Luan hoan thanh muc tieu'),(22,3,9.0,'Sang tao trong giai phap'),
+(22,4,9.0,'Chuyen mon xuat sac'),(22,5,9.0,'Lanh dao doi nhom tot');
+-- #23: Dinh Van Long (Truong phong KT)
+INSERT INTO CHITIETDANHGIA (maDanhGia, maTieuChi, diem, nhanXet) VALUES
+(23,1,9.0,'Chat luong quan ly tot'),(23,2,8.5,'Hoan thanh muc tieu'),(23,3,9.0,'Sang tao trong ke toan'),
+(23,4,9.0,'Chuyen mon ke toan cao'),(23,5,8.5,'Lanh dao hieu qua');
 
 -- =====================================================
 -- 12. YEUCAUTUYENDUNG + TINTUYENDUNG + UNGVIEN

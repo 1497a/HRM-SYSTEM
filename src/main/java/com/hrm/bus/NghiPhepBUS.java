@@ -183,6 +183,16 @@ public class NghiPhepBUS {
         return repository.findAll();
     }
 
+    public List<DonXinNghiPhep> getPendingRequestsByScope(int currentUserId) {
+        com.hrm.model.DataScope scope = com.hrm.bus.XacThucBUS.getInstance().getScopeForAction("LEAVE_APPROVE");
+        return repository.findChoDuyetByScope(scope, currentUserId);
+    }
+
+    public List<DonXinNghiPhep> getAllRequestsByScope(int currentUserId) {
+        com.hrm.model.DataScope scope = com.hrm.bus.XacThucBUS.getInstance().getScopeForAction("LEAVE_VIEW");
+        return repository.findAllByScope(scope, currentUserId);
+    }
+
     public List<LoaiPhep> getAllLeaveTypes() {
         return repository.findAllLoaiPhep();
     }

@@ -277,6 +277,53 @@ public class ChamCongDAO {
         return result;
     }
 
+    public List<ChamCong> findByThangByScope(int thang, int nam, com.hrm.model.DataScope scope, int currentUserId) {
+        List<ChamCong> result = new ArrayList<>();
+        if (scope == com.hrm.model.DataScope.NONE) return result;
+
+        String sqlBase = "SELECT c.maChamCong, c.maNV, c.ngay, c.maCaLam, c.gioVao, c.gioRa, c.soGioLam, c.gioLamThem, c.trangThai, c.phuongThucChamCong, c.ghiChu, t.hoTen, ca.tenCaLam FROM CHAMCONG c "
+                + "LEFT JOIN THONGTINCANHAN t ON c.maNV = t.maNV "
+                + "LEFT JOIN CALAM ca ON c.maCaLam = ca.maCaLam "
+                + "LEFT JOIN BONHIEM b ON c.maNV = b.maNV AND b.trangThai = 'hieu_luc' AND b.loaiBoNhiem = 'chinh' "
+                + "WHERE MONTH(c.ngay)=? AND YEAR(c.ngay)=? ";
+
+        String sqlCondition = "";
+        switch (scope) {
+            case ALL:
+                break;
+            case DEPT:
+                sqlCondition = " AND b.maPhongBan = (SELECT b2.maPhongBan FROM BONHIEM b2 WHERE b2.maNV = ? AND b2.trangThai = 'hieu_luc' AND b2.loaiBoNhiem = 'chinh') ";
+                break;
+            case TEAM:
+                sqlCondition = " AND b.maQuanLy = ? ";
+                break;
+            case SELF:
+                sqlCondition = " AND c.maNV = ? ";
+                break;
+            default:
+                return result;
+        }
+
+        String sql = sqlBase + sqlCondition + " ORDER BY c.ngay, c.maNV";
+
+        try (Connection conn = DatabaseConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setInt(1, thang);
+            ps.setInt(2, nam);
+            if (scope != com.hrm.model.DataScope.ALL) {
+                ps.setInt(3, currentUserId);
+            }
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    result.add(mapChamCong(rs));
+                }
+            }
+        } catch (SQLException e) {
+            throw new RuntimeException("Lỗi tải chấm công theo scope: " + e.getMessage(), e);
+        }
+        return result;
+    }
+
     public double getTongGioLamThemTrongThang(int nhanVienId, int thang, int nam) {
         String sql = "SELECT COALESCE(SUM(gioLamThem), 0) FROM CHAMCONG "
                 + "WHERE maNV=? AND MONTH(ngay)=? AND YEAR(ngay)=?";
@@ -521,6 +568,62 @@ public class ChamCongDAO {
             }
         } catch (SQLException e) {
             throw new RuntimeException("Lỗi tải tất cả đơn OT: " + e.getMessage(), e);
+        }
+        return result;
+    }
+
+    public List<DangKyLamThem> findAllDangKyLamThemByScope(com.hrm.model.DataScope scope, int currentUserId) {
+        return getOTByScopeAndStatus(scope, currentUserId, null);
+    }
+
+    public List<DangKyLamThem> findChoDuyetOTByScope(com.hrm.model.DataScope scope, int currentUserId) {
+        return getOTByScopeAndStatus(scope, currentUserId, "cho_duyet");
+    }
+
+    private List<DangKyLamThem> getOTByScopeAndStatus(com.hrm.model.DataScope scope, int currentUserId, String statusValue) {
+        List<DangKyLamThem> result = new ArrayList<>();
+        if (scope == com.hrm.model.DataScope.NONE) return result;
+
+        String sqlBase = "SELECT d.maDK, d.maNV, d.ngay, d.soGio, d.heSoOT, d.lyDo, d.trangThai, d.nguoiDuyet, d.ngayDuyet, t.hoTen FROM DANGKY_LAMTHEM d "
+                + "LEFT JOIN THONGTINCANHAN t ON d.maNV = t.maNV "
+                + "LEFT JOIN BONHIEM b ON d.maNV = b.maNV AND b.trangThai = 'hieu_luc' AND b.loaiBoNhiem = 'chinh' ";
+
+        String sqlCondition = "";
+        switch (scope) {
+            case ALL:
+                sqlCondition = " WHERE 1=1 ";
+                break;
+            case DEPT:
+                sqlCondition = " WHERE b.maPhongBan = (SELECT b2.maPhongBan FROM BONHIEM b2 WHERE b2.maNV = ? AND b2.trangThai = 'hieu_luc' AND b2.loaiBoNhiem = 'chinh') ";
+                break;
+            case TEAM:
+                sqlCondition = " WHERE b.maQuanLy = ? ";
+                break;
+            case SELF:
+                sqlCondition = " WHERE d.maNV = ? ";
+                break;
+            default:
+                return result;
+        }
+
+        if (statusValue != null) {
+            sqlCondition += " AND d.trangThai = '" + statusValue + "' ";
+        }
+
+        String sql = sqlBase + sqlCondition + " ORDER BY d.ngay DESC";
+        try (Connection conn = DatabaseConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            
+            if (scope != com.hrm.model.DataScope.ALL) {
+                ps.setInt(1, currentUserId);
+            }
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    result.add(mapDangKyLamThem(rs));
+                }
+            }
+        } catch (SQLException e) {
+            throw new RuntimeException("Lỗi tải đơn OT theo scope: " + e.getMessage(), e);
         }
         return result;
     }

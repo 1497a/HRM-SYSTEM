@@ -64,7 +64,7 @@ public class NotificationPanel extends JPanel {
         this.currentUser = SessionContext.getInstance().getCurrentUser();
 
         SessionContext sc = SessionContext.getInstance();
-        this.canSend = sc.hasRole("ADMIN") || sc.hasRole("HR") || sc.hasPermission("NOTIFICATION_SEND");
+        this.canSend = sc.coQuyen("NOTIFICATION_SEND");
 
         setLayout(new BorderLayout());
         setBackground(UIColors.LIGHT_GRAY_BG);

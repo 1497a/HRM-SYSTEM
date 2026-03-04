@@ -105,13 +105,13 @@ public class RoleManagementPanel extends JPanel {
 
         JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT, 10, 0));
         buttonPanel.setOpaque(false);
-        if (sessionContext.hasPermission("ROLE_CREATE")) {
+        if (sessionContext.coQuyen("ROLE_CREATE")) {
             buttonPanel.add(btnCreate);
         }
-        if (sessionContext.hasPermission("ROLE_UPDATE")) {
+        if (sessionContext.coQuyen("ROLE_UPDATE")) {
             buttonPanel.add(btnEdit);
         }
-        if (sessionContext.hasPermission("ROLE_DELETE")) {
+        if (sessionContext.coQuyen("ROLE_DELETE")) {
             buttonPanel.add(btnDelete);
         }
 
@@ -138,8 +138,8 @@ public class RoleManagementPanel extends JPanel {
 
         for (VaiTro role : roles) {
             Object[] row = {
-                role.getCode(),
-                role.getName(),
+                role.getId(),
+                role.getTenVaiTro(),
                 role.getMoTa(),
                 role.getQuyens().size(),
                 role.isLaHeThong() ? "Co" : "-"

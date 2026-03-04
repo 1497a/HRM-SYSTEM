@@ -243,6 +243,11 @@ public class ChamCongBUS {
         return repository.findByThang(thang, nam);
     }
 
+    public List<ChamCong> getChamCongTatCaTheoThangByScope(int thang, int nam, int currentUserId) {
+        com.hrm.model.DataScope scope = com.hrm.bus.XacThucBUS.getInstance().getScopeForAction("ATTENDANCE_VIEW");
+        return repository.findByThangByScope(thang, nam, scope, currentUserId);
+    }
+
     // Legacy compat
     public List<ChamCong> getChamCongTheoThang(int thang, int nam) {
         return repository.findByThang(thang, nam);
@@ -325,6 +330,11 @@ public class ChamCongBUS {
         return repository.findChoDuyet();
     }
 
+    public List<DangKyLamThem> getDonChoDuyetOTByScope(int currentUserId) {
+        com.hrm.model.DataScope scope = com.hrm.bus.XacThucBUS.getInstance().getScopeForAction("ATTENDANCE_APPROVE");
+        return repository.findChoDuyetOTByScope(scope, currentUserId);
+    }
+
     // Legacy compat
     public List<DangKyLamThem> getDonChoQuanLyDuyet() {
         return repository.findChoDuyet();
@@ -346,6 +356,12 @@ public class ChamCongBUS {
     /** Get all OT requests (all statuses). */
     public List<DangKyLamThem> getDonLamThemTatCa() {
         return repository.findAllDangKyLamThem();
+    }
+
+    /** Get all OT requests by scope. */
+    public List<DangKyLamThem> getDonLamThemTatCaByScope(int currentUserId) {
+        com.hrm.model.DataScope scope = com.hrm.bus.XacThucBUS.getInstance().getScopeForAction("ATTENDANCE_VIEW");
+        return repository.findAllDangKyLamThemByScope(scope, currentUserId);
     }
 
     /** Update heSoOT for an OT request without approving. */

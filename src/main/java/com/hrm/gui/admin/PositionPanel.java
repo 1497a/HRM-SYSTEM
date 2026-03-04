@@ -144,9 +144,7 @@ public class PositionPanel extends JPanel {
         SessionContext sc = SessionContext.getInstance();
 
         // Admin hoặc có quyền POSITION_CREATE/EDIT
-        boolean canEdit = sc.hasRole("ADMIN")
-                || sc.hasPermission("POSITION_CREATE")
-                || sc.hasPermission("POSITION_EDIT");
+        boolean canEdit = sc.coQuyen("POSITION_MANAGE");
 
         // Nếu không có quyền → Ẩn các nút
         btnThem.setVisible(canEdit);

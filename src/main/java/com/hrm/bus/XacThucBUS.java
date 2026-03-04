@@ -9,7 +9,6 @@ import com.hrm.util.SessionContext;
 
 import java.util.HashSet;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 
 /**
@@ -58,15 +57,15 @@ public class XacThucBUS {
             return null;
         }
 
-        if (!user.isActive()) {
+        if (!user.isHoatDong()) {
             return null;
         }
 
-        if (user.isLocked()) {
+        if (user.isBiKhoa()) {
             return null;
         }
 
-        if (!PasswordUtil.verifyPassword(password, user.getPassword())) {
+        if (!PasswordUtil.verifyPassword(password, user.getMatKhau())) {
             return null;
         }
 
@@ -100,7 +99,27 @@ public class XacThucBUS {
      */
     public boolean hasPermission(String permissionCode) {
         TaiKhoan user = getCurrentUser();
-        return user != null && user.hasPermission(permissionCode);
+        return user != null && user.coQuyen(permissionCode);
+    }
+
+    /**
+     * Lấy phạm vi dữ liệu cho phép dựa trên cụm từ khoá quyền (actionPrefix).
+     * Ví dụ actionPrefix = "LEAVE_VIEW", hàm sẽ kiểm tra lần lượt:
+     * LEAVE_VIEW_ALL, LEAVE_VIEW_DEPT, LEAVE_VIEW_TEAM, LEAVE_VIEW_SELF
+     * @param actionPrefix Tiền tố của quyền cần kiểm tra.
+     * @return Phạm vi dữ liệu (DataScope).
+     */
+    public com.hrm.model.DataScope getScopeForAction(String actionPrefix) {
+        if (hasPermission(actionPrefix + "_ALL")) return com.hrm.model.DataScope.ALL;
+        if (hasPermission(actionPrefix + "_DEPT")) return com.hrm.model.DataScope.DEPT;
+        if (hasPermission(actionPrefix + "_TEAM")) return com.hrm.model.DataScope.TEAM;
+        if (hasPermission(actionPrefix + "_SELF")) return com.hrm.model.DataScope.SELF;
+        return com.hrm.model.DataScope.NONE;
+    }
+
+    /** Alias for hasPermission() */
+    public boolean coQuyen(String maQuyen) {
+        return hasPermission(maQuyen);
     }
 
     /**
@@ -108,7 +127,7 @@ public class XacThucBUS {
      */
     public boolean hasRole(String roleCode) {
         TaiKhoan user = getCurrentUser();
-        return user != null && user.hasRole(roleCode);
+        return user != null && user.coVaiTro(roleCode);
     }
 
     /**
@@ -133,7 +152,7 @@ public class XacThucBUS {
             return KetQua.error("Không tìm thấy tài khoản.");
         }
 
-        if (!PasswordUtil.verifyPassword(oldPass, user.getPassword())) {
+        if (!PasswordUtil.verifyPassword(oldPass, user.getMatKhau())) {
             return KetQua.error("Mật khẩu cũ không đúng.");
         }
 
@@ -143,6 +162,21 @@ public class XacThucBUS {
             return KetQua.success(null, "Đổi mật khẩu thành công.");
         }
         return KetQua.error("Không thể cập nhật mật khẩu. Vui lòng thử lại.");
+    }
+
+    /**
+     * Admin reset mật khẩu người dùng khác (không cần mật khẩu cũ).
+     */
+    public KetQua<Void> resetPassword(int userId, String newPass) {
+        if (newPass == null || newPass.isEmpty()) {
+            return KetQua.error("Mat khau moi khong duoc de trong.");
+        }
+        String hashedNew = PasswordUtil.hashPassword(newPass);
+        boolean updated = taiKhoanRepo.updatePassword(userId, hashedNew);
+        if (updated) {
+            return KetQua.success(null, "Da cap nhat mat khau thanh cong.");
+        }
+        return KetQua.error("Khong the cap nhat mat khau.");
     }
 
     // =====================================================================
@@ -187,7 +221,7 @@ public class XacThucBUS {
         if (maNV != null && maNV > 0) {
             TaiKhoan existing = taiKhoanRepo.findByMaNV(maNV);
             if (existing != null) {
-                return KetQua.error("Nhân viên này đã có tài khoản ('" + existing.getUsername()
+                return KetQua.error("Nhân viên này đã có tài khoản ('" + existing.getTenDangNhap()
                         + "'). Mỗi nhân viên chỉ được có một tài khoản.");
             }
         }
@@ -232,7 +266,7 @@ public class XacThucBUS {
         if (user == null) {
             return KetQua.error("Không tìm thấy tài khoản.");
         }
-        if ("admin".equalsIgnoreCase(user.getUsername())) {
+        if ("admin".equalsIgnoreCase(user.getTenDangNhap())) {
             return KetQua.error("Không thể xóa tài khoản admin hệ thống.");
         }
         try {
@@ -358,59 +392,6 @@ public class XacThucBUS {
     }
 
     /**
-     * Thêm hoặc cập nhật quyền đặc biệt cho một tài khoản.
-     *
-     * @param maTaiKhoan ID tài khoản
-     * @param maQuyen    mã quyền
-     * @param choPhep    true = cấp thêm, false = thu hồi
-     * @return KetQua thành công hoặc lỗi
-     */
-    public KetQua<Void> setUserPermission(int maTaiKhoan, String maQuyen, boolean choPhep) {
-        if (maQuyen == null || maQuyen.trim().isEmpty()) {
-            return KetQua.error("Mã quyền không hợp lệ.");
-        }
-        try {
-            taiKhoanRepo.setUserPermission(maTaiKhoan, maQuyen.trim(), choPhep);
-            return KetQua.success(null, "Cập nhật quyền tài khoản thành công.");
-        } catch (Exception e) {
-            System.err.println("Lỗi setUserPermission: " + e.getMessage());
-            e.printStackTrace();
-            return KetQua.error("Không thể cập nhật quyền tài khoản: " + e.getMessage());
-        }
-    }
-
-    /**
-     * Xóa quyền đặc biệt của tài khoản (quay về quyền theo vai trò).
-     *
-     * @param maTaiKhoan ID tài khoản
-     * @param maQuyen    mã quyền
-     * @return KetQua thành công hoặc lỗi
-     */
-    public KetQua<Void> removeUserPermission(int maTaiKhoan, String maQuyen) {
-        if (maQuyen == null || maQuyen.trim().isEmpty()) {
-            return KetQua.error("Mã quyền không hợp lệ.");
-        }
-        try {
-            taiKhoanRepo.removeUserPermission(maTaiKhoan, maQuyen.trim());
-            return KetQua.success(null, "Đã gỡ quyền đặc biệt của tài khoản.");
-        } catch (Exception e) {
-            System.err.println("Lỗi removeUserPermission: " + e.getMessage());
-            e.printStackTrace();
-            return KetQua.error("Không thể gỡ quyền tài khoản: " + e.getMessage());
-        }
-    }
-
-    /**
-     * Lấy các quyền đặc biệt (override) của một tài khoản.
-     *
-     * @param maTaiKhoan ID tài khoản
-     * @return Map maQuyen -> choPhep
-     */
-    public Map<String, Boolean> getUserPermissions(int maTaiKhoan) {
-        return taiKhoanRepo.findUserPermissions(maTaiKhoan);
-    }
-
-    /**
      * Tìm tài khoản theo maNV nhân viên.
      */
     public com.hrm.model.TaiKhoan findByMaNV(int maNV) {
@@ -459,23 +440,13 @@ public class XacThucBUS {
         TaiKhoan user = taiKhoanRepo.findById(maTaiKhoan);
         if (user == null) return new HashSet<>();
 
-        // Bước 1: Tập quyền từ vai trò
+        // Tập quyền từ vai trò
         Set<String> fromRoles = new HashSet<>();
-        user.getRoles().forEach(role ->
-            role.getQuyens().forEach(p -> fromRoles.add(p.getCode()))
+        user.getVaiTros().forEach(role ->
+            role.getQuyens().forEach(p -> fromRoles.add(p.getId()))
         );
 
-        // Bước 2: Áp dụng TaiKhoanQuyen overrides
-        Map<String, Boolean> overrides = user.getNgoaiLeQuyen();
-        Set<String> effective = new HashSet<>(fromRoles);
-        overrides.forEach((code, granted) -> {
-            if (granted) {
-                effective.add(code);    // explicitly granted
-            } else {
-                effective.remove(code); // explicitly denied
-            }
-        });
-
-        return effective;
+        return fromRoles;
     }
+
 }

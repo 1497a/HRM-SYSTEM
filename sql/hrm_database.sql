@@ -79,6 +79,9 @@ CREATE TABLE THONGTINCANHAN (
     tonGiao NVARCHAR(50),
     tinhTrangHonNhan ENUM('doc_than', 'da_ket_hon', 'ly_hon') DEFAULT 'doc_than',
     anhDaiDien VARCHAR(255),
+    fileCV VARCHAR(255),
+    trinhDoHocVan NVARCHAR(100),
+    kinhNghiem NVARCHAR(500),
     ngayTao DATETIME DEFAULT CURRENT_TIMESTAMP,
     ngayCapNhat DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     FOREIGN KEY (maNV) REFERENCES NHANVIEN(maNV) ON DELETE CASCADE
@@ -387,17 +390,6 @@ CREATE TABLE TAIKHOAN (
     FOREIGN KEY (maVaiTro) REFERENCES VAITRO(maVaiTro)
 ) ENGINE=InnoDB;
 
-CREATE TABLE TAIKHOAN_QUYEN (
-    maTaiKhoan INT NOT NULL,
-    maQuyen VARCHAR(50) NOT NULL,
-    choPhep BOOLEAN NOT NULL,
-    ghiChu NVARCHAR(255),
-    ngayTao DATETIME DEFAULT CURRENT_TIMESTAMP,
-    PRIMARY KEY (maTaiKhoan, maQuyen),
-    FOREIGN KEY (maTaiKhoan) REFERENCES TAIKHOAN(maTaiKhoan) ON DELETE CASCADE,
-    FOREIGN KEY (maQuyen) REFERENCES QUYEN(maQuyen) ON DELETE CASCADE
-) ENGINE=InnoDB;
-
 -- =====================================================
 -- NGHIEP VU 10: THONG BAO NOI BO
 -- =====================================================
@@ -529,114 +521,6 @@ CREATE INDEX idx_audit_bang ON LOG_AUDIT(bangDuLieu);
 -- DU LIEU MAC DINH
 -- =====================================================
 
-INSERT INTO VAITRO (maVaiTro, tenVaiTro, moTa, laVaiTroHeThong) VALUES
-('ADMIN', 'Quan tri vien', 'Toan quyen quan tri he thong', TRUE),
-('HR', 'Nhan su', 'Quan ly nhan vien, hop dong, nghi phep', FALSE),
-('MANAGER', 'Quan ly', 'Quan ly team, duyet phep, danh gia nhan vien', FALSE),
-('EMPLOYEE', 'Nhan vien', 'Xem thong tin ca nhan, dang ky nghi phep', FALSE);
-
-INSERT INTO QUYEN (maQuyen, tenQuyen, nhomQuyen) VALUES
-('VIEW_SELF', 'Xem thong tin ca nhan', 'Employee'),
-('EMPLOYEE_VIEW', 'Xem danh sach nhan vien', 'Employee'),
-('EMPLOYEE_CREATE', 'Tao nhan vien', 'Employee'),
-('EMPLOYEE_UPDATE', 'Cap nhat nhan vien', 'Employee'),
-('EMPLOYEE_DELETE', 'Xoa nhan vien', 'Employee'),
-('LEAVE_CREATE', 'Tao don nghi phep', 'Leave'),
-('LEAVE_VIEW_SELF', 'Xem nghi phep ca nhan', 'Leave'),
-('LEAVE_VIEW_ALL', 'Xem tat ca nghi phep', 'Leave'),
-('LEAVE_APPROVE', 'Duyet nghi phep', 'Leave'),
-('LEAVE_MANAGE', 'Quan ly nghi phep', 'Leave'),
-('EVAL_VIEW_SELF', 'Xem danh gia ca nhan', 'Evaluation'),
-('EVAL_VIEW_ALL', 'Xem tat ca danh gia', 'Evaluation'),
-('EVAL_REVIEW', 'Danh gia nhan vien', 'Evaluation'),
-('EVAL_MANAGE', 'Quan ly danh gia', 'Evaluation'),
-('USER_VIEW', 'Xem danh sach tai khoan', 'User'),
-('USER_CREATE', 'Tao tai khoan', 'User'),
-('USER_UPDATE', 'Cap nhat tai khoan', 'User'),
-('USER_DELETE', 'Xoa tai khoan', 'User'),
-('ROLE_VIEW', 'Xem vai tro', 'Role'),
-('ROLE_CREATE', 'Tao vai tro', 'Role'),
-('ROLE_UPDATE', 'Cap nhat vai tro', 'Role'),
-('ROLE_DELETE', 'Xoa vai tro', 'Role'),
-('REPORT_VIEW', 'Xem bao cao', 'Report'),
-('REPORT_EXPORT', 'Xuat bao cao', 'Report'),
-('SETTINGS_VIEW', 'Xem cai dat', 'Settings'),
-('SETTINGS_UPDATE', 'Cap nhat cai dat', 'Settings'),
-('DEPARTMENT_VIEW', 'Xem phong ban', 'Organization'),
-('DEPARTMENT_MANAGE', 'Quan ly phong ban', 'Organization'),
-('POSITION_VIEW', 'Xem chuc vu', 'Organization'),
-('POSITION_MANAGE', 'Quan ly chuc vu', 'Organization'),
-('APPOINTMENT_VIEW', 'Xem bo nhiem', 'Appointment'),
-('APPOINTMENT_CREATE', 'Tao bo nhiem', 'Appointment'),
-('APPOINTMENT_APPROVE', 'Duyet bo nhiem', 'Appointment'),
-('ATTENDANCE_VIEW', 'Xem cham cong', 'Attendance'),
-('ATTENDANCE_MANAGE', 'Quan ly cham cong', 'Attendance'),
-('CONTRACT_VIEW', 'Xem hop dong', 'Contract'),
-('CONTRACT_MANAGE', 'Quan ly hop dong', 'Contract'),
-('PAYROLL_VIEW', 'Xem luong', 'Payroll'),
-('PAYROLL_CALCULATE', 'Tinh luong', 'Payroll'),
-('RECRUITMENT_VIEW', 'Xem tuyen dung', 'Recruitment'),
-('RECRUITMENT_MANAGE', 'Quan ly tuyen dung', 'Recruitment');
-
-INSERT INTO VAITRO_QUYEN (maVaiTro, maQuyen)
-SELECT 'ADMIN', maQuyen FROM QUYEN;
-
-INSERT INTO VAITRO_QUYEN (maVaiTro, maQuyen) VALUES
-('HR', 'VIEW_SELF'), ('HR', 'EMPLOYEE_VIEW'), ('HR', 'EMPLOYEE_CREATE'), ('HR', 'EMPLOYEE_UPDATE'),
-('HR', 'LEAVE_CREATE'), ('HR', 'LEAVE_VIEW_SELF'), ('HR', 'LEAVE_VIEW_ALL'), ('HR', 'LEAVE_APPROVE'), ('HR', 'LEAVE_MANAGE'),
-('HR', 'EVAL_VIEW_SELF'), ('HR', 'EVAL_VIEW_ALL'), ('HR', 'EVAL_MANAGE'),
-('HR', 'REPORT_VIEW');
-
-INSERT INTO VAITRO_QUYEN (maVaiTro, maQuyen) VALUES
-('MANAGER', 'VIEW_SELF'), ('MANAGER', 'EMPLOYEE_VIEW'),
-('MANAGER', 'LEAVE_CREATE'), ('MANAGER', 'LEAVE_VIEW_SELF'), ('MANAGER', 'LEAVE_VIEW_ALL'), ('MANAGER', 'LEAVE_APPROVE'),
-('MANAGER', 'EVAL_VIEW_SELF'), ('MANAGER', 'EVAL_VIEW_ALL'), ('MANAGER', 'EVAL_REVIEW'),
-('MANAGER', 'REPORT_VIEW');
-
-INSERT INTO VAITRO_QUYEN (maVaiTro, maQuyen) VALUES
-('EMPLOYEE', 'VIEW_SELF'),
-('EMPLOYEE', 'LEAVE_CREATE'), ('EMPLOYEE', 'LEAVE_VIEW_SELF'),
-('EMPLOYEE', 'EVAL_VIEW_SELF');
-
-INSERT INTO LOAIPHEP (maLoaiPhep, tenLoaiPhep, coLuong, canChungTu, soNgayToiDa) VALUES
-('PHEP_NAM', 'Nghi phep nam', TRUE, FALSE, 12),
-('PHEP_OM', 'Nghi om', TRUE, TRUE, 30),
-('PHEP_CUOI', 'Nghi cuoi', TRUE, TRUE, 3),
-('PHEP_TANG', 'Nghi tang', TRUE, TRUE, 3),
-('PHEP_THAI_SAN', 'Nghi thai san', TRUE, TRUE, 180),
-('PHEP_KHONG_LUONG', 'Nghi khong luong', FALSE, FALSE, 0);
-
-INSERT INTO CALAM (maCaLam, tenCaLam, gioBatDau, gioKetThuc, soGioChuan) VALUES
-('HANH_CHINH', 'Ca hanh chinh', '08:00:00', '17:00:00', 8.00),
-('CA_SANG', 'Ca sang', '06:00:00', '14:00:00', 8.00),
-('CA_CHIEU', 'Ca chieu', '14:00:00', '22:00:00', 8.00),
-('CA_DEM', 'Ca dem', '22:00:00', '06:00:00', 8.00);
-
-INSERT INTO PHONGBAN (maPhongBan, tenPhongBan, phongBanCha, moTa) VALUES
-('CONGTY', 'Cong ty ABC', NULL, 'Cong ty me'),
-('PHONGNS', 'Phong Nhan su', 'CONGTY', 'Quan ly nhan su'),
-('PHONGKT', 'Phong Ke toan', 'CONGTY', 'Quan ly tai chinh'),
-('PHONGKD', 'Phong Kinh doanh', 'CONGTY', 'Kinh doanh va ban hang'),
-('PHONGIT', 'Phong IT', 'CONGTY', 'Cong nghe thong tin');
-
-INSERT INTO CHUCVU (maChucVu, tenChucVu, capBac, heSoLuong, phuCapChucVu) VALUES
-('GD', 'Giam doc', 1, 5.00, 10000000),
-('PGD', 'Pho Giam doc', 2, 4.00, 7000000),
-('TP', 'Truong phong', 3, 3.00, 5000000),
-('PP', 'Pho phong', 4, 2.50, 3000000),
-('TT', 'Truong team', 5, 2.00, 2000000),
-('NV', 'Nhan vien', 10, 1.00, 0);
-
-INSERT INTO TIEUCHIDANHGIA (tenTieuChi, moTa, nhomTieuChi, diemToiDa) VALUES
-('Chat luong cong viec', 'Danh gia chat luong output', 'Ket qua', 25),
-('Tien do hoan thanh', 'Danh gia viec hoan thanh dung han', 'Ket qua', 20),
-('Sang tao & Cai tien', 'Kha nang dua ra giai phap moi', 'Nang luc', 15),
-('Ky nang chuyen mon', 'Kien thuc va ky nang nghe', 'Nang luc', 20),
-('Tinh than hop tac', 'Kha nang lam viec nhom', 'Thai do', 10),
-('Tuan thu noi quy', 'Chap hanh quy dinh cong ty', 'Thai do', 10);
-
-INSERT INTO TAIKHOAN (tenDangNhap, matKhau, maNV, maVaiTro, email) VALUES
-('admin', '123', NULL, 'ADMIN', 'admin@hrm.local');
 
 -- =====================================================
 -- TRIGGERS & PROCEDURES

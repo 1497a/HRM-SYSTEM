@@ -122,13 +122,13 @@ public class TaiKhoanDAO {
      * Cập nhật thông tin tài khoản (hoatDong, biKhoa, email, maVaiTro).
      */
     public void update(TaiKhoan user) {
-        String maVaiTro = user.getRoles().isEmpty() ? null : user.getRoles().get(0).getCode();
+        String maVaiTro = user.getVaiTros().isEmpty() ? null : user.getVaiTros().get(0).getId();
         String sql = "UPDATE TAIKHOAN SET hoatDong = ?, biKhoa = ?, email = ?, maVaiTro = ?, ngayCapNhat = NOW() "
                    + "WHERE maTaiKhoan = ?";
         try (Connection conn = DatabaseConnection.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
-            ps.setBoolean(1, user.isActive());
-            ps.setBoolean(2, user.isLocked());
+            ps.setBoolean(1, user.isHoatDong());
+            ps.setBoolean(2, user.isBiKhoa());
             ps.setString(3, user.getEmail());
             ps.setString(4, maVaiTro);
             ps.setInt(5, user.getId());
@@ -161,15 +161,10 @@ public class TaiKhoanDAO {
      */
     public void delete(int id) {
         // Xóa các bản ghi liên quan trước
-        String delUserPerms = "DELETE FROM TAIKHOAN_QUYEN WHERE maTaiKhoan = ?";
         String delAccount   = "DELETE FROM TAIKHOAN WHERE maTaiKhoan = ?";
         try (Connection conn = DatabaseConnection.getConnection()) {
             conn.setAutoCommit(false);
             try {
-                try (PreparedStatement ps1 = conn.prepareStatement(delUserPerms)) {
-                    ps1.setInt(1, id);
-                    ps1.executeUpdate();
-                }
                 try (PreparedStatement ps2 = conn.prepareStatement(delAccount)) {
                     ps2.setInt(1, id);
                     ps2.executeUpdate();
@@ -281,7 +276,7 @@ public class TaiKhoanDAO {
                 role.setLaHeThong(rs.getBoolean("laVaiTroHeThong"));
                 
                 // Nạp quyền của vai trò để bảng danh sách hiển thị đúng
-                List<Quyen> perms = findPermissionsByRole(role.getCode());
+                List<Quyen> perms = findPermissionsByRole(role.getId());
                 for (Quyen p : perms) {
                     role.getQuyens().add(p);
                 }
@@ -351,9 +346,9 @@ public class TaiKhoanDAO {
         String sql = "UPDATE VAITRO SET tenVaiTro = ?, moTa = ? WHERE maVaiTro = ?";
         try (Connection conn = DatabaseConnection.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
-            ps.setString(1, role.getName());
+            ps.setString(1, role.getTenVaiTro());
             ps.setString(2, role.getMoTa());
-            ps.setString(3, role.getCode());
+            ps.setString(3, role.getId());
             ps.executeUpdate();
         } catch (SQLException e) {
             System.err.println("Lỗi updateRole: " + e.getMessage());
@@ -510,67 +505,6 @@ public class TaiKhoanDAO {
     }
 
     // =====================================================================
-    // ==================== TaiKhoan Quyen Exception Methods ==============
-    // =====================================================================
-
-    /**
-     * Lấy các quyền đặc biệt (override) của tài khoản.
-     * key = maQuyen, value = choPhep (true = cấp thêm, false = thu hồi)
-     */
-    public Map<String, Boolean> findUserPermissions(int maTaiKhoan) {
-        Map<String, Boolean> map = new HashMap<>();
-        String sql = "SELECT maQuyen, choPhep FROM TAIKHOAN_QUYEN WHERE maTaiKhoan = ?";
-        try (Connection conn = DatabaseConnection.getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql)) {
-            ps.setInt(1, maTaiKhoan);
-            try (ResultSet rs = ps.executeQuery()) {
-                while (rs.next()) {
-                    map.put(rs.getString("maQuyen"), rs.getBoolean("choPhep"));
-                }
-            }
-        } catch (SQLException e) {
-            System.err.println("Lỗi findUserPermissions: " + e.getMessage());
-            e.printStackTrace();
-        }
-        return map;
-    }
-
-    /**
-     * Thêm hoặc cập nhật một quyền đặc biệt cho tài khoản.
-     */
-    public void setUserPermission(int maTaiKhoan, String maQuyen, boolean choPhep) {
-        String sql = "INSERT INTO TAIKHOAN_QUYEN (maTaiKhoan, maQuyen, choPhep) VALUES (?, ?, ?) "
-                   + "ON DUPLICATE KEY UPDATE choPhep = ?";
-        try (Connection conn = DatabaseConnection.getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql)) {
-            ps.setInt(1, maTaiKhoan);
-            ps.setString(2, maQuyen);
-            ps.setBoolean(3, choPhep);
-            ps.setBoolean(4, choPhep);
-            ps.executeUpdate();
-        } catch (SQLException e) {
-            System.err.println("Lỗi setUserPermission: " + e.getMessage());
-            e.printStackTrace();
-        }
-    }
-
-    /**
-     * Xóa một quyền đặc biệt của tài khoản (quay về quyền theo vai trò).
-     */
-    public void removeUserPermission(int maTaiKhoan, String maQuyen) {
-        String sql = "DELETE FROM TAIKHOAN_QUYEN WHERE maTaiKhoan = ? AND maQuyen = ?";
-        try (Connection conn = DatabaseConnection.getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql)) {
-            ps.setInt(1, maTaiKhoan);
-            ps.setString(2, maQuyen);
-            ps.executeUpdate();
-        } catch (SQLException e) {
-            System.err.println("Lỗi removeUserPermission: " + e.getMessage());
-            e.printStackTrace();
-        }
-    }
-
-    // =====================================================================
     // ==================== Private Helpers ================================
     // =====================================================================
 
@@ -588,13 +522,14 @@ public class TaiKhoanDAO {
         boolean biKhoa = rs.getBoolean("biKhoa");
 
         // Thử lấy họ tên từ THONGTINCANHAN nếu có cột maNV
-        String fullName = resolveFullName(id, username);
+        int maNVVal = rs.getInt("maNV");
+        Integer maNV = rs.wasNull() ? null : maNVVal;
+        String fullName = resolveFullName(maNV, username);
 
         TaiKhoan user = new TaiKhoan(id, username, password, fullName, email);
         user.setHoatDong(hoatDong);
         user.setBiKhoa(biKhoa);
-        int maNVVal = rs.getInt("maNV");
-        if (!rs.wasNull()) user.setMaNV(maNVVal);
+        if (maNV != null) user.setMaNV(maNV);
         return user;
     }
 
@@ -623,24 +558,20 @@ public class TaiKhoanDAO {
             System.err.println("Lỗi loadUserRoleAndPermissions (role): " + e.getMessage());
             e.printStackTrace();
         }
-
-        // Nạp quyền đặc biệt của tài khoản
-        Map<String, Boolean> userPerms = findUserPermissions(maTaiKhoan);
-        user.setNgoaiLeQuyen(userPerms);
     }
 
     /**
      * Cố gắng lấy họ tên nhân viên từ bảng THONGTINCANHAN thông qua maNV trong TAIKHOAN.
      * Nếu không có, trả về tên đăng nhập.
      */
-    private String resolveFullName(int maTaiKhoan, String fallback) {
-        String sql = "SELECT ttcn.hoTen "
-                   + "FROM TAIKHOAN tk "
-                   + "JOIN THONGTINCANHAN ttcn ON tk.maNV = ttcn.maNV "
-                   + "WHERE tk.maTaiKhoan = ?";
+    private String resolveFullName(Integer maNV, String fallback) {
+        if (maNV == null) {
+            return fallback;
+        }
+        String sql = "SELECT hoTen FROM THONGTINCANHAN WHERE maNV = ?";
         try (Connection conn = DatabaseConnection.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
-            ps.setInt(1, maTaiKhoan);
+            ps.setInt(1, maNV);
             try (ResultSet rs = ps.executeQuery()) {
                 if (rs.next()) {
                     String hoTen = rs.getString("hoTen");

@@ -37,10 +37,20 @@ public class SessionContext {
     }
 
     public boolean hasPermission(String permissionCode) {
-        return currentUser != null && currentUser.hasPermission(permissionCode);
+        return currentUser != null && currentUser.coQuyen(permissionCode);
     }
 
     public boolean hasRole(String roleCode) {
-        return currentUser != null && currentUser.hasRole(roleCode);
+        return currentUser != null && currentUser.coVaiTro(roleCode);
+    }
+
+    /** Alias for hasPermission() */
+    public boolean coQuyen(String maQuyen) {
+        return hasPermission(maQuyen);
+    }
+
+    /** Alias for hasRole() */
+    public boolean coVaiTro(String maVaiTro) {
+        return hasRole(maVaiTro);
     }
 }

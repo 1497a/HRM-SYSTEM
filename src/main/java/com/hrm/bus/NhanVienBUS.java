@@ -185,6 +185,16 @@ public class NhanVienBUS {
         return nvRepo.findAll();
     }
 
+    public List<NhanVien> getAllByScope(int currentUserId) {
+        com.hrm.model.DataScope scope = com.hrm.bus.XacThucBUS.getInstance().getScopeForAction("EMPLOYEE_VIEW");
+        return nvRepo.findAllByScope(scope, currentUserId);
+    }
+
+    public List<NhanVien> getAllByActionScope(String action, int currentUserId) {
+        com.hrm.model.DataScope scope = com.hrm.bus.XacThucBUS.getInstance().getScopeForAction(action);
+        return nvRepo.findAllByScope(scope, currentUserId);
+    }
+
     public List<NhanVien> getDangLamViec() {
         return nvRepo.findDangLamViec();
     }
@@ -203,6 +213,10 @@ public class NhanVienBUS {
 
     public String generateMaNhanVien() {
         return nvRepo.generateMaNhanVien();
+    }
+
+    public List<NhanVien> getNhanVienByMaQuanLy(int maQuanLy) {
+        return nvRepo.findNhanVienByMaQuanLy(maQuanLy);
     }
 
     // ============================

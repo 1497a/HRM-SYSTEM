@@ -60,6 +60,7 @@ public class BoNhiemDAO {
         try { bn.setTenNV(rs.getString("hoTen")); } catch (SQLException ignored) {}
         try { bn.setTenPhongBan(rs.getString("tenPhongBan")); } catch (SQLException ignored) {}
         try { bn.setTenChucVu(rs.getString("tenChucVu")); } catch (SQLException ignored) {}
+        try { bn.setTenQuanLy(rs.getString("tenQuanLy")); } catch (SQLException ignored) {}
     }
 
     // ============================
@@ -224,6 +225,54 @@ public class BoNhiemDAO {
         return result;
     }
 
+    public List<BoNhiem> findAllByScope(com.hrm.model.DataScope scope, int currentUserId) {
+        List<BoNhiem> result = new ArrayList<>();
+        if (scope == com.hrm.model.DataScope.NONE) return result;
+
+        String whereClause;
+        switch (scope) {
+            case ALL:
+                whereClause = "";
+                break;
+            case DEPT:
+                whereClause = "WHERE b.maPhongBan = ("
+                        + "SELECT b2.maPhongBan FROM BONHIEM b2 "
+                        + "WHERE b2.maNV = ? AND b2.trangThai = 'hieu_luc' AND b2.loaiBoNhiem = 'chinh'"
+                        + ")";
+                break;
+            case TEAM:
+                whereClause = "WHERE b.maQuanLy = ? OR b.maNV = ?";
+                break;
+            case SELF:
+                whereClause = "WHERE b.maNV = ?";
+                break;
+            default:
+                return result;
+        }
+
+        String sql = buildJoinQuery(whereClause, "ORDER BY b.maBoNhiem DESC");
+        try (Connection conn = DatabaseConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            if (scope == com.hrm.model.DataScope.TEAM) {
+                ps.setInt(1, currentUserId);
+                ps.setInt(2, currentUserId);
+            } else if (scope != com.hrm.model.DataScope.ALL) {
+                ps.setInt(1, currentUserId);
+            }
+
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    BoNhiem bn = mapRow(rs);
+                    trySetTransient(rs, bn);
+                    result.add(bn);
+                }
+            }
+        } catch (SQLException e) {
+            throw new RuntimeException("Loi tai danh sach bo nhiem theo scope: " + e.getMessage(), e);
+        }
+        return result;
+    }
+
     // ============================
     // hasConflictingChinhBoNhiem
     // ============================
@@ -307,19 +356,20 @@ public class BoNhiemDAO {
     // ============================
 
     private String buildJoinQuery(String whereClause, String orderAndLimit) {
-        return "SELECT b.*, t.hoTen, pb.tenPhongBan, cv.tenChucVu "
+        return "SELECT b.*, t.hoTen, pb.tenPhongBan, cv.tenChucVu, t_ql.hoTen AS tenQuanLy "
                 + "FROM BONHIEM b "
                 + "LEFT JOIN THONGTINCANHAN t ON b.maNV = t.maNV "
                 + "LEFT JOIN PHONGBAN pb ON b.maPhongBan = pb.maPhongBan "
                 + "LEFT JOIN CHUCVU cv ON b.maChucVu = cv.maChucVu "
+                + "LEFT JOIN THONGTINCANHAN t_ql ON b.maQuanLy = t_ql.maNV "
                 + (whereClause.isEmpty() ? "" : whereClause + " ")
                 + orderAndLimit;
     }
 
     private void setInsertParams(PreparedStatement ps, BoNhiem bn) throws SQLException {
         ps.setInt(1, bn.getMaNV());
-        ps.setString(2, bn.getChucVuId());
-        ps.setString(3, bn.getChucVuId());
+        ps.setString(2, bn.getPhongBanId());   // maPhongBan  ← FIXED (was chucVuId)
+        ps.setString(3, bn.getChucVuId());     // maChucVu
         ps.setString(4, bn.getLoaiBoNhiem());
         ps.setDouble(5, bn.getTyLeHuongLuong());
         if (bn.getMaQuanLy() > 0) {

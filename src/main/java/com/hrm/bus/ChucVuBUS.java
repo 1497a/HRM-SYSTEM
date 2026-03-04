@@ -127,11 +127,11 @@ public class ChucVuBUS {
             String nguoiThayDoi = "Admin";
             if (SessionContext.getInstance().isLoggedIn()
                     && SessionContext.getInstance().getCurrentUser() != null) {
-                String fullName = SessionContext.getInstance().getCurrentUser().getFullName();
+                String fullName = SessionContext.getInstance().getCurrentUser().getHoTen();
                 if (fullName != null && !fullName.isEmpty()) {
                     nguoiThayDoi = fullName;
                 } else {
-                    nguoiThayDoi = SessionContext.getInstance().getCurrentUser().getUsername();
+                    nguoiThayDoi = SessionContext.getInstance().getCurrentUser().getTenDangNhap();
                 }
             }
 

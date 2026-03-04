@@ -203,7 +203,7 @@ public class DanhGiaDAO {
     }
 
     public List<TieuChiDanhGia> findAllCriteria() {
-        String sql = "SELECT maTieuChi, tenTieuChi, moTa, nhomTieuChi, diemToiDa, trangThai FROM TIEUCHIDANHGIA ORDER BY maTieuChi";
+        String sql = "SELECT maTieuChi, tenTieuChi, moTa, nhomTieuChi, diemToiDa, trangThai FROM TIEUCHIDANHGIA WHERE trangThai = 'hoatDong' OR trangThai IS NULL ORDER BY maTieuChi";
         List<TieuChiDanhGia> result = new ArrayList<>();
         try (Connection conn = DatabaseConnection.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql);
@@ -318,8 +318,11 @@ public class DanhGiaDAO {
     }
 
     public DanhGiaHieuSuat findSubmissionByDotAndNV(int maDot, int maNV) {
-        String sql = "SELECT dg.*, t.hoTen FROM DANHGIAHIEUSUAT dg "
+        String sql = "SELECT dg.*, t.hoTen as tenNhanVien, e.hoTen as tenNguoiDanhGia, d.tenDot "
+                + "FROM DANHGIAHIEUSUAT dg "
                 + "LEFT JOIN THONGTINCANHAN t ON dg.maNV = t.maNV "
+                + "LEFT JOIN THONGTINCANHAN e ON dg.nguoiDanhGia = e.maNV "
+                + "LEFT JOIN DOTDANHGIA d ON dg.maDot = d.maDot "
                 + "WHERE dg.maDot=? AND dg.maNV=?";
         try (Connection conn = DatabaseConnection.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
@@ -335,8 +338,11 @@ public class DanhGiaDAO {
     }
 
     public List<DanhGiaHieuSuat> findByDot(int maDot) {
-        String sql = "SELECT dg.*, t.hoTen FROM DANHGIAHIEUSUAT dg "
+        String sql = "SELECT dg.*, t.hoTen as tenNhanVien, e.hoTen as tenNguoiDanhGia, d.tenDot "
+                + "FROM DANHGIAHIEUSUAT dg "
                 + "LEFT JOIN THONGTINCANHAN t ON dg.maNV = t.maNV "
+                + "LEFT JOIN THONGTINCANHAN e ON dg.nguoiDanhGia = e.maNV "
+                + "LEFT JOIN DOTDANHGIA d ON dg.maDot = d.maDot "
                 + "WHERE dg.maDot=? ORDER BY dg.maDanhGia";
         List<DanhGiaHieuSuat> result = new ArrayList<>();
         try (Connection conn = DatabaseConnection.getConnection();
@@ -354,8 +360,11 @@ public class DanhGiaDAO {
     }
 
     public List<DanhGiaHieuSuat> findAll() {
-        String sql = "SELECT dg.*, t.hoTen FROM DANHGIAHIEUSUAT dg "
+        String sql = "SELECT dg.*, t.hoTen as tenNhanVien, e.hoTen as tenNguoiDanhGia, d.tenDot "
+                + "FROM DANHGIAHIEUSUAT dg "
                 + "LEFT JOIN THONGTINCANHAN t ON dg.maNV = t.maNV "
+                + "LEFT JOIN THONGTINCANHAN e ON dg.nguoiDanhGia = e.maNV "
+                + "LEFT JOIN DOTDANHGIA d ON dg.maDot = d.maDot "
                 + "ORDER BY dg.maDanhGia DESC";
         List<DanhGiaHieuSuat> result = new ArrayList<>();
         try (Connection conn = DatabaseConnection.getConnection();
@@ -366,6 +375,57 @@ public class DanhGiaDAO {
             }
         } catch (SQLException e) {
             throw new RuntimeException("Lỗi tải tất cả đánh giá: " + e.getMessage(), e);
+        }
+        return result;
+    }
+
+    public List<DanhGiaHieuSuat> findAllByScope(com.hrm.model.DataScope scope, int currentUserId) {
+        List<DanhGiaHieuSuat> result = new ArrayList<>();
+        if (scope == com.hrm.model.DataScope.NONE) return result;
+
+        String sqlBase = "SELECT dg.*, t.hoTen as tenNhanVien, e.hoTen as tenNguoiDanhGia, d.tenDot "
+                + "FROM DANHGIAHIEUSUAT dg "
+                + "LEFT JOIN THONGTINCANHAN t ON dg.maNV = t.maNV "
+                + "LEFT JOIN THONGTINCANHAN e ON dg.nguoiDanhGia = e.maNV "
+                + "LEFT JOIN DOTDANHGIA d ON dg.maDot = d.maDot "
+                + "LEFT JOIN BONHIEM b ON dg.maNV = b.maNV AND b.trangThai = 'hieu_luc' AND b.loaiBoNhiem = 'chinh' ";
+
+        String sqlCondition = "";
+        switch (scope) {
+            case ALL:
+                sqlCondition = " WHERE 1=1 ";
+                break;
+            case DEPT:
+                sqlCondition = " WHERE b.maPhongBan = (SELECT b2.maPhongBan FROM BONHIEM b2 WHERE b2.maNV = ? AND b2.trangThai = 'hieu_luc' AND b2.loaiBoNhiem = 'chinh') ";
+                break;
+            case TEAM:
+                sqlCondition = " WHERE b.maQuanLy = ? ";
+                break;
+            case SELF:
+                sqlCondition = " WHERE (dg.maNV = ? OR dg.nguoiDanhGia = ?) ";
+                break;
+            default:
+                return result;
+        }
+
+        String sql = sqlBase + sqlCondition + " ORDER BY dg.ngayDanhGia DESC";
+
+        try (Connection conn = DatabaseConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            
+            if (scope == com.hrm.model.DataScope.SELF) {
+                ps.setInt(1, currentUserId);
+                ps.setInt(2, currentUserId);
+            } else if (scope != com.hrm.model.DataScope.ALL) {
+                ps.setInt(1, currentUserId);
+            }
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    result.add(mapSubmission(rs));
+                }
+            }
+        } catch (SQLException e) {
+            throw new RuntimeException("Lỗi tải đánh giá theo scope: " + e.getMessage(), e);
         }
         return result;
     }
@@ -383,7 +443,9 @@ public class DanhGiaDAO {
         Timestamp ngayDG = rs.getTimestamp("ngayDanhGia");
         if (ngayDG != null) sub.setNgayDanhGia(ngayDG.toLocalDateTime());
         // transient
-        try { sub.setTenNhanVien(rs.getString("hoTen")); } catch (SQLException ignored) {}
+        try { sub.setTenNhanVien(rs.getString("tenNhanVien")); } catch (SQLException ignored) {}
+        try { sub.setTenNguoiDanhGia(rs.getString("tenNguoiDanhGia")); } catch (SQLException ignored) {}
+        try { sub.setTenDot(rs.getString("tenDot")); } catch (SQLException ignored) {}
         return sub;
     }
 
@@ -467,7 +529,7 @@ public class DanhGiaDAO {
                     score.setNhanXet(rs.getString("nhanXet"));
                     // transient
                     try { score.setTenTieuChi(rs.getString("tenTieuChi")); } catch (SQLException ignored) {}
-                    try { rs.getDouble("trongSo"); /* replaced score.setWeight */ } catch (SQLException ignored) {}
+                    try { score.setTrongSo(rs.getDouble("trongSo")); } catch (SQLException ignored) {}
                     result.add(score);
                 }
             }
@@ -516,7 +578,7 @@ public class DanhGiaDAO {
                 ps.setString(1, c.getName());
                 ps.setString(2, c.getDescription());
                 ps.setDouble(3, c.getMaxScore());
-                ps.setString(4, c.isActive() ? "hoatDong" : "ngung_hoat_dong");
+                ps.setString(4, c.isHoatDong() ? "hoatDong" : "ngung_hoat_dong");
                 ps.executeUpdate();
                 try (ResultSet keys = ps.getGeneratedKeys()) {
                     if (keys.next()) c.setId(keys.getInt(1));
@@ -531,7 +593,7 @@ public class DanhGiaDAO {
                 ps.setString(1, c.getName());
                 ps.setString(2, c.getDescription());
                 ps.setDouble(3, c.getMaxScore());
-                ps.setString(4, c.isActive() ? "hoatDong" : "ngung_hoat_dong");
+                ps.setString(4, c.isHoatDong() ? "hoatDong" : "ngung_hoat_dong");
                 ps.setInt(5, c.getId());
                 ps.executeUpdate();
             } catch (SQLException e) {
@@ -567,8 +629,11 @@ public class DanhGiaDAO {
     }
 
     public List<DanhGiaHieuSuat> getSubmissionsByEmployee(int employeeId) {
-        String sql = "SELECT dg.*, t.hoTen FROM DANHGIAHIEUSUAT dg "
+        String sql = "SELECT dg.*, t.hoTen as tenNhanVien, e.hoTen as tenNguoiDanhGia, d.tenDot "
+                + "FROM DANHGIAHIEUSUAT dg "
                 + "LEFT JOIN THONGTINCANHAN t ON dg.maNV = t.maNV "
+                + "LEFT JOIN THONGTINCANHAN e ON dg.nguoiDanhGia = e.maNV "
+                + "LEFT JOIN DOTDANHGIA d ON dg.maDot = d.maDot "
                 + "WHERE dg.maNV=? ORDER BY dg.ngayDanhGia DESC";
         List<DanhGiaHieuSuat> result = new ArrayList<>();
         try (Connection conn = DatabaseConnection.getConnection();
@@ -583,9 +648,33 @@ public class DanhGiaDAO {
         return result;
     }
 
-    public DanhGiaHieuSuat getSubmission(int id) {
-        String sql = "SELECT dg.*, t.hoTen FROM DANHGIAHIEUSUAT dg "
+    public List<DanhGiaHieuSuat> getSubmissionsRelatedToUser(int userId) {
+        String sql = "SELECT dg.*, t.hoTen as tenNhanVien, e.hoTen as tenNguoiDanhGia, d.tenDot "
+                + "FROM DANHGIAHIEUSUAT dg "
                 + "LEFT JOIN THONGTINCANHAN t ON dg.maNV = t.maNV "
+                + "LEFT JOIN THONGTINCANHAN e ON dg.nguoiDanhGia = e.maNV "
+                + "LEFT JOIN DOTDANHGIA d ON dg.maDot = d.maDot "
+                + "WHERE dg.maNV=? OR dg.nguoiDanhGia=? ORDER BY dg.ngayDanhGia DESC";
+        List<DanhGiaHieuSuat> result = new ArrayList<>();
+        try (Connection conn = DatabaseConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setInt(1, userId);
+            ps.setInt(2, userId);
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) result.add(mapSubmission(rs));
+            }
+        } catch (SQLException e) {
+            throw new RuntimeException("Lỗi tải đánh giá liên quan đến user: " + e.getMessage(), e);
+        }
+        return result;
+    }
+
+    public DanhGiaHieuSuat getSubmission(int id) {
+        String sql = "SELECT dg.*, t.hoTen as tenNhanVien, e.hoTen as tenNguoiDanhGia, d.tenDot "
+                + "FROM DANHGIAHIEUSUAT dg "
+                + "LEFT JOIN THONGTINCANHAN t ON dg.maNV = t.maNV "
+                + "LEFT JOIN THONGTINCANHAN e ON dg.nguoiDanhGia = e.maNV "
+                + "LEFT JOIN DOTDANHGIA d ON dg.maDot = d.maDot "
                 + "WHERE dg.maDanhGia=?";
         try (Connection conn = DatabaseConnection.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
@@ -597,5 +686,71 @@ public class DanhGiaDAO {
             throw new RuntimeException("Lỗi tìm đánh giá: " + e.getMessage(), e);
         }
         return null;
+    }
+
+    /**
+     * Get maNV list of employees already evaluated in a cycle (to prevent re-evaluation).
+     */
+    public List<Integer> getEvaluatedMaNVInCycle(int maDot) {
+        String sql = "SELECT maNV FROM DANHGIAHIEUSUAT WHERE maDot=?";
+        List<Integer> result = new java.util.ArrayList<>();
+        try (Connection conn = DatabaseConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setInt(1, maDot);
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) result.add(rs.getInt("maNV"));
+            }
+        } catch (SQLException e) {
+            throw new RuntimeException("Lỗi tải danh sách đã đánh giá: " + e.getMessage(), e);
+        }
+        return result;
+    }
+
+    /**
+     * Get submissions where employee is managed by given maNV (direct reports).
+     */
+    public List<DanhGiaHieuSuat> getSubmissionsForManagedEmployees(int managerMaNV) {
+        String sql = "SELECT dg.*, t.hoTen as tenNhanVien, e.hoTen as tenNguoiDanhGia, d.tenDot "
+                + "FROM DANHGIAHIEUSUAT dg "
+                + "LEFT JOIN THONGTINCANHAN t ON dg.maNV = t.maNV "
+                + "LEFT JOIN THONGTINCANHAN e ON dg.nguoiDanhGia = e.maNV "
+                + "LEFT JOIN DOTDANHGIA d ON dg.maDot = d.maDot "
+                + "LEFT JOIN BONHIEM b ON dg.maNV = b.maNV AND b.trangThai='hieu_luc' AND b.loaiBoNhiem='chinh' "
+                + "WHERE b.maQuanLy=? ORDER BY dg.ngayDanhGia DESC";
+        List<DanhGiaHieuSuat> result = new java.util.ArrayList<>();
+        try (Connection conn = DatabaseConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setInt(1, managerMaNV);
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) result.add(mapSubmission(rs));
+            }
+        } catch (SQLException e) {
+            throw new RuntimeException("Lỗi tải đánh giá của cấp dưới: " + e.getMessage(), e);
+        }
+        return result;
+    }
+
+    /**
+     * Get submissions for all employees in a department.
+     */
+    public List<DanhGiaHieuSuat> getSubmissionsForDepartment(String maPhongBan) {
+        String sql = "SELECT dg.*, t.hoTen as tenNhanVien, e.hoTen as tenNguoiDanhGia, d.tenDot "
+                + "FROM DANHGIAHIEUSUAT dg "
+                + "LEFT JOIN THONGTINCANHAN t ON dg.maNV = t.maNV "
+                + "LEFT JOIN THONGTINCANHAN e ON dg.nguoiDanhGia = e.maNV "
+                + "LEFT JOIN DOTDANHGIA d ON dg.maDot = d.maDot "
+                + "LEFT JOIN BONHIEM b ON dg.maNV = b.maNV AND b.trangThai='hieu_luc' AND b.loaiBoNhiem='chinh' "
+                + "WHERE b.maPhongBan=? ORDER BY dg.ngayDanhGia DESC";
+        List<DanhGiaHieuSuat> result = new java.util.ArrayList<>();
+        try (Connection conn = DatabaseConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setString(1, maPhongBan);
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) result.add(mapSubmission(rs));
+            }
+        } catch (SQLException e) {
+            throw new RuntimeException("Lỗi tải đánh giá theo phòng ban: " + e.getMessage(), e);
+        }
+        return result;
     }
 }

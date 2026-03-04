@@ -30,6 +30,7 @@ public class ContractListPanel extends JPanel {
     private TableRowSorter<DefaultTableModel> sorter;
 
     private JComboBox<String> cboTrangThai;
+    private JComboBox<Object> cboNhanVien;
     private PurpleButton btnTao;
     private PurpleButton btnThanhLy;
     private PurpleButton btnHuy;
@@ -85,6 +86,43 @@ public class ContractListPanel extends JPanel {
         cboTrangThai.setFont(new Font("Segoe UI", Font.PLAIN, 14));
         cboTrangThai.setPreferredSize(new Dimension(160, 32));
 
+        JLabel lblNhanVien = new JLabel("Nhân viên:");
+        lblNhanVien.setFont(new Font("Segoe UI", Font.PLAIN, 14));
+        lblNhanVien.setForeground(UIColors.TEXT_DARK);
+
+        cboNhanVien = new JComboBox<>();
+        cboNhanVien.setFont(new Font("Segoe UI", Font.PLAIN, 14));
+        cboNhanVien.addItem("Tất cả");
+
+        com.hrm.model.TaiKhoan currentUser = SessionContext.getInstance().getCurrentUser();
+        boolean isManager = currentUser.coQuyen("CONTRACT_VIEW_ALL") || currentUser.coQuyen("CONTRACT_VIEW_TEAM");
+
+        if (isManager) {
+            List<com.hrm.model.NhanVien> dsNV = com.hrm.bus.NhanVienBUS.getInstance().getAllByActionScope("EMPLOYEE_VIEW", currentUser.getId());
+            for (com.hrm.model.NhanVien nv : dsNV) {
+                cboNhanVien.addItem(nv);
+            }
+        }
+
+        cboNhanVien.setRenderer(new DefaultListCellRenderer() {
+            @Override
+            public Component getListCellRendererComponent(JList<?> list, Object value,
+                    int index, boolean isSelected, boolean cellHasFocus) {
+                super.getListCellRendererComponent(list, value, index, isSelected, cellHasFocus);
+                if (value instanceof com.hrm.model.NhanVien) {
+                    com.hrm.model.NhanVien nv = (com.hrm.model.NhanVien) value;
+                    setText("[" + nv.getMaNhanVien() + "] " + nv.getHoTen());
+                } else if (value != null) {
+                    setText(value.toString());
+                }
+                return this;
+            }
+        });
+
+        if (isManager) {
+            filterPanel.add(lblNhanVien);
+            filterPanel.add(cboNhanVien);
+        }
         filterPanel.add(lblTrangThai);
         filterPanel.add(cboTrangThai);
 
@@ -148,6 +186,7 @@ public class ContractListPanel extends JPanel {
         btnLamMoi.addActionListener(e -> loadData());
 
         cboTrangThai.addActionListener(e -> applyFilter());
+        cboNhanVien.addActionListener(e -> applyFilter());
 
         table.addMouseListener(new java.awt.event.MouseAdapter() {
             @Override
@@ -165,8 +204,8 @@ public class ContractListPanel extends JPanel {
 
     private void setupPermissions() {
         SessionContext sc = SessionContext.getInstance();
-        boolean canCreate = sc.hasRole("ADMIN") || sc.hasPermission("CONTRACT_CREATE");
-        boolean canUpdate = sc.hasRole("ADMIN") || sc.hasPermission("CONTRACT_UPDATE");
+        boolean canCreate = sc.coQuyen("CONTRACT_CREATE");
+        boolean canUpdate = sc.coQuyen("CONTRACT_MANAGE");
 
         btnTao.setVisible(canCreate);
         btnThanhLy.setVisible(canUpdate);
@@ -200,15 +239,34 @@ public class ContractListPanel extends JPanel {
 
     private void applyFilter() {
         String trangThaiFilter = (String) cboTrangThai.getSelectedItem();
+        
+        int tempMaNV = -1;
+        if (cboNhanVien != null && cboNhanVien.getSelectedItem() instanceof com.hrm.model.NhanVien) {
+            tempMaNV = ((com.hrm.model.NhanVien) cboNhanVien.getSelectedItem()).getId();
+        }
+        final int filterMaNV = tempMaNV;
 
         RowFilter<DefaultTableModel, Object> rf = new RowFilter<DefaultTableModel, Object>() {
             @Override
             public boolean include(Entry<? extends DefaultTableModel, ? extends Object> entry) {
-                if ("Tất cả".equals(trangThaiFilter)) return true;
-                String trangThai = entry.getStringValue(8);
-                if ("Hiệu lực".equals(trangThaiFilter)) return "Hiệu lực".equals(trangThai);
-                if ("Hết hiệu lực".equals(trangThaiFilter)) return "Hết hạn".equals(trangThai);
-                if ("Thanh lý".equals(trangThaiFilter)) return "Thanh lý".equals(trangThai);
+                // Check Employee filter
+                if (filterMaNV > 0) {
+                    Object nvIdObj = entry.getValue(2);
+                    if (nvIdObj instanceof Integer) {
+                        if ((Integer) nvIdObj != filterMaNV) return false;
+                    } else if (nvIdObj != null) {
+                        if (!nvIdObj.toString().equals(String.valueOf(filterMaNV))) return false;
+                    }
+                }
+
+                // Check Status filter
+                if (!"Tất cả".equals(trangThaiFilter)) {
+                    String trangThai = entry.getStringValue(8);
+                    if ("Hiệu lực".equals(trangThaiFilter) && !"Hiệu lực".equals(trangThai)) return false;
+                    if ("Hết hiệu lực".equals(trangThaiFilter) && !"Hết hạn".equals(trangThai)) return false;
+                    if ("Thanh lý".equals(trangThaiFilter) && !"Thanh lý".equals(trangThai)) return false;
+                }
+                
                 return true;
             }
         };

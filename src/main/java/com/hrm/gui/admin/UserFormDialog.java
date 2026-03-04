@@ -1,6 +1,7 @@
 package com.hrm.gui.admin;
 
 import com.hrm.model.NhanVien;
+import com.hrm.model.ThongTinCaNhan;
 import com.hrm.model.VaiTro;
 import com.hrm.model.TaiKhoan;
 import com.hrm.bus.NhanVienBUS;
@@ -10,12 +11,15 @@ import com.hrm.util.UIHelper;
 
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
+import javax.swing.border.TitledBorder;
 import java.awt.*;
+import java.time.format.DateTimeFormatter;
 import java.util.List;
 
 /**
- * TaiKhoan Form Dialog - Create/Edit user accounts
- * Khi tao moi: chon nhan vien tu danh sach, chi duoc 1 tai khoan/NV
+ * TaiKhoan Form Dialog - Create/Edit user accounts.
+ * Khi tao moi: chon nhan vien, mat khau mac dinh = ngaySinh (ddMMyyyy).
+ * Khi sua: hien thi ma NV, trang thai dung radio button (chi chon 1 trong 3).
  */
 public class UserFormDialog extends JDialog {
     private final XacThucBUS authService;
@@ -23,19 +27,24 @@ public class UserFormDialog extends JDialog {
     private final TaiKhoan editingUser;
     private boolean successful = false;
 
-    // For create mode
+    // Create mode
     private JComboBox<NhanVien> cboNhanVien;
+    private JLabel lblDefaultPassword;
 
-    // For edit mode
+    // Edit mode
     private JTextField txtUsername;
+    private JTextField txtMaNV;
     private JTextField txtFullName;
     private JTextField txtEmail;
 
     private JPasswordField txtPassword;
     private JPanel rolesPanel;
     private ButtonGroup roleGroup;
-    private JCheckBox chkActive;
-    private JCheckBox chkLocked;
+
+    // Status (edit mode) - radio buttons, mutually exclusive
+    private JRadioButton rdoHoatDong;
+    private JRadioButton rdoBiKhoa;
+    private ButtonGroup statusGroup;
 
     public UserFormDialog(Frame parent, TaiKhoan user) {
         super(parent, user == null ? "Tao tai khoan moi" : "Sua tai khoan", true);
@@ -49,18 +58,15 @@ public class UserFormDialog extends JDialog {
             loadUserData();
         }
 
-        setSize(480, user == null ? 560 : 520);
+        setSize(500, user == null ? 560 : 540);
         setLocationRelativeTo(parent);
     }
 
     private void initComponents() {
         txtPassword = new JPasswordField(20);
-        chkActive = new JCheckBox("Hoat dong");
-        chkActive.setSelected(true);
-        chkLocked = new JCheckBox("Khoa tai khoan");
 
         if (editingUser == null) {
-            // CREATE mode: dropdown nhan vien
+            // CREATE mode
             List<NhanVien> dsNV = nhanVienService.getDangLamViec();
             cboNhanVien = new JComboBox<>();
             for (NhanVien nv : dsNV) {
@@ -69,9 +75,7 @@ public class UserFormDialog extends JDialog {
             cboNhanVien.setRenderer((list, value, index, isSelected, cellHasFocus) -> {
                 JLabel label = new JLabel();
                 if (value != null) {
-                    String hoTen = value.getHoTen() != null ? value.getHoTen() : "";
-                    String ma = value.getMaNhanVien() != null ? value.getMaNhanVien() : "";
-                    label.setText(hoTen + " (" + ma + ")");
+                    label.setText(value.getHoTen() + " (" + value.getMaNhanVien() + ")");
                 }
                 if (isSelected) {
                     label.setBackground(list.getSelectionBackground());
@@ -80,12 +84,31 @@ public class UserFormDialog extends JDialog {
                 }
                 return label;
             });
+
+            // When employee changes, auto-fill default password from DOB
+            lblDefaultPassword = new JLabel("Mat khau mac dinh: (chua chon nhan vien)");
+            lblDefaultPassword.setFont(new Font("Segoe UI", Font.ITALIC, 12));
+            lblDefaultPassword.setForeground(new Color(100, 100, 200));
+
+            cboNhanVien.addActionListener(e -> updateDefaultPassword());
+            updateDefaultPassword();
+
         } else {
-            // EDIT mode: text fields
+            // EDIT mode
             txtUsername = new JTextField(20);
             txtUsername.setEditable(false);
+            txtMaNV = new JTextField(10);
+            txtMaNV.setEditable(false);
+            txtMaNV.setBackground(new Color(245, 245, 245));
             txtFullName = new JTextField(20);
             txtEmail = new JTextField(20);
+
+            // Status: radio buttons (mutually exclusive)
+            rdoHoatDong = new JRadioButton("Hoat dong");
+            rdoBiKhoa = new JRadioButton("Bi khoa");
+            statusGroup = new ButtonGroup();
+            statusGroup.add(rdoHoatDong);
+            statusGroup.add(rdoBiKhoa);
         }
 
         // Roles panel
@@ -95,8 +118,8 @@ public class UserFormDialog extends JDialog {
 
         List<VaiTro> roles = authService.getAllRoles();
         for (VaiTro role : roles) {
-            JRadioButton rb = new JRadioButton(role.getName() + " (" + role.getCode() + ")");
-            rb.setActionCommand(role.getCode());
+            JRadioButton rb = new JRadioButton(role.getTenVaiTro() + " (" + role.getId() + ")");
+            rb.setActionCommand(role.getId());
             roleGroup.add(rb);
             rolesPanel.add(rb);
         }
@@ -106,6 +129,33 @@ public class UserFormDialog extends JDialog {
             if (first instanceof JRadioButton) {
                 ((JRadioButton) first).setSelected(true);
             }
+        }
+    }
+
+    private void updateDefaultPassword() {
+        if (cboNhanVien == null || lblDefaultPassword == null) return;
+        NhanVien selectedNV = (NhanVien) cboNhanVien.getSelectedItem();
+        if (selectedNV == null) {
+            lblDefaultPassword.setText("Mat khau mac dinh: (chua chon nhan vien)");
+            txtPassword.setText("");
+            return;
+        }
+
+        String dob = "";
+        try {
+            ThongTinCaNhan ttcn = nhanVienService.getThongTinCaNhan(selectedNV.getId());
+            if (ttcn != null && ttcn.getNgaySinh() != null) {
+                dob = ttcn.getNgaySinh().format(DateTimeFormatter.ofPattern("ddMMyyyy"));
+            }
+        } catch (Exception ignored) {}
+
+        if (!dob.isEmpty()) {
+            txtPassword.setText(dob);
+            lblDefaultPassword.setText("Mat khau mac dinh: " + dob + " (ngay sinh)");
+        } else {
+            String fallback = selectedNV.getMaNhanVien() + "@123";
+            txtPassword.setText(fallback);
+            lblDefaultPassword.setText("Mat khau mac dinh: " + fallback + " (khong co ngay sinh)");
         }
     }
 
@@ -121,43 +171,62 @@ public class UserFormDialog extends JDialog {
         int row = 0;
 
         if (editingUser == null) {
-            // CREATE: show employee dropdown
-            gbc.gridx = 0; gbc.gridy = row;
-            gbc.anchor = GridBagConstraints.NORTHWEST;
+            gbc.gridx = 0; gbc.gridy = row; gbc.anchor = GridBagConstraints.NORTHWEST;
             formPanel.add(new JLabel("Nhan vien:"), gbc);
-            gbc.gridx = 1; gbc.fill = GridBagConstraints.HORIZONTAL;
+            gbc.gridx = 1; gbc.fill = GridBagConstraints.HORIZONTAL; gbc.weightx = 1;
             cboNhanVien.setPreferredSize(new Dimension(280, 28));
             formPanel.add(cboNhanVien, gbc);
             row++;
 
-            // Password
-            gbc.gridx = 0; gbc.gridy = row; gbc.fill = GridBagConstraints.NONE;
+            gbc.gridx = 1; gbc.gridy = row; gbc.fill = GridBagConstraints.HORIZONTAL;
+            formPanel.add(lblDefaultPassword, gbc);
+            row++;
+
+            gbc.gridx = 0; gbc.gridy = row; gbc.fill = GridBagConstraints.NONE; gbc.weightx = 0;
             gbc.anchor = GridBagConstraints.WEST;
             formPanel.add(new JLabel("Mat khau:"), gbc);
             gbc.gridx = 1; gbc.fill = GridBagConstraints.HORIZONTAL;
             formPanel.add(txtPassword, gbc);
             row++;
+            gbc.gridx = 1; gbc.gridy = row;
+            JLabel hint = new JLabel("(Co the thay doi mat khau mac dinh truoc khi luu)");
+            hint.setFont(new Font("Segoe UI", Font.ITALIC, 11));
+            hint.setForeground(Color.GRAY);
+            formPanel.add(hint, gbc);
+            row++;
+
         } else {
-            // EDIT: show editable fields
             gbc.gridx = 0; gbc.gridy = row;
             formPanel.add(new JLabel("Ten dang nhap:"), gbc);
-            gbc.gridx = 1; gbc.fill = GridBagConstraints.HORIZONTAL;
+            gbc.gridx = 1; gbc.fill = GridBagConstraints.HORIZONTAL; gbc.weightx = 1;
             formPanel.add(txtUsername, gbc);
             row++;
 
-            gbc.gridx = 0; gbc.gridy = row; gbc.fill = GridBagConstraints.NONE;
+            gbc.gridx = 0; gbc.gridy = row; gbc.fill = GridBagConstraints.NONE; gbc.weightx = 0;
+            formPanel.add(new JLabel("Ma nhan vien:"), gbc);
+            gbc.gridx = 1; gbc.fill = GridBagConstraints.HORIZONTAL;
+            formPanel.add(txtMaNV, gbc);
+            row++;
+
+            gbc.gridx = 0; gbc.gridy = row; gbc.fill = GridBagConstraints.NONE; gbc.weightx = 0;
             formPanel.add(new JLabel("Mat khau moi:"), gbc);
             gbc.gridx = 1; gbc.fill = GridBagConstraints.HORIZONTAL;
             formPanel.add(txtPassword, gbc);
             row++;
+            gbc.gridx = 1; gbc.gridy = row;
+            JLabel pwHint = new JLabel("(De trong neu khong muon doi mat khau)");
+            pwHint.setFont(new Font("Segoe UI", Font.ITALIC, 11));
+            pwHint.setForeground(Color.GRAY);
+            formPanel.add(pwHint, gbc);
+            row++;
 
-            gbc.gridx = 0; gbc.gridy = row; gbc.fill = GridBagConstraints.NONE;
+            gbc.gridx = 0; gbc.gridy = row; gbc.fill = GridBagConstraints.NONE; gbc.weightx = 0;
             formPanel.add(new JLabel("Ho ten:"), gbc);
             gbc.gridx = 1; gbc.fill = GridBagConstraints.HORIZONTAL;
             formPanel.add(txtFullName, gbc);
             row++;
 
-            gbc.gridx = 0; gbc.gridy = row; gbc.fill = GridBagConstraints.NONE;
+            gbc.gridx = 0; gbc.gridy = row; gbc.fill = GridBagConstraints.NONE; gbc.weightx = 0;
             formPanel.add(new JLabel("Email:"), gbc);
             gbc.gridx = 1; gbc.fill = GridBagConstraints.HORIZONTAL;
             formPanel.add(txtEmail, gbc);
@@ -165,28 +234,28 @@ public class UserFormDialog extends JDialog {
         }
 
         // Roles
-        gbc.gridx = 0; gbc.gridy = row; gbc.fill = GridBagConstraints.NONE;
+        gbc.gridx = 0; gbc.gridy = row; gbc.fill = GridBagConstraints.NONE; gbc.weightx = 0;
         gbc.anchor = GridBagConstraints.NORTHWEST;
         formPanel.add(new JLabel("Vai tro:"), gbc);
         gbc.gridx = 1; gbc.fill = GridBagConstraints.HORIZONTAL;
         JScrollPane rolesScroll = new JScrollPane(rolesPanel);
-        rolesScroll.setPreferredSize(new Dimension(250, 120));
+        rolesScroll.setPreferredSize(new Dimension(250, 110));
+        rolesScroll.setBorder(new TitledBorder(""));
         formPanel.add(rolesScroll, gbc);
         row++;
 
-        // Status (edit only)
+        // Status (edit mode only)
         if (editingUser != null) {
-            gbc.gridx = 0; gbc.gridy = row; gbc.fill = GridBagConstraints.NONE;
+            gbc.gridx = 0; gbc.gridy = row; gbc.fill = GridBagConstraints.NONE; gbc.weightx = 0;
             gbc.anchor = GridBagConstraints.WEST;
             formPanel.add(new JLabel("Trang thai:"), gbc);
             gbc.gridx = 1;
             JPanel statusPanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 10, 0));
-            statusPanel.add(chkActive);
-            statusPanel.add(chkLocked);
+            statusPanel.add(rdoHoatDong);
+            statusPanel.add(rdoBiKhoa);
             formPanel.add(statusPanel, gbc);
         }
 
-        // Buttons
         JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT));
         JButton btnSave = UIHelper.createSuccessButton("Luu");
         btnSave.addActionListener(e -> save());
@@ -197,21 +266,35 @@ public class UserFormDialog extends JDialog {
 
         mainPanel.add(formPanel, BorderLayout.CENTER);
         mainPanel.add(buttonPanel, BorderLayout.SOUTH);
-
         setContentPane(mainPanel);
     }
 
     private void loadUserData() {
         if (editingUser == null) return;
-        txtUsername.setText(editingUser.getUsername());
-        txtFullName.setText(editingUser.getFullName());
-        txtEmail.setText(editingUser.getEmail());
-        chkActive.setSelected(editingUser.isActive());
-        chkLocked.setSelected(editingUser.isLocked());
+        txtUsername.setText(editingUser.getTenDangNhap());
+        txtFullName.setText(editingUser.getHoTen() != null ? editingUser.getHoTen() : "");
+        txtEmail.setText(editingUser.getEmail() != null ? editingUser.getEmail() : "");
+
+        if (editingUser.getMaNV() != null) {
+            try {
+                NhanVien nv = nhanVienService.getById(editingUser.getMaNV());
+                txtMaNV.setText(nv != null ? nv.getMaNhanVien() + " (ID: " + editingUser.getMaNV() + ")" : String.valueOf(editingUser.getMaNV()));
+            } catch (Exception e) {
+                txtMaNV.setText(String.valueOf(editingUser.getMaNV()));
+            }
+        } else {
+            txtMaNV.setText("(Chua lien ket nhan vien)");
+        }
+
+        if (editingUser.isBiKhoa()) {
+            rdoBiKhoa.setSelected(true);
+        } else {
+            rdoHoatDong.setSelected(true);
+        }
 
         String currentRoleCode = null;
-        if (editingUser.getRoles() != null && !editingUser.getRoles().isEmpty()) {
-            currentRoleCode = editingUser.getRoles().get(0).getCode();
+        if (editingUser.getVaiTros() != null && !editingUser.getVaiTros().isEmpty()) {
+            currentRoleCode = editingUser.getVaiTros().get(0).getId();
         }
         for (Component comp : rolesPanel.getComponents()) {
             if (comp instanceof JRadioButton) {
@@ -229,16 +312,13 @@ public class UserFormDialog extends JDialog {
 
         String selectedRoleCode = null;
         ButtonModel selectedModel = roleGroup.getSelection();
-        if (selectedModel != null) {
-            selectedRoleCode = selectedModel.getActionCommand();
-        }
+        if (selectedModel != null) selectedRoleCode = selectedModel.getActionCommand();
         if (selectedRoleCode == null || selectedRoleCode.isEmpty()) {
             JOptionPane.showMessageDialog(this, "Vui long chon vai tro", "Loi", JOptionPane.ERROR_MESSAGE);
             return;
         }
 
         if (editingUser == null) {
-            // CREATE: lay thong tin tu NV duoc chon
             NhanVien selectedNV = (NhanVien) cboNhanVien.getSelectedItem();
             if (selectedNV == null) {
                 JOptionPane.showMessageDialog(this, "Vui long chon nhan vien", "Loi", JOptionPane.ERROR_MESSAGE);
@@ -249,16 +329,12 @@ public class UserFormDialog extends JDialog {
                 return;
             }
 
-            // Username = ma nhan vien
             String username = selectedNV.getMaNhanVien();
             String email = null;
-            // Try to get email from ThongTinCaNhan
             try {
-                com.hrm.model.ThongTinCaNhan ttcn = nhanVienService.getThongTinCaNhan(selectedNV.getId());
+                ThongTinCaNhan ttcn = nhanVienService.getThongTinCaNhan(selectedNV.getId());
                 if (ttcn != null) email = ttcn.getEmail();
-            } catch (Exception ex) {
-                // ignore
-            }
+            } catch (Exception ex) { /* ignore */ }
 
             KetQua<Integer> result = authService.createUser(username, password, selectedNV.getId(), selectedRoleCode, email);
             if (!result.isSuccess()) {
@@ -267,11 +343,11 @@ public class UserFormDialog extends JDialog {
             }
             successful = true;
             JOptionPane.showMessageDialog(this,
-                    "Da tao tai khoan thanh cong!\nTen dang nhap: " + username,
+                    "Da tao tai khoan thanh cong!\nTen dang nhap: " + username + "\nMat khau: " + password,
                     "Thong bao", JOptionPane.INFORMATION_MESSAGE);
             dispose();
+
         } else {
-            // UPDATE
             String fullName = txtFullName.getText().trim();
             String email = txtEmail.getText().trim();
             if (fullName.isEmpty()) {
@@ -281,17 +357,17 @@ public class UserFormDialog extends JDialog {
 
             editingUser.setHoTen(fullName);
             editingUser.setEmail(email);
-            editingUser.setHoatDong(chkActive.isSelected());
-            editingUser.setBiKhoa(chkLocked.isSelected());
+            boolean biKhoa = rdoBiKhoa.isSelected();
+            editingUser.setHoatDong(!biKhoa);
+            editingUser.setBiKhoa(biKhoa);
 
             final String roleCode = selectedRoleCode;
             VaiTro selectedRole = authService.getAllRoles().stream()
-                    .filter(r -> r.getCode().equals(roleCode))
-                    .findFirst()
-                    .orElse(null);
+                    .filter(r -> r.getId().equals(roleCode))
+                    .findFirst().orElse(null);
             if (selectedRole != null) {
-                editingUser.getRoles().clear();
-                editingUser.getRoles().add(selectedRole);
+                editingUser.getVaiTros().clear();
+                editingUser.getVaiTros().add(selectedRole);
             }
 
             KetQua<Void> result = authService.updateUser(editingUser);
@@ -301,21 +377,14 @@ public class UserFormDialog extends JDialog {
             }
 
             if (!password.isEmpty()) {
-                JOptionPane.showMessageDialog(this,
-                        "Thong tin tai khoan da duoc cap nhat.\nDe doi mat khau, su dung chuc nang Doi mat khau trong Cai dat.",
-                        "Thong bao", JOptionPane.INFORMATION_MESSAGE);
-            } else {
-                JOptionPane.showMessageDialog(this,
-                        "Da cap nhat tai khoan thanh cong!",
-                        "Thong bao", JOptionPane.INFORMATION_MESSAGE);
+                authService.resetPassword(editingUser.getId(), password);
             }
 
+            JOptionPane.showMessageDialog(this, "Da cap nhat tai khoan thanh cong!", "Thong bao", JOptionPane.INFORMATION_MESSAGE);
             successful = true;
             dispose();
         }
     }
 
-    public boolean isSuccessful() {
-        return successful;
-    }
+    public boolean isSuccessful() { return successful; }
 }

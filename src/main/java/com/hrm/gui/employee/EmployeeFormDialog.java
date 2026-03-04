@@ -45,6 +45,9 @@ public class EmployeeFormDialog extends JDialog {
     private JTextField txtDiaChiThuongTru;
     private JTextField txtQueQuan;
     private JComboBox<String> cboTinhTrangHonNhan;
+    private JTextField txtTrinhDoHocVan;
+    private JTextArea txtKinhNghiem;
+    private JTextField txtFileCV;
 
     /**
      * @param parent  Frame cha
@@ -57,7 +60,7 @@ public class EmployeeFormDialog extends JDialog {
         this.thongTinCaNhan = ttcn != null ? ttcn : new ThongTinCaNhan();
         this.isEdit = nv != null;
 
-        setSize(680, 560);
+        setSize(780, 720);
         setLocationRelativeTo(parent);
         setDefaultCloseOperation(DISPOSE_ON_CLOSE);
         setResizable(false);
@@ -189,6 +192,26 @@ public class EmployeeFormDialog extends JDialog {
         cboTinhTrangHonNhan.setRenderer(new HonNhanRenderer());
         addField(panel, cboTinhTrangHonNhan, gbc, 1, 9);
 
+        // --- NEW FIELDS ---
+        addLabel(panel, "Trinh do hoc van:", gbc, 0, 10);
+        txtTrinhDoHocVan = new JTextField(25);
+        addField(panel, txtTrinhDoHocVan, gbc, 1, 10);
+
+        addLabel(panel, "File CV (Link/Ten):", gbc, 0, 11);
+        txtFileCV = new JTextField(25);
+        addField(panel, txtFileCV, gbc, 1, 11);
+
+        addLabel(panel, "Kinh nghiem:", gbc, 0, 12);
+        txtKinhNghiem = new JTextArea(3, 25);
+        txtKinhNghiem.setFont(new Font("Segoe UI", Font.PLAIN, 14));
+        txtKinhNghiem.setLineWrap(true);
+        txtKinhNghiem.setWrapStyleWord(true);
+        JScrollPane scrollKinhNghiem = new JScrollPane(txtKinhNghiem);
+        scrollKinhNghiem.setPreferredSize(new Dimension(300, 60));
+        gbc.gridx = 1; gbc.gridy = 12; gbc.fill = GridBagConstraints.BOTH;
+        panel.add(scrollKinhNghiem, gbc);
+        gbc.fill = GridBagConstraints.HORIZONTAL;
+
         return panel;
     }
 
@@ -242,6 +265,9 @@ public class EmployeeFormDialog extends JDialog {
         if (thongTinCaNhan.getTinhTrangHonNhan() != null) {
             cboTinhTrangHonNhan.setSelectedItem(thongTinCaNhan.getTinhTrangHonNhan());
         }
+        txtTrinhDoHocVan.setText(thongTinCaNhan.getTrinhDoHocVan() != null ? thongTinCaNhan.getTrinhDoHocVan() : "");
+        txtFileCV.setText(thongTinCaNhan.getFileCV() != null ? thongTinCaNhan.getFileCV() : "");
+        txtKinhNghiem.setText(thongTinCaNhan.getKinhNghiem() != null ? thongTinCaNhan.getKinhNghiem() : "");
     }
 
     private void prefillNew() {
@@ -274,6 +300,11 @@ public class EmployeeFormDialog extends JDialog {
         String diaChiThuongTru = txtDiaChiThuongTru.getText().trim();
         String queQuan = txtQueQuan.getText().trim();
         String tinhTrangHonNhan = (String) cboTinhTrangHonNhan.getSelectedItem();
+        String trinhDoHocVan, kinhNghiem, fileCV;
+        // Collect new fields
+        trinhDoHocVan = txtTrinhDoHocVan.getText().trim();
+        kinhNghiem = txtKinhNghiem.getText().trim();
+        fileCV = txtFileCV.getText().trim();
 
         // Basic validation
         if (maNhanVien.isEmpty()) {
@@ -326,6 +357,9 @@ public class EmployeeFormDialog extends JDialog {
         thongTinCaNhan.setDiaChiThuongTru(diaChiThuongTru.isEmpty() ? null : diaChiThuongTru);
         thongTinCaNhan.setQueQuan(queQuan.isEmpty() ? null : queQuan);
         thongTinCaNhan.setTinhTrangHonNhan(tinhTrangHonNhan);
+        thongTinCaNhan.setTrinhDoHocVan(trinhDoHocVan.isEmpty() ? null : trinhDoHocVan);
+        thongTinCaNhan.setKinhNghiem(kinhNghiem.isEmpty() ? null : kinhNghiem);
+        thongTinCaNhan.setFileCV(fileCV.isEmpty() ? null : fileCV);
 
         if (isEdit) {
             // Update thông tin lao động (chỉ cho phép sửa một số trường)

@@ -1,9 +1,7 @@
 package com.hrm.model;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 public class TaiKhoan {
     private int id;
@@ -15,13 +13,11 @@ public class TaiKhoan {
     private boolean biKhoa;
     private Integer nhanVienId;
     private List<VaiTro> vaiTros;
-    private Map<String, Boolean> ngoaiLeQuyen;
 
     public TaiKhoan() {
         this.hoatDong = true;
         this.biKhoa = false;
         this.vaiTros = new ArrayList<>();
-        this.ngoaiLeQuyen = new HashMap<>();
     }
 
     public TaiKhoan(int id, String tenDangNhap, String matKhau, String hoTen, String email) {
@@ -33,7 +29,6 @@ public class TaiKhoan {
         this.hoatDong = true;
         this.biKhoa = false;
         this.vaiTros = new ArrayList<>();
-        this.ngoaiLeQuyen = new HashMap<>();
     }
 
     public int getId() { return id; }
@@ -52,41 +47,23 @@ public class TaiKhoan {
     public void setBiKhoa(boolean biKhoa) { this.biKhoa = biKhoa; }
     public Integer getNhanVienId() { return nhanVienId; }
     public void setNhanVienId(Integer nhanVienId) { this.nhanVienId = nhanVienId; }
+    public Integer getMaNV() { return nhanVienId; }
+    public void setMaNV(Integer maNV) { this.nhanVienId = maNV; }
     public List<VaiTro> getVaiTros() { return vaiTros; }
     public void setVaiTros(List<VaiTro> vaiTros) { this.vaiTros = vaiTros; }
-    public Map<String, Boolean> getNgoaiLeQuyen() { return ngoaiLeQuyen; }
-    public void setNgoaiLeQuyen(Map<String, Boolean> ngoaiLeQuyen) { this.ngoaiLeQuyen = ngoaiLeQuyen; }
 
     public void themVaiTro(VaiTro vaiTro) {
         if (!vaiTros.contains(vaiTro)) vaiTros.add(vaiTro);
     }
     public void xoaVaiTro(VaiTro vaiTro) { vaiTros.remove(vaiTro); }
-    public void capQuyenNgoaiLe(String maQuyen) { ngoaiLeQuyen.put(maQuyen, true); }
-    public void thuHoiQuyenNgoaiLe(String maQuyen) { ngoaiLeQuyen.put(maQuyen, false); }
-    public void xoaNgoaiLeQuyen(String maQuyen) { ngoaiLeQuyen.remove(maQuyen); }
 
     public boolean coQuyen(String maQuyen) {
-        if (ngoaiLeQuyen.containsKey(maQuyen)) return ngoaiLeQuyen.get(maQuyen);
         return vaiTros.stream().anyMatch(vt -> vt.coQuyen(maQuyen));
     }
-
-    public Boolean trangThaiQuyen(String maQuyen) { return ngoaiLeQuyen.get(maQuyen); }
 
     public boolean coVaiTro(String maVaiTro) {
         return vaiTros.stream().anyMatch(vt -> vt.getId().equals(maVaiTro));
     }
-
-    // Legacy compatibility methods used by GUI/SessionContext
-    public String getUsername() { return tenDangNhap; }
-    public String getPassword() { return matKhau; }
-    public String getFullName() { return hoTen; }
-    public boolean isActive() { return hoatDong; }
-    public boolean isLocked() { return biKhoa; }
-    public Integer getMaNV() { return nhanVienId; }
-    public void setMaNV(Integer maNV) { this.nhanVienId = maNV; }
-    public List<VaiTro> getRoles() { return vaiTros; }
-    public boolean hasPermission(String permissionCode) { return coQuyen(permissionCode); }
-    public boolean hasRole(String roleCode) { return coVaiTro(roleCode); }
 
     public String getTenVaiTros() {
         StringBuilder sb = new StringBuilder();

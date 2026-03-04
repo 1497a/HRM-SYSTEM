@@ -19,10 +19,11 @@ public class Quyen {
     public void setTenQuyen(String tenQuyen) { this.tenQuyen = tenQuyen; }
     public String getNhomQuyen() { return nhomQuyen; }
     public void setNhomQuyen(String nhomQuyen) { this.nhomQuyen = nhomQuyen; }
-
-    // Legacy compatibility
+    /** Alias for getId() */
     public String getCode() { return id; }
+    /** Alias for getTenQuyen() */
     public String getName() { return tenQuyen; }
+    /** Alias for getNhomQuyen() */
     public String getModule() { return nhomQuyen; }
 
     @Override

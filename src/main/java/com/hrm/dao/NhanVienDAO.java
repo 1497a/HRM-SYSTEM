@@ -125,6 +125,68 @@ public class NhanVienDAO {
     }
 
     // ============================
+    // findAllByScope 
+    // ============================
+
+    public List<NhanVien> findAllByScope(com.hrm.model.DataScope scope, int currentUserId) {
+        List<NhanVien> result = new ArrayList<>();
+        if (scope == com.hrm.model.DataScope.NONE) return result;
+
+        String sqlBase = "SELECT n.*, t.hoTen, pb.maPhongBan AS maPhongBanHT, "
+                + "pb.tenPhongBan, cv.tenChucVu "
+                + "FROM NHANVIEN n "
+                + "LEFT JOIN THONGTINCANHAN t ON n.maNV = t.maNV "
+                + "LEFT JOIN BONHIEM b ON n.maNV = b.maNV AND b.trangThai = 'hieu_luc' AND b.loaiBoNhiem = 'chinh' "
+                + "LEFT JOIN PHONGBAN pb ON b.maPhongBan = pb.maPhongBan "
+                + "LEFT JOIN CHUCVU cv ON b.maChucVu = cv.maChucVu ";
+        
+        String sqlCondition = "";
+        switch (scope) {
+            case ALL:
+                sqlCondition = " ORDER BY n.maNV";
+                break;
+            case DEPT:
+                sqlCondition = " WHERE b.maPhongBan = (SELECT b2.maPhongBan FROM BONHIEM b2 WHERE b2.maNV = ? AND b2.trangThai = 'hieu_luc' AND b2.loaiBoNhiem = 'chinh') ORDER BY n.maNV";
+                break;
+            case TEAM:
+                sqlCondition = " WHERE b.maQuanLy = ? OR n.maNV = ? ORDER BY n.maNV";
+                break;
+            case SELF:
+                sqlCondition = " WHERE n.maNV = ? ORDER BY n.maNV";
+                break;
+            default:
+                return result;
+        }
+
+        String finalSql = sqlBase + sqlCondition;
+
+        try (Connection conn = DatabaseConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(finalSql)) {
+            
+            if (scope == com.hrm.model.DataScope.TEAM) {
+                ps.setInt(1, currentUserId);
+                ps.setInt(2, currentUserId);
+            } else if (scope != com.hrm.model.DataScope.ALL) {
+                ps.setInt(1, currentUserId);
+            }
+
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    NhanVien nv = mapRow(rs);
+                    nv.setHoTen(rs.getString("hoTen"));
+                    nv.setMaPhongBanHienTai(rs.getString("maPhongBanHT"));
+                    nv.setTenPhongBanHienTai(rs.getString("tenPhongBan"));
+                    nv.setTenChucVuHienTai(rs.getString("tenChucVu"));
+                    result.add(nv);
+                }
+            }
+        } catch (SQLException e) {
+            throw new RuntimeException("Lỗi tải danh sách nhân viên theo scope: " + e.getMessage(), e);
+        }
+        return result;
+    }
+
+    // ============================
     // findByTrangThai
     // ============================
 
@@ -253,6 +315,40 @@ public class NhanVienDAO {
             throw new RuntimeException("Lỗi kiểm tra maNhanVien: " + e.getMessage(), e);
         }
         return false;
+    }
+
+    // ============================
+    // findNhanVienByMaQuanLy
+    // ============================
+    
+    public List<NhanVien> findNhanVienByMaQuanLy(int maQuanLy) {
+        String sql = "SELECT n.*, t.hoTen, pb.maPhongBan AS maPhongBanHT, "
+                   + "pb.tenPhongBan, cv.tenChucVu "
+                   + "FROM NHANVIEN n "
+                   + "LEFT JOIN THONGTINCANHAN t ON n.maNV = t.maNV "
+                   + "JOIN BONHIEM b ON n.maNV = b.maNV "
+                   + "LEFT JOIN PHONGBAN pb ON b.maPhongBan = pb.maPhongBan "
+                   + "LEFT JOIN CHUCVU cv ON b.maChucVu = cv.maChucVu "
+                   + "WHERE b.trangThai = 'hieu_luc' AND b.maQuanLy = ? "
+                   + "ORDER BY n.maNV";
+        List<NhanVien> result = new ArrayList<>();
+        try (Connection conn = DatabaseConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setInt(1, maQuanLy);
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    NhanVien nv = mapRow(rs);
+                    nv.setHoTen(rs.getString("hoTen"));
+                    nv.setMaPhongBanHienTai(rs.getString("maPhongBanHT"));
+                    nv.setTenPhongBanHienTai(rs.getString("tenPhongBan"));
+                    nv.setTenChucVuHienTai(rs.getString("tenChucVu"));
+                    result.add(nv);
+                }
+            }
+        } catch (SQLException e) {
+            throw new RuntimeException("Lỗi tìm nhân viên theo quản lý: " + e.getMessage(), e);
+        }
+        return result;
     }
 
     // ============================

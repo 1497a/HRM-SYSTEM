@@ -2,14 +2,14 @@ package com.hrm.bus;
 
 import com.hrm.model.BoNhiem;
 import com.hrm.model.NhanVien;
-import com.hrm.model.ChucVu;
 import com.hrm.model.ThongTinCaNhan;
 import com.hrm.model.TaiKhoan;
+import com.hrm.model.VaiTro;
 import com.hrm.dao.BoNhiemDAO;
 import com.hrm.dao.NhanVienDAO;
-import com.hrm.dao.ChucVuDAO;
 import com.hrm.dao.ThongTinCaNhanDAO;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
@@ -24,7 +24,6 @@ public class BoNhiemBUS {
 
     private final BoNhiemDAO boNhiemRepo = BoNhiemDAO.getInstance();
     private final NhanVienDAO nvRepo = NhanVienDAO.getInstance();
-    private final ChucVuDAO positionRepo = new ChucVuDAO();
     private final ThongTinCaNhanDAO ttcnRepo = ThongTinCaNhanDAO.getInstance();
 
     private BoNhiemBUS() {
@@ -169,6 +168,11 @@ public class BoNhiemBUS {
         return boNhiemRepo.findAll();
     }
 
+    public List<BoNhiem> getAllByScope(int currentUserId) {
+        com.hrm.model.DataScope scope = XacThucBUS.getInstance().getScopeForAction("APPOINTMENT_VIEW");
+        return boNhiemRepo.findAllByScope(scope, currentUserId);
+    }
+
     public List<BoNhiem> getChoDuyet() {
         return boNhiemRepo.findChoDuyet();
     }
@@ -182,6 +186,36 @@ public class BoNhiemBUS {
     }
 
     // ============================
+    // ketThucBoNhiem
+    // ============================
+
+    public KetQua<BoNhiem> ketThucBoNhiem(int maBoNhiem, LocalDate denNgay) {
+        if (denNgay == null) {
+            return KetQua.error("Vui lòng chọn ngày kết thúc.");
+        }
+        List<BoNhiem> all = boNhiemRepo.findAll();
+        BoNhiem bn = null;
+        for (BoNhiem b : all) {
+            if (b.getMaBoNhiem() == maBoNhiem) { bn = b; break; }
+        }
+        if (bn == null) {
+            return KetQua.error("Không tìm thấy bổ nhiệm.");
+        }
+        if (!"hieu_luc".equals(bn.getTrangThai())) {
+            return KetQua.error("Chỉ có thể kết thúc bổ nhiệm đang hiệu lực.");
+        }
+        if (bn.getTuNgay() != null && !denNgay.isAfter(bn.getTuNgay())) {
+            return KetQua.error("Ngày kết thúc phải sau ngày bắt đầu (" + bn.getTuNgay() + ").");
+        }
+        try {
+            boNhiemRepo.endBoNhiem(maBoNhiem, denNgay);
+            return KetQua.success(null, "Đã kết thúc bổ nhiệm #" + maBoNhiem + ".");
+        } catch (Exception e) {
+            return KetQua.error("Lỗi kết thúc bổ nhiệm: " + e.getMessage());
+        }
+    }
+
+    // ============================
     // autoTaoTaiKhoanVaVaiTro (private helper)
     // ============================
 
@@ -191,14 +225,12 @@ public class BoNhiemBUS {
         if (nv == null) return;
 
         // Bước 1: Xác định vai trò từ chức vụ
-        String maChucVu = bn.getChucVuId();
-        ChucVu pos = positionRepo.findById(maChucVu);
-        String roleCode = "ROLE_" + maChucVu.toUpperCase();
-        String roleName = (pos != null) ? pos.getTenChucVu() : maChucVu;
+        String roleCode = resolveDefaultRoleCode(authService);
 
         // Tạo vai trò nếu chưa có
-        if (authService.getRoleByCode(roleCode) == null) {
-            authService.createRole(roleCode, roleName, "Tu dong tao khi phe duyet bo nhiem");
+        if (roleCode == null || roleCode.trim().isEmpty()) {
+            System.err.println("Canh bao: Khong tim thay vai tro mac dinh de tao tai khoan.");
+            return;
         }
 
         // Bước 2: Kiểm tra tài khoản nhân viên
@@ -218,7 +250,26 @@ public class BoNhiemBUS {
             authService.createUser(username, password, bn.getMaNV(), roleCode, email);
         } else {
             // Tài khoản đã tồn tại: cập nhật vai trò
-            authService.assignRoleToUser(existingUser.getId(), roleCode);
+            // Giu nguyen vai tro hien tai cua tai khoan.
         }
     }
+
+    private String resolveDefaultRoleCode(XacThucBUS authService) {
+        List<VaiTro> roles = authService.getAllRoles();
+        if (roles == null || roles.isEmpty()) return null;
+
+        for (VaiTro role : roles) {
+            if (role != null && "NHAN_VIEN".equalsIgnoreCase(role.getId())) return role.getId();
+        }
+        for (VaiTro role : roles) {
+            if (role != null && "EMPLOYEE".equalsIgnoreCase(role.getId())) return role.getId();
+        }
+        for (VaiTro role : roles) {
+            if (role != null && role.getId() != null && !"ADMIN".equalsIgnoreCase(role.getId())) {
+                return role.getId();
+            }
+        }
+        return roles.get(0).getId();
+    }
+
 }

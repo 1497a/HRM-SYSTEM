@@ -242,6 +242,21 @@ public class EmployeeDetailPanel extends JDialog {
             addInfoRow(ttcnPanel, 8, "Que quan:",         safe(thongTinCaNhan.getQueQuan()));
             addInfoRow(ttcnPanel, 9, "Tinh trang hon nhan:",
                     formatHonNhan(thongTinCaNhan.getTinhTrangHonNhan()));
+            addInfoRow(ttcnPanel, 10, "Trinh do hoc van:",
+                    safe(thongTinCaNhan.getTrinhDoHocVan()));
+            addInfoRow(ttcnPanel, 11, "File CV:",
+                    safe(thongTinCaNhan.getFileCV()));
+            
+            // For kinh nghiem, use a JTextArea wrapped in JScrollPane if it's long, or just standard row if short
+            String exp = safe(thongTinCaNhan.getKinhNghiem());
+            JTextArea tExp = new JTextArea(exp);
+            tExp.setEditable(false);
+            tExp.setLineWrap(true);
+            tExp.setWrapStyleWord(true);
+            tExp.setBackground(UIColors.WHITE);
+            tExp.setFont(new Font("Segoe UI", Font.PLAIN, 13));
+            tExp.setBorder(BorderFactory.createEmptyBorder(2, 0, 2, 0));
+            addInfoRow(ttcnPanel, 12, "Kinh nghiem:", tExp);
         } else {
             JLabel noData = new JLabel("  Khong co thong tin ca nhan.");
             noData.setFont(new Font("Segoe UI", Font.ITALIC, 13));

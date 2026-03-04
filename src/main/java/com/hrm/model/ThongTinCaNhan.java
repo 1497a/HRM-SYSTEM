@@ -19,6 +19,9 @@ public class ThongTinCaNhan {
     private String diaChiThuongTru;
     private String queQuan;
     private String tinhTrangHonNhan; // "doc_than", "da_ket_hon", "ly_hon"
+    private String fileCV;
+    private String trinhDoHocVan;
+    private String kinhNghiem;
 
     public ThongTinCaNhan() {
     }
@@ -130,6 +133,30 @@ public class ThongTinCaNhan {
 
     public void setTinhTrangHonNhan(String tinhTrangHonNhan) {
         this.tinhTrangHonNhan = tinhTrangHonNhan;
+    }
+
+    public String getFileCV() {
+        return fileCV;
+    }
+
+    public void setFileCV(String fileCV) {
+        this.fileCV = fileCV;
+    }
+
+    public String getTrinhDoHocVan() {
+        return trinhDoHocVan;
+    }
+
+    public void setTrinhDoHocVan(String trinhDoHocVan) {
+        this.trinhDoHocVan = trinhDoHocVan;
+    }
+
+    public String getKinhNghiem() {
+        return kinhNghiem;
+    }
+
+    public void setKinhNghiem(String kinhNghiem) {
+        this.kinhNghiem = kinhNghiem;
     }
 
     @Override
