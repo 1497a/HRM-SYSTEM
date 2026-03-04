@@ -253,6 +253,17 @@ public class LeaveListPanel extends JPanel {
     }
 
     private void createRequest() {
+        if (currentUser.getNhanVienId() == null) {
+            String message = currentUser.coVaiTro("ADMIN")
+                    ? "Tai khoan admin khong can tao yeu cau nghi phep."
+                    : "Tai khoan cua ban chua gan ma nhan vien nen khong the tao don nghi phep.";
+            JOptionPane.showMessageDialog(this,
+                    message,
+                    "Thong bao",
+                    JOptionPane.INFORMATION_MESSAGE);
+            return;
+        }
+
         LeaveCreateDialog dialog = new LeaveCreateDialog(
                 (Frame) SwingUtilities.getWindowAncestor(this));
         dialog.setVisible(true);

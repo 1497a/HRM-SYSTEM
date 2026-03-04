@@ -4,7 +4,9 @@ import com.hrm.model.*;
 import com.hrm.dao.DanhGiaDAO;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 /**
  * Performance Evaluation Service
@@ -105,6 +107,10 @@ public class DanhGiaBUS {
         return repository.getAllCriteria();
     }
 
+    public List<TieuChiDanhGia> getCriteriaByCycle(int cycleId) {
+        return repository.findCriteriaByDot(cycleId);
+    }
+
     public KetQua<TieuChiDanhGia> saveCriteria(String name, String description, int weight) {
         if (name == null || name.trim().isEmpty()) {
             return KetQua.error("Ten tieu chi khong duoc de trong");
@@ -188,6 +194,20 @@ public class DanhGiaBUS {
         for (ChiTietDanhGia score : scores) {
             if (score.getScore() < 1 || score.getScore() > 10) {
                 return KetQua.error("Diem phai tu 1 den 10");
+            }
+        }
+
+        List<TieuChiDanhGia> cycleCriteria = repository.findCriteriaByDot(cycleId);
+        if (cycleCriteria == null || cycleCriteria.isEmpty()) {
+            return KetQua.error("Dot danh gia chua duoc cau hinh tieu chi");
+        }
+        Set<Integer> cycleCriteriaIds = new HashSet<>();
+        for (TieuChiDanhGia c : cycleCriteria) {
+            cycleCriteriaIds.add(c.getId());
+        }
+        for (ChiTietDanhGia score : scores) {
+            if (!cycleCriteriaIds.contains(score.getCriteriaId())) {
+                return KetQua.error("Danh sach diem co tieu chi khong thuoc dot danh gia");
             }
         }
 

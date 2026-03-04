@@ -1,121 +1,121 @@
--- =====================================================
--- HRM SAMPLE DATA V2 - Du lieu mau hoan chinh & logic
--- Chay sau hrm_database.sql
+﻿-- =====================================================
+-- HRM SAMPLE DATA V2 - Dữ liệu mẫu hoàn chỉnh & logic
+-- Chạy sau hrm_database.sql
 -- =====================================================
 USE hrm_db;
 
 -- =====================================================
--- 1. PHONG BAN - Co cau to chuc day du co phan cap
+-- 1. PHONG BAN - Cơ cấu tổ chức đầy đủ có phân cấp
 -- =====================================================
--- Xoa data mac dinh va tao lai day du
+-- Xóa data mặc định và tạo lại đầy đủ
 DELETE FROM PHONGBAN;
 
 INSERT INTO PHONGBAN (maPhongBan, tenPhongBan, phongBanCha, moTa, trangThai) VALUES
--- Cap cong ty
-('CONGTY',    'Cong ty TNHH ABC Technology',    NULL,       'Cong ty cong nghe phan mem va giai phap CNTT',              'hoatDong'),
--- Cap phong ban chinh
-('PHONGLD',   'Phong Lanh dao',                  'CONGTY',   'Ban giam doc va lanh dao cap cao',                          'hoatDong'),
-('PHONGNS',   'Phong Nhan su',                   'CONGTY',   'Quan ly nhan su, tuyen dung, luong thuong',                 'hoatDong'),
-('PHONGKT',   'Phong Ke toan - Tai chinh',       'CONGTY',   'Quan ly tai chinh, ke toan, thue',                         'hoatDong'),
-('PHONGKD',   'Phong Kinh doanh',                'CONGTY',   'Phat trien kinh doanh, ban hang, cham soc khach hang',     'hoatDong'),
-('PHONGIT',   'Phong Cong nghe thong tin',       'CONGTY',   'Phat trien phan mem, he thong CNTT, bao mat',              'hoatDong'),
-('PHONGMKT',  'Phong Marketing',                 'CONGTY',   'Truyen thong, quang cao, thuong hieu, digital marketing',  'hoatDong'),
-('PHONGHC',   'Phong Hanh chinh - Tong hop',     'CONGTY',   'Quan ly van phong, hanh chinh, tai san',                   'hoatDong'),
--- Cap team / nhom trong phong IT
-('TEAM_BE',   'Team Backend',                    'PHONGIT',  'Phat trien he thong backend, API, co so du lieu',          'hoatDong'),
-('TEAM_FE',   'Team Frontend',                   'PHONGIT',  'Phat trien giao dien, ung dung web va mobile',             'hoatDong'),
-('TEAM_QA',   'Team QA & Testing',               'PHONGIT',  'Kiem thu phan mem, dam bao chat luong san pham',           'hoatDong'),
--- Cap team trong phong Kinh doanh
-('TEAM_B2B',  'Team Kinh doanh B2B',             'PHONGKD',  'Phat trien khach hang doanh nghiep',                       'hoatDong'),
-('TEAM_B2C',  'Team Kinh doanh B2C',             'PHONGKD',  'Phat trien khach hang ca nhan, ban le',                    'hoatDong');
+-- Cấp công ty
+('CONGTY',    'Công ty TNHH ABC Technology',    NULL,       'Công ty công nghệ phần mềm và giải pháp CNTT',              'hoatDong'),
+-- Cấp phòng ban chính
+('PHONGLD',   'Phòng Lãnh đạo',                  'CONGTY',   'Ban giám đốc và lãnh đạo cấp cao',                          'hoatDong'),
+('PHONGNS',   'Phòng Nhân sự',                   'CONGTY',   'Quản lý nhân sự, tuyển dụng, lương thưởng',                 'hoatDong'),
+('PHONGKT',   'Phòng Kế toán - Tài chính',       'CONGTY',   'Quản lý tài chính, kế toán, thuế',                         'hoatDong'),
+('PHONGKD',   'Phòng Kinh doanh',                'CONGTY',   'Phát triển kinh doanh, bán hàng, chăm sóc khách hàng',     'hoatDong'),
+('PHONGIT',   'Phòng Công nghệ thông tin',       'CONGTY',   'Phát triển phần mềm, hệ thống CNTT, bảo mật',              'hoatDong'),
+('PHONGMKT',  'Phòng Marketing',                 'CONGTY',   'Truyền thông, quảng cáo, thương hiệu, digital marketing',  'hoatDong'),
+('PHONGHC',   'Phòng Hành chính - Tổng hợp',     'CONGTY',   'Quản lý văn phòng, hành chính, tài sản',                   'hoatDong'),
+-- Cấp team / nhóm trong phòng IT
+('TEAM_BE',   'Team Backend',                    'PHONGIT',  'Phát triển hệ thống backend, API, cơ sở dữ liệu',          'hoatDong'),
+('TEAM_FE',   'Team Frontend',                   'PHONGIT',  'Phát triển giao diện, ứng dụng web và mobile',             'hoatDong'),
+('TEAM_QA',   'Team QA & Testing',               'PHONGIT',  'Kiểm thử phần mềm, đảm bảo chất lượng sản phẩm',           'hoatDong'),
+-- Cấp team trong phòng Kinh doanh
+('TEAM_B2B',  'Team Kinh doanh B2B',             'PHONGKD',  'Phát triển khách hàng doanh nghiệp',                       'hoatDong'),
+('TEAM_B2C',  'Team Kinh doanh B2C',             'PHONGKD',  'Phát triển khách hàng cá nhân, bán lẻ',                    'hoatDong');
 
 -- =====================================================
--- 2. CHUC VU - Day du cac cap bac & chuyen mon
+-- 2. CHUC VU - Đầy đủ các cấp bậc & chuyên môn
 -- =====================================================
 DELETE FROM CHUCVU;
 
 INSERT INTO CHUCVU (maChucVu, tenChucVu, capBac, heSoLuong, phuCapChucVu, moTa, trangThai) VALUES
--- Cap lanh dao
-('GD',         'Giam doc',                    1,  5.50, 15000000, 'Giam doc dieu hanh (CEO)',                   'hoatDong'),
-('PGD',        'Pho Giam doc',                2,  4.50, 10000000, 'Pho Giam doc phu trach cac mang hoat dong',  'hoatDong'),
-('GD_KD',      'Giam doc Kinh doanh',         2,  4.20,  9000000, 'Giam doc phu trach mang Kinh doanh (CSO)',   'hoatDong'),
-('GD_CN',      'Giam doc Cong nghe',          2,  4.20,  9000000, 'Giam doc phu trach cong nghe (CTO)',         'hoatDong'),
--- Cap truong / pho phong
-('TP',         'Trưởng phòng',                3,  3.20,  5000000, 'Truong don vi cap phong',                    'hoatDong'),
-('PP',         'Pho phong',                   4,  2.70,  3500000, 'Pho truong don vi cap phong',                'hoatDong'),
--- Cap team lead / chuyen vien cao cap
-('TT',         'Truong nhom / Team Lead',     5,  2.20,  2000000, 'Truong nhom ky thuat hoac nghiep vu',        'hoatDong'),
-('CVCC',       'Chuyen vien Cao cap',         5,  2.10,  1500000, 'Nhan vien cap cao co kinh nghiem 5+ nam',    'hoatDong'),
--- Cap nhan vien chuyen mon IT
-('SE_SENIOR',  'Senior Software Engineer',    6,  2.00,  1000000, 'Ky su phan mem cap cao, 3+ nam kinh nghiem', 'hoatDong'),
-('SE_MID',     'Software Engineer',           7,  1.50,   500000, 'Ky su phan mem, 1-3 nam kinh nghiem',        'hoatDong'),
-('SE_JUNIOR',  'Junior Software Engineer',    8,  1.20,   200000, 'Ky su phan mem moi ra truong',               'hoatDong'),
-('QA_SENIOR',  'Senior QA Engineer',          6,  1.80,   800000, 'Ky su kiem thu cap cao',                     'hoatDong'),
-('QA_MID',     'QA Engineer',                 7,  1.40,   300000, 'Ky su kiem thu',                             'hoatDong'),
--- Cap nhan vien chuyen mon khac
-('KTV',        'Ke toan vien',                7,  1.40,   300000, 'Ke toan vien chinh thuc',                    'hoatDong'),
-('KTVT',       'Ke toan vien Tong hop',       6,  1.70,   600000, 'Ke toan tong hop / ke toan truong pho',      'hoatDong'),
-('NV_KD',      'Nhan vien Kinh doanh',        7,  1.30,   200000, 'Nhan vien ban hang va phat trien kinh doanh','hoatDong'),
-('NVCC_KD',    'Chuyen vien Kinh doanh CC',   6,  1.60,   500000, 'Chuyen vien kinh doanh cao cap',             'hoatDong'),
-('NV_MKT',     'Nhan vien Marketing',         7,  1.30,   200000, 'Nhan vien truyen thong va marketing',        'hoatDong'),
-('NV_NS',      'Nhan vien Nhan su',           7,  1.30,   200000, 'Nhan vien quan ly ho so nhan su',            'hoatDong'),
-('NV_HC',      'Nhan vien Hanh chinh',        8,  1.10,   100000, 'Nhan vien hanh chinh van phong',             'hoatDong'),
--- Cap thu viec
-('TV',         'Thu viec',                    10, 0.85,         0, 'Nhan su dang trong thoi gian thu viec',      'hoatDong');
+-- Cấp lãnh đạo
+('GD',         'Giám đốc',                    1,  5.50, 15000000, 'Giám đốc điều hành (CEO)',                   'hoatDong'),
+('PGD',        'Pho Giám đốc',                2,  4.50, 10000000, 'Pho Giám đốc phụ trách cac mang hoat dong',  'hoatDong'),
+('GD_KD',      'Giám đốc Kinh doanh',         2,  4.20,  9000000, 'Giám đốc phụ trách mang Kinh doanh (CSO)',   'hoatDong'),
+('GD_CN',      'Giám đốc Công nghệ',          2,  4.20,  9000000, 'Giám đốc phụ trách cong nghe (CTO)',         'hoatDong'),
+-- Cấp trưởng / phó phòng
+('TP',         'Trưởng phòng',                3,  3.20,  5000000, 'Trưởng đơn vị cấp phòng',                    'hoatDong'),
+('PP',         'Phó phòng',                   4,  2.70,  3500000, 'Phó trưởng đơn vị cấp phòng',                'hoatDong'),
+-- Cấp team lead / chuyên viên cao cấp
+('TT',         'Trưởng nhóm / Team Lead',     5,  2.20,  2000000, 'Trưởng nhóm kỹ thuật hoặc nghiệp vụ',        'hoatDong'),
+('CVCC',       'Chuyên viên Cao cấp',         5,  2.10,  1500000, 'Nhân viên cấp cao có kinh nghiệm 5+ năm',    'hoatDong'),
+-- Cấp nhân viên chuyên môn IT
+('SE_SENIOR',  'Senior Software Engineer',    6,  2.00,  1000000, 'Kỹ sư phần mềm cấp cao, 3+ năm kinh nghiệm', 'hoatDong'),
+('SE_MID',     'Software Engineer',           7,  1.50,   500000, 'Kỹ sư phần mềm, 1-3 năm kinh nghiệm',        'hoatDong'),
+('SE_JUNIOR',  'Junior Software Engineer',    8,  1.20,   200000, 'Kỹ sư phần mềm mới ra trường',               'hoatDong'),
+('QA_SENIOR',  'Senior QA Engineer',          6,  1.80,   800000, 'Kỹ sư kiểm thử cấp cao',                     'hoatDong'),
+('QA_MID',     'QA Engineer',                 7,  1.40,   300000, 'Kỹ sư kiểm thử',                             'hoatDong'),
+-- Cấp nhân viên chuyên môn khác
+('KTV',        'Kế toán viên',                7,  1.40,   300000, 'Kế toán viên chính thức',                    'hoatDong'),
+('KTVT',       'Kế toán viên Tổng hợp',       6,  1.70,   600000, 'Kế toán tổng hợp / kế toán trưởng phó',      'hoatDong'),
+('NV_KD',      'Nhân viên Kinh doanh',        7,  1.30,   200000, 'Nhân viên bán hàng và phát triển kinh doanh','hoatDong'),
+('NVCC_KD',    'Chuyên viên Kinh doanh CC',   6,  1.60,   500000, 'Chuyên viên kinh doanh cao cấp',             'hoatDong'),
+('NV_MKT',     'Nhân viên Marketing',         7,  1.30,   200000, 'Nhân viên truyền thông và marketing',        'hoatDong'),
+('NV_NS',      'Nhân viên Nhân sự',           7,  1.30,   200000, 'Nhân viên quản lý hồ sơ nhân sự',            'hoatDong'),
+('NV_HC',      'Nhân viên Hành chính',        8,  1.10,   100000, 'Nhân viên hành chính văn phòng',             'hoatDong'),
+-- Cấp thử việc
+('TV',         'Thử việc',                    10, 0.85,         0, 'Nhân sự đang trong thời gian thử việc',      'hoatDong');
 
 -- =====================================================
--- 3. NHAN VIEN - 35 nhan vien, phan bo hop ly
+-- 3. NHAN VIEN - 35 nhan vien, phân bổ hợp lý
 -- =====================================================
 INSERT INTO NHANVIEN (maNhanVien, loaiHopDong, ngayVaoLam, trangThai, ghiChu) VALUES
--- Lanh dao (5)
-('NV001', 'khong_xac_dinh',    '2015-01-05', 'dang_lam_viec', 'Giam doc cong ty'),
-('NV002', 'khong_xac_dinh',    '2015-06-01', 'dang_lam_viec', 'Pho Giam doc'),
-('NV003', 'khong_xac_dinh',    '2016-03-01', 'dang_lam_viec', 'Giam doc Kinh doanh'),
-('NV004', 'khong_xac_dinh',    '2016-09-01', 'dang_lam_viec', 'Giam doc Cong nghe - CTO'),
--- Phong Nhan su (5)
-('NV005', 'khong_xac_dinh',    '2017-02-01', 'dang_lam_viec', 'Truong phong Nhan su'),
-('NV006', 'khong_xac_dinh',    '2018-05-01', 'dang_lam_viec', 'Pho phong Nhan su'),
+-- Lãnh đạo (5)
+('NV001', 'khong_xac_dinh',    '2015-01-05', 'dang_lam_viec', 'Giám đốc công ty'),
+('NV002', 'khong_xac_dinh',    '2015-06-01', 'dang_lam_viec', 'Pho Giám đốc'),
+('NV003', 'khong_xac_dinh',    '2016-03-01', 'dang_lam_viec', 'Giám đốc Kinh doanh'),
+('NV004', 'khong_xac_dinh',    '2016-09-01', 'dang_lam_viec', 'Giám đốc Công nghệ - CTO'),
+-- Phòng Nhân sự (5)
+('NV005', 'khong_xac_dinh',    '2017-02-01', 'dang_lam_viec', 'Trưởng phòng Nhân sự'),
+('NV006', 'khong_xac_dinh',    '2018-05-01', 'dang_lam_viec', 'Phó phòng Nhân sự'),
 ('NV007', 'xac_dinh_thoi_han', '2020-08-01', 'dang_lam_viec', NULL),
 ('NV008', 'xac_dinh_thoi_han', '2021-11-01', 'dang_lam_viec', NULL),
-('NV009', 'thu_viec',          '2025-12-01', 'dang_lam_viec', 'Dang thu viec NS'),
--- Phong Ke toan (5)
-('NV010', 'khong_xac_dinh',    '2017-04-01', 'dang_lam_viec', 'Truong phong Ke toan'),
-('NV011', 'khong_xac_dinh',    '2018-09-01', 'dang_lam_viec', 'Pho phong Ke toan'),
+('NV009', 'thu_viec',          '2025-12-01', 'dang_lam_viec', 'Đang thử việc NS'),
+-- Phòng Kế toán (5)
+('NV010', 'khong_xac_dinh',    '2017-04-01', 'dang_lam_viec', 'Trưởng phòng Kế toán'),
+('NV011', 'khong_xac_dinh',    '2018-09-01', 'dang_lam_viec', 'Phó phòng Kế toán'),
 ('NV012', 'xac_dinh_thoi_han', '2020-03-01', 'dang_lam_viec', NULL),
 ('NV013', 'xac_dinh_thoi_han', '2021-07-01', 'dang_lam_viec', NULL),
 ('NV014', 'xac_dinh_thoi_han', '2023-01-01', 'dang_lam_viec', NULL),
--- Phong Kinh doanh (7)
-('NV015', 'khong_xac_dinh',    '2017-07-01', 'dang_lam_viec', 'Truong phong Kinh doanh'),
+-- Phòng Kinh doanh (7)
+('NV015', 'khong_xac_dinh',    '2017-07-01', 'dang_lam_viec', 'Trưởng phòng Kinh doanh'),
 ('NV016', 'khong_xac_dinh',    '2019-02-01', 'dang_lam_viec', 'Team Lead B2B'),
 ('NV017', 'xac_dinh_thoi_han', '2020-06-01', 'dang_lam_viec', NULL),
 ('NV018', 'xac_dinh_thoi_han', '2021-09-01', 'dang_lam_viec', NULL),
 ('NV019', 'xac_dinh_thoi_han', '2022-04-01', 'dang_lam_viec', NULL),
 ('NV020', 'xac_dinh_thoi_han', '2023-03-01', 'dang_lam_viec', NULL),
-('NV021', 'thu_viec',          '2025-11-01', 'dang_lam_viec', 'Dang thu viec KD'),
--- Phong IT - Team Backend (5)
-('NV022', 'khong_xac_dinh',    '2018-01-15', 'dang_lam_viec', 'Truong phong IT'),
+('NV021', 'thu_viec',          '2025-11-01', 'dang_lam_viec', 'Đang thử việc KD'),
+-- Phòng IT - Team Backend (5)
+('NV022', 'khong_xac_dinh',    '2018-01-15', 'dang_lam_viec', 'Trưởng phòng IT'),
 ('NV023', 'khong_xac_dinh',    '2019-08-01', 'dang_lam_viec', 'Team Lead Backend'),
 ('NV024', 'xac_dinh_thoi_han', '2020-10-01', 'dang_lam_viec', NULL),
 ('NV025', 'xac_dinh_thoi_han', '2022-02-01', 'dang_lam_viec', NULL),
 ('NV026', 'xac_dinh_thoi_han', '2023-06-01', 'dang_lam_viec', NULL),
--- Phong IT - Team Frontend (4)
+-- Phòng IT - Team Frontend (4)
 ('NV027', 'khong_xac_dinh',    '2019-11-01', 'dang_lam_viec', 'Team Lead Frontend'),
 ('NV028', 'xac_dinh_thoi_han', '2021-04-01', 'dang_lam_viec', NULL),
 ('NV029', 'xac_dinh_thoi_han', '2022-09-01', 'dang_lam_viec', NULL),
-('NV030', 'thu_viec',          '2025-10-01', 'dang_lam_viec', 'Dang thu viec FE'),
--- Phong IT - Team QA (3)
+('NV030', 'thu_viec',          '2025-10-01', 'dang_lam_viec', 'Đang thử việc FE'),
+-- Phòng IT - Team QA (3)
 ('NV031', 'khong_xac_dinh',    '2020-01-01', 'dang_lam_viec', 'Team Lead QA'),
 ('NV032', 'xac_dinh_thoi_han', '2021-12-01', 'dang_lam_viec', NULL),
--- Phong Marketing (3)
-('NV033', 'khong_xac_dinh',    '2018-07-01', 'dang_lam_viec', 'Truong phong Marketing'),
+-- Phòng Marketing (3)
+('NV033', 'khong_xac_dinh',    '2018-07-01', 'dang_lam_viec', 'Trưởng phòng Marketing'),
 ('NV034', 'xac_dinh_thoi_han', '2021-03-01', 'dang_lam_viec', NULL),
-('NV035', 'xac_dinh_thoi_han', '2022-08-01', 'tam_nghi',      'Dang nghi thai san tu 2025-11-01');
+('NV035', 'xac_dinh_thoi_han', '2022-08-01', 'tam_nghi',      'Đang nghỉ thai sản từ 2025-11-01');
 
 -- =====================================================
--- 4. THONG TIN CA NHAN
+-- 4. THÔNG TIN CÁ NHÂN
 -- =====================================================
 INSERT INTO THONGTINCANHAN (maNV, hoTen, ngaySinh, gioiTinh, cccd, dienThoai, email, diaChi, diaChiThuongTru, queQuan, danToc, tonGiao, tinhTrangHonNhan) VALUES
--- Lanh dao
+-- Lãnh đạo
 (1,  'Nguyen Duc Hung',      '1978-05-12', 'nam', '001078005121', '0901000001', 'hung.nguyen@abctech.vn',    '10 Le Duan, Q1, TP.HCM',           '10 Le Duan, Q1, TP.HCM',        'Ha Noi',      'Kinh', 'Khong', 'da_ket_hon'),
 (2,  'Tran Thi Minh Chau',   '1980-09-20', 'nu',  '001080009201', '0901000002', 'chau.tran@abctech.vn',      '35 Nguyen Du, Q1, TP.HCM',          '35 Nguyen Du, Q1, TP.HCM',       'TP.HCM',     'Kinh', 'Khong', 'da_ket_hon'),
 (3,  'Le Quang Khai',        '1979-03-15', 'nam', '079079003151', '0901000003', 'khai.le@abctech.vn',        '55 Hai Ba Trung, Q3, TP.HCM',       '55 Hai Ba Trung, Q3, TP.HCM',    'Da Nang',    'Kinh', 'Khong', 'da_ket_hon'),
@@ -140,56 +140,56 @@ INSERT INTO THONGTINCANHAN (maNV, hoTen, ngaySinh, gioiTinh, cccd, dienThoai, em
 (19, 'Vu Duc Manh',          '1995-04-08', 'nam', '079095004081', '0901000019', 'manh.vu@abctech.vn',        '44 Bui Thi Xuan, Q1, TP.HCM',       '44 Bui Thi Xuan, Q1, TP.HCM',    'Thanh Hoa',  'Kinh', 'Khong', 'doc_than'),
 (20, 'Doan Thi Phuong Thao', '1997-10-22', 'nu',  '079097010221', '0901000020', 'phuongthao.doan@abctech.vn','33 Ly Chinh Thang, Q3, TP.HCM',     '33 Ly Chinh Thang, Q3, TP.HCM',  'Long An',    'Kinh', 'Khong', 'doc_than'),
 (21, 'Cao Van Phuc',          '2000-02-28', 'nam', '079100002281', '0901000021', 'phuc.cao@abctech.vn',       '77 Dien Bien Phu, BT, TP.HCM',      '77 Dien Bien Phu, BT, TP.HCM',   'TP.HCM',     'Kinh', 'Khong', 'doc_than'),
--- Phong IT Backend
+-- Phòng IT Backend
 (22, 'Dinh Quang Son',       '1982-08-30', 'nam', '079082008301', '0901000022', 'son.dinh@abctech.vn',       '10 Nguyen Van Cu, Q5, TP.HCM',      '10 Nguyen Van Cu, Q5, TP.HCM',   'Hai Phong',  'Kinh', 'Khong', 'da_ket_hon'),
 (23, 'Nguyen Van Khoa',      '1990-04-05', 'nam', '079090004051', '0901000023', 'khoa.nguyen@abctech.vn',    '26 Truong Dinh, Q3, TP.HCM',        '26 Truong Dinh, Q3, TP.HCM',     'Quang Ngai', 'Kinh', 'Khong', 'da_ket_hon'),
 (24, 'Tran Thi Mai Trang',   '1992-11-14', 'nu',  '079092011141', '0901000024', 'maitrang.tran@abctech.vn',  '55 Nguyen Thi Minh Khai, Q3',       '55 Nguyen Thi Minh Khai, Q3',    'Khanh Hoa',  'Kinh', 'Khong', 'da_ket_hon'),
 (25, 'Hoang Minh Tri',       '1995-07-01', 'nam', '079095007011', '0901000025', 'tri.hoang@abctech.vn',      '38 Vo Van Tan, Q3, TP.HCM',         '38 Vo Van Tan, Q3, TP.HCM',      'Ha Noi',     'Kinh', 'Khong', 'doc_than'),
 (26, 'Le Thi Quynh Nhu',     '1998-03-20', 'nu',  '079098003201', '0901000026', 'quynhnhu.le@abctech.vn',    '19 Doan Thi Diem, PN, TP.HCM',      '19 Doan Thi Diem, PN, TP.HCM',   'Tay Ninh',   'Kinh', 'Khong', 'doc_than'),
--- Phong IT Frontend
+-- Phòng IT Frontend
 (27, 'Ngo Thanh Long',       '1991-09-18', 'nam', '079091009181', '0901000027', 'long.ngo@abctech.vn',       '5 Tran Quy Cap, BT, TP.HCM',        '5 Tran Quy Cap, BT, TP.HCM',     'TP.HCM',     'Kinh', 'Khong', 'da_ket_hon'),
 (28, 'Bui Thi Hong Van',     '1994-06-11', 'nu',  '079094006111', '0901000028', 'hongvan.bui@abctech.vn',    '63 Nguyen Gia Tri, BT, TP.HCM',     '63 Nguyen Gia Tri, BT, TP.HCM',  'Dong Nai',   'Kinh', 'Khong', 'doc_than'),
 (29, 'Pham Ngoc Duy',        '1997-01-25', 'nam', '079097001251', '0901000029', 'duy.pham@abctech.vn',       '101 Cach Mang Thang 8, Q3',         '101 Cach Mang Thang 8, Q3',      'Binh Thuan', 'Kinh', 'Khong', 'doc_than'),
 (30, 'Vo Thi Cam Tu',        '2001-08-07', 'nu',  '079101008071', '0901000030', 'camtu.vo@abctech.vn',       '25 Dinh Tien Hoang, BT, TP.HCM',    '25 Dinh Tien Hoang, BT, TP.HCM', 'TP.HCM',     'Kinh', 'Khong', 'doc_than'),
--- Phong IT QA
+-- Phòng IT QA
 (31, 'Nguyen Xuan Bach',     '1990-12-22', 'nam', '079090012221', '0901000031', 'bach.nguyen@abctech.vn',    '7 Phan Dinh Phung, PN, TP.HCM',     '7 Phan Dinh Phung, PN, TP.HCM',  'Ha Tinh',    'Kinh', 'Khong', 'da_ket_hon'),
 (32, 'Tran Ngoc Bao',        '1994-04-16', 'nam', '079094004161', '0901000032', 'bao.tran@abctech.vn',       '48 Hoang Viet, Tan Binh, TP.HCM',   '48 Hoang Viet, Tan Binh, TP.HCM','TP.HCM',     'Kinh', 'Khong', 'doc_than'),
--- Phong Marketing
-(33, 'Le Thi Phuong Linh',   '1986-10-09', 'nu',  '079086010091', '0901000033', 'phuonglinh.le@abctech.vn',  '30 Nguyen Trong Tuyen, PN, TP.HCM', '30 Nguyen Trong Tuyen, PN, TP.HCM','TP.HCM',    'Kinh', 'Khong', 'da_ket_hon'),
+-- Phòng Marketing
+(33, 'Le Thi Phuong Linh',   '1986-10-09', 'nu',  '079086010091', '0901000033', 'phuonglinh.le@abctech.vn',  '30 Nguyen Trong Tuyển, PN, TP.HCM', '30 Nguyen Trong Tuyển, PN, TP.HCM','TP.HCM',    'Kinh', 'Khong', 'da_ket_hon'),
 (34, 'Pham Dinh Khang',      '1993-05-04', 'nam', '079093005041', '0901000034', 'khang.pham@abctech.vn',     '52 Phu Nhuan, PN, TP.HCM',          '52 Phu Nhuan, PN, TP.HCM',       'Binh Phuoc', 'Kinh', 'Khong', 'doc_than'),
 (35, 'Cao Thi Hanh',         '1996-02-14', 'nu',  '079096002141', '0901000035', 'hanh.cao@abctech.vn',       '18 Nguyen Kim, Q10, TP.HCM',        '18 Nguyen Kim, Q10, TP.HCM',     'Dong Thap',  'Kinh', 'Khong', 'da_ket_hon');
 
 -- =====================================================
--- 5. BO NHIEM - Lich su bo nhiem day du, co nguoi quyet
+-- 5. BỔ NHIỆM - Lịch sử bổ nhiệm đầy đủ, có người duyệt
 -- =====================================================
 INSERT INTO BONHIEM (maNV, maPhongBan, maChucVu, loaiBoNhiem, tyLeHuongLuong, maQuanLy, nguoiDuyet, tuNgay, trangThai, lyDo) VALUES
--- Lanh dao cong ty
-(1,  'PHONGLD',  'GD',        'chinh', 100.00, NULL, NULL, '2015-01-05', 'hieu_luc', 'Bo nhiem Giam doc dieu hanh'),
-(2,  'PHONGLD',  'PGD',       'chinh', 100.00, 1,    1,    '2015-06-01', 'hieu_luc', 'Bo nhiem Pho Giam doc'),
-(3,  'PHONGKD',  'GD_KD',     'chinh', 100.00, 1,    1,    '2016-03-01', 'hieu_luc', 'Bo nhiem Giam doc Kinh doanh'),
-(4,  'PHONGIT',  'GD_CN',     'chinh', 100.00, 1,    1,    '2016-09-01', 'hieu_luc', 'Bo nhiem Giam doc Cong nghe / CTO'),
+-- Lãnh đạo công ty
+(1,  'PHONGLD',  'GD',        'chinh', 100.00, NULL, NULL, '2015-01-05', 'hieu_luc', 'Bổ nhiệm Giám đốc điều hành'),
+(2,  'PHONGLD',  'PGD',       'chinh', 100.00, 1,    1,    '2015-06-01', 'hieu_luc', 'Bổ nhiệm Pho Giám đốc'),
+(3,  'PHONGKD',  'GD_KD',     'chinh', 100.00, 1,    1,    '2016-03-01', 'hieu_luc', 'Bổ nhiệm Giám đốc Kinh doanh'),
+(4,  'PHONGIT',  'GD_CN',     'chinh', 100.00, 1,    1,    '2016-09-01', 'hieu_luc', 'Bổ nhiệm Giám đốc Công nghệ / CTO'),
 -- Phong NS
-(5,  'PHONGNS',  'TP',        'chinh', 100.00, 2,    1,    '2017-02-01', 'hieu_luc', 'Bo nhiem Truong phong Nhan su'),
-(6,  'PHONGNS',  'PP',        'chinh', 100.00, 5,    1,    '2018-05-01', 'hieu_luc', 'Bo nhiem Pho phong Nhan su'),
-(7,  'PHONGNS',  'NV_NS',     'chinh', 100.00, 5,    1,    '2020-08-01', 'hieu_luc', 'Nhan vien Nhan su'),
-(8,  'PHONGNS',  'NV_NS',     'chinh', 100.00, 5,    1,    '2021-11-01', 'hieu_luc', 'Nhan vien Nhan su'),
-(9,  'PHONGNS',  'TV',        'chinh', 100.00, 5,    1,    '2025-12-01', 'hieu_luc', 'Thu viec nhan su'),
+(5,  'PHONGNS',  'TP',        'chinh', 100.00, 2,    1,    '2017-02-01', 'hieu_luc', 'Bổ nhiệm Trưởng phòng Nhân sự'),
+(6,  'PHONGNS',  'PP',        'chinh', 100.00, 5,    1,    '2018-05-01', 'hieu_luc', 'Bổ nhiệm Phó phòng Nhân sự'),
+(7,  'PHONGNS',  'NV_NS',     'chinh', 100.00, 5,    1,    '2020-08-01', 'hieu_luc', 'Nhân viên Nhân sự'),
+(8,  'PHONGNS',  'NV_NS',     'chinh', 100.00, 5,    1,    '2021-11-01', 'hieu_luc', 'Nhân viên Nhân sự'),
+(9,  'PHONGNS',  'TV',        'chinh', 100.00, 5,    1,    '2025-12-01', 'hieu_luc', 'Thử việc nhân sự'),
 -- Phong KT
-(10, 'PHONGKT',  'TP',        'chinh', 100.00, 2,    1,    '2017-04-01', 'hieu_luc', 'Bo nhiem Truong phong Ke toan'),
-(11, 'PHONGKT',  'PP',        'chinh', 100.00, 10,   1,    '2018-09-01', 'hieu_luc', 'Bo nhiem Pho phong Ke toan'),
-(12, 'PHONGKT',  'KTVT',      'chinh', 100.00, 10,   1,    '2020-03-01', 'hieu_luc', 'Ke toan Tong hop'),
-(13, 'PHONGKT',  'KTV',       'chinh', 100.00, 10,   1,    '2021-07-01', 'hieu_luc', 'Ke toan vien'),
-(14, 'PHONGKT',  'KTV',       'chinh', 100.00, 10,   1,    '2023-01-01', 'hieu_luc', 'Ke toan vien'),
+(10, 'PHONGKT',  'TP',        'chinh', 100.00, 2,    1,    '2017-04-01', 'hieu_luc', 'Bổ nhiệm Trưởng phòng Kế toán'),
+(11, 'PHONGKT',  'PP',        'chinh', 100.00, 10,   1,    '2018-09-01', 'hieu_luc', 'Bổ nhiệm Phó phòng Kế toán'),
+(12, 'PHONGKT',  'KTVT',      'chinh', 100.00, 10,   1,    '2020-03-01', 'hieu_luc', 'Kế toán Tổng hợp'),
+(13, 'PHONGKT',  'KTV',       'chinh', 100.00, 10,   1,    '2021-07-01', 'hieu_luc', 'Kế toán viên'),
+(14, 'PHONGKT',  'KTV',       'chinh', 100.00, 10,   1,    '2023-01-01', 'hieu_luc', 'Kế toán viên'),
 -- Phong KD
-(15, 'PHONGKD',  'TP',        'chinh', 100.00, 3,    1,    '2017-07-01', 'hieu_luc', 'Bo nhiem Truong phong Kinh doanh'),
+(15, 'PHONGKD',  'TP',        'chinh', 100.00, 3,    1,    '2017-07-01', 'hieu_luc', 'Bổ nhiệm Trưởng phòng Kinh doanh'),
 (16, 'TEAM_B2B', 'TT',        'chinh', 100.00, 15,   1,    '2019-02-01', 'hieu_luc', 'Team Lead B2B'),
 (17, 'TEAM_B2B', 'NVCC_KD',   'chinh', 100.00, 16,   1,    '2020-06-01', 'hieu_luc', 'Chuyen vien Kinh doanh cao cap'),
-(18, 'TEAM_B2B', 'NV_KD',     'chinh', 100.00, 16,   1,    '2021-09-01', 'hieu_luc', 'Nhan vien Kinh doanh B2B'),
+(18, 'TEAM_B2B', 'NV_KD',     'chinh', 100.00, 16,   1,    '2021-09-01', 'hieu_luc', 'Nhân viên Kinh doanh B2B'),
 (19, 'TEAM_B2C', 'NVCC_KD',   'chinh', 100.00, 15,   1,    '2022-04-01', 'hieu_luc', 'Chuyen vien Kinh doanh B2C cao cap'),
-(20, 'TEAM_B2C', 'NV_KD',     'chinh', 100.00, 15,   1,    '2023-03-01', 'hieu_luc', 'Nhan vien Kinh doanh B2C'),
-(21, 'TEAM_B2C', 'TV',        'chinh', 100.00, 15,   1,    '2025-11-01', 'hieu_luc', 'Thu viec Kinh doanh'),
--- Phong IT
-(22, 'PHONGIT',  'TP',        'chinh', 100.00, 4,    1,    '2018-01-15', 'hieu_luc', 'Bo nhiem Truong phong IT'),
+(20, 'TEAM_B2C', 'NV_KD',     'chinh', 100.00, 15,   1,    '2023-03-01', 'hieu_luc', 'Nhân viên Kinh doanh B2C'),
+(21, 'TEAM_B2C', 'TV',        'chinh', 100.00, 15,   1,    '2025-11-01', 'hieu_luc', 'Thử việc Kinh doanh'),
+-- Phòng IT
+(22, 'PHONGIT',  'TP',        'chinh', 100.00, 4,    1,    '2018-01-15', 'hieu_luc', 'Bổ nhiệm Trưởng phòng IT'),
 (23, 'TEAM_BE',  'TT',        'chinh', 100.00, 22,   1,    '2019-08-01', 'hieu_luc', 'Team Lead Backend'),
 (24, 'TEAM_BE',  'SE_SENIOR', 'chinh', 100.00, 23,   1,    '2020-10-01', 'hieu_luc', 'Senior Software Engineer Backend'),
 (25, 'TEAM_BE',  'SE_MID',    'chinh', 100.00, 23,   1,    '2022-02-01', 'hieu_luc', 'Software Engineer Backend'),
@@ -197,109 +197,109 @@ INSERT INTO BONHIEM (maNV, maPhongBan, maChucVu, loaiBoNhiem, tyLeHuongLuong, ma
 (27, 'TEAM_FE',  'TT',        'chinh', 100.00, 22,   1,    '2019-11-01', 'hieu_luc', 'Team Lead Frontend'),
 (28, 'TEAM_FE',  'SE_SENIOR', 'chinh', 100.00, 27,   1,    '2021-04-01', 'hieu_luc', 'Senior Frontend Engineer'),
 (29, 'TEAM_FE',  'SE_MID',    'chinh', 100.00, 27,   1,    '2022-09-01', 'hieu_luc', 'Frontend Engineer'),
-(30, 'TEAM_FE',  'TV',        'chinh', 100.00, 27,   1,    '2025-10-01', 'hieu_luc', 'Thu viec Frontend'),
+(30, 'TEAM_FE',  'TV',        'chinh', 100.00, 27,   1,    '2025-10-01', 'hieu_luc', 'Thử việc Frontend'),
 (31, 'TEAM_QA',  'TT',        'chinh', 100.00, 22,   1,    '2020-01-01', 'hieu_luc', 'Team Lead QA'),
 (32, 'TEAM_QA',  'QA_MID',    'chinh', 100.00, 31,   1,    '2021-12-01', 'hieu_luc', 'QA Engineer'),
--- Phong Marketing
-(33, 'PHONGMKT', 'TP',        'chinh', 100.00, 2,    1,    '2018-07-01', 'hieu_luc', 'Bo nhiem Truong phong Marketing'),
-(34, 'PHONGMKT', 'NV_MKT',    'chinh', 100.00, 33,   1,    '2021-03-01', 'hieu_luc', 'Nhan vien Marketing'),
-(35, 'PHONGMKT', 'NV_MKT',    'chinh', 100.00, 33,   1,    '2022-08-01', 'hieu_luc', 'Nhan vien Marketing - dang tam nghi thai san'),
--- Kiem nhiem: NV022 (TP IT) kiem nhiem CVCC trong du an dac biet
-(22, 'PHONGIT',  'CVCC',      'kiem_nhiem', 20.00, 4, 1,   '2023-01-01', 'hieu_luc', 'Kiem nhiem Chuyen vien tu van du an chuyen doi so');
+-- Phòng Marketing
+(33, 'PHONGMKT', 'TP',        'chinh', 100.00, 2,    1,    '2018-07-01', 'hieu_luc', 'Bổ nhiệm Trưởng phòng Marketing'),
+(34, 'PHONGMKT', 'NV_MKT',    'chinh', 100.00, 33,   1,    '2021-03-01', 'hieu_luc', 'Nhân viên Marketing'),
+(35, 'PHONGMKT', 'NV_MKT',    'chinh', 100.00, 33,   1,    '2022-08-01', 'hieu_luc', 'Nhân viên Marketing - đang tạm nghỉ thai sản'),
+-- Kiêm nhiệm: NV022 (TP IT) kiem nhiem CVCC trong dự án dac biet
+(22, 'PHONGIT',  'CVCC',      'kiem_nhiem', 20.00, 4, 1,   '2023-01-01', 'hieu_luc', 'Kiêm nhiệm Chuyên viên tư vấn dự án chuyển đổi số');
 
 -- =====================================================
--- 5.5. VAI TRO & QUYEN
+-- 5.5. VAI TRÒ & QUYỀN
 -- =====================================================
 INSERT INTO VAITRO (maVaiTro, tenVaiTro, moTa, laVaiTroHeThong, trangThai) VALUES
-('ADMIN',         'Quan tri vien',   'Toan quyen quan tri he thong',            TRUE,  'hoatDong'),
-('TONG_GIAM_DOC', 'Tong giam doc',   'Dieu hanh cap cao toan cong ty',          FALSE, 'hoatDong'),
-('GIAM_DOC',      'Giam doc',        'Quan ly nghiep vu cap cong ty',           FALSE, 'hoatDong'),
-('PHO_GIAM_DOC',  'Pho giam doc',    'Ho tro giam doc, dieu hanh bo phan',      FALSE, 'hoatDong'),
-('TRUONG_PHONG',  'Truong phong',    'Quan ly phong ban va phe duyet cap dept', FALSE, 'hoatDong'),
-('QUAN_LY',       'Quan ly',         'Quan ly nhom va phe duyet cap team',      FALSE, 'hoatDong'),
-('NHAN_VIEN',     'Nhan vien',       'Nhan vien thong thuong',                   FALSE, 'hoatDong');
+('ADMIN',         'Quản trị viên',   'Toàn quyền quản trị hệ thống',            TRUE,  'hoatDong'),
+('TONG_GIAM_DOC', 'Tổng giám đốc',   'Điều hành cấp cao toàn công ty',          FALSE, 'hoatDong'),
+('GIAM_DOC',      'Giám đốc',        'Quản lý nghiep vu cap công ty',           FALSE, 'hoatDong'),
+('PHO_GIAM_DOC',  'Phó giám đốc',    'Hỗ trợ giám đốc, điều hành bộ phận',      FALSE, 'hoatDong'),
+('TRUONG_PHONG',  'Trưởng phòng',    'Quản lý phòng ban và phê duyệt cấp dept', FALSE, 'hoatDong'),
+('QUAN_LY',       'Quản lý',         'Quản lý nhóm và phê duyệt cấp team',      FALSE, 'hoatDong'),
+('NHAN_VIEN',     'Nhân viên',       'Nhân viên thông thường',                   FALSE, 'hoatDong');
 
 INSERT INTO QUYEN (maQuyen, tenQuyen, nhomQuyen) VALUES
--- Nhan vien
-('EMPLOYEE_VIEW_ALL',      'Xem toan bo nhan vien',           'Employee'),
-('EMPLOYEE_VIEW_DEPT',     'Xem nhan vien trong phong',       'Employee'),
-('EMPLOYEE_VIEW_TEAM',     'Xem nhan vien duoi quyen',        'Employee'),
-('EMPLOYEE_VIEW_SELF',     'Xem thong tin ca nhan',           'Employee'),
-('EMPLOYEE_CREATE',        'Tao nhan vien',                   'Employee'),
-('EMPLOYEE_UPDATE',        'Cap nhat nhan vien',              'Employee'),
-('EMPLOYEE_DELETE',        'Xoa nhan vien',                   'Employee'),
+-- Nhân viên
+('EMPLOYEE_VIEW_ALL',      'Xem toàn bộ nhân viên',           'Nhân viên'),
+('EMPLOYEE_VIEW_DEPT',     'Xem nhân viên trong phòng',       'Nhân viên'),
+('EMPLOYEE_VIEW_TEAM',     'Xem nhân viên dưới quyền',        'Nhân viên'),
+('EMPLOYEE_VIEW_SELF',     'Xem thông tin cá nhân',           'Nhân viên'),
+('EMPLOYEE_CREATE',        'Tạo nhân viên',                   'Nhân viên'),
+('EMPLOYEE_UPDATE',        'Cập nhật nhân viên',              'Nhân viên'),
+('EMPLOYEE_DELETE',        'Xóa nhân viên',                   'Nhân viên'),
 -- To chuc
-('DEPARTMENT_VIEW',        'Xem phong ban',                   'Organization'),
-('DEPARTMENT_MANAGE',      'Quan ly phong ban',               'Organization'),
-('POSITION_VIEW',          'Xem chuc vu',                     'Organization'),
-('POSITION_MANAGE',        'Quan ly chuc vu',                 'Organization'),
--- Bo nhiem
-('APPOINTMENT_VIEW_ALL',   'Xem tat ca bo nhiem',             'Appointment'),
-('APPOINTMENT_VIEW_DEPT',  'Xem bo nhiem trong phong',        'Appointment'),
-('APPOINTMENT_VIEW_TEAM',  'Xem bo nhiem duoi quyen',         'Appointment'),
-('APPOINTMENT_VIEW_SELF',  'Xem bo nhiem ca nhan',            'Appointment'),
-('APPOINTMENT_CREATE',     'Tao bo nhiem',                    'Appointment'),
-('APPOINTMENT_APPROVE',    'Duyet bo nhiem',                  'Appointment'),
+('DEPARTMENT_VIEW',        'Xem phòng ban',                   'Tổ chức'),
+('DEPARTMENT_MANAGE',      'Quản lý phòng ban',               'Tổ chức'),
+('POSITION_VIEW',          'Xem chức vụ',                     'Tổ chức'),
+('POSITION_MANAGE',        'Quản lý chức vụ',                 'Tổ chức'),
+-- Bổ nhiệm
+('APPOINTMENT_VIEW_ALL',   'Xem tất cả bổ nhiệm',             'Bổ nhiệm'),
+('APPOINTMENT_VIEW_DEPT',  'Xem bổ nhiệm trong phòng',        'Bổ nhiệm'),
+('APPOINTMENT_VIEW_TEAM',  'Xem bổ nhiệm dưới quyền',         'Bổ nhiệm'),
+('APPOINTMENT_VIEW_SELF',  'Xem bổ nhiệm cá nhân',            'Bổ nhiệm'),
+('APPOINTMENT_CREATE',     'Tạo bổ nhiệm',                    'Bổ nhiệm'),
+('APPOINTMENT_APPROVE',    'Duyệt bổ nhiệm',                  'Bổ nhiệm'),
 -- Cham cong
-('ATTENDANCE_VIEW_ALL',    'Xem tat ca cham cong',            'Attendance'),
-('ATTENDANCE_VIEW_DEPT',   'Xem cham cong trong phong',       'Attendance'),
-('ATTENDANCE_VIEW_TEAM',   'Xem cham cong duoi quyen',        'Attendance'),
-('ATTENDANCE_VIEW_SELF',   'Xem cham cong ca nhan',           'Attendance'),
-('ATTENDANCE_MANAGE',      'Quan ly cham cong',               'Attendance'),
+('ATTENDANCE_VIEW_ALL',    'Xem tất cả chấm công',            'Chấm công'),
+('ATTENDANCE_VIEW_DEPT',   'Xem chấm công trong phòng',       'Chấm công'),
+('ATTENDANCE_VIEW_TEAM',   'Xem chấm công dưới quyền',        'Chấm công'),
+('ATTENDANCE_VIEW_SELF',   'Xem chấm công cá nhân',           'Chấm công'),
+('ATTENDANCE_MANAGE',      'Quản lý chấm công',               'Chấm công'),
 -- Hop dong
-('CONTRACT_VIEW_ALL',      'Xem tat ca hop dong',             'Contract'),
-('CONTRACT_VIEW_DEPT',     'Xem hop dong trong phong',        'Contract'),
-('CONTRACT_VIEW_TEAM',     'Xem hop dong duoi quyen',         'Contract'),
-('CONTRACT_VIEW_SELF',     'Xem hop dong ca nhan',            'Contract'),
-('CONTRACT_CREATE',        'Tao hop dong',                    'Contract'),
-('CONTRACT_UPDATE',        'Cap nhat hop dong',               'Contract'),
-('CONTRACT_MANAGE',        'Quan ly hop dong',                'Contract'),
+('CONTRACT_VIEW_ALL',      'Xem tất cả hợp đồng',             'Hợp đồng'),
+('CONTRACT_VIEW_DEPT',     'Xem hợp đồng trong phòng',        'Hợp đồng'),
+('CONTRACT_VIEW_TEAM',     'Xem hợp đồng dưới quyền',         'Hợp đồng'),
+('CONTRACT_VIEW_SELF',     'Xem hợp đồng cá nhân',            'Hợp đồng'),
+('CONTRACT_CREATE',        'Tạo hợp đồng',                    'Hợp đồng'),
+('CONTRACT_UPDATE',        'Cập nhật hợp đồng',               'Hợp đồng'),
+('CONTRACT_MANAGE',        'Quản lý hợp đồng',                'Hợp đồng'),
 -- Luong
-('PAYROLL_VIEW_ALL',       'Xem tat ca luong',                'Payroll'),
-('PAYROLL_VIEW_DEPT',      'Xem luong trong phong',           'Payroll'),
-('PAYROLL_VIEW_TEAM',      'Xem luong duoi quyen',            'Payroll'),
-('PAYROLL_VIEW_SELF',      'Xem luong ca nhan',               'Payroll'),
-('PAYROLL_CALCULATE',      'Tinh luong',                      'Payroll'),
+('PAYROLL_VIEW_ALL',       'Xem tất cả lương',                'Lương'),
+('PAYROLL_VIEW_DEPT',      'Xem lương trong phòng',           'Lương'),
+('PAYROLL_VIEW_TEAM',      'Xem lương dưới quyền',            'Lương'),
+('PAYROLL_VIEW_SELF',      'Xem lương cá nhân',               'Lương'),
+('PAYROLL_CALCULATE',      'Tính lương',                      'Lương'),
 -- Nghi phep
-('LEAVE_VIEW_ALL',         'Xem tat ca nghi phep',            'Leave'),
-('LEAVE_VIEW_DEPT',        'Xem nghi phep trong phong',       'Leave'),
-('LEAVE_VIEW_TEAM',        'Xem nghi phep duoi quyen',        'Leave'),
-('LEAVE_VIEW_SELF',        'Xem nghi phep ca nhan',           'Leave'),
-('LEAVE_CREATE',           'Tao don nghi phep',               'Leave'),
-('LEAVE_MANAGE',           'Quan ly nghi phep',               'Leave'),
-('LEAVE_APPROVE_ALL',      'Duyet tat ca nghi phep',          'Leave'),
-('LEAVE_APPROVE_DEPT',     'Duyet nghi phep trong phong',     'Leave'),
-('LEAVE_APPROVE_TEAM',     'Duyet nghi phep duoi quyen',      'Leave'),
+('LEAVE_VIEW_ALL',         'Xem tất cả nghỉ phép',            'Nghỉ phép'),
+('LEAVE_VIEW_DEPT',        'Xem nghỉ phép trong phòng',       'Nghỉ phép'),
+('LEAVE_VIEW_TEAM',        'Xem nghỉ phép dưới quyền',        'Nghỉ phép'),
+('LEAVE_VIEW_SELF',        'Xem nghỉ phép cá nhân',           'Nghỉ phép'),
+('LEAVE_CREATE',           'Tạo đơn nghỉ phép',               'Nghỉ phép'),
+('LEAVE_MANAGE',           'Quản lý nghỉ phép',               'Nghỉ phép'),
+('LEAVE_APPROVE_ALL',      'Duyệt tất cả nghỉ phép',          'Nghỉ phép'),
+('LEAVE_APPROVE_DEPT',     'Duyệt nghỉ phép trong phòng',     'Nghỉ phép'),
+('LEAVE_APPROVE_TEAM',     'Duyệt nghỉ phép dưới quyền',      'Nghỉ phép'),
 -- Danh gia
-('EVAL_VIEW_ALL',          'Xem tat ca danh gia',             'Evaluation'),
-('EVAL_VIEW_DEPT',         'Xem danh gia trong phong',        'Evaluation'),
-('EVAL_VIEW_TEAM',         'Xem danh gia duoi quyen',         'Evaluation'),
-('EVAL_VIEW_SELF',         'Xem danh gia ca nhan',            'Evaluation'),
-('EVAL_MANAGE',            'Quan ly dot danh gia',            'Evaluation'),
-('EVAL_REVIEW_ALL',        'Danh gia toan bo nhan vien',      'Evaluation'),
-('EVAL_REVIEW_DEPT',       'Danh gia nhan vien trong phong',  'Evaluation'),
-('EVAL_REVIEW_TEAM',       'Danh gia nhan vien duoi quyen',   'Evaluation'),
--- Tuyen dung
-('RECRUITMENT_VIEW_ALL',   'Xem tat ca tuyen dung',           'Recruitment'),
-('RECRUITMENT_VIEW_DEPT',  'Xem tuyen dung trong phong',      'Recruitment'),
-('RECRUITMENT_VIEW_TEAM',  'Xem tuyen dung duoi quyen',       'Recruitment'),
-('RECRUITMENT_VIEW_SELF',  'Xem tuyen dung ca nhan',          'Recruitment'),
-('RECRUITMENT_MANAGE',     'Quan ly tuyen dung',              'Recruitment'),
--- Bao cao & Thong bao
-('REPORT_VIEW',            'Xem bao cao',                     'Report'),
-('REPORT_EXPORT',          'Xuat bao cao',                    'Report'),
-('NOTIFICATION_SEND',      'Gui thong bao',                   'Notification'),
--- Quan tri he thong
-('USER_VIEW',              'Xem danh sach tai khoan',         'User'),
-('USER_CREATE',            'Tao tai khoan',                   'User'),
-('USER_UPDATE',            'Cap nhat tai khoan',              'User'),
-('USER_DELETE',            'Xoa tai khoan',                   'User'),
-('ROLE_VIEW',              'Xem vai tro',                     'Role'),
-('ROLE_CREATE',            'Tao vai tro',                     'Role'),
-('ROLE_UPDATE',            'Cap nhat vai tro',                'Role'),
-('ROLE_DELETE',            'Xoa vai tro',                     'Role'),
-('SETTINGS_VIEW',          'Xem cai dat',                     'Settings'),
-('SETTINGS_UPDATE',        'Cap nhat cai dat',                'Settings');
+('EVAL_VIEW_ALL',          'Xem tất cả đánh giá',             'Đánh giá'),
+('EVAL_VIEW_DEPT',         'Xem đánh giá trong phòng',        'Đánh giá'),
+('EVAL_VIEW_TEAM',         'Xem đánh giá dưới quyền',         'Đánh giá'),
+('EVAL_VIEW_SELF',         'Xem đánh giá cá nhân',            'Đánh giá'),
+('EVAL_MANAGE',            'Quản lý đợt đánh giá',            'Đánh giá'),
+('EVAL_REVIEW_ALL',        'Đánh giá toàn bộ nhân viên',      'Đánh giá'),
+('EVAL_REVIEW_DEPT',       'Đánh giá nhân viên trong phòng',  'Đánh giá'),
+('EVAL_REVIEW_TEAM',       'Đánh giá nhân viên dưới quyền',   'Đánh giá'),
+-- Tuyển dung
+('RECRUITMENT_VIEW_ALL',   'Xem tất cả tuyển dụng',           'Tuyển dụng'),
+('RECRUITMENT_VIEW_DEPT',  'Xem tuyển dụng trong phòng',      'Tuyển dụng'),
+('RECRUITMENT_VIEW_TEAM',  'Xem tuyển dụng dưới quyền',       'Tuyển dụng'),
+('RECRUITMENT_VIEW_SELF',  'Xem tuyển dụng cá nhân',          'Tuyển dụng'),
+('RECRUITMENT_MANAGE',     'Quản lý tuyển dụng',              'Tuyển dụng'),
+-- Bao cao & Thông báo
+('REPORT_VIEW',            'Xem báo cáo',                     'Báo cáo'),
+('REPORT_EXPORT',          'Xuất báo cáo',                    'Báo cáo'),
+('NOTIFICATION_SEND',      'Gửi thông báo',                   'Thông báo'),
+-- Quản trị he thong
+('USER_VIEW',              'Xem danh sách tài khoản',         'Tài khoản'),
+('USER_CREATE',            'Tạo tài khoản',                   'Tài khoản'),
+('USER_UPDATE',            'Cập nhật tài khoản',              'Tài khoản'),
+('USER_DELETE',            'Xóa tài khoản',                   'Tài khoản'),
+('ROLE_VIEW',              'Xem vai trò',                     'Vai trò'),
+('ROLE_CREATE',            'Tạo vai trò',                     'Vai trò'),
+('ROLE_UPDATE',            'Cập nhật vai trò',                'Vai trò'),
+('ROLE_DELETE',            'Xóa vai trò',                     'Vai trò'),
+('SETTINGS_VIEW',          'Xem cài đặt',                     'Cài đặt'),
+('SETTINGS_UPDATE',        'Cập nhật cài đặt',                'Cài đặt');
 
 -- ADMIN: tat ca quyen
 INSERT IGNORE INTO VAITRO_QUYEN (maVaiTro, maQuyen)
@@ -425,15 +425,15 @@ INSERT INTO TAIKHOAN (tenDangNhap, matKhau, maNV, maVaiTro, email, hoatDong) VAL
 -- =====================================================
 -- 7. HOP DONG LAO DONG
 -- =====================================================
-INSERT INTO HOPDONGLAODONG (soHopDong, maNV, loaiHopDong, luongCoSo, ngayKy, ngayHieuLuc, ngayHetHieuLuc, trangThai, noiDung) VALUES
--- Lanh dao (khong xac dinh)
-('HD2015-GD-001',   1,  'khong_xac_dinh',    80000000, '2015-01-03', '2015-01-05', NULL,         'hieu_luc', 'Hop dong lao dong khong xac dinh thoi han - Giam doc'),
+INSERT INTO HOPDONGLAODONG (soHopDong, maNV, loaiHopDong, luongCoSo, ngàyKy, ngàyHieuLuc, ngàyHetHieuLuc, trangThai, noiDung) VALUES
+-- Lãnh đạo (khong xac dinh)
+('HD2015-GD-001',   1,  'khong_xac_dinh',    80000000, '2015-01-03', '2015-01-05', NULL,         'hieu_luc', 'Hop dong lao dong khong xac dinh thoi han - Giám đốc'),
 ('HD2015-PGD-001',  2,  'khong_xac_dinh',    60000000, '2015-05-28', '2015-06-01', NULL,         'hieu_luc', 'Hop dong lao dong khong xac dinh thoi han - Pho GD'),
 ('HD2016-GDK-001',  3,  'khong_xac_dinh',    55000000, '2016-02-25', '2016-03-01', NULL,         'hieu_luc', 'Hop dong lao dong khong xac dinh thoi han - GD KD'),
 ('HD2016-CTO-001',  4,  'khong_xac_dinh',    55000000, '2016-08-26', '2016-09-01', NULL,         'hieu_luc', 'Hop dong lao dong khong xac dinh thoi han - CTO'),
 -- Phong NS
-('HD2017-NS-005',   5,  'khong_xac_dinh',    22000000, '2017-01-25', '2017-02-01', NULL,         'hieu_luc', 'Hop dong TP Nhan su'),
-('HD2018-NS-006',   6,  'khong_xac_dinh',    18000000, '2018-04-25', '2018-05-01', NULL,         'hieu_luc', 'Hop dong PP Nhan su'),
+('HD2017-NS-005',   5,  'khong_xac_dinh',    22000000, '2017-01-25', '2017-02-01', NULL,         'hieu_luc', 'Hop dong TP Nhân sự'),
+('HD2018-NS-006',   6,  'khong_xac_dinh',    18000000, '2018-04-25', '2018-05-01', NULL,         'hieu_luc', 'Hop dong PP Nhân sự'),
 ('HD2020-NS-007',   7,  'xac_dinh_thoi_han', 10000000, '2020-07-25', '2020-08-01', '2022-08-01', 'het_han',  'Hop dong lan 1 NV NS'),
 ('HD2022-NS-007',   7,  'xac_dinh_thoi_han', 11500000, '2022-07-28', '2022-08-01', '2024-08-01', 'het_han',  'Hop dong lan 2 NV NS'),
 ('HD2024-NS-007',   7,  'xac_dinh_thoi_han', 13000000, '2024-07-28', '2024-08-01', '2026-08-01', 'hieu_luc', 'Hop dong lan 3 NV NS'),
@@ -442,8 +442,8 @@ INSERT INTO HOPDONGLAODONG (soHopDong, maNV, loaiHopDong, luongCoSo, ngayKy, nga
 ('HD2025-NS-008',   8,  'xac_dinh_thoi_han', 12500000, '2025-10-25', '2025-11-01', '2027-11-01', 'hieu_luc', 'Hop dong lan 3 NV NS'),
 ('HD2025-NS-009',   9,  'thu_viec',            8000000, '2025-11-28', '2025-12-01', '2026-03-01', 'hieu_luc', 'Hop dong thu viec NS'),
 -- Phong KT
-('HD2017-KT-010',   10, 'khong_xac_dinh',    25000000, '2017-03-28', '2017-04-01', NULL,         'hieu_luc', 'Hop dong TP Ke toan'),
-('HD2018-KT-011',   11, 'khong_xac_dinh',    20000000, '2018-08-25', '2018-09-01', NULL,         'hieu_luc', 'Hop dong PP Ke toan'),
+('HD2017-KT-010',   10, 'khong_xac_dinh',    25000000, '2017-03-28', '2017-04-01', NULL,         'hieu_luc', 'Hop dong TP Kế toán'),
+('HD2018-KT-011',   11, 'khong_xac_dinh',    20000000, '2018-08-25', '2018-09-01', NULL,         'hieu_luc', 'Hop dong PP Kế toán'),
 ('HD2020-KT-012',   12, 'xac_dinh_thoi_han', 12000000, '2020-02-25', '2020-03-01', '2022-03-01', 'het_han',  'Hop dong lan 1 KTVT'),
 ('HD2022-KT-012',   12, 'xac_dinh_thoi_han', 14000000, '2022-02-25', '2022-03-01', '2024-03-01', 'het_han',  'Hop dong lan 2 KTVT'),
 ('HD2024-KT-012',   12, 'xac_dinh_thoi_han', 16000000, '2024-02-25', '2024-03-01', '2026-03-01', 'hieu_luc', 'Hop dong lan 3 KTVT'),
@@ -466,7 +466,7 @@ INSERT INTO HOPDONGLAODONG (soHopDong, maNV, loaiHopDong, luongCoSo, ngayKy, nga
 ('HD2023-KD-020',   20, 'xac_dinh_thoi_han', 10000000, '2023-02-25', '2023-03-01', '2025-03-01', 'het_han',  'Hop dong lan 1 NV KD B2C'),
 ('HD2025-KD-020',   20, 'xac_dinh_thoi_han', 12000000, '2025-02-25', '2025-03-01', '2027-03-01', 'hieu_luc', 'Hop dong lan 2 NV KD B2C'),
 ('HD2025-KD-021',   21, 'thu_viec',            8000000, '2025-10-28', '2025-11-01', '2026-02-01', 'hieu_luc', 'Hop dong thu viec KD'),
--- Phong IT
+-- Phòng IT
 ('HD2018-IT-022',   22, 'khong_xac_dinh',    35000000, '2018-01-10', '2018-01-15', NULL,         'hieu_luc', 'Hop dong TP IT'),
 ('HD2019-IT-023',   23, 'khong_xac_dinh',    28000000, '2019-07-28', '2019-08-01', NULL,         'hieu_luc', 'Hop dong TL Backend'),
 ('HD2020-IT-024',   24, 'xac_dinh_thoi_han', 20000000, '2020-09-28', '2020-10-01', '2022-10-01', 'het_han',  'Hop dong lan 1 SE Senior BE'),
@@ -487,7 +487,7 @@ INSERT INTO HOPDONGLAODONG (soHopDong, maNV, loaiHopDong, luongCoSo, ngayKy, nga
 ('HD2021-IT-032',   32, 'xac_dinh_thoi_han', 13000000, '2021-11-28', '2021-12-01', '2023-12-01', 'het_han',  'Hop dong lan 1 QA Mid'),
 ('HD2023-IT-032',   32, 'xac_dinh_thoi_han', 15000000, '2023-11-28', '2023-12-01', '2025-12-01', 'het_han',  'Hop dong lan 2 QA Mid'),
 ('HD2025-IT-032',   32, 'xac_dinh_thoi_han', 17000000, '2025-11-28', '2025-12-01', '2027-12-01', 'hieu_luc', 'Hop dong lan 3 QA Mid'),
--- Phong Marketing
+-- Phòng Marketing
 ('HD2018-MKT-033',  33, 'khong_xac_dinh',    22000000, '2018-06-25', '2018-07-01', NULL,         'hieu_luc', 'Hop dong TP Marketing'),
 ('HD2021-MKT-034',  34, 'xac_dinh_thoi_han', 11000000, '2021-02-25', '2021-03-01', '2023-03-01', 'het_han',  'Hop dong lan 1 NV MKT'),
 ('HD2023-MKT-034',  34, 'xac_dinh_thoi_han', 13000000, '2023-02-25', '2023-03-01', '2025-03-01', 'het_han',  'Hop dong lan 2 NV MKT'),
@@ -498,313 +498,313 @@ INSERT INTO HOPDONGLAODONG (soHopDong, maNV, loaiHopDong, luongCoSo, ngayKy, nga
 -- =====================================================
 -- 8. CA LAM
 -- =====================================================
-INSERT INTO CALAM (maCaLam, tenCaLam, gioBatDau, gioKetThuc, soGioChuan, choPhepLamThem, moTa, trangThai) VALUES
+INSERT INTO CALAM (maCaLam, tenCaLam, giờBatDau, giờKetThuc, soGioChuan, choPhepLamThem, moTa, trangThai) VALUES
 ('HANH_CHINH', 'Ca hanh chinh', '08:00:00', '17:00:00', 8.00, TRUE,  'Ca lam viec hanh chinh van phong', 'hoatDong'),
-('CA_SANG',    'Ca sang',       '06:00:00', '14:00:00', 8.00, TRUE,  'Ca sang cho bo phan san xuat',     'hoatDong'),
+('CA_SANG',    'Ca sáng',       '06:00:00', '14:00:00', 8.00, TRUE,  'Ca sáng cho bo phan san xuat',     'hoatDong'),
 ('CA_CHIEU',   'Ca chieu',      '14:00:00', '22:00:00', 8.00, TRUE,  'Ca chieu cho bo phan san xuat',    'hoatDong'),
 ('CA_DEM',     'Ca dem',        '22:00:00', '06:00:00', 8.00, FALSE, 'Ca dem cho bo phan ky thuat',      'hoatDong');
 
 -- =====================================================
 -- 9. CHAM CONG - Thang 1 va 2/2026 cho toan bo NV
--- Cac ngay lam viec thang 1: Mon-Fri (khong tinh cuoi tuan, le)
--- Cac ngay lam viec thang 2: Mon-Fri
+-- Cac ngày lam viec tháng 1: Mon-Fri (khong tinh cuoi tuan, le)
+-- Cac ngày lam viec tháng 2: Mon-Fri
 -- =====================================================
 
 -- Helper: Thang 1/2026 - Ngay lam viec (bo qua 1/1 la nghi le)
--- Thang 1: 2,5,6,7,8,9,12,13,14,15,16,19,20,21,22,23,26,27,28,29,30 = 21 ngay
--- Thang 2: 2,3,4,5,6,9,10,11,12,13,16,17,18,19,20,23,24,25,26,27 = 19 ngay
+-- Thang 1: 2,5,6,7,8,9,12,13,14,15,16,19,20,21,22,23,26,27,28,29,30 = 21 ngày
+-- Thang 2: 2,3,4,5,6,9,10,11,12,13,16,17,18,19,20,23,24,25,26,27 = 19 ngày
 
 -- *** CHAM CONG THANG 1/2026 ***
 -- Tao du lieu cham cong cho cac nhan vien chinh (bo qua nhan vien tam nghi NV035)
--- Format: maNV, ngay, maCaLam, gioVao, gioRa, soGioLam, gioLamThem, trangThai, phuongThucChamCong
+-- Format: maNV, ngày, maCaLam, giờVao, giờRa, soGioLam, giờLamThem, trangThai, phuongThucChamCong
 
-INSERT INTO CHAMCONG (maNV, ngay, maCaLam, gioVao, gioRa, soGioLam, gioLamThem, trangThai, phuongThucChamCong, ghiChu) VALUES
--- NV001 (GD) - thang 1
-(1,'2026-01-02','HANH_CHINH','2026-01-02 08:00','2026-01-02 17:30',8.00,0.50,'dung_gio','the_tu',NULL),
-(1,'2026-01-05','HANH_CHINH','2026-01-05 08:00','2026-01-05 17:00',8.00,0.00,'dung_gio','the_tu',NULL),
-(1,'2026-01-06','HANH_CHINH','2026-01-06 08:00','2026-01-06 17:00',8.00,0.00,'dung_gio','the_tu',NULL),
-(1,'2026-01-07','HANH_CHINH','2026-01-07 08:00','2026-01-07 18:00',8.00,1.00,'dung_gio','the_tu',NULL),
-(1,'2026-01-08','HANH_CHINH','2026-01-08 08:00','2026-01-08 17:00',8.00,0.00,'dung_gio','the_tu',NULL),
-(1,'2026-01-09','HANH_CHINH','2026-01-09 08:00','2026-01-09 17:00',8.00,0.00,'dung_gio','the_tu',NULL),
-(1,'2026-01-12','HANH_CHINH','2026-01-12 08:00','2026-01-12 17:00',8.00,0.00,'dung_gio','the_tu',NULL),
-(1,'2026-01-13','HANH_CHINH','2026-01-13 08:00','2026-01-13 17:00',8.00,0.00,'dung_gio','the_tu',NULL),
-(1,'2026-01-14','HANH_CHINH','2026-01-14 08:00','2026-01-14 17:00',8.00,0.00,'dung_gio','the_tu',NULL),
-(1,'2026-01-15','HANH_CHINH','2026-01-15 08:00','2026-01-15 17:00',8.00,0.00,'dung_gio','the_tu',NULL),
-(1,'2026-01-16','HANH_CHINH','2026-01-16 08:00','2026-01-16 17:00',8.00,0.00,'dung_gio','the_tu',NULL),
-(1,'2026-01-19','HANH_CHINH','2026-01-19 08:00','2026-01-19 17:00',8.00,0.00,'dung_gio','the_tu',NULL),
-(1,'2026-01-20','HANH_CHINH','2026-01-20 08:00','2026-01-20 17:00',8.00,0.00,'dung_gio','the_tu',NULL),
-(1,'2026-01-21','HANH_CHINH','2026-01-21 08:00','2026-01-21 17:00',8.00,0.00,'dung_gio','the_tu',NULL),
-(1,'2026-01-22','HANH_CHINH','2026-01-22 08:00','2026-01-22 17:00',8.00,0.00,'dung_gio','the_tu',NULL),
-(1,'2026-01-23','HANH_CHINH','2026-01-23 08:00','2026-01-23 17:00',8.00,0.00,'dung_gio','the_tu',NULL),
-(1,'2026-01-26','HANH_CHINH','2026-01-26 08:00','2026-01-26 17:00',8.00,0.00,'dung_gio','the_tu',NULL),
-(1,'2026-01-27','HANH_CHINH','2026-01-27 08:00','2026-01-27 17:00',8.00,0.00,'dung_gio','the_tu',NULL),
-(1,'2026-01-28','HANH_CHINH','2026-01-28 08:00','2026-01-28 17:00',8.00,0.00,'dung_gio','the_tu',NULL),
-(1,'2026-01-29','HANH_CHINH','2026-01-29 08:00','2026-01-29 17:00',8.00,0.00,'dung_gio','the_tu',NULL),
-(1,'2026-01-30','HANH_CHINH','2026-01-30 08:00','2026-01-30 17:00',8.00,0.00,'dung_gio','the_tu',NULL),
--- NV005 (TP NS) - thang 1: 1 ngay di muon, 1 ngay nghi phep
-(5,'2026-01-02','HANH_CHINH','2026-01-02 08:00','2026-01-02 17:00',8.00,0.00,'dung_gio','van_tay',NULL),
+INSERT INTO CHAMCONG (maNV, ngày, maCaLam, giờVao, giờRa, soGioLam, giờLamThem, trangThai, phuongThucChamCong, ghiChu) VALUES
+-- NV001 (GD) - tháng 1
+(1,'2026-01-02','HANH_CHINH','2026-01-02 08:00','2026-01-02 17:30',8.00,0.50,'dung_giờ','the_tu',NULL),
+(1,'2026-01-05','HANH_CHINH','2026-01-05 08:00','2026-01-05 17:00',8.00,0.00,'dung_giờ','the_tu',NULL),
+(1,'2026-01-06','HANH_CHINH','2026-01-06 08:00','2026-01-06 17:00',8.00,0.00,'dung_giờ','the_tu',NULL),
+(1,'2026-01-07','HANH_CHINH','2026-01-07 08:00','2026-01-07 18:00',8.00,1.00,'dung_giờ','the_tu',NULL),
+(1,'2026-01-08','HANH_CHINH','2026-01-08 08:00','2026-01-08 17:00',8.00,0.00,'dung_giờ','the_tu',NULL),
+(1,'2026-01-09','HANH_CHINH','2026-01-09 08:00','2026-01-09 17:00',8.00,0.00,'dung_giờ','the_tu',NULL),
+(1,'2026-01-12','HANH_CHINH','2026-01-12 08:00','2026-01-12 17:00',8.00,0.00,'dung_giờ','the_tu',NULL),
+(1,'2026-01-13','HANH_CHINH','2026-01-13 08:00','2026-01-13 17:00',8.00,0.00,'dung_giờ','the_tu',NULL),
+(1,'2026-01-14','HANH_CHINH','2026-01-14 08:00','2026-01-14 17:00',8.00,0.00,'dung_giờ','the_tu',NULL),
+(1,'2026-01-15','HANH_CHINH','2026-01-15 08:00','2026-01-15 17:00',8.00,0.00,'dung_giờ','the_tu',NULL),
+(1,'2026-01-16','HANH_CHINH','2026-01-16 08:00','2026-01-16 17:00',8.00,0.00,'dung_giờ','the_tu',NULL),
+(1,'2026-01-19','HANH_CHINH','2026-01-19 08:00','2026-01-19 17:00',8.00,0.00,'dung_giờ','the_tu',NULL),
+(1,'2026-01-20','HANH_CHINH','2026-01-20 08:00','2026-01-20 17:00',8.00,0.00,'dung_giờ','the_tu',NULL),
+(1,'2026-01-21','HANH_CHINH','2026-01-21 08:00','2026-01-21 17:00',8.00,0.00,'dung_giờ','the_tu',NULL),
+(1,'2026-01-22','HANH_CHINH','2026-01-22 08:00','2026-01-22 17:00',8.00,0.00,'dung_giờ','the_tu',NULL),
+(1,'2026-01-23','HANH_CHINH','2026-01-23 08:00','2026-01-23 17:00',8.00,0.00,'dung_giờ','the_tu',NULL),
+(1,'2026-01-26','HANH_CHINH','2026-01-26 08:00','2026-01-26 17:00',8.00,0.00,'dung_giờ','the_tu',NULL),
+(1,'2026-01-27','HANH_CHINH','2026-01-27 08:00','2026-01-27 17:00',8.00,0.00,'dung_giờ','the_tu',NULL),
+(1,'2026-01-28','HANH_CHINH','2026-01-28 08:00','2026-01-28 17:00',8.00,0.00,'dung_giờ','the_tu',NULL),
+(1,'2026-01-29','HANH_CHINH','2026-01-29 08:00','2026-01-29 17:00',8.00,0.00,'dung_giờ','the_tu',NULL),
+(1,'2026-01-30','HANH_CHINH','2026-01-30 08:00','2026-01-30 17:00',8.00,0.00,'dung_giờ','the_tu',NULL),
+-- NV005 (TP NS) - tháng 1: 1 ngày di muon, 1 ngày nghi phep
+(5,'2026-01-02','HANH_CHINH','2026-01-02 08:00','2026-01-02 17:00',8.00,0.00,'dung_giờ','van_tay',NULL),
 (5,'2026-01-05','HANH_CHINH','2026-01-05 08:25','2026-01-05 17:00',7.58,0.00,'di_muon','van_tay','Di muon 25 phut'),
-(5,'2026-01-06','HANH_CHINH','2026-01-06 08:00','2026-01-06 17:00',8.00,0.00,'dung_gio','van_tay',NULL),
-(5,'2026-01-07','HANH_CHINH','2026-01-07 08:00','2026-01-07 17:00',8.00,0.00,'dung_gio','van_tay',NULL),
-(5,'2026-01-08','HANH_CHINH','2026-01-08 08:00','2026-01-08 17:00',8.00,0.00,'dung_gio','van_tay',NULL),
-(5,'2026-01-09','HANH_CHINH','2026-01-09 08:00','2026-01-09 17:00',8.00,0.00,'dung_gio','van_tay',NULL),
-(5,'2026-01-12','HANH_CHINH','2026-01-12 08:00','2026-01-12 17:00',8.00,0.00,'dung_gio','van_tay',NULL),
-(5,'2026-01-13','HANH_CHINH','2026-01-13 08:00','2026-01-13 17:00',8.00,0.00,'dung_gio','van_tay',NULL),
+(5,'2026-01-06','HANH_CHINH','2026-01-06 08:00','2026-01-06 17:00',8.00,0.00,'dung_giờ','van_tay',NULL),
+(5,'2026-01-07','HANH_CHINH','2026-01-07 08:00','2026-01-07 17:00',8.00,0.00,'dung_giờ','van_tay',NULL),
+(5,'2026-01-08','HANH_CHINH','2026-01-08 08:00','2026-01-08 17:00',8.00,0.00,'dung_giờ','van_tay',NULL),
+(5,'2026-01-09','HANH_CHINH','2026-01-09 08:00','2026-01-09 17:00',8.00,0.00,'dung_giờ','van_tay',NULL),
+(5,'2026-01-12','HANH_CHINH','2026-01-12 08:00','2026-01-12 17:00',8.00,0.00,'dung_giờ','van_tay',NULL),
+(5,'2026-01-13','HANH_CHINH','2026-01-13 08:00','2026-01-13 17:00',8.00,0.00,'dung_giờ','van_tay',NULL),
 (5,'2026-01-14',NULL,NULL,NULL,0.00,0.00,'nghi_phep','thu_cong','Phep nam'),
-(5,'2026-01-15','HANH_CHINH','2026-01-15 08:00','2026-01-15 17:00',8.00,0.00,'dung_gio','van_tay',NULL),
-(5,'2026-01-16','HANH_CHINH','2026-01-16 08:00','2026-01-16 17:00',8.00,0.00,'dung_gio','van_tay',NULL),
-(5,'2026-01-19','HANH_CHINH','2026-01-19 08:00','2026-01-19 17:00',8.00,0.00,'dung_gio','van_tay',NULL),
-(5,'2026-01-20','HANH_CHINH','2026-01-20 08:00','2026-01-20 17:00',8.00,0.00,'dung_gio','van_tay',NULL),
-(5,'2026-01-21','HANH_CHINH','2026-01-21 08:00','2026-01-21 17:00',8.00,0.00,'dung_gio','van_tay',NULL),
-(5,'2026-01-22','HANH_CHINH','2026-01-22 08:00','2026-01-22 17:00',8.00,0.00,'dung_gio','van_tay',NULL),
-(5,'2026-01-23','HANH_CHINH','2026-01-23 08:00','2026-01-23 17:00',8.00,0.00,'dung_gio','van_tay',NULL),
-(5,'2026-01-26','HANH_CHINH','2026-01-26 08:00','2026-01-26 17:00',8.00,0.00,'dung_gio','van_tay',NULL),
-(5,'2026-01-27','HANH_CHINH','2026-01-27 08:00','2026-01-27 17:00',8.00,0.00,'dung_gio','van_tay',NULL),
-(5,'2026-01-28','HANH_CHINH','2026-01-28 08:00','2026-01-28 17:00',8.00,0.00,'dung_gio','van_tay',NULL),
-(5,'2026-01-29','HANH_CHINH','2026-01-29 08:00','2026-01-29 17:00',8.00,0.00,'dung_gio','van_tay',NULL),
-(5,'2026-01-30','HANH_CHINH','2026-01-30 08:00','2026-01-30 17:00',8.00,0.00,'dung_gio','van_tay',NULL),
--- NV022 (TP IT) - thang 1
-(22,'2026-01-02','HANH_CHINH','2026-01-02 07:55','2026-01-02 18:00',8.00,1.00,'dung_gio','van_tay',NULL),
-(22,'2026-01-05','HANH_CHINH','2026-01-05 08:00','2026-01-05 17:00',8.00,0.00,'dung_gio','van_tay',NULL),
-(22,'2026-01-06','HANH_CHINH','2026-01-06 08:00','2026-01-06 17:00',8.00,0.00,'dung_gio','van_tay',NULL),
-(22,'2026-01-07','HANH_CHINH','2026-01-07 08:00','2026-01-07 19:00',8.00,2.00,'dung_gio','van_tay',NULL),
-(22,'2026-01-08','HANH_CHINH','2026-01-08 08:00','2026-01-08 17:00',8.00,0.00,'dung_gio','van_tay',NULL),
-(22,'2026-01-09','HANH_CHINH','2026-01-09 08:00','2026-01-09 17:00',8.00,0.00,'dung_gio','van_tay',NULL),
-(22,'2026-01-12','HANH_CHINH','2026-01-12 08:00','2026-01-12 17:00',8.00,0.00,'dung_gio','van_tay',NULL),
-(22,'2026-01-13','HANH_CHINH','2026-01-13 08:00','2026-01-13 17:00',8.00,0.00,'dung_gio','van_tay',NULL),
-(22,'2026-01-14','HANH_CHINH','2026-01-14 08:00','2026-01-14 17:00',8.00,0.00,'dung_gio','van_tay',NULL),
-(22,'2026-01-15','HANH_CHINH','2026-01-15 08:00','2026-01-15 17:00',8.00,0.00,'dung_gio','van_tay',NULL),
-(22,'2026-01-16','HANH_CHINH','2026-01-16 08:00','2026-01-16 17:00',8.00,0.00,'dung_gio','van_tay',NULL),
-(22,'2026-01-19','HANH_CHINH','2026-01-19 08:00','2026-01-19 17:00',8.00,0.00,'dung_gio','van_tay',NULL),
-(22,'2026-01-20','HANH_CHINH','2026-01-20 08:00','2026-01-20 17:00',8.00,0.00,'dung_gio','van_tay',NULL),
-(22,'2026-01-21','HANH_CHINH','2026-01-21 08:00','2026-01-21 17:00',8.00,0.00,'dung_gio','van_tay',NULL),
-(22,'2026-01-22','HANH_CHINH','2026-01-22 08:00','2026-01-22 17:00',8.00,0.00,'dung_gio','van_tay',NULL),
-(22,'2026-01-23','HANH_CHINH','2026-01-23 08:00','2026-01-23 17:00',8.00,0.00,'dung_gio','van_tay',NULL),
-(22,'2026-01-26','HANH_CHINH','2026-01-26 08:00','2026-01-26 17:00',8.00,0.00,'dung_gio','van_tay',NULL),
-(22,'2026-01-27','HANH_CHINH','2026-01-27 08:00','2026-01-27 17:00',8.00,0.00,'dung_gio','van_tay',NULL),
-(22,'2026-01-28','HANH_CHINH','2026-01-28 08:00','2026-01-28 17:00',8.00,0.00,'dung_gio','van_tay',NULL),
-(22,'2026-01-29','HANH_CHINH','2026-01-29 08:00','2026-01-29 17:00',8.00,0.00,'dung_gio','van_tay',NULL),
-(22,'2026-01-30','HANH_CHINH','2026-01-30 08:00','2026-01-30 17:00',8.00,0.00,'dung_gio','van_tay',NULL),
--- NV023 (TL Backend) - thang 1 co 1 ngay nghi om
-(23,'2026-01-02','HANH_CHINH','2026-01-02 08:00','2026-01-02 17:00',8.00,0.00,'dung_gio','van_tay',NULL),
-(23,'2026-01-05','HANH_CHINH','2026-01-05 08:00','2026-01-05 17:00',8.00,0.00,'dung_gio','van_tay',NULL),
-(23,'2026-01-06','HANH_CHINH','2026-01-06 08:00','2026-01-06 17:00',8.00,0.00,'dung_gio','van_tay',NULL),
-(23,'2026-01-07','HANH_CHINH','2026-01-07 08:00','2026-01-07 17:00',8.00,0.00,'dung_gio','van_tay',NULL),
+(5,'2026-01-15','HANH_CHINH','2026-01-15 08:00','2026-01-15 17:00',8.00,0.00,'dung_giờ','van_tay',NULL),
+(5,'2026-01-16','HANH_CHINH','2026-01-16 08:00','2026-01-16 17:00',8.00,0.00,'dung_giờ','van_tay',NULL),
+(5,'2026-01-19','HANH_CHINH','2026-01-19 08:00','2026-01-19 17:00',8.00,0.00,'dung_giờ','van_tay',NULL),
+(5,'2026-01-20','HANH_CHINH','2026-01-20 08:00','2026-01-20 17:00',8.00,0.00,'dung_giờ','van_tay',NULL),
+(5,'2026-01-21','HANH_CHINH','2026-01-21 08:00','2026-01-21 17:00',8.00,0.00,'dung_giờ','van_tay',NULL),
+(5,'2026-01-22','HANH_CHINH','2026-01-22 08:00','2026-01-22 17:00',8.00,0.00,'dung_giờ','van_tay',NULL),
+(5,'2026-01-23','HANH_CHINH','2026-01-23 08:00','2026-01-23 17:00',8.00,0.00,'dung_giờ','van_tay',NULL),
+(5,'2026-01-26','HANH_CHINH','2026-01-26 08:00','2026-01-26 17:00',8.00,0.00,'dung_giờ','van_tay',NULL),
+(5,'2026-01-27','HANH_CHINH','2026-01-27 08:00','2026-01-27 17:00',8.00,0.00,'dung_giờ','van_tay',NULL),
+(5,'2026-01-28','HANH_CHINH','2026-01-28 08:00','2026-01-28 17:00',8.00,0.00,'dung_giờ','van_tay',NULL),
+(5,'2026-01-29','HANH_CHINH','2026-01-29 08:00','2026-01-29 17:00',8.00,0.00,'dung_giờ','van_tay',NULL),
+(5,'2026-01-30','HANH_CHINH','2026-01-30 08:00','2026-01-30 17:00',8.00,0.00,'dung_giờ','van_tay',NULL),
+-- NV022 (TP IT) - tháng 1
+(22,'2026-01-02','HANH_CHINH','2026-01-02 07:55','2026-01-02 18:00',8.00,1.00,'dung_giờ','van_tay',NULL),
+(22,'2026-01-05','HANH_CHINH','2026-01-05 08:00','2026-01-05 17:00',8.00,0.00,'dung_giờ','van_tay',NULL),
+(22,'2026-01-06','HANH_CHINH','2026-01-06 08:00','2026-01-06 17:00',8.00,0.00,'dung_giờ','van_tay',NULL),
+(22,'2026-01-07','HANH_CHINH','2026-01-07 08:00','2026-01-07 19:00',8.00,2.00,'dung_giờ','van_tay',NULL),
+(22,'2026-01-08','HANH_CHINH','2026-01-08 08:00','2026-01-08 17:00',8.00,0.00,'dung_giờ','van_tay',NULL),
+(22,'2026-01-09','HANH_CHINH','2026-01-09 08:00','2026-01-09 17:00',8.00,0.00,'dung_giờ','van_tay',NULL),
+(22,'2026-01-12','HANH_CHINH','2026-01-12 08:00','2026-01-12 17:00',8.00,0.00,'dung_giờ','van_tay',NULL),
+(22,'2026-01-13','HANH_CHINH','2026-01-13 08:00','2026-01-13 17:00',8.00,0.00,'dung_giờ','van_tay',NULL),
+(22,'2026-01-14','HANH_CHINH','2026-01-14 08:00','2026-01-14 17:00',8.00,0.00,'dung_giờ','van_tay',NULL),
+(22,'2026-01-15','HANH_CHINH','2026-01-15 08:00','2026-01-15 17:00',8.00,0.00,'dung_giờ','van_tay',NULL),
+(22,'2026-01-16','HANH_CHINH','2026-01-16 08:00','2026-01-16 17:00',8.00,0.00,'dung_giờ','van_tay',NULL),
+(22,'2026-01-19','HANH_CHINH','2026-01-19 08:00','2026-01-19 17:00',8.00,0.00,'dung_giờ','van_tay',NULL),
+(22,'2026-01-20','HANH_CHINH','2026-01-20 08:00','2026-01-20 17:00',8.00,0.00,'dung_giờ','van_tay',NULL),
+(22,'2026-01-21','HANH_CHINH','2026-01-21 08:00','2026-01-21 17:00',8.00,0.00,'dung_giờ','van_tay',NULL),
+(22,'2026-01-22','HANH_CHINH','2026-01-22 08:00','2026-01-22 17:00',8.00,0.00,'dung_giờ','van_tay',NULL),
+(22,'2026-01-23','HANH_CHINH','2026-01-23 08:00','2026-01-23 17:00',8.00,0.00,'dung_giờ','van_tay',NULL),
+(22,'2026-01-26','HANH_CHINH','2026-01-26 08:00','2026-01-26 17:00',8.00,0.00,'dung_giờ','van_tay',NULL),
+(22,'2026-01-27','HANH_CHINH','2026-01-27 08:00','2026-01-27 17:00',8.00,0.00,'dung_giờ','van_tay',NULL),
+(22,'2026-01-28','HANH_CHINH','2026-01-28 08:00','2026-01-28 17:00',8.00,0.00,'dung_giờ','van_tay',NULL),
+(22,'2026-01-29','HANH_CHINH','2026-01-29 08:00','2026-01-29 17:00',8.00,0.00,'dung_giờ','van_tay',NULL),
+(22,'2026-01-30','HANH_CHINH','2026-01-30 08:00','2026-01-30 17:00',8.00,0.00,'dung_giờ','van_tay',NULL),
+-- NV023 (TL Backend) - tháng 1 co 1 ngày nghi om
+(23,'2026-01-02','HANH_CHINH','2026-01-02 08:00','2026-01-02 17:00',8.00,0.00,'dung_giờ','van_tay',NULL),
+(23,'2026-01-05','HANH_CHINH','2026-01-05 08:00','2026-01-05 17:00',8.00,0.00,'dung_giờ','van_tay',NULL),
+(23,'2026-01-06','HANH_CHINH','2026-01-06 08:00','2026-01-06 17:00',8.00,0.00,'dung_giờ','van_tay',NULL),
+(23,'2026-01-07','HANH_CHINH','2026-01-07 08:00','2026-01-07 17:00',8.00,0.00,'dung_giờ','van_tay',NULL),
 (23,'2026-01-08',NULL,NULL,NULL,0.00,0.00,'nghi_phep','thu_cong','Nghi om'),
-(23,'2026-01-09','HANH_CHINH','2026-01-09 08:00','2026-01-09 17:00',8.00,0.00,'dung_gio','van_tay',NULL),
-(23,'2026-01-12','HANH_CHINH','2026-01-12 08:00','2026-01-12 17:00',8.00,0.00,'dung_gio','van_tay',NULL),
-(23,'2026-01-13','HANH_CHINH','2026-01-13 08:00','2026-01-13 17:00',8.00,0.00,'dung_gio','van_tay',NULL),
-(23,'2026-01-14','HANH_CHINH','2026-01-14 08:00','2026-01-14 17:00',8.00,0.00,'dung_gio','van_tay',NULL),
-(23,'2026-01-15','HANH_CHINH','2026-01-15 08:00','2026-01-15 17:00',8.00,0.00,'dung_gio','van_tay',NULL),
-(23,'2026-01-16','HANH_CHINH','2026-01-16 08:00','2026-01-16 17:00',8.00,0.00,'dung_gio','van_tay',NULL),
-(23,'2026-01-19','HANH_CHINH','2026-01-19 08:00','2026-01-19 17:00',8.00,0.00,'dung_gio','van_tay',NULL),
-(23,'2026-01-20','HANH_CHINH','2026-01-20 08:00','2026-01-20 17:00',8.00,0.00,'dung_gio','van_tay',NULL),
-(23,'2026-01-21','HANH_CHINH','2026-01-21 08:00','2026-01-21 17:00',8.00,0.00,'dung_gio','van_tay',NULL),
-(23,'2026-01-22','HANH_CHINH','2026-01-22 08:00','2026-01-22 17:00',8.00,0.00,'dung_gio','van_tay',NULL),
-(23,'2026-01-23','HANH_CHINH','2026-01-23 08:00','2026-01-23 17:00',8.00,0.00,'dung_gio','van_tay',NULL),
-(23,'2026-01-26','HANH_CHINH','2026-01-26 08:00','2026-01-26 17:00',8.00,0.00,'dung_gio','van_tay',NULL),
-(23,'2026-01-27','HANH_CHINH','2026-01-27 08:00','2026-01-27 17:00',8.00,0.00,'dung_gio','van_tay',NULL),
-(23,'2026-01-28','HANH_CHINH','2026-01-28 08:00','2026-01-28 17:00',8.00,0.00,'dung_gio','van_tay',NULL),
-(23,'2026-01-29','HANH_CHINH','2026-01-29 08:00','2026-01-29 17:00',8.00,0.00,'dung_gio','van_tay',NULL),
-(23,'2026-01-30','HANH_CHINH','2026-01-30 08:00','2026-01-30 17:00',8.00,0.00,'dung_gio','van_tay',NULL),
+(23,'2026-01-09','HANH_CHINH','2026-01-09 08:00','2026-01-09 17:00',8.00,0.00,'dung_giờ','van_tay',NULL),
+(23,'2026-01-12','HANH_CHINH','2026-01-12 08:00','2026-01-12 17:00',8.00,0.00,'dung_giờ','van_tay',NULL),
+(23,'2026-01-13','HANH_CHINH','2026-01-13 08:00','2026-01-13 17:00',8.00,0.00,'dung_giờ','van_tay',NULL),
+(23,'2026-01-14','HANH_CHINH','2026-01-14 08:00','2026-01-14 17:00',8.00,0.00,'dung_giờ','van_tay',NULL),
+(23,'2026-01-15','HANH_CHINH','2026-01-15 08:00','2026-01-15 17:00',8.00,0.00,'dung_giờ','van_tay',NULL),
+(23,'2026-01-16','HANH_CHINH','2026-01-16 08:00','2026-01-16 17:00',8.00,0.00,'dung_giờ','van_tay',NULL),
+(23,'2026-01-19','HANH_CHINH','2026-01-19 08:00','2026-01-19 17:00',8.00,0.00,'dung_giờ','van_tay',NULL),
+(23,'2026-01-20','HANH_CHINH','2026-01-20 08:00','2026-01-20 17:00',8.00,0.00,'dung_giờ','van_tay',NULL),
+(23,'2026-01-21','HANH_CHINH','2026-01-21 08:00','2026-01-21 17:00',8.00,0.00,'dung_giờ','van_tay',NULL),
+(23,'2026-01-22','HANH_CHINH','2026-01-22 08:00','2026-01-22 17:00',8.00,0.00,'dung_giờ','van_tay',NULL),
+(23,'2026-01-23','HANH_CHINH','2026-01-23 08:00','2026-01-23 17:00',8.00,0.00,'dung_giờ','van_tay',NULL),
+(23,'2026-01-26','HANH_CHINH','2026-01-26 08:00','2026-01-26 17:00',8.00,0.00,'dung_giờ','van_tay',NULL),
+(23,'2026-01-27','HANH_CHINH','2026-01-27 08:00','2026-01-27 17:00',8.00,0.00,'dung_giờ','van_tay',NULL),
+(23,'2026-01-28','HANH_CHINH','2026-01-28 08:00','2026-01-28 17:00',8.00,0.00,'dung_giờ','van_tay',NULL),
+(23,'2026-01-29','HANH_CHINH','2026-01-29 08:00','2026-01-29 17:00',8.00,0.00,'dung_giờ','van_tay',NULL),
+(23,'2026-01-30','HANH_CHINH','2026-01-30 08:00','2026-01-30 17:00',8.00,0.00,'dung_giờ','van_tay',NULL),
 -- NV024 (SE Senior BE) - co lam them nhieu
-(24,'2026-01-02','HANH_CHINH','2026-01-02 08:00','2026-01-02 19:30',8.00,2.50,'dung_gio','van_tay',NULL),
-(24,'2026-01-05','HANH_CHINH','2026-01-05 08:00','2026-01-05 17:00',8.00,0.00,'dung_gio','van_tay',NULL),
-(24,'2026-01-06','HANH_CHINH','2026-01-06 08:00','2026-01-06 17:00',8.00,0.00,'dung_gio','van_tay',NULL),
-(24,'2026-01-07','HANH_CHINH','2026-01-07 08:00','2026-01-07 20:00',8.00,3.00,'dung_gio','van_tay',NULL),
-(24,'2026-01-08','HANH_CHINH','2026-01-08 08:00','2026-01-08 17:00',8.00,0.00,'dung_gio','van_tay',NULL),
-(24,'2026-01-09','HANH_CHINH','2026-01-09 08:00','2026-01-09 18:00',8.00,1.00,'dung_gio','van_tay',NULL),
-(24,'2026-01-12','HANH_CHINH','2026-01-12 08:00','2026-01-12 17:00',8.00,0.00,'dung_gio','van_tay',NULL),
-(24,'2026-01-13','HANH_CHINH','2026-01-13 08:00','2026-01-13 17:00',8.00,0.00,'dung_gio','van_tay',NULL),
-(24,'2026-01-14','HANH_CHINH','2026-01-14 08:00','2026-01-14 17:00',8.00,0.00,'dung_gio','van_tay',NULL),
-(24,'2026-01-15','HANH_CHINH','2026-01-15 08:00','2026-01-15 17:00',8.00,0.00,'dung_gio','van_tay',NULL),
-(24,'2026-01-16','HANH_CHINH','2026-01-16 08:00','2026-01-16 17:00',8.00,0.00,'dung_gio','van_tay',NULL),
-(24,'2026-01-19','HANH_CHINH','2026-01-19 08:00','2026-01-19 17:00',8.00,0.00,'dung_gio','van_tay',NULL),
-(24,'2026-01-20','HANH_CHINH','2026-01-20 08:00','2026-01-20 17:00',8.00,0.00,'dung_gio','van_tay',NULL),
-(24,'2026-01-21','HANH_CHINH','2026-01-21 08:00','2026-01-21 17:00',8.00,0.00,'dung_gio','van_tay',NULL),
-(24,'2026-01-22','HANH_CHINH','2026-01-22 08:00','2026-01-22 17:00',8.00,0.00,'dung_gio','van_tay',NULL),
-(24,'2026-01-23','HANH_CHINH','2026-01-23 08:00','2026-01-23 17:00',8.00,0.00,'dung_gio','van_tay',NULL),
-(24,'2026-01-26','HANH_CHINH','2026-01-26 08:00','2026-01-26 17:00',8.00,0.00,'dung_gio','van_tay',NULL),
-(24,'2026-01-27','HANH_CHINH','2026-01-27 08:00','2026-01-27 17:00',8.00,0.00,'dung_gio','van_tay',NULL),
-(24,'2026-01-28','HANH_CHINH','2026-01-28 08:00','2026-01-28 17:00',8.00,0.00,'dung_gio','van_tay',NULL),
-(24,'2026-01-29','HANH_CHINH','2026-01-29 08:00','2026-01-29 17:00',8.00,0.00,'dung_gio','van_tay',NULL),
-(24,'2026-01-30','HANH_CHINH','2026-01-30 08:00','2026-01-30 17:00',8.00,0.00,'dung_gio','van_tay',NULL),
--- NV025 (SE Mid BE) - 1 ngay vang mat ko phep
-(25,'2026-01-02','HANH_CHINH','2026-01-02 08:00','2026-01-02 17:00',8.00,0.00,'dung_gio','van_tay',NULL),
-(25,'2026-01-05','HANH_CHINH','2026-01-05 08:00','2026-01-05 17:00',8.00,0.00,'dung_gio','van_tay',NULL),
+(24,'2026-01-02','HANH_CHINH','2026-01-02 08:00','2026-01-02 19:30',8.00,2.50,'dung_giờ','van_tay',NULL),
+(24,'2026-01-05','HANH_CHINH','2026-01-05 08:00','2026-01-05 17:00',8.00,0.00,'dung_giờ','van_tay',NULL),
+(24,'2026-01-06','HANH_CHINH','2026-01-06 08:00','2026-01-06 17:00',8.00,0.00,'dung_giờ','van_tay',NULL),
+(24,'2026-01-07','HANH_CHINH','2026-01-07 08:00','2026-01-07 20:00',8.00,3.00,'dung_giờ','van_tay',NULL),
+(24,'2026-01-08','HANH_CHINH','2026-01-08 08:00','2026-01-08 17:00',8.00,0.00,'dung_giờ','van_tay',NULL),
+(24,'2026-01-09','HANH_CHINH','2026-01-09 08:00','2026-01-09 18:00',8.00,1.00,'dung_giờ','van_tay',NULL),
+(24,'2026-01-12','HANH_CHINH','2026-01-12 08:00','2026-01-12 17:00',8.00,0.00,'dung_giờ','van_tay',NULL),
+(24,'2026-01-13','HANH_CHINH','2026-01-13 08:00','2026-01-13 17:00',8.00,0.00,'dung_giờ','van_tay',NULL),
+(24,'2026-01-14','HANH_CHINH','2026-01-14 08:00','2026-01-14 17:00',8.00,0.00,'dung_giờ','van_tay',NULL),
+(24,'2026-01-15','HANH_CHINH','2026-01-15 08:00','2026-01-15 17:00',8.00,0.00,'dung_giờ','van_tay',NULL),
+(24,'2026-01-16','HANH_CHINH','2026-01-16 08:00','2026-01-16 17:00',8.00,0.00,'dung_giờ','van_tay',NULL),
+(24,'2026-01-19','HANH_CHINH','2026-01-19 08:00','2026-01-19 17:00',8.00,0.00,'dung_giờ','van_tay',NULL),
+(24,'2026-01-20','HANH_CHINH','2026-01-20 08:00','2026-01-20 17:00',8.00,0.00,'dung_giờ','van_tay',NULL),
+(24,'2026-01-21','HANH_CHINH','2026-01-21 08:00','2026-01-21 17:00',8.00,0.00,'dung_giờ','van_tay',NULL),
+(24,'2026-01-22','HANH_CHINH','2026-01-22 08:00','2026-01-22 17:00',8.00,0.00,'dung_giờ','van_tay',NULL),
+(24,'2026-01-23','HANH_CHINH','2026-01-23 08:00','2026-01-23 17:00',8.00,0.00,'dung_giờ','van_tay',NULL),
+(24,'2026-01-26','HANH_CHINH','2026-01-26 08:00','2026-01-26 17:00',8.00,0.00,'dung_giờ','van_tay',NULL),
+(24,'2026-01-27','HANH_CHINH','2026-01-27 08:00','2026-01-27 17:00',8.00,0.00,'dung_giờ','van_tay',NULL),
+(24,'2026-01-28','HANH_CHINH','2026-01-28 08:00','2026-01-28 17:00',8.00,0.00,'dung_giờ','van_tay',NULL),
+(24,'2026-01-29','HANH_CHINH','2026-01-29 08:00','2026-01-29 17:00',8.00,0.00,'dung_giờ','van_tay',NULL),
+(24,'2026-01-30','HANH_CHINH','2026-01-30 08:00','2026-01-30 17:00',8.00,0.00,'dung_giờ','van_tay',NULL),
+-- NV025 (SE Mid BE) - 1 ngày vang mat ko phep
+(25,'2026-01-02','HANH_CHINH','2026-01-02 08:00','2026-01-02 17:00',8.00,0.00,'dung_giờ','van_tay',NULL),
+(25,'2026-01-05','HANH_CHINH','2026-01-05 08:00','2026-01-05 17:00',8.00,0.00,'dung_giờ','van_tay',NULL),
 (25,'2026-01-06',NULL,NULL,NULL,0.00,0.00,'vang_mat','thu_cong','Vang mat khong ly do'),
-(25,'2026-01-07','HANH_CHINH','2026-01-07 08:00','2026-01-07 17:00',8.00,0.00,'dung_gio','van_tay',NULL),
-(25,'2026-01-08','HANH_CHINH','2026-01-08 08:00','2026-01-08 17:00',8.00,0.00,'dung_gio','van_tay',NULL),
-(25,'2026-01-09','HANH_CHINH','2026-01-09 08:00','2026-01-09 17:00',8.00,0.00,'dung_gio','van_tay',NULL),
-(25,'2026-01-12','HANH_CHINH','2026-01-12 08:00','2026-01-12 17:00',8.00,0.00,'dung_gio','van_tay',NULL),
-(25,'2026-01-13','HANH_CHINH','2026-01-13 08:00','2026-01-13 17:00',8.00,0.00,'dung_gio','van_tay',NULL),
-(25,'2026-01-14','HANH_CHINH','2026-01-14 08:00','2026-01-14 17:00',8.00,0.00,'dung_gio','van_tay',NULL),
-(25,'2026-01-15','HANH_CHINH','2026-01-15 08:00','2026-01-15 17:00',8.00,0.00,'dung_gio','van_tay',NULL),
-(25,'2026-01-16','HANH_CHINH','2026-01-16 08:00','2026-01-16 17:00',8.00,0.00,'dung_gio','van_tay',NULL),
-(25,'2026-01-19','HANH_CHINH','2026-01-19 08:00','2026-01-19 17:00',8.00,0.00,'dung_gio','van_tay',NULL),
-(25,'2026-01-20','HANH_CHINH','2026-01-20 08:00','2026-01-20 17:00',8.00,0.00,'dung_gio','van_tay',NULL),
-(25,'2026-01-21','HANH_CHINH','2026-01-21 08:00','2026-01-21 17:00',8.00,0.00,'dung_gio','van_tay',NULL),
-(25,'2026-01-22','HANH_CHINH','2026-01-22 08:00','2026-01-22 17:00',8.00,0.00,'dung_gio','van_tay',NULL),
-(25,'2026-01-23','HANH_CHINH','2026-01-23 08:00','2026-01-23 17:00',8.00,0.00,'dung_gio','van_tay',NULL),
-(25,'2026-01-26','HANH_CHINH','2026-01-26 08:00','2026-01-26 17:00',8.00,0.00,'dung_gio','van_tay',NULL),
-(25,'2026-01-27','HANH_CHINH','2026-01-27 08:00','2026-01-27 17:00',8.00,0.00,'dung_gio','van_tay',NULL),
-(25,'2026-01-28','HANH_CHINH','2026-01-28 08:00','2026-01-28 17:00',8.00,0.00,'dung_gio','van_tay',NULL),
-(25,'2026-01-29','HANH_CHINH','2026-01-29 08:00','2026-01-29 17:00',8.00,0.00,'dung_gio','van_tay',NULL),
-(25,'2026-01-30','HANH_CHINH','2026-01-30 08:00','2026-01-30 17:00',8.00,0.00,'dung_gio','van_tay',NULL),
--- NV015 (TP KD) - thang 1, cong tac 2 ngay
-(15,'2026-01-02','HANH_CHINH','2026-01-02 08:00','2026-01-02 17:00',8.00,0.00,'dung_gio','gps',NULL),
-(15,'2026-01-05','HANH_CHINH','2026-01-05 08:00','2026-01-05 17:00',8.00,0.00,'dung_gio','gps',NULL),
+(25,'2026-01-07','HANH_CHINH','2026-01-07 08:00','2026-01-07 17:00',8.00,0.00,'dung_giờ','van_tay',NULL),
+(25,'2026-01-08','HANH_CHINH','2026-01-08 08:00','2026-01-08 17:00',8.00,0.00,'dung_giờ','van_tay',NULL),
+(25,'2026-01-09','HANH_CHINH','2026-01-09 08:00','2026-01-09 17:00',8.00,0.00,'dung_giờ','van_tay',NULL),
+(25,'2026-01-12','HANH_CHINH','2026-01-12 08:00','2026-01-12 17:00',8.00,0.00,'dung_giờ','van_tay',NULL),
+(25,'2026-01-13','HANH_CHINH','2026-01-13 08:00','2026-01-13 17:00',8.00,0.00,'dung_giờ','van_tay',NULL),
+(25,'2026-01-14','HANH_CHINH','2026-01-14 08:00','2026-01-14 17:00',8.00,0.00,'dung_giờ','van_tay',NULL),
+(25,'2026-01-15','HANH_CHINH','2026-01-15 08:00','2026-01-15 17:00',8.00,0.00,'dung_giờ','van_tay',NULL),
+(25,'2026-01-16','HANH_CHINH','2026-01-16 08:00','2026-01-16 17:00',8.00,0.00,'dung_giờ','van_tay',NULL),
+(25,'2026-01-19','HANH_CHINH','2026-01-19 08:00','2026-01-19 17:00',8.00,0.00,'dung_giờ','van_tay',NULL),
+(25,'2026-01-20','HANH_CHINH','2026-01-20 08:00','2026-01-20 17:00',8.00,0.00,'dung_giờ','van_tay',NULL),
+(25,'2026-01-21','HANH_CHINH','2026-01-21 08:00','2026-01-21 17:00',8.00,0.00,'dung_giờ','van_tay',NULL),
+(25,'2026-01-22','HANH_CHINH','2026-01-22 08:00','2026-01-22 17:00',8.00,0.00,'dung_giờ','van_tay',NULL),
+(25,'2026-01-23','HANH_CHINH','2026-01-23 08:00','2026-01-23 17:00',8.00,0.00,'dung_giờ','van_tay',NULL),
+(25,'2026-01-26','HANH_CHINH','2026-01-26 08:00','2026-01-26 17:00',8.00,0.00,'dung_giờ','van_tay',NULL),
+(25,'2026-01-27','HANH_CHINH','2026-01-27 08:00','2026-01-27 17:00',8.00,0.00,'dung_giờ','van_tay',NULL),
+(25,'2026-01-28','HANH_CHINH','2026-01-28 08:00','2026-01-28 17:00',8.00,0.00,'dung_giờ','van_tay',NULL),
+(25,'2026-01-29','HANH_CHINH','2026-01-29 08:00','2026-01-29 17:00',8.00,0.00,'dung_giờ','van_tay',NULL),
+(25,'2026-01-30','HANH_CHINH','2026-01-30 08:00','2026-01-30 17:00',8.00,0.00,'dung_giờ','van_tay',NULL),
+-- NV015 (TP KD) - tháng 1, cong tac 2 ngày
+(15,'2026-01-02','HANH_CHINH','2026-01-02 08:00','2026-01-02 17:00',8.00,0.00,'dung_giờ','gps',NULL),
+(15,'2026-01-05','HANH_CHINH','2026-01-05 08:00','2026-01-05 17:00',8.00,0.00,'dung_giờ','gps',NULL),
 (15,'2026-01-06',NULL,NULL,NULL,8.00,0.00,'cong_tac','thu_cong','Cong tac Ha Noi'),
 (15,'2026-01-07',NULL,NULL,NULL,8.00,0.00,'cong_tac','thu_cong','Cong tac Ha Noi'),
-(15,'2026-01-08','HANH_CHINH','2026-01-08 08:00','2026-01-08 17:00',8.00,0.00,'dung_gio','gps',NULL),
-(15,'2026-01-09','HANH_CHINH','2026-01-09 08:00','2026-01-09 17:00',8.00,0.00,'dung_gio','gps',NULL),
-(15,'2026-01-12','HANH_CHINH','2026-01-12 08:00','2026-01-12 17:00',8.00,0.00,'dung_gio','gps',NULL),
-(15,'2026-01-13','HANH_CHINH','2026-01-13 08:00','2026-01-13 17:00',8.00,0.00,'dung_gio','gps',NULL),
-(15,'2026-01-14','HANH_CHINH','2026-01-14 08:00','2026-01-14 17:00',8.00,0.00,'dung_gio','gps',NULL),
-(15,'2026-01-15','HANH_CHINH','2026-01-15 08:00','2026-01-15 17:00',8.00,0.00,'dung_gio','gps',NULL),
-(15,'2026-01-16','HANH_CHINH','2026-01-16 08:00','2026-01-16 17:00',8.00,0.00,'dung_gio','gps',NULL),
-(15,'2026-01-19','HANH_CHINH','2026-01-19 08:00','2026-01-19 17:00',8.00,0.00,'dung_gio','gps',NULL),
-(15,'2026-01-20','HANH_CHINH','2026-01-20 08:00','2026-01-20 17:00',8.00,0.00,'dung_gio','gps',NULL),
-(15,'2026-01-21','HANH_CHINH','2026-01-21 08:00','2026-01-21 17:00',8.00,0.00,'dung_gio','gps',NULL),
-(15,'2026-01-22','HANH_CHINH','2026-01-22 08:00','2026-01-22 17:00',8.00,0.00,'dung_gio','gps',NULL),
-(15,'2026-01-23','HANH_CHINH','2026-01-23 08:00','2026-01-23 17:00',8.00,0.00,'dung_gio','gps',NULL),
-(15,'2026-01-26','HANH_CHINH','2026-01-26 08:00','2026-01-26 17:00',8.00,0.00,'dung_gio','gps',NULL),
-(15,'2026-01-27','HANH_CHINH','2026-01-27 08:00','2026-01-27 17:00',8.00,0.00,'dung_gio','gps',NULL),
-(15,'2026-01-28','HANH_CHINH','2026-01-28 08:00','2026-01-28 17:00',8.00,0.00,'dung_gio','gps',NULL),
-(15,'2026-01-29','HANH_CHINH','2026-01-29 08:00','2026-01-29 17:00',8.00,0.00,'dung_gio','gps',NULL),
-(15,'2026-01-30','HANH_CHINH','2026-01-30 08:00','2026-01-30 17:00',8.00,0.00,'dung_gio','gps',NULL);
+(15,'2026-01-08','HANH_CHINH','2026-01-08 08:00','2026-01-08 17:00',8.00,0.00,'dung_giờ','gps',NULL),
+(15,'2026-01-09','HANH_CHINH','2026-01-09 08:00','2026-01-09 17:00',8.00,0.00,'dung_giờ','gps',NULL),
+(15,'2026-01-12','HANH_CHINH','2026-01-12 08:00','2026-01-12 17:00',8.00,0.00,'dung_giờ','gps',NULL),
+(15,'2026-01-13','HANH_CHINH','2026-01-13 08:00','2026-01-13 17:00',8.00,0.00,'dung_giờ','gps',NULL),
+(15,'2026-01-14','HANH_CHINH','2026-01-14 08:00','2026-01-14 17:00',8.00,0.00,'dung_giờ','gps',NULL),
+(15,'2026-01-15','HANH_CHINH','2026-01-15 08:00','2026-01-15 17:00',8.00,0.00,'dung_giờ','gps',NULL),
+(15,'2026-01-16','HANH_CHINH','2026-01-16 08:00','2026-01-16 17:00',8.00,0.00,'dung_giờ','gps',NULL),
+(15,'2026-01-19','HANH_CHINH','2026-01-19 08:00','2026-01-19 17:00',8.00,0.00,'dung_giờ','gps',NULL),
+(15,'2026-01-20','HANH_CHINH','2026-01-20 08:00','2026-01-20 17:00',8.00,0.00,'dung_giờ','gps',NULL),
+(15,'2026-01-21','HANH_CHINH','2026-01-21 08:00','2026-01-21 17:00',8.00,0.00,'dung_giờ','gps',NULL),
+(15,'2026-01-22','HANH_CHINH','2026-01-22 08:00','2026-01-22 17:00',8.00,0.00,'dung_giờ','gps',NULL),
+(15,'2026-01-23','HANH_CHINH','2026-01-23 08:00','2026-01-23 17:00',8.00,0.00,'dung_giờ','gps',NULL),
+(15,'2026-01-26','HANH_CHINH','2026-01-26 08:00','2026-01-26 17:00',8.00,0.00,'dung_giờ','gps',NULL),
+(15,'2026-01-27','HANH_CHINH','2026-01-27 08:00','2026-01-27 17:00',8.00,0.00,'dung_giờ','gps',NULL),
+(15,'2026-01-28','HANH_CHINH','2026-01-28 08:00','2026-01-28 17:00',8.00,0.00,'dung_giờ','gps',NULL),
+(15,'2026-01-29','HANH_CHINH','2026-01-29 08:00','2026-01-29 17:00',8.00,0.00,'dung_giờ','gps',NULL),
+(15,'2026-01-30','HANH_CHINH','2026-01-30 08:00','2026-01-30 17:00',8.00,0.00,'dung_giờ','gps',NULL);
 
--- *** CHAM CONG THANG 2/2026 (Thang 2 ngay lam viec: 2,3,4,5,6,9,10,11,12,13,16,17,18,19,20,23,24,25,26,27) ***
-INSERT INTO CHAMCONG (maNV, ngay, maCaLam, gioVao, gioRa, soGioLam, gioLamThem, trangThai, phuongThucChamCong, ghiChu) VALUES
--- NV001 thang 2
-(1,'2026-02-02','HANH_CHINH','2026-02-02 08:00','2026-02-02 17:00',8.00,0.00,'dung_gio','the_tu',NULL),
-(1,'2026-02-03','HANH_CHINH','2026-02-03 07:55','2026-02-03 17:00',8.00,0.00,'dung_gio','the_tu',NULL),
+-- *** CHAM CONG THANG 2/2026 (Thang 2 ngày lam viec: 2,3,4,5,6,9,10,11,12,13,16,17,18,19,20,23,24,25,26,27) ***
+INSERT INTO CHAMCONG (maNV, ngày, maCaLam, giờVao, giờRa, soGioLam, giờLamThem, trangThai, phuongThucChamCong, ghiChu) VALUES
+-- NV001 tháng 2
+(1,'2026-02-02','HANH_CHINH','2026-02-02 08:00','2026-02-02 17:00',8.00,0.00,'dung_giờ','the_tu',NULL),
+(1,'2026-02-03','HANH_CHINH','2026-02-03 07:55','2026-02-03 17:00',8.00,0.00,'dung_giờ','the_tu',NULL),
 (1,'2026-02-04','HANH_CHINH','2026-02-04 08:25','2026-02-04 17:00',7.58,0.00,'di_muon','the_tu','Di muon 25 phut'),
-(1,'2026-02-05','HANH_CHINH','2026-02-05 08:00','2026-02-05 17:00',8.00,0.00,'dung_gio','the_tu',NULL),
-(1,'2026-02-06','HANH_CHINH','2026-02-06 08:00','2026-02-06 19:00',8.00,2.00,'dung_gio','the_tu',NULL),
-(1,'2026-02-09','HANH_CHINH','2026-02-09 08:00','2026-02-09 17:00',8.00,0.00,'dung_gio','the_tu',NULL),
-(1,'2026-02-10','HANH_CHINH','2026-02-10 08:00','2026-02-10 17:00',8.00,0.00,'dung_gio','the_tu',NULL),
-(1,'2026-02-11','HANH_CHINH','2026-02-11 08:00','2026-02-11 17:00',8.00,0.00,'dung_gio','the_tu',NULL),
-(1,'2026-02-12','HANH_CHINH','2026-02-12 08:00','2026-02-12 17:00',8.00,0.00,'dung_gio','the_tu',NULL),
-(1,'2026-02-13','HANH_CHINH','2026-02-13 08:00','2026-02-13 17:00',8.00,0.00,'dung_gio','the_tu',NULL),
-(1,'2026-02-16','HANH_CHINH','2026-02-16 08:00','2026-02-16 17:00',8.00,0.00,'dung_gio','the_tu',NULL),
-(1,'2026-02-17','HANH_CHINH','2026-02-17 08:00','2026-02-17 17:00',8.00,0.00,'dung_gio','the_tu',NULL),
-(1,'2026-02-18','HANH_CHINH','2026-02-18 08:00','2026-02-18 17:00',8.00,0.00,'dung_gio','the_tu',NULL),
+(1,'2026-02-05','HANH_CHINH','2026-02-05 08:00','2026-02-05 17:00',8.00,0.00,'dung_giờ','the_tu',NULL),
+(1,'2026-02-06','HANH_CHINH','2026-02-06 08:00','2026-02-06 19:00',8.00,2.00,'dung_giờ','the_tu',NULL),
+(1,'2026-02-09','HANH_CHINH','2026-02-09 08:00','2026-02-09 17:00',8.00,0.00,'dung_giờ','the_tu',NULL),
+(1,'2026-02-10','HANH_CHINH','2026-02-10 08:00','2026-02-10 17:00',8.00,0.00,'dung_giờ','the_tu',NULL),
+(1,'2026-02-11','HANH_CHINH','2026-02-11 08:00','2026-02-11 17:00',8.00,0.00,'dung_giờ','the_tu',NULL),
+(1,'2026-02-12','HANH_CHINH','2026-02-12 08:00','2026-02-12 17:00',8.00,0.00,'dung_giờ','the_tu',NULL),
+(1,'2026-02-13','HANH_CHINH','2026-02-13 08:00','2026-02-13 17:00',8.00,0.00,'dung_giờ','the_tu',NULL),
+(1,'2026-02-16','HANH_CHINH','2026-02-16 08:00','2026-02-16 17:00',8.00,0.00,'dung_giờ','the_tu',NULL),
+(1,'2026-02-17','HANH_CHINH','2026-02-17 08:00','2026-02-17 17:00',8.00,0.00,'dung_giờ','the_tu',NULL),
+(1,'2026-02-18','HANH_CHINH','2026-02-18 08:00','2026-02-18 17:00',8.00,0.00,'dung_giờ','the_tu',NULL),
 (1,'2026-02-19','HANH_CHINH','2026-02-19 08:35','2026-02-19 17:00',7.42,0.00,'di_muon','the_tu','Di muon 35 phut'),
-(1,'2026-02-20','HANH_CHINH','2026-02-20 08:00','2026-02-20 19:30',8.00,2.50,'dung_gio','the_tu',NULL),
-(1,'2026-02-23','HANH_CHINH','2026-02-23 08:00','2026-02-23 17:00',8.00,0.00,'dung_gio','the_tu',NULL),
-(1,'2026-02-24','HANH_CHINH','2026-02-24 08:00','2026-02-24 17:00',8.00,0.00,'dung_gio','the_tu',NULL),
-(1,'2026-02-25','HANH_CHINH','2026-02-25 08:00','2026-02-25 17:00',8.00,0.00,'dung_gio','the_tu',NULL),
-(1,'2026-02-26','HANH_CHINH','2026-02-26 08:00','2026-02-26 17:00',8.00,0.00,'dung_gio','the_tu',NULL),
-(1,'2026-02-27','HANH_CHINH','2026-02-27 08:00','2026-02-27 17:00',8.00,0.00,'dung_gio','the_tu',NULL),
--- NV005 thang 2 (nghi phep 1 ngay)
-(5,'2026-02-02','HANH_CHINH','2026-02-02 08:00','2026-02-02 17:00',8.00,0.00,'dung_gio','van_tay',NULL),
-(5,'2026-02-03','HANH_CHINH','2026-02-03 08:00','2026-02-03 17:00',8.00,0.00,'dung_gio','van_tay',NULL),
-(5,'2026-02-04','HANH_CHINH','2026-02-04 08:00','2026-02-04 17:00',8.00,0.00,'dung_gio','van_tay',NULL),
-(5,'2026-02-05','HANH_CHINH','2026-02-05 08:00','2026-02-05 17:00',8.00,0.00,'dung_gio','van_tay',NULL),
-(5,'2026-02-06','HANH_CHINH','2026-02-06 08:00','2026-02-06 17:00',8.00,0.00,'dung_gio','van_tay',NULL),
-(5,'2026-02-09','HANH_CHINH','2026-02-09 08:00','2026-02-09 17:00',8.00,0.00,'dung_gio','van_tay',NULL),
-(5,'2026-02-10','HANH_CHINH','2026-02-10 08:00','2026-02-10 17:00',8.00,0.00,'dung_gio','van_tay',NULL),
-(5,'2026-02-11','HANH_CHINH','2026-02-11 08:00','2026-02-11 17:00',8.00,0.00,'dung_gio','van_tay',NULL),
-(5,'2026-02-12','HANH_CHINH','2026-02-12 08:00','2026-02-12 17:00',8.00,0.00,'dung_gio','van_tay',NULL),
-(5,'2026-02-13','HANH_CHINH','2026-02-13 08:00','2026-02-13 17:00',8.00,0.00,'dung_gio','van_tay',NULL),
+(1,'2026-02-20','HANH_CHINH','2026-02-20 08:00','2026-02-20 19:30',8.00,2.50,'dung_giờ','the_tu',NULL),
+(1,'2026-02-23','HANH_CHINH','2026-02-23 08:00','2026-02-23 17:00',8.00,0.00,'dung_giờ','the_tu',NULL),
+(1,'2026-02-24','HANH_CHINH','2026-02-24 08:00','2026-02-24 17:00',8.00,0.00,'dung_giờ','the_tu',NULL),
+(1,'2026-02-25','HANH_CHINH','2026-02-25 08:00','2026-02-25 17:00',8.00,0.00,'dung_giờ','the_tu',NULL),
+(1,'2026-02-26','HANH_CHINH','2026-02-26 08:00','2026-02-26 17:00',8.00,0.00,'dung_giờ','the_tu',NULL),
+(1,'2026-02-27','HANH_CHINH','2026-02-27 08:00','2026-02-27 17:00',8.00,0.00,'dung_giờ','the_tu',NULL),
+-- NV005 tháng 2 (nghi phep 1 ngày)
+(5,'2026-02-02','HANH_CHINH','2026-02-02 08:00','2026-02-02 17:00',8.00,0.00,'dung_giờ','van_tay',NULL),
+(5,'2026-02-03','HANH_CHINH','2026-02-03 08:00','2026-02-03 17:00',8.00,0.00,'dung_giờ','van_tay',NULL),
+(5,'2026-02-04','HANH_CHINH','2026-02-04 08:00','2026-02-04 17:00',8.00,0.00,'dung_giờ','van_tay',NULL),
+(5,'2026-02-05','HANH_CHINH','2026-02-05 08:00','2026-02-05 17:00',8.00,0.00,'dung_giờ','van_tay',NULL),
+(5,'2026-02-06','HANH_CHINH','2026-02-06 08:00','2026-02-06 17:00',8.00,0.00,'dung_giờ','van_tay',NULL),
+(5,'2026-02-09','HANH_CHINH','2026-02-09 08:00','2026-02-09 17:00',8.00,0.00,'dung_giờ','van_tay',NULL),
+(5,'2026-02-10','HANH_CHINH','2026-02-10 08:00','2026-02-10 17:00',8.00,0.00,'dung_giờ','van_tay',NULL),
+(5,'2026-02-11','HANH_CHINH','2026-02-11 08:00','2026-02-11 17:00',8.00,0.00,'dung_giờ','van_tay',NULL),
+(5,'2026-02-12','HANH_CHINH','2026-02-12 08:00','2026-02-12 17:00',8.00,0.00,'dung_giờ','van_tay',NULL),
+(5,'2026-02-13','HANH_CHINH','2026-02-13 08:00','2026-02-13 17:00',8.00,0.00,'dung_giờ','van_tay',NULL),
 (5,'2026-02-16',NULL,NULL,NULL,0.00,0.00,'nghi_phep','thu_cong','Nghi phep nam'),
-(5,'2026-02-17','HANH_CHINH','2026-02-17 08:00','2026-02-17 17:00',8.00,0.00,'dung_gio','van_tay',NULL),
-(5,'2026-02-18','HANH_CHINH','2026-02-18 08:00','2026-02-18 17:00',8.00,0.00,'dung_gio','van_tay',NULL),
-(5,'2026-02-19','HANH_CHINH','2026-02-19 08:00','2026-02-19 17:00',8.00,0.00,'dung_gio','van_tay',NULL),
-(5,'2026-02-20','HANH_CHINH','2026-02-20 08:00','2026-02-20 17:00',8.00,0.00,'dung_gio','van_tay',NULL),
-(5,'2026-02-23','HANH_CHINH','2026-02-23 08:00','2026-02-23 17:00',8.00,0.00,'dung_gio','van_tay',NULL),
-(5,'2026-02-24','HANH_CHINH','2026-02-24 08:00','2026-02-24 17:00',8.00,0.00,'dung_gio','van_tay',NULL),
-(5,'2026-02-25','HANH_CHINH','2026-02-25 08:00','2026-02-25 17:00',8.00,0.00,'dung_gio','van_tay',NULL),
-(5,'2026-02-26','HANH_CHINH','2026-02-26 08:00','2026-02-26 17:00',8.00,0.00,'dung_gio','van_tay',NULL),
-(5,'2026-02-27','HANH_CHINH','2026-02-27 08:00','2026-02-27 17:00',8.00,0.00,'dung_gio','van_tay',NULL),
--- NV022 thang 2 (lam them nhieu)
-(22,'2026-02-02','HANH_CHINH','2026-02-02 08:00','2026-02-02 17:00',8.00,0.00,'dung_gio','van_tay',NULL),
-(22,'2026-02-03','HANH_CHINH','2026-02-03 08:00','2026-02-03 17:00',8.00,0.00,'dung_gio','van_tay',NULL),
-(22,'2026-02-04','HANH_CHINH','2026-02-04 08:00','2026-02-04 17:00',8.00,0.00,'dung_gio','van_tay',NULL),
-(22,'2026-02-05','HANH_CHINH','2026-02-05 08:00','2026-02-05 19:00',8.00,2.00,'dung_gio','van_tay',NULL),
-(22,'2026-02-06','HANH_CHINH','2026-02-06 08:00','2026-02-06 19:30',8.00,2.50,'dung_gio','van_tay',NULL),
-(22,'2026-02-09','HANH_CHINH','2026-02-09 08:00','2026-02-09 17:00',8.00,0.00,'dung_gio','van_tay',NULL),
-(22,'2026-02-10','HANH_CHINH','2026-02-10 08:00','2026-02-10 17:00',8.00,0.00,'dung_gio','van_tay',NULL),
-(22,'2026-02-11','HANH_CHINH','2026-02-11 08:00','2026-02-11 17:00',8.00,0.00,'dung_gio','van_tay',NULL),
-(22,'2026-02-12','HANH_CHINH','2026-02-12 08:00','2026-02-12 17:00',8.00,0.00,'dung_gio','van_tay',NULL),
-(22,'2026-02-13','HANH_CHINH','2026-02-13 08:00','2026-02-13 17:00',8.00,0.00,'dung_gio','van_tay',NULL),
-(22,'2026-02-16','HANH_CHINH','2026-02-16 08:00','2026-02-16 17:00',8.00,0.00,'dung_gio','van_tay',NULL),
-(22,'2026-02-17','HANH_CHINH','2026-02-17 08:00','2026-02-17 17:00',8.00,0.00,'dung_gio','van_tay',NULL),
-(22,'2026-02-18','HANH_CHINH','2026-02-18 08:00','2026-02-18 17:00',8.00,0.00,'dung_gio','van_tay',NULL),
-(22,'2026-02-19','HANH_CHINH','2026-02-19 08:00','2026-02-19 17:00',8.00,0.00,'dung_gio','van_tay',NULL),
-(22,'2026-02-20','HANH_CHINH','2026-02-20 08:00','2026-02-20 17:00',8.00,0.00,'dung_gio','van_tay',NULL),
-(22,'2026-02-23','HANH_CHINH','2026-02-23 08:00','2026-02-23 17:00',8.00,0.00,'dung_gio','van_tay',NULL),
-(22,'2026-02-24','HANH_CHINH','2026-02-24 08:00','2026-02-24 17:00',8.00,0.00,'dung_gio','van_tay',NULL),
-(22,'2026-02-25','HANH_CHINH','2026-02-25 08:00','2026-02-25 17:00',8.00,0.00,'dung_gio','van_tay',NULL),
-(22,'2026-02-26','HANH_CHINH','2026-02-26 08:00','2026-02-26 17:00',8.00,0.00,'dung_gio','van_tay',NULL),
-(22,'2026-02-27','HANH_CHINH','2026-02-27 08:00','2026-02-27 17:00',8.00,0.00,'dung_gio','van_tay',NULL),
--- NV024 thang 2 (lam them cao)
-(24,'2026-02-02','HANH_CHINH','2026-02-02 08:00','2026-02-02 20:00',8.00,3.00,'dung_gio','van_tay',NULL),
-(24,'2026-02-03','HANH_CHINH','2026-02-03 08:00','2026-02-03 17:00',8.00,0.00,'dung_gio','van_tay',NULL),
-(24,'2026-02-04','HANH_CHINH','2026-02-04 08:00','2026-02-04 17:00',8.00,0.00,'dung_gio','van_tay',NULL),
-(24,'2026-02-05','HANH_CHINH','2026-02-05 08:00','2026-02-05 19:30',8.00,2.50,'dung_gio','van_tay',NULL),
-(24,'2026-02-06','HANH_CHINH','2026-02-06 08:00','2026-02-06 17:00',8.00,0.00,'dung_gio','van_tay',NULL),
-(24,'2026-02-09','HANH_CHINH','2026-02-09 08:00','2026-02-09 17:00',8.00,0.00,'dung_gio','van_tay',NULL),
-(24,'2026-02-10','HANH_CHINH','2026-02-10 08:00','2026-02-10 17:00',8.00,0.00,'dung_gio','van_tay',NULL),
-(24,'2026-02-11','HANH_CHINH','2026-02-11 08:00','2026-02-11 17:00',8.00,0.00,'dung_gio','van_tay',NULL),
-(24,'2026-02-12','HANH_CHINH','2026-02-12 08:00','2026-02-12 17:00',8.00,0.00,'dung_gio','van_tay',NULL),
-(24,'2026-02-13','HANH_CHINH','2026-02-13 08:00','2026-02-13 17:00',8.00,0.00,'dung_gio','van_tay',NULL),
-(24,'2026-02-16','HANH_CHINH','2026-02-16 08:00','2026-02-16 17:00',8.00,0.00,'dung_gio','van_tay',NULL),
-(24,'2026-02-17','HANH_CHINH','2026-02-17 08:00','2026-02-17 17:00',8.00,0.00,'dung_gio','van_tay',NULL),
-(24,'2026-02-18','HANH_CHINH','2026-02-18 08:00','2026-02-18 17:00',8.00,0.00,'dung_gio','van_tay',NULL),
-(24,'2026-02-19','HANH_CHINH','2026-02-19 08:00','2026-02-19 17:00',8.00,0.00,'dung_gio','van_tay',NULL),
-(24,'2026-02-20','HANH_CHINH','2026-02-20 08:00','2026-02-20 17:00',8.00,0.00,'dung_gio','van_tay',NULL),
-(24,'2026-02-23','HANH_CHINH','2026-02-23 08:00','2026-02-23 17:00',8.00,0.00,'dung_gio','van_tay',NULL),
-(24,'2026-02-24','HANH_CHINH','2026-02-24 08:00','2026-02-24 17:00',8.00,0.00,'dung_gio','van_tay',NULL),
-(24,'2026-02-25','HANH_CHINH','2026-02-25 08:00','2026-02-25 17:00',8.00,0.00,'dung_gio','van_tay',NULL),
-(24,'2026-02-26','HANH_CHINH','2026-02-26 08:00','2026-02-26 17:00',8.00,0.00,'dung_gio','van_tay',NULL),
-(24,'2026-02-27','HANH_CHINH','2026-02-27 08:00','2026-02-27 17:00',8.00,0.00,'dung_gio','van_tay',NULL),
--- NV015 thang 2 (truong phong KD - di muon 1 lan)
-(15,'2026-02-02','HANH_CHINH','2026-02-02 08:00','2026-02-02 17:00',8.00,0.00,'dung_gio','gps',NULL),
+(5,'2026-02-17','HANH_CHINH','2026-02-17 08:00','2026-02-17 17:00',8.00,0.00,'dung_giờ','van_tay',NULL),
+(5,'2026-02-18','HANH_CHINH','2026-02-18 08:00','2026-02-18 17:00',8.00,0.00,'dung_giờ','van_tay',NULL),
+(5,'2026-02-19','HANH_CHINH','2026-02-19 08:00','2026-02-19 17:00',8.00,0.00,'dung_giờ','van_tay',NULL),
+(5,'2026-02-20','HANH_CHINH','2026-02-20 08:00','2026-02-20 17:00',8.00,0.00,'dung_giờ','van_tay',NULL),
+(5,'2026-02-23','HANH_CHINH','2026-02-23 08:00','2026-02-23 17:00',8.00,0.00,'dung_giờ','van_tay',NULL),
+(5,'2026-02-24','HANH_CHINH','2026-02-24 08:00','2026-02-24 17:00',8.00,0.00,'dung_giờ','van_tay',NULL),
+(5,'2026-02-25','HANH_CHINH','2026-02-25 08:00','2026-02-25 17:00',8.00,0.00,'dung_giờ','van_tay',NULL),
+(5,'2026-02-26','HANH_CHINH','2026-02-26 08:00','2026-02-26 17:00',8.00,0.00,'dung_giờ','van_tay',NULL),
+(5,'2026-02-27','HANH_CHINH','2026-02-27 08:00','2026-02-27 17:00',8.00,0.00,'dung_giờ','van_tay',NULL),
+-- NV022 tháng 2 (lam them nhieu)
+(22,'2026-02-02','HANH_CHINH','2026-02-02 08:00','2026-02-02 17:00',8.00,0.00,'dung_giờ','van_tay',NULL),
+(22,'2026-02-03','HANH_CHINH','2026-02-03 08:00','2026-02-03 17:00',8.00,0.00,'dung_giờ','van_tay',NULL),
+(22,'2026-02-04','HANH_CHINH','2026-02-04 08:00','2026-02-04 17:00',8.00,0.00,'dung_giờ','van_tay',NULL),
+(22,'2026-02-05','HANH_CHINH','2026-02-05 08:00','2026-02-05 19:00',8.00,2.00,'dung_giờ','van_tay',NULL),
+(22,'2026-02-06','HANH_CHINH','2026-02-06 08:00','2026-02-06 19:30',8.00,2.50,'dung_giờ','van_tay',NULL),
+(22,'2026-02-09','HANH_CHINH','2026-02-09 08:00','2026-02-09 17:00',8.00,0.00,'dung_giờ','van_tay',NULL),
+(22,'2026-02-10','HANH_CHINH','2026-02-10 08:00','2026-02-10 17:00',8.00,0.00,'dung_giờ','van_tay',NULL),
+(22,'2026-02-11','HANH_CHINH','2026-02-11 08:00','2026-02-11 17:00',8.00,0.00,'dung_giờ','van_tay',NULL),
+(22,'2026-02-12','HANH_CHINH','2026-02-12 08:00','2026-02-12 17:00',8.00,0.00,'dung_giờ','van_tay',NULL),
+(22,'2026-02-13','HANH_CHINH','2026-02-13 08:00','2026-02-13 17:00',8.00,0.00,'dung_giờ','van_tay',NULL),
+(22,'2026-02-16','HANH_CHINH','2026-02-16 08:00','2026-02-16 17:00',8.00,0.00,'dung_giờ','van_tay',NULL),
+(22,'2026-02-17','HANH_CHINH','2026-02-17 08:00','2026-02-17 17:00',8.00,0.00,'dung_giờ','van_tay',NULL),
+(22,'2026-02-18','HANH_CHINH','2026-02-18 08:00','2026-02-18 17:00',8.00,0.00,'dung_giờ','van_tay',NULL),
+(22,'2026-02-19','HANH_CHINH','2026-02-19 08:00','2026-02-19 17:00',8.00,0.00,'dung_giờ','van_tay',NULL),
+(22,'2026-02-20','HANH_CHINH','2026-02-20 08:00','2026-02-20 17:00',8.00,0.00,'dung_giờ','van_tay',NULL),
+(22,'2026-02-23','HANH_CHINH','2026-02-23 08:00','2026-02-23 17:00',8.00,0.00,'dung_giờ','van_tay',NULL),
+(22,'2026-02-24','HANH_CHINH','2026-02-24 08:00','2026-02-24 17:00',8.00,0.00,'dung_giờ','van_tay',NULL),
+(22,'2026-02-25','HANH_CHINH','2026-02-25 08:00','2026-02-25 17:00',8.00,0.00,'dung_giờ','van_tay',NULL),
+(22,'2026-02-26','HANH_CHINH','2026-02-26 08:00','2026-02-26 17:00',8.00,0.00,'dung_giờ','van_tay',NULL),
+(22,'2026-02-27','HANH_CHINH','2026-02-27 08:00','2026-02-27 17:00',8.00,0.00,'dung_giờ','van_tay',NULL),
+-- NV024 tháng 2 (lam them cao)
+(24,'2026-02-02','HANH_CHINH','2026-02-02 08:00','2026-02-02 20:00',8.00,3.00,'dung_giờ','van_tay',NULL),
+(24,'2026-02-03','HANH_CHINH','2026-02-03 08:00','2026-02-03 17:00',8.00,0.00,'dung_giờ','van_tay',NULL),
+(24,'2026-02-04','HANH_CHINH','2026-02-04 08:00','2026-02-04 17:00',8.00,0.00,'dung_giờ','van_tay',NULL),
+(24,'2026-02-05','HANH_CHINH','2026-02-05 08:00','2026-02-05 19:30',8.00,2.50,'dung_giờ','van_tay',NULL),
+(24,'2026-02-06','HANH_CHINH','2026-02-06 08:00','2026-02-06 17:00',8.00,0.00,'dung_giờ','van_tay',NULL),
+(24,'2026-02-09','HANH_CHINH','2026-02-09 08:00','2026-02-09 17:00',8.00,0.00,'dung_giờ','van_tay',NULL),
+(24,'2026-02-10','HANH_CHINH','2026-02-10 08:00','2026-02-10 17:00',8.00,0.00,'dung_giờ','van_tay',NULL),
+(24,'2026-02-11','HANH_CHINH','2026-02-11 08:00','2026-02-11 17:00',8.00,0.00,'dung_giờ','van_tay',NULL),
+(24,'2026-02-12','HANH_CHINH','2026-02-12 08:00','2026-02-12 17:00',8.00,0.00,'dung_giờ','van_tay',NULL),
+(24,'2026-02-13','HANH_CHINH','2026-02-13 08:00','2026-02-13 17:00',8.00,0.00,'dung_giờ','van_tay',NULL),
+(24,'2026-02-16','HANH_CHINH','2026-02-16 08:00','2026-02-16 17:00',8.00,0.00,'dung_giờ','van_tay',NULL),
+(24,'2026-02-17','HANH_CHINH','2026-02-17 08:00','2026-02-17 17:00',8.00,0.00,'dung_giờ','van_tay',NULL),
+(24,'2026-02-18','HANH_CHINH','2026-02-18 08:00','2026-02-18 17:00',8.00,0.00,'dung_giờ','van_tay',NULL),
+(24,'2026-02-19','HANH_CHINH','2026-02-19 08:00','2026-02-19 17:00',8.00,0.00,'dung_giờ','van_tay',NULL),
+(24,'2026-02-20','HANH_CHINH','2026-02-20 08:00','2026-02-20 17:00',8.00,0.00,'dung_giờ','van_tay',NULL),
+(24,'2026-02-23','HANH_CHINH','2026-02-23 08:00','2026-02-23 17:00',8.00,0.00,'dung_giờ','van_tay',NULL),
+(24,'2026-02-24','HANH_CHINH','2026-02-24 08:00','2026-02-24 17:00',8.00,0.00,'dung_giờ','van_tay',NULL),
+(24,'2026-02-25','HANH_CHINH','2026-02-25 08:00','2026-02-25 17:00',8.00,0.00,'dung_giờ','van_tay',NULL),
+(24,'2026-02-26','HANH_CHINH','2026-02-26 08:00','2026-02-26 17:00',8.00,0.00,'dung_giờ','van_tay',NULL),
+(24,'2026-02-27','HANH_CHINH','2026-02-27 08:00','2026-02-27 17:00',8.00,0.00,'dung_giờ','van_tay',NULL),
+-- NV015 tháng 2 (truong phong KD - di muon 1 lan)
+(15,'2026-02-02','HANH_CHINH','2026-02-02 08:00','2026-02-02 17:00',8.00,0.00,'dung_giờ','gps',NULL),
 (15,'2026-02-03','HANH_CHINH','2026-02-03 08:40','2026-02-03 17:00',7.33,0.00,'di_muon','gps','Di muon 40 phut - ket xe'),
-(15,'2026-02-04','HANH_CHINH','2026-02-04 08:00','2026-02-04 17:00',8.00,0.00,'dung_gio','gps',NULL),
-(15,'2026-02-05','HANH_CHINH','2026-02-05 08:00','2026-02-05 17:00',8.00,0.00,'dung_gio','gps',NULL),
-(15,'2026-02-06','HANH_CHINH','2026-02-06 08:00','2026-02-06 17:00',8.00,0.00,'dung_gio','gps',NULL),
-(15,'2026-02-09','HANH_CHINH','2026-02-09 08:00','2026-02-09 17:00',8.00,0.00,'dung_gio','gps',NULL),
-(15,'2026-02-10','HANH_CHINH','2026-02-10 08:00','2026-02-10 17:00',8.00,0.00,'dung_gio','gps',NULL),
-(15,'2026-02-11','HANH_CHINH','2026-02-11 08:00','2026-02-11 17:00',8.00,0.00,'dung_gio','gps',NULL),
+(15,'2026-02-04','HANH_CHINH','2026-02-04 08:00','2026-02-04 17:00',8.00,0.00,'dung_giờ','gps',NULL),
+(15,'2026-02-05','HANH_CHINH','2026-02-05 08:00','2026-02-05 17:00',8.00,0.00,'dung_giờ','gps',NULL),
+(15,'2026-02-06','HANH_CHINH','2026-02-06 08:00','2026-02-06 17:00',8.00,0.00,'dung_giờ','gps',NULL),
+(15,'2026-02-09','HANH_CHINH','2026-02-09 08:00','2026-02-09 17:00',8.00,0.00,'dung_giờ','gps',NULL),
+(15,'2026-02-10','HANH_CHINH','2026-02-10 08:00','2026-02-10 17:00',8.00,0.00,'dung_giờ','gps',NULL),
+(15,'2026-02-11','HANH_CHINH','2026-02-11 08:00','2026-02-11 17:00',8.00,0.00,'dung_giờ','gps',NULL),
 (15,'2026-02-12',NULL,NULL,NULL,8.00,0.00,'cong_tac','thu_cong','Cong tac gap khach Da Nang'),
 (15,'2026-02-13',NULL,NULL,NULL,8.00,0.00,'cong_tac','thu_cong','Cong tac gap khach Da Nang'),
-(15,'2026-02-16','HANH_CHINH','2026-02-16 08:00','2026-02-16 17:00',8.00,0.00,'dung_gio','gps',NULL),
-(15,'2026-02-17','HANH_CHINH','2026-02-17 08:00','2026-02-17 17:00',8.00,0.00,'dung_gio','gps',NULL),
-(15,'2026-02-18','HANH_CHINH','2026-02-18 08:00','2026-02-18 17:00',8.00,0.00,'dung_gio','gps',NULL),
-(15,'2026-02-19','HANH_CHINH','2026-02-19 08:00','2026-02-19 17:00',8.00,0.00,'dung_gio','gps',NULL),
-(15,'2026-02-20','HANH_CHINH','2026-02-20 08:00','2026-02-20 17:00',8.00,0.00,'dung_gio','gps',NULL),
-(15,'2026-02-23','HANH_CHINH','2026-02-23 08:00','2026-02-23 17:00',8.00,0.00,'dung_gio','gps',NULL),
-(15,'2026-02-24','HANH_CHINH','2026-02-24 08:00','2026-02-24 17:00',8.00,0.00,'dung_gio','gps',NULL),
-(15,'2026-02-25','HANH_CHINH','2026-02-25 08:00','2026-02-25 17:00',8.00,0.00,'dung_gio','gps',NULL),
-(15,'2026-02-26','HANH_CHINH','2026-02-26 08:00','2026-02-26 17:00',8.00,0.00,'dung_gio','gps',NULL),
-(15,'2026-02-27','HANH_CHINH','2026-02-27 08:00','2026-02-27 17:00',8.00,0.00,'dung_gio','gps',NULL);
+(15,'2026-02-16','HANH_CHINH','2026-02-16 08:00','2026-02-16 17:00',8.00,0.00,'dung_giờ','gps',NULL),
+(15,'2026-02-17','HANH_CHINH','2026-02-17 08:00','2026-02-17 17:00',8.00,0.00,'dung_giờ','gps',NULL),
+(15,'2026-02-18','HANH_CHINH','2026-02-18 08:00','2026-02-18 17:00',8.00,0.00,'dung_giờ','gps',NULL),
+(15,'2026-02-19','HANH_CHINH','2026-02-19 08:00','2026-02-19 17:00',8.00,0.00,'dung_giờ','gps',NULL),
+(15,'2026-02-20','HANH_CHINH','2026-02-20 08:00','2026-02-20 17:00',8.00,0.00,'dung_giờ','gps',NULL),
+(15,'2026-02-23','HANH_CHINH','2026-02-23 08:00','2026-02-23 17:00',8.00,0.00,'dung_giờ','gps',NULL),
+(15,'2026-02-24','HANH_CHINH','2026-02-24 08:00','2026-02-24 17:00',8.00,0.00,'dung_giờ','gps',NULL),
+(15,'2026-02-25','HANH_CHINH','2026-02-25 08:00','2026-02-25 17:00',8.00,0.00,'dung_giờ','gps',NULL),
+(15,'2026-02-26','HANH_CHINH','2026-02-26 08:00','2026-02-26 17:00',8.00,0.00,'dung_giờ','gps',NULL),
+(15,'2026-02-27','HANH_CHINH','2026-02-27 08:00','2026-02-27 17:00',8.00,0.00,'dung_giờ','gps',NULL);
 
 -- =====================================================
 -- 10. DANG KY LAM THEM
 -- =====================================================
-INSERT INTO DANGKY_LAMTHEM (maNV, ngay, soGio, heSoOT, lyDo, nguoiDuyet, ngayDuyet, trangThai) VALUES
+INSERT INTO DANGKY_LAMTHEM (maNV, ngày, soGio, heSoOT, lyDo, nguoiDuyet, ngayDuyet, trangThai) VALUES
 -- Thang 1
-(1,  '2026-01-02', 0.50, 1.50, 'Chuan bi bao cao nhan su dau nam',               2,  '2026-01-02 17:30:00', 'da_duyet'),
-(1,  '2026-01-07', 1.00, 1.50, 'Hop tong ket nam 2025 ngoai gio',                2,  '2026-01-07 16:00:00', 'da_duyet'),
+(1,  '2026-01-02', 0.50, 1.50, 'Chuan bi bao cao nhân sự dau nam',               2,  '2026-01-02 17:30:00', 'da_duyet'),
+(1,  '2026-01-07', 1.00, 1.50, 'Hop tong ket nam 2025 ngoai giờ',                2,  '2026-01-07 16:00:00', 'da_duyet'),
 (22, '2026-01-02', 1.00, 1.50, 'Deploy hotfix he thong production',               4,  '2026-01-02 16:00:00', 'da_duyet'),
-(22, '2026-01-07', 2.00, 1.50, 'Sprint planning va kien truc he thong moi',       4,  '2026-01-06 17:00:00', 'da_duyet'),
+(22, '2026-01-07', 2.00, 1.50, 'Sprint planning va kien truc he thong mới',       4,  '2026-01-06 17:00:00', 'da_duyet'),
 (24, '2026-01-02', 2.50, 1.50, 'Xu ly bug nghiem trong quan ly don hang',         23, '2026-01-02 15:00:00', 'da_duyet'),
-(24, '2026-01-07', 3.00, 1.50, 'Hoan thanh module API payment truoc deadline',    23, '2026-01-06 17:00:00', 'da_duyet'),
+(24, '2026-01-07', 3.00, 1.50, 'Hoan thanh module API payment trước deadline',    23, '2026-01-06 17:00:00', 'da_duyet'),
 (24, '2026-01-09', 1.00, 1.50, 'Code review va merge nhieu PR',                   23, '2026-01-08 17:00:00', 'da_duyet'),
 -- Thang 2
-(22, '2026-02-05', 2.00, 1.50, 'Setup moi truong staging cho sprint moi',         4,  '2026-02-04 17:00:00', 'da_duyet'),
-(22, '2026-02-06', 2.50, 1.50, 'Demo san pham cho khach hang',                    4,  '2026-02-05 17:00:00', 'da_duyet'),
-(24, '2026-02-02', 3.00, 1.50, 'Refactor module thanh toan, viet unit test',      23, '2026-02-01 17:00:00', 'da_duyet'),
-(24, '2026-02-05', 2.50, 1.50, 'Hoan thanh API tich hop cong thanh toan moi',    23, '2026-02-04 16:00:00', 'da_duyet'),
-(1,  '2026-02-06', 2.00, 1.50, 'Xu ly ho so nhan vien moi thang 2',               2,  '2026-02-05 16:00:00', 'da_duyet'),
-(1,  '2026-02-20', 2.50, 1.50, 'Bao cao tong hop nhan su Quy 1',                  2,  '2026-02-19 17:00:00', 'da_duyet'),
-(17, '2026-02-28', 2.00, 1.50, 'Gap khach hang ngoai gio ky hop dong moi',        15, NULL,                   'cho_duyet'),
+(22, '2026-02-05', 2.00, 1.50, 'Setup mới truong staging cho sprint mới',         4,  '2026-02-04 17:00:00', 'da_duyet'),
+(22, '2026-02-06', 2.50, 1.50, 'Demo sản phẩm cho khach hang',                    4,  '2026-02-05 17:00:00', 'da_duyet'),
+(24, '2026-02-02', 3.00, 1.50, 'Refactor module thanh toan, viết unit test',      23, '2026-02-01 17:00:00', 'da_duyet'),
+(24, '2026-02-05', 2.50, 1.50, 'Hoan thanh API tich hop cong thanh toan mới',    23, '2026-02-04 16:00:00', 'da_duyet'),
+(1,  '2026-02-06', 2.00, 1.50, 'Xu ly ho so nhan vien mới tháng 2',               2,  '2026-02-05 16:00:00', 'da_duyet'),
+(1,  '2026-02-20', 2.50, 1.50, 'Bao cao tong hop nhân sự Quy 1',                  2,  '2026-02-19 17:00:00', 'da_duyet'),
+(17, '2026-02-28', 2.00, 1.50, 'Gap khach hang ngoai giờ ky hop dong mới',        15, NULL,                   'cho_duyet'),
 (25, '2026-02-28', 3.00, 1.50, 'Xu ly bug release 2.1.0 gap',                     23, NULL,                   'cho_duyet'),
-(33, '2026-02-27', 2.00, 1.50, 'Chay chien dich quang cao cuoi thang',            2,  NULL,                   'cho_duyet'),
-(19, '2026-02-14', 1.50, 2.00, 'Ho tro event ra mat san pham cuoi tuan',           15, '2026-02-13 17:00:00', 'da_duyet');
+(33, '2026-02-27', 2.00, 1.50, 'Chay chien dich quang cao cuoi tháng',            2,  NULL,                   'cho_duyet'),
+(19, '2026-02-14', 1.50, 2.00, 'Ho tro event ra mat sản phẩm cuoi tuan',           15, '2026-02-13 17:00:00', 'da_duyet');
 
 -- =====================================================
 -- 10.5. LOAI PHEP
@@ -925,21 +925,21 @@ INSERT INTO DONXINNGHIPHEP (maNV, maLoaiPhep, tuNgay, denNgay, soNgayNghi, lyDo,
 -- =====================================================
 -- 13. BANG LUONG + CHI TIET LUONG + THANH PHAN LUONG
 -- =====================================================
-INSERT INTO BANGLUONG (thang, nam, tenBangLuong, nguoiTao, nguoiDuyet, ngayDuyet, trangThai) VALUES
-(11, 2025, 'Bang luong thang 11-2025', 5, 2, '2025-12-03 10:00:00', 'da_khoa'),
-(12, 2025, 'Bang luong thang 12-2025', 5, 2, '2026-01-05 10:00:00', 'da_khoa'),
-( 1, 2026, 'Bang luong thang 01-2026', 5, 2, '2026-02-05 09:00:00', 'da_khoa'),
-( 2, 2026, 'Bang luong thang 02-2026', 5, NULL, NULL,               'dang_xu_ly');
+INSERT INTO BANGLUONG (tháng, nam, tenBangLuong, nguoiTao, nguoiDuyet, ngayDuyet, trangThai) VALUES
+(11, 2025, 'Bảng lương tháng 11-2025', 5, 2, '2025-12-03 10:00:00', 'da_khoa'),
+(12, 2025, 'Bảng lương tháng 12-2025', 5, 2, '2026-01-05 10:00:00', 'da_khoa'),
+( 1, 2026, 'Bảng lương tháng 01-2026', 5, 2, '2026-02-05 09:00:00', 'da_khoa'),
+( 2, 2026, 'Bảng lương tháng 02-2026', 5, NULL, NULL,               'dang_xu_ly');
 
--- Bang luong thang 1/2026 (maBangLuong=3) - day du 34 NV (bo NV035 dang nghi thai san huong BHXH)
+-- Bảng lương tháng 1/2026 (maBangLuong=3) - day du 34 NV (bo NV035 dang nghi thai san huong BHXH)
 INSERT INTO CHITIETLUONG (maBangLuong, maNV, luongCoSo, tongLuongChucVu, luongLamThem, tongThuNhap, tongKhauTru, luongThucLanh, soNgayCong, soGioLamThem) VALUES
--- Lanh dao
+-- Lãnh đạo
 (3, 1,  80000000, 15000000,  1125000, 96125000, 9612500, 86512500, 21.0,  1.5),
 (3, 2,  60000000, 10000000,     0,    70000000, 7000000, 63000000, 21.0,  0.0),
 (3, 3,  55000000,  9000000,     0,    64000000, 6400000, 57600000, 21.0,  0.0),
 (3, 4,  55000000,  9000000,     0,    64000000, 6400000, 57600000, 21.0,  0.0),
 -- Phong NS
-(3, 5,  22000000,  5000000,     0,    27000000, 2700000, 24300000, 20.0,  0.0), -- 1 ngay phep
+(3, 5,  22000000,  5000000,     0,    27000000, 2700000, 24300000, 20.0,  0.0), -- 1 ngày phep
 (3, 6,  18000000,  3500000,     0,    21500000, 2150000, 19350000, 21.0,  0.0),
 (3, 7,  13000000,   200000,     0,    13200000, 1320000, 11880000, 21.0,  0.0),
 (3, 8,  12500000,   200000,     0,    12700000, 1270000, 11430000, 21.0,  0.0),
@@ -958,11 +958,11 @@ INSERT INTO CHITIETLUONG (maBangLuong, maNV, luongCoSo, tongLuongChucVu, luongLa
 (3,19,  17000000,   500000,  337500,  17837500, 1783750, 16053750, 21.0,  1.5),
 (3,20,  12000000,   200000,     0,    12200000, 1220000, 10980000, 21.0,  0.0),
 (3,21,   8000000,      0,      0,     8000000,  800000,  7200000, 21.0,  0.0),
--- Phong IT
+-- Phòng IT
 (3,22,  35000000,  5000000,  2250000, 42250000, 4225000, 38025000, 21.0,  3.0),
-(3,23,  28000000,  2000000,     0,    30000000, 3000000, 27000000, 20.0,  0.0), -- 1 ngay om
+(3,23,  28000000,  2000000,     0,    30000000, 3000000, 27000000, 20.0,  0.0), -- 1 ngày om
 (3,24,  28000000,  1000000,  7875000, 36875000, 3687500, 33187500, 21.0, 6.50),
-(3,25,  18000000,   500000,     0,    18500000, 1850000, 16650000, 20.0,  0.0), -- 1 ngay vang
+(3,25,  18000000,   500000,     0,    18500000, 1850000, 16650000, 20.0,  0.0), -- 1 ngày vang
 (3,26,  13000000,   200000,     0,    13200000, 1320000, 11880000, 21.0,  0.0),
 (3,27,  26000000,  2000000,     0,    28000000, 2800000, 25200000, 21.0,  0.0),
 (3,28,  27000000,  1000000,     0,    28000000, 2800000, 25200000, 21.0,  0.0),
@@ -983,8 +983,8 @@ INSERT INTO THANHPHANLUONG (maChiTiet, tenThanhPhan, loai, soTien, ghiChu) VALUE
 (1,'BHXH 8%',                  'khau_tru',  6400000, 'Tren luong co so 80tr'),
 (1,'BHYT 1.5%',                'khau_tru',  1200000, NULL),
 (1,'BHTN 1%',                  'khau_tru',   800000, NULL),
-(1,'Thue TNCN',                'khau_tru',  1212500, 'Tinh theo bieu thue luy tien'),
--- NV022 (maChiTiet=22 trong bang = row thu 22, maChiTiet thuc te phu thuoc AUTO_INCREMENT)
+(1,'Thuế TNCN',                'khau_tru',  1212500, 'Tinh theo bieu thue luy tien'),
+-- NV022 (maChiTiet=22 trong bang = row thu 22, maChiTiet thực tế phu thuoc AUTO_INCREMENT)
 -- Dung subquery de tranh hard-code maChiTiet
 ((SELECT maChiTiet FROM CHITIETLUONG WHERE maBangLuong=3 AND maNV=22),'Luong co so',       'thu_nhap', 35000000, NULL),
 ((SELECT maChiTiet FROM CHITIETLUONG WHERE maBangLuong=3 AND maNV=22),'Phu cap chuc vu TP','thu_nhap',  5000000, NULL),
@@ -992,7 +992,7 @@ INSERT INTO THANHPHANLUONG (maChiTiet, tenThanhPhan, loai, soTien, ghiChu) VALUE
 ((SELECT maChiTiet FROM CHITIETLUONG WHERE maBangLuong=3 AND maNV=22),'BHXH 8%',           'khau_tru',  2800000, NULL),
 ((SELECT maChiTiet FROM CHITIETLUONG WHERE maBangLuong=3 AND maNV=22),'BHYT 1.5%',         'khau_tru',   525000, NULL),
 ((SELECT maChiTiet FROM CHITIETLUONG WHERE maBangLuong=3 AND maNV=22),'BHTN 1%',           'khau_tru',   350000, NULL),
-((SELECT maChiTiet FROM CHITIETLUONG WHERE maBangLuong=3 AND maNV=22),'Thue TNCN',         'khau_tru',   550000, NULL),
+((SELECT maChiTiet FROM CHITIETLUONG WHERE maBangLuong=3 AND maNV=22),'Thuế TNCN',         'khau_tru',   550000, NULL),
 -- NV024 (SE Senior, lam them nhieu)
 ((SELECT maChiTiet FROM CHITIETLUONG WHERE maBangLuong=3 AND maNV=24),'Luong co so',       'thu_nhap', 28000000, NULL),
 ((SELECT maChiTiet FROM CHITIETLUONG WHERE maBangLuong=3 AND maNV=24),'Phu cap chuyen mon','thu_nhap',  1000000, NULL),
@@ -1000,20 +1000,20 @@ INSERT INTO THANHPHANLUONG (maChiTiet, tenThanhPhan, loai, soTien, ghiChu) VALUE
 ((SELECT maChiTiet FROM CHITIETLUONG WHERE maBangLuong=3 AND maNV=24),'BHXH 8%',           'khau_tru',  2240000, NULL),
 ((SELECT maChiTiet FROM CHITIETLUONG WHERE maBangLuong=3 AND maNV=24),'BHYT 1.5%',         'khau_tru',   420000, NULL),
 ((SELECT maChiTiet FROM CHITIETLUONG WHERE maBangLuong=3 AND maNV=24),'BHTN 1%',           'khau_tru',   280000, NULL),
-((SELECT maChiTiet FROM CHITIETLUONG WHERE maBangLuong=3 AND maNV=24),'Thue TNCN',         'khau_tru',   747500, NULL);
+((SELECT maChiTiet FROM CHITIETLUONG WHERE maBangLuong=3 AND maNV=24),'Thuế TNCN',         'khau_tru',   747500, NULL);
 
 -- =====================================================
 -- 14. DOT DANH GIA & TIEU CHI
 -- =====================================================
--- Tieu chi danh gia (them 1 tieu chi moi: Tuan thu noi quy)
+-- Tieu chi danh gia (them 1 tieu chi mới: Tuan thu noi quy)
 INSERT INTO TIEUCHIDANHGIA (tenTieuChi, moTa, nhomTieuChi, diemToiDa, trangThai) VALUES
-('Chat luong cong viec',    'Chat luong dau ra, san pham, dich vu cung cap',       'Ket qua',  10, 'hoatDong'),
+('Chat luong cong viec',    'Chat luong dau ra, sản phẩm, dich vu cung cap',       'Ket qua',  10, 'hoatDong'),
 ('Tien do hoan thanh',      'Hoan thanh dung han, khong tre deadline',              'Ket qua',  10, 'hoatDong'),
-('Kha nang sang tao',       'De xuat giai phap, cai tien quy trinh',               'Nang luc', 10, 'hoatDong'),
-('Ky nang chuyen mon',      'Trinh do chuyen mon, ky nang ky thuat',               'Nang luc', 10, 'hoatDong'),
+('Kha nang sáng tao',       'De xuat giai phap, cai tien quy trinh',               'Nang luc', 10, 'hoatDong'),
+('Kỹ năng chuyen mon',      'Trinh do chuyen mon, kỹ năng ky thuat',               'Nang luc', 10, 'hoatDong'),
 ('Lam viec nhom',           'Phoi hop, ho tro dong nghiep, tinh than team',        'Thai do',  10, 'hoatDong'),
-('Tuan thu noi quy',        'Chap hanh quy che, di lam dung gio, tac phong',       'Thai do',  10, 'hoatDong'),
-('Phat trien ban than',     'Hoc hoi ky nang moi, nang cao trinh do',              'Nang luc', 10, 'hoatDong');
+('Tuan thu noi quy',        'Chap hanh quy che, di lam dung giờ, tac phong',       'Thai do',  10, 'hoatDong'),
+('Phát triển ban than',     'Hoc hoi kỹ năng mới, nang cao trinh do',              'Nang luc', 10, 'hoatDong');
 
 -- Dot danh gia
 INSERT INTO DOTDANHGIA (tenDot, nam, kyDanhGia, tuNgay, denNgay, moTa, trangThai) VALUES
@@ -1024,7 +1024,7 @@ INSERT INTO DOTDANHGIA (tenDot, nam, kyDanhGia, tuNgay, denNgay, moTa, trangThai
 ('Danh gia Nam 2025',        2025, 'nam',   '2026-01-12', '2026-01-23', 'Danh gia tong ket nam 2025',         'da_ket_thuc'),
 ('Danh gia Quy 1 nam 2026',  2026, 'quy_1', '2026-04-06', '2026-04-17', 'Danh gia hieu suat Quy 1/2026',     'chua_bat_dau');
 
--- Trong so tieu chi cho moi dot (tong trong so cua moi dot = 100%)
+-- Trong so tieu chi cho mới dot (tong trong so cua mới dot = 100%)
 -- Dot 1 (Q4/2024): tap trung Ket qua va Nang luc
 INSERT INTO DOTDANHGIA_TIEUCHI (maDot, maTieuChi, trongSo, batBuoc) VALUES
 (1,1,20.0,TRUE),(1,2,20.0,TRUE),(1,3,10.0,FALSE),(1,4,20.0,TRUE),(1,5,10.0,TRUE),(1,6,10.0,TRUE),(1,7,10.0,FALSE);
@@ -1037,7 +1037,7 @@ INSERT INTO DOTDANHGIA_TIEUCHI (maDot, maTieuChi, trongSo, batBuoc) VALUES
 -- Dot 4 (Q3/2025)
 INSERT INTO DOTDANHGIA_TIEUCHI (maDot, maTieuChi, trongSo, batBuoc) VALUES
 (4,1,20.0,TRUE),(4,2,20.0,TRUE),(4,3,10.0,FALSE),(4,4,20.0,TRUE),(4,5,15.0,TRUE),(4,6,10.0,TRUE),(4,7,5.0,FALSE);
--- Dot 5 (Nam 2025): nang cao trong so Phat trien ban than
+-- Dot 5 (Nam 2025): nang cao trong so Phát triển ban than
 INSERT INTO DOTDANHGIA_TIEUCHI (maDot, maTieuChi, trongSo, batBuoc) VALUES
 (5,1,17.0,TRUE),(5,2,17.0,TRUE),(5,3,13.0,FALSE),(5,4,17.0,TRUE),(5,5,13.0,TRUE),(5,6,8.0,TRUE),(5,7,15.0,FALSE);
 -- Dot 6 (Q1/2026): chua bat dau
@@ -1045,32 +1045,32 @@ INSERT INTO DOTDANHGIA_TIEUCHI (maDot, maTieuChi, trongSo, batBuoc) VALUES
 (6,1,20.0,TRUE),(6,2,20.0,TRUE),(6,3,10.0,FALSE),(6,4,20.0,TRUE),(6,5,15.0,TRUE),(6,6,10.0,TRUE),(6,7,5.0,FALSE);
 
 -- Danh gia hieu suat dot 5 (Nam 2025) - day du nhieu nhan vien
-INSERT INTO DANHGIAHIEUSUAT (maDot, maNV, nguoiDanhGia, tongDiem, xepLoai, nhanXetChung, ngayDanhGia, trangThai) VALUES
+INSERT INTO DANHGIAHIEUSUAT (maDot, maNV, nguoiDanhGia, tongDiem, xepLoai, nhanXetChung, ngàyDanhGia, trangThai) VALUES
 -- Dot 1 (Q4/2024)
 (1,23, 22, 8.60,'tot',      'Khoa Nguyen hoan thanh tot muc tieu ky, team van hanh on dinh.',        '2025-01-10 10:00:00','da_xac_nhan'),
-(1,24, 23, 8.90,'tot',      'Mai Trang duy tri chat luong ky thuat cao, dong gop lon cho du an.',     '2025-01-10 11:00:00','da_xac_nhan'),
+(1,24, 23, 8.90,'tot',      'Mai Trang duy tri chat luong ky thuat cao, dong gop lon cho dự án.',     '2025-01-10 11:00:00','da_xac_nhan'),
 (1,16, 15, 8.20,'tot',      'Ngoc Bich dat KPI kinh doanh va ho tro team B2B hieu qua.',              '2025-01-13 09:00:00','da_xac_nhan'),
 -- Dot 2 (Q1/2025)
 (2,23, 22, 8.70,'tot',      'Khoa Nguyen tiep tuc dan dat team backend tot, giao hang dung han.',      '2025-04-11 09:30:00','da_xac_nhan'),
-(2,29, 27, 7.70,'kha',      'Ngoc Duy tien bo ro net, can toi uu them hieu nang giao dien.',           '2025-04-11 10:30:00','da_xac_nhan'),
+(2,29, 27, 7.70,'kha',      'Ngoc Duy tien bo ro net, can toi uu them hieu nang giao diện.',           '2025-04-11 10:30:00','da_xac_nhan'),
 (2,34, 33, 7.90,'kha',      'Dinh Khang hoan thanh chien dich marketing dung tien do.',                '2025-04-15 14:00:00','da_xac_nhan'),
 -- Dot 3 (Q2/2025)
-(3,17, 16, 8.30,'tot',      'Minh Hoang dat ket qua kinh doanh on dinh, ky nang dam phan tot.',       '2025-07-11 10:00:00','da_xac_nhan'),
-(3,31, 22, 8.10,'tot',      'Xuan Bach cai tien quy trinh QA, giam bug tai moi truong test.',         '2025-07-14 15:00:00','da_xac_nhan'),
+(3,17, 16, 8.30,'tot',      'Minh Hoang dat ket qua kinh doanh on dinh, kỹ năng dam phan tot.',       '2025-07-11 10:00:00','da_xac_nhan'),
+(3,31, 22, 8.10,'tot',      'Xuan Bach cai tien quy trinh QA, giam bug tai mới truong test.',         '2025-07-14 15:00:00','da_xac_nhan'),
 (3,12, 10, 8.00,'tot',      'My Linh xu ly nghiep vu ke toan chinh xac, dung han.',                    '2025-07-16 09:00:00','da_xac_nhan'),
 -- Dot 4 (Q3/2025)
-(4,18, 16, 7.50,'kha',      'Thanh Thuy giu hieu suat on dinh, can mo rong tap khach hang moi.',       '2025-10-10 16:00:00','da_xac_nhan'),
+(4,18, 16, 7.50,'kha',      'Thanh Thuy giu hieu suat on dinh, can mo rong tap khach hang mới.',       '2025-10-10 16:00:00','da_xac_nhan'),
 (4,25, 23, 8.20,'tot',      'Minh Tri hoan thanh tot cac task backend, chu dong xu ly su co.',         '2025-10-14 10:00:00','da_xac_nhan'),
 (4,32, 31, 7.80,'kha',      'Ngoc Bao bao cao bug ro rang, can bo sung test automation.',              '2025-10-16 14:30:00','da_xac_nhan'),
 -- NV5 danh gia toan Phong NS (truong phong danh gia)
-(5, 6,  5, 8.20,'tot',      'Duc Vo hoan thanh tot nhiem vu, ky nang quan ly ho so tot.',        '2026-01-15 09:00:00','da_xac_nhan'),
-(5, 7,  5, 7.80,'kha',      'Lan Anh co gang, can phat trien them ky nang tuyen dung.',          '2026-01-15 10:00:00','da_xac_nhan'),
+(5, 6,  5, 8.20,'tot',      'Duc Vo hoan thanh tot nhiem vu, kỹ năng quan ly ho so tot.',        '2026-01-15 09:00:00','da_xac_nhan'),
+(5, 7,  5, 7.80,'kha',      'Lan Anh co gang, can phat trien them kỹ năng tuyen dung.',          '2026-01-15 10:00:00','da_xac_nhan'),
 (5, 8,  5, 7.50,'kha',      'Huy Bui co tien bo, can chu dong hon trong cong viec.',             '2026-01-15 11:00:00','da_xac_nhan'),
--- NV22 danh gia Phong IT (TP IT danh gia)
+-- NV22 danh gia Phòng IT (TP IT danh gia)
 (5,23, 22, 8.80,'tot',      'Khoa Nguyen dan dat team tot, code quality cao.',                    '2026-01-16 09:00:00','da_xac_nhan'),
-(5,24, 23, 9.10,'xuat_sac', 'Mai Trang - Senior xuat sac, dong gop lon cho du an X.',            '2026-01-16 10:00:00','da_xac_nhan'),
+(5,24, 23, 9.10,'xuat_sac', 'Mai Trang - Senior xuất sắc, dong gop lon cho dự án X.',            '2026-01-16 10:00:00','da_xac_nhan'),
 (5,25, 23, 8.30,'tot',      'Minh Tri phat trien nhanh, can kinh nghiem them.',                  '2026-01-16 11:00:00','da_xac_nhan'),
-(5,26, 23, 7.20,'kha',      'Quynh Nhu nhan vien moi co tiem nang, can mentoring.',              '2026-01-16 14:00:00','da_xac_nhan'),
+(5,26, 23, 7.20,'kha',      'Quynh Nhu nhan vien mới co tiem nang, can mentoring.',              '2026-01-16 14:00:00','da_xac_nhan'),
 (5,27, 22, 8.60,'tot',      'Thanh Long TL Frontend tot, team hoat dong on dinh.',               '2026-01-17 09:00:00','da_xac_nhan'),
 (5,28, 27, 8.90,'tot',      'Hong Van - Senior FE, chat luong UI/UX rat tot.',                   '2026-01-17 10:00:00','da_xac_nhan'),
 (5,29, 27, 7.80,'kha',      'Ngoc Duy tich cuc, can cai thien frontend performance.',            '2026-01-17 11:00:00','da_xac_nhan'),
@@ -1078,138 +1078,138 @@ INSERT INTO DANHGIAHIEUSUAT (maDot, maNV, nguoiDanhGia, tongDiem, xepLoai, nhanX
 (5,32, 31, 8.00,'tot',      'Ngoc Bao QA on dinh, doc bug nhieu, bao cao ro rang.',             '2026-01-17 15:00:00','da_xac_nhan'),
 -- NV15 danh gia Phong KD (TP KD danh gia)
 (5,16, 15, 8.70,'tot',      'Ngoc Bich TL B2B hoan thanh 115% chi tieu doanh so.',              '2026-01-15 14:00:00','da_xac_nhan'),
-(5,17, 16, 8.40,'tot',      'Minh Hoang co hieu suat tot, ky nang dam phan kha.',               '2026-01-15 15:00:00','da_xac_nhan'),
-(5,18, 16, 7.60,'kha',      'Thanh Thuy can tang cau KH moi, doanh so on dinh.',                '2026-01-15 16:00:00','da_xac_nhan'),
-(5,19, 15, 9.00,'xuat_sac', 'Duc Manh B2C xuat sac, doanh so vuot 130% ke hoach.',             '2026-01-16 14:00:00','da_xac_nhan'),
+(5,17, 16, 8.40,'tot',      'Minh Hoang co hieu suat tot, kỹ năng dam phan kha.',               '2026-01-15 15:00:00','da_xac_nhan'),
+(5,18, 16, 7.60,'kha',      'Thanh Thuy can tang cau KH mới, doanh so on dinh.',                '2026-01-15 16:00:00','da_xac_nhan'),
+(5,19, 15, 9.00,'xuat_sac', 'Duc Manh B2C xuất sắc, doanh so vuot 130% ke hoach.',             '2026-01-16 14:00:00','da_xac_nhan'),
 (5,20, 15, 7.40,'kha',      'Phuong Thao can co gang them, doanh so chua dat chi tieu.',        '2026-01-16 15:00:00','da_xac_nhan'),
 -- Phong KT (TP KT danh gia)
 (5,11, 10, 8.80,'tot',      'Van Liem pho phong lam viec hieu qua, ke toan chinh xac.',         '2026-01-14 09:00:00','da_xac_nhan'),
 (5,12, 10, 8.20,'tot',      'My Linh KTVT on dinh, xu ly nghiep vu phuc tap tot.',              '2026-01-14 10:00:00','da_xac_nhan'),
-(5,13, 10, 7.80,'kha',      'Thanh Tam can nang cao ky nang xu ly ho so thue.',                 '2026-01-14 11:00:00','da_xac_nhan'),
-(5,14, 10, 7.30,'kha',      'Quoc Toan nhan vien moi, co gang hoc hoi nhieu.',                  '2026-01-14 14:00:00','da_xac_nhan'),
+(5,13, 10, 7.80,'kha',      'Thanh Tam can nang cao kỹ năng xu ly ho so thue.',                 '2026-01-14 11:00:00','da_xac_nhan'),
+(5,14, 10, 7.30,'kha',      'Quoc Toan nhan vien mới, co gang hoc hoi nhieu.',                  '2026-01-14 14:00:00','da_xac_nhan'),
 -- Phong MKT
-(5,34, 33, 8.00,'tot',      'Dinh Khang sang tao trong content, cac chien dich hieu qua.',      '2026-01-15 09:00:00','da_xac_nhan');
+(5,34, 33, 8.00,'tot',      'Dinh Khang sáng tao trong content, cac chien dich hieu qua.',      '2026-01-15 09:00:00','da_xac_nhan');
 
--- Chi tiet danh gia dot 5 cho NV024 (xuat sac)
+-- Chi tiet danh gia dot 5 cho NV024 (xuất sắc)
 INSERT INTO CHITIETDANHGIA (maDanhGia, maTieuChi, diem, nhanXet) VALUES
 ((SELECT maDanhGia FROM DANHGIAHIEUSUAT WHERE maDot=5 AND maNV=24),1, 9.5,'API quality cao, zero bug trong production'),
-((SELECT maDanhGia FROM DANHGIAHIEUSUAT WHERE maDot=5 AND maNV=24),2, 9.0,'Luon hoan thanh sprint truoc deadline'),
+((SELECT maDanhGia FROM DANHGIAHIEUSUAT WHERE maDot=5 AND maNV=24),2, 9.0,'Luon hoan thanh sprint trước deadline'),
 ((SELECT maDanhGia FROM DANHGIAHIEUSUAT WHERE maDot=5 AND maNV=24),3, 9.0,'De xuat nhieu giai phap toi uu hoa DB'),
-((SELECT maDanhGia FROM DANHGIAHIEUSUAT WHERE maDot=5 AND maNV=24),4, 9.5,'Trinh do Java/Spring Boot xuat sac'),
+((SELECT maDanhGia FROM DANHGIAHIEUSUAT WHERE maDot=5 AND maNV=24),4, 9.5,'Trinh do Java/Spring Boot xuất sắc'),
 ((SELECT maDanhGia FROM DANHGIAHIEUSUAT WHERE maDot=5 AND maNV=24),5, 9.0,'Mentor tot cho junior, code review chat'),
 ((SELECT maDanhGia FROM DANHGIAHIEUSUAT WHERE maDot=5 AND maNV=24),6, 8.5,'Chap hanh tot noi quy'),
-((SELECT maDanhGia FROM DANHGIAHIEUSUAT WHERE maDot=5 AND maNV=24),7, 9.0,'Tu hoc Docker, K8s, nang cao ky nang DevOps');
+((SELECT maDanhGia FROM DANHGIAHIEUSUAT WHERE maDot=5 AND maNV=24),7, 9.0,'Tu hoc Docker, K8s, nang cao kỹ năng DevOps');
 
--- Chi tiet danh gia dot 5 cho NV019 (xuat sac KD)
+-- Chi tiet danh gia dot 5 cho NV019 (xuất sắc KD)
 INSERT INTO CHITIETDANHGIA (maDanhGia, maTieuChi, diem, nhanXet) VALUES
 ((SELECT maDanhGia FROM DANHGIAHIEUSUAT WHERE maDot=5 AND maNV=19),1, 9.0,'Doanh so 130% ke hoach, chat luong KH cao'),
-((SELECT maDanhGia FROM DANHGIAHIEUSUAT WHERE maDot=5 AND maNV=19),2, 9.0,'Hoan thanh muc tieu hang thang lien tuc'),
-((SELECT maDanhGia FROM DANHGIAHIEUSUAT WHERE maDot=5 AND maNV=19),3, 9.5,'Sang tao trong chien luoc tiep can KH moi'),
-((SELECT maDanhGia FROM DANHGIAHIEUSUAT WHERE maDot=5 AND maNV=19),4, 9.0,'Ky nang dam phan va chot hop dong tot'),
+((SELECT maDanhGia FROM DANHGIAHIEUSUAT WHERE maDot=5 AND maNV=19),2, 9.0,'Hoan thanh muc tieu hang tháng lien tuc'),
+((SELECT maDanhGia FROM DANHGIAHIEUSUAT WHERE maDot=5 AND maNV=19),3, 9.5,'Sang tao trong chien luoc tiep can KH mới'),
+((SELECT maDanhGia FROM DANHGIAHIEUSUAT WHERE maDot=5 AND maNV=19),4, 9.0,'Kỹ năng dam phan va chot hop dong tot'),
 ((SELECT maDanhGia FROM DANHGIAHIEUSUAT WHERE maDot=5 AND maNV=19),5, 8.5,'Ho tro dong nghiep trong team B2C hieu qua'),
-((SELECT maDanhGia FROM DANHGIAHIEUSUAT WHERE maDot=5 AND maNV=19),6, 9.0,'Cham chi, tuong xuyen di cong tac dung gio'),
+((SELECT maDanhGia FROM DANHGIAHIEUSUAT WHERE maDot=5 AND maNV=19),6, 9.0,'Cham chi, tuong xuyen di cong tac dung giờ'),
 ((SELECT maDanhGia FROM DANHGIAHIEUSUAT WHERE maDot=5 AND maNV=19),7, 9.0,'Tu hoc phan tich du lieu kinh doanh, dung Excel/CRM');
 
 -- =====================================================
--- 15. TUYEN DUNG
+-- 15. TUYỂN DỤNG
 -- =====================================================
 INSERT INTO YEUCAUTUYENDUNG (maPhongBan, maChucVu, soLuong, lyDo, mucLuongDuKien, yeuCauKinhNghiem, yeuCauHocVan, yeuCauKhac, hanTuyenDung, nguoiDuyet, ngayDuyet, trangThai) VALUES
-('TEAM_BE',  'SE_SENIOR',  1, 'Phat trien tinh nang moi cho Platform V2',     '25-35 trieu',   '3+ nam Java/Spring Boot, Microservices', 'Dai hoc CNTT hoac tuong duong',  'Co kinh nghiem Kubernetes, CI/CD la loi the', '2026-03-31', 4, '2026-01-20 10:00:00', 'da_duyet'),
-('TEAM_BE',  'SE_MID',     2, 'Bo sung team Backend cho du an moi',           '18-24 trieu',   '2+ nam Java/Spring Boot, REST API',      'Dai hoc CNTT',                   'Biet Docker, PostgreSQL',                     '2026-04-15', 4, '2026-01-20 10:00:00', 'da_duyet'),
-('TEAM_FE',  'SE_MID',     1, 'Tang cuong team Frontend, project scale up',   '16-22 trieu',   '2+ nam ReactJS, TypeScript',            'Dai hoc CNTT',                   'Co kinh nghiem NextJS, Tailwind la plus',     '2026-04-30', 4, '2026-01-25 14:00:00', 'da_duyet'),
-('TEAM_QA',  'QA_MID',     1, 'Mo rong QA team cho san pham moi',             '14-19 trieu',   '1.5+ nam Automation Testing',           'Dai hoc CNTT',                   'Biet Selenium, Playwright, JMeter',           '2026-05-15', 4, '2026-02-01 09:00:00', 'da_duyet'),
-('TEAM_B2B', 'NV_KD',      2, 'Tang truong kinh doanh B2B mang Enterprise',   '12-18 trieu + Hoa hong', '1+ nam sales B2B, IT solution', 'Dai hoc Kinh te, Quan tri',       'Co mang luoi quan he doanh nghiep la loi the','2026-05-31', 3, '2026-02-05 10:00:00', 'da_duyet'),
-('PHONGMKT', 'NV_MKT',     1, 'Phat trien digital marketing cho san pham SaaS','11-15 trieu',   '2+ nam Digital Marketing',             'Dai hoc Marketing, Truyen thong', 'Biet chay quang cao Google, Meta Ads',        '2026-04-30', 2, '2026-02-10 14:00:00', 'da_duyet'),
-('PHONGNS',  'NV_NS',      1, 'Bo sung nhan luc tuyen dung cho cong ty tang truong nhanh', '10-13 trieu', '1+ nam tuyen dung IT', 'Dai hoc QTKD hoac QTNL',        'Co kinh nghiem tuyen dung IT la uu tien',     '2026-06-30', 2, NULL,                 'cho_duyet');
+('TEAM_BE',  'SE_SENIOR',  1, 'Phát triển tính năng mới cho Platform V2',     '25-35 triệu',   '3+ nam Java/Spring Boot, Microservices', 'Đại học CNTT hoặc tương đương',  'Có kinh nghiệm Kubernetes, CI/CD là lợi thế', '2026-03-31', 4, '2026-01-20 10:00:00', 'da_duyet'),
+('TEAM_BE',  'SE_MID',     2, 'Bổ sung team Backend cho dự án mới',           '18-24 triệu',   '2+ nam Java/Spring Boot, REST API',      'Đại học CNTT',                   'Biết Docker, PostgreSQL',                     '2026-04-15', 4, '2026-01-20 10:00:00', 'da_duyet'),
+('TEAM_FE',  'SE_MID',     1, 'Tăng cường team Frontend, project scale up',   '16-22 triệu',   '2+ nam ReactJS, TypeScript',            'Đại học CNTT',                   'Có kinh nghiệm NextJS, Tailwind la plus',     '2026-04-30', 4, '2026-01-25 14:00:00', 'da_duyet'),
+('TEAM_QA',  'QA_MID',     1, 'Mở rộng QA team cho sản phẩm mới',             '14-19 triệu',   '1.5+ nam Automation Testing',           'Đại học CNTT',                   'Biết Selenium, Playwright, JMeter',           '2026-05-15', 4, '2026-02-01 09:00:00', 'da_duyet'),
+('TEAM_B2B', 'NV_KD',      2, 'Tăng trưởng kinh doanh B2B mang Enterprise',   '12-18 triệu + Hoa hồng', '1+ nam sales B2B, IT solution', 'Đại học Kinh tế, Quản trị',       'Co mạng lưới quan hệ doanh nghiệp là lợi thế','2026-05-31', 3, '2026-02-05 10:00:00', 'da_duyet'),
+('PHONGMKT', 'NV_MKT',     1, 'Phát triển digital marketing cho sản phẩm SaaS','11-15 triệu',   '2+ nam Digital Marketing',             'Đại học Marketing, Truyền thông', 'Biết chay quang cao Google, Meta Ads',        '2026-04-30', 2, '2026-02-10 14:00:00', 'da_duyet'),
+('PHONGNS',  'NV_NS',      1, 'Bổ sung nhan luc tuyen dung cho công ty tang truong nhanh', '10-13 triệu', '1+ nam tuyển dụng IT', 'Đại học QTKD hoac QTNL',        'Có kinh nghiệm tuyển dụng IT là ưu tiên',     '2026-06-30', 2, NULL,                 'cho_duyet');
 
 INSERT INTO TINTUYENDUNG (maYeuCau, tieuDe, noiDung, mucLuong, diaDiem, hanNopHoSo, trangThai, soLuotXem) VALUES
-(1,'Tuyen Senior Java Backend Engineer (Spring Boot / Microservices)','Tham gia phat trien Platform V2 phuc vu 100K+ user. Ky nang: Java 11+, Spring Boot, Microservices, Docker, Kafka, Redis.','25-35 trieu','Q1, TP.HCM (Hybrid)','2026-03-25','dang_tuyen',1250),
-(2,'Tuyen 02 Java Backend Engineer (Mid Level)','Xay dung REST API, tich hop he thong 3rd party, viet unit test. 2+ nam Java Spring Boot.','18-24 trieu','Q1, TP.HCM','2026-04-10','dang_tuyen',870),
-(3,'Tuyen Frontend Engineer (ReactJS / TypeScript)','Phat trien giao dien web cho san pham SaaS, tuong tac API. Ky nang: React, TypeScript, NextJS.','16-22 trieu','Q1, TP.HCM (Hybrid)','2026-04-25','dang_tuyen',620),
-(4,'Tuyen QA Automation Engineer','Thiet ke va trien khai automation test suite. Ky nang: Selenium/Playwright, API testing, CI/CD pipeline.','14-19 trieu','Q1, TP.HCM','2026-05-10','dang_tuyen',310),
-(5,'Tuyen 02 Nhan vien Kinh doanh B2B (IT Solution)','Phat trien va quan ly khach hang doanh nghiep, gioi thieu giai phap phan mem quan ly.','12-18 trieu + Hoa hong hap dan','TP.HCM & ca nuoc','2026-05-25','dang_tuyen',480),
-(6,'Tuyen Chuyen vien Digital Marketing','Lao cac chien dich quang cao Google, Meta, SEO/SEM cho san pham SaaS B2B.','11-15 trieu','Q1, TP.HCM','2026-04-25','dang_tuyen',390);
+(1,'Tuyển Senior Java Backend Engineer (Spring Boot / Microservices)','Tham gia phat trien Platform V2 phục vụ 100K+ user. Kỹ năng: Java 11+, Spring Boot, Microservices, Docker, Kafka, Redis.','25-35 triệu','Q1, TP.HCM (Hybrid)','2026-03-25','dang_tuyen',1250),
+(2,'Tuyển 02 Java Backend Engineer (Mid Level)','Xây dựng REST API, tích hợp hệ thống 3rd party, viết unit test. 2+ nam Java Spring Boot.','18-24 triệu','Q1, TP.HCM','2026-04-10','dang_tuyen',870),
+(3,'Tuyển Frontend Engineer (ReactJS / TypeScript)','Phát triển giao diện web cho sản phẩm SaaS, tương tác API. Kỹ năng: React, TypeScript, NextJS.','16-22 triệu','Q1, TP.HCM (Hybrid)','2026-04-25','dang_tuyen',620),
+(4,'Tuyển QA Automation Engineer','Thiết kế và triển khai automation test suite. Kỹ năng: Selenium/Playwright, API testing, CI/CD pipeline.','14-19 triệu','Q1, TP.HCM','2026-05-10','dang_tuyen',310),
+(5,'Tuyển 02 Nhân viên Kinh doanh B2B (IT Solution)','Phát triển va quan ly khach hang doanh nghiep, giời thieu giai phap phan mem quan ly.','12-18 triệu + Hoa hồng hấp dẫn','TP.HCM & cả nước','2026-05-25','dang_tuyen',480),
+(6,'Tuyển Chuyen vien Digital Marketing','Làm các chiến dịch quảng cáo Google, Meta, SEO/SEM cho sản phẩm SaaS B2B.','11-15 triệu','Q1, TP.HCM','2026-04-25','dang_tuyen',390);
 
 INSERT INTO UNGVIEN (maTin, hoTen, email, dienThoai, ngaySinh, gioiTinh, diaChi, trinhDoHocVan, kinhNghiem, nguonUngTuyen, trangThai, nhanXet) VALUES
--- Tin 1 (Senior Java) - 6 ung vien
-(1,'Nguyen Van Kien',    'kien.nv@gmail.com',     '0912001001','1995-03-12','nam','Ha Noi',      'DH Bach Khoa HN - CNTT',       '5 nam Java Spring Boot, giao thuc Kafka, AWS',     'LinkedIn',   'dang_phong_van','Ky nang xuat sac, phu hop vi tri. Chau moi tu Ha Noi.'),
-(1,'Tran Minh Quan',     'quan.tm@gmail.com',     '0912001002','1996-07-25','nam','TP.HCM',     'DH CNTT TP.HCM',               '4 nam Java, Microservices, Kubernetes',             'Website cty','dang_phong_van','Kinh nghiem thuc te tot, salary yeu cau hop ly.'),
-(1,'Le Phuong Uyen',     'uyen.lp@gmail.com',     '0912001003','1997-01-10','nu', 'Binh Duong', 'DH FPT - Software Engineering', '3 nam Backend Java, da lam startup, scale up',     'Topdev',     'moi',          'Ho so an tuong, ky nang multitasking tot.'),
-(1,'Do Thi Lan',         'lan.dt@gmail.com',       '0912001004','1993-11-08','nu', 'TP.HCM',    'DH Khoa hoc TN - CNTT',        '6 nam Java Enterprise, banking domain',             'Gioi thieu', 'trung_tuyen',  'Ung vien manh nhat. De nghi offer 32 trieu.'),
-(1,'Cao Quang Hieu',     'hieu.cq@gmail.com',     '0912001005','1998-05-20','nam','Da Nang',   'DH Da Nang - CNTT',             '2.5 nam Java, can nang cao them',                   'VietnamWorks','tu_choi',     'Kinh nghiem chua du yeu cau Senior.'),
-(1,'Vu Thi Hue',         'hue.vt@gmail.com',      '0912001006','1994-09-14','nu', 'TP.HCM',    'DH Bach Khoa HCM',             '5 nam Java, co lead du an nho',                     'ITviec',     'moi',          'Ung vien tot, cho lich phong van vong 2.'),
--- Tin 2 (Mid Java) - 5 ung vien
-(2,'Phan Van Hoa',       'hoa.pv@gmail.com',      '0912002001','1998-04-18','nam','TP.HCM',    'DH Cong nghe - DHQG HCM',      '2.5 nam Java Spring, REST API, MySQL',              'LinkedIn',   'dang_phong_van','Ky nang on, phu hop voi yeu cau.'),
-(2,'Nguyen Thi Thao',    'thao.nt@gmail.com',     '0912002002','1999-12-03','nu', 'TP.HCM',    'DH Su pham Ky thuat',          '2 nam Java, muon chuyen sang Backend chuyen sau',   'Facebook',   'moi',          'Sang tao, cau hoi phong van tot.'),
-(2,'Hoang Duc Anh',      'ducAnh.h@gmail.com',    '0912002003','1997-06-30','nam','Ha Noi',    'DH Cong nghe thong tin - DHQG','3 nam Java Backend, co kinh nghiem Docker',          'Topdev',     'trung_tuyen',  'On dinh, ky nang kha, co kinh nghiem Docker.'),
-(2,'Trinh Quoc Thanh',   'thanh.tq@gmail.com',    '0912002004','2000-02-22','nam','Dong Nai',  'DH Lac Hong - CNTT',           '2 nam Java, muon phat trien lau dai',               'ITviec',     'moi',          'Tiem nang, can training them.'),
-(2,'Bui Thi Ngoc Hien',  'ngochiEn.bt@gmail.com', '0912002005','1998-08-15','nu', 'TP.HCM',   'DH RMIT Vietnam',               '2 nam Java Spring Boot, Agile/Scrum',               'LinkedIn',   'moi',          'Giao tiep Tieng Anh tot, ky nang tot.'),
--- Tin 3 (Frontend React) - 4 ung vien
-(3,'Le Van Tan',         'tan.lv@gmail.com',      '0912003001','1998-09-05','nam','TP.HCM',    'DH CNTT TP.HCM',               '2.5 nam ReactJS, TypeScript, NextJS',               'LinkedIn',   'dang_phong_van','Ky nang frontend tot, portfolio dep.'),
-(3,'Nguyen Thi Bao Tran','baotran.nt@gmail.com',  '0912003002','2000-03-18','nu', 'Tay Ninh',  'DH Cong nghe TP.HCM',          '2 nam ReactJS, co kinh nghiem NextJS',              'Website cty','moi',          'Ho so tot, trao doi luong hop ly.'),
-(3,'Pham Ngoc An',       'ngocan.pm@gmail.com',   '0912003003','1997-11-25','nam','Binh Thuan','DH FPT TPHCM',                  '3 nam Frontend, Vue va React, thich React hon',     'Topdev',     'trung_tuyen',  'Co nen ky thuat tot. De nghi offer 20 trieu.'),
-(3,'Vo Thi Kim Thi',     'kimthi.vt@gmail.com',   '0912003004','1999-07-10','nu', 'TP.HCM',    'DH Nguyen Tat Thanh',          '2 nam ReactJS, chua co kinh nghiem TypeScript',     'Facebook',   'tu_choi',      'Chua co TypeScript, khong du yeu cau hien tai.'),
--- Tin 5 (KD B2B) - 4 ung vien
-(5,'Ngo Tuan Vu',        'tuanvu.ngo@gmail.com',  '0912005001','1995-02-14','nam','TP.HCM',    'DH Kinh te TP.HCM',             '3 nam sales B2B phan mem ERP',                      'LinkedIn',   'dang_phong_van','Mang KH tot, da chot nhieu hop dong lon.'),
-(5,'Dang Thi Minh Phuong','minhphuong.dt@gmail.com','0912005002','1997-08-30','nu','TP.HCM',   'DH Ngoai thuong',               '2 nam kinh doanh phan mem, tieng Anh tot',          'Facebook',   'moi',          'Giao tiep tot, can test ky nang chot deal.'),
-(5,'Ha Quoc Khanh',      'khanh.hq@gmail.com',    '0912005003','1993-12-22','nam','Binh Duong','DH Kinh te Quoc dan',           '5 nam sales Enterprise, co sach KH rieng',          'Gioi thieu', 'trung_tuyen',  'Ung vien xuat sac. Salary yeu cau 18tr + 5% hoa hong.'),
-(5,'Ly Thi Thanh Huong', 'thanhHuong.lt@gmail.com','0912005004','1999-05-08','nu','Long An',   'DH Thuong mai TP.HCM',          '1 nam sales, moi vao nghe nhung nhiet tinh',        'VietnamWorks','moi',          'Cam kết tot, can thoi gian dao tao ban dau.');
+-- Tin 1 (Senior Java) - 6 ứng viên
+(1,'Nguyen Van Kien',    'kien.nv@gmail.com',     '0912001001','1995-03-12','nam','Ha Noi',      'DH Bach Khoa HN - CNTT',       '5 nam Java Spring Boot, giao thuc Kafka, AWS',     'LinkedIn',   'dang_phong_van','Kỹ năng xuất sắc, phù hợp vị trí. Chau mới tu Ha Noi.'),
+(1,'Tran Minh Quan',     'quan.tm@gmail.com',     '0912001002','1996-07-25','nam','TP.HCM',     'DH CNTT TP.HCM',               '4 nam Java, Microservices, Kubernetes',             'Website cty','dang_phong_van','Kinh nghiệm thực tế tot, salary yêu cầu hợp lý.'),
+(1,'Le Phuong Uyen',     'uyen.lp@gmail.com',     '0912001003','1997-01-10','nu', 'Binh Duong', 'DH FPT - Software Engineering', '3 nam Backend Java, đã làm startup, scale up',     'Topdev',     'mới',          'Hồ sơ ấn tượng, kỹ năng multitasking tot.'),
+(1,'Do Thi Lan',         'lan.dt@gmail.com',       '0912001004','1993-11-08','nu', 'TP.HCM',    'DH Khoa hoc TN - CNTT',        '6 nam Java Enterprise, banking domain',             'Giới thiệu', 'trung_tuyen',  'Ung vien manh nhat. De nghi offer 32 triệu.'),
+(1,'Cao Quang Hieu',     'hieu.cq@gmail.com',     '0912001005','1998-05-20','nam','Da Nang',   'DH Da Nang - CNTT',             '2.5 nam Java, can nang cao them',                   'VietnamWorks','tu_choi',     'Kinh nghiệm chua du yêu cầu Senior.'),
+(1,'Vu Thi Hue',         'hue.vt@gmail.com',      '0912001006','1994-09-14','nu', 'TP.HCM',    'DH Bach Khoa HCM',             '5 nam Java, co lead dự án nho',                     'ITviec',     'mới',          'Ứng viên tốt, chờ lịch phỏng vấn vòng 2.'),
+-- Tin 2 (Mid Java) - 5 ứng viên
+(2,'Phan Van Hoa',       'hoa.pv@gmail.com',      '0912002001','1998-04-18','nam','TP.HCM',    'DH Công nghệ - DHQG HCM',      '2.5 nam Java Spring, REST API, MySQL',              'LinkedIn',   'dang_phong_van','Kỹ năng on, phù hợp voi yêu cầu.'),
+(2,'Nguyen Thi Thao',    'thao.nt@gmail.com',     '0912002002','1999-12-03','nu', 'TP.HCM',    'DH Su pham Ky thuat',          '2 nam Java, muon chuyen sáng Backend chuyen sau',   'Facebook',   'mới',          'Sáng tạo, câu hỏi phỏng vấn tốt.'),
+(2,'Hoang Duc Anh',      'ducAnh.h@gmail.com',    '0912002003','1997-06-30','nam','Ha Noi',    'DH Công nghệ thong tin - DHQG','3 nam Java Backend, co kinh nghiem Docker',          'Topdev',     'trung_tuyen',  'On dinh, kỹ năng kha, co kinh nghiem Docker.'),
+(2,'Trinh Quoc Thanh',   'thanh.tq@gmail.com',    '0912002004','2000-02-22','nam','Dong Nai',  'DH Lac Hong - CNTT',           '2 nam Java, muon phat trien lau dai',               'ITviec',     'mới',          'Tiềm năng, cần training thêm.'),
+(2,'Bui Thi Ngoc Hien',  'ngochiEn.bt@gmail.com', '0912002005','1998-08-15','nu', 'TP.HCM',   'DH RMIT Vietnam',               '2 nam Java Spring Boot, Agile/Scrum',               'LinkedIn',   'mới',          'Giao tiep Tieng Anh tot, kỹ năng tot.'),
+-- Tin 3 (Frontend React) - 4 ứng viên
+(3,'Le Van Tan',         'tan.lv@gmail.com',      '0912003001','1998-09-05','nam','TP.HCM',    'DH CNTT TP.HCM',               '2.5 nam ReactJS, TypeScript, NextJS',               'LinkedIn',   'dang_phong_van','Kỹ năng frontend tot, portfolio dep.'),
+(3,'Nguyen Thi Bao Tran','baotran.nt@gmail.com',  '0912003002','2000-03-18','nu', 'Tay Ninh',  'DH Công nghệ TP.HCM',          '2 nam ReactJS, co kinh nghiem NextJS',              'Website cty','mới',          'Ho so tot, trao doi luong hợp lý.'),
+(3,'Pham Ngoc An',       'ngocan.pm@gmail.com',   '0912003003','1997-11-25','nam','Binh Thuan','DH FPT TPHCM',                  '3 nam Frontend, Vue va React, thich React hon',     'Topdev',     'trung_tuyen',  'Co nen ky thuat tot. De nghi offer 20 triệu.'),
+(3,'Vo Thi Kim Thi',     'kimthi.vt@gmail.com',   '0912003004','1999-07-10','nu', 'TP.HCM',    'DH Nguyen Tat Thanh',          '2 nam ReactJS, chua co kinh nghiem TypeScript',     'Facebook',   'tu_choi',      'Chua co TypeScript, khong du yêu cầu hien tai.'),
+-- Tin 5 (KD B2B) - 4 ứng viên
+(5,'Ngo Tuan Vu',        'tuanvu.ngo@gmail.com',  '0912005001','1995-02-14','nam','TP.HCM',    'DH Kinh tế TP.HCM',             '3 nam sales B2B phan mem ERP',                      'LinkedIn',   'dang_phong_van','Mạng KH tốt, đã chốt nhiều hợp đồng lớn.'),
+(5,'Dang Thi Minh Phuong','minhphuong.dt@gmail.com','0912005002','1997-08-30','nu','TP.HCM',   'DH Ngoai thuong',               '2 nam kinh doanh phan mem, tiếng Anh tốt',          'Facebook',   'mới',          'Giao tiep tot, can test kỹ năng chot deal.'),
+(5,'Ha Quoc Khanh',      'khanh.hq@gmail.com',    '0912005003','1993-12-22','nam','Binh Duong','DH Kinh tế Quoc dan',           '5 nam sales Enterprise, co sach KH rieng',          'Giới thiệu', 'trung_tuyen',  'Ung vien xuất sắc. Salary yêu cầu 18tr + 5% hoa hong.'),
+(5,'Ly Thi Thanh Huong', 'thanhHuong.lt@gmail.com','0912005004','1999-05-08','nu','Long An',   'DH Thuong mai TP.HCM',          '1 nam sales, mới vao nghe nhung nhiet tinh',        'VietnamWorks','mới',          'Cam kết tốt, cần thời gian đào tạo ban đầu.');
 
 -- =====================================================
--- 16. THONG BAO NOI BO
+-- 16. THÔNG BÁO NỘI BỘ
 -- =====================================================
 INSERT INTO THONGBAO (tieuDe, noiDung, loaiThongBao, maTaiKhoanGui, maTaiKhoanNhan, daDoc, ngayDoc) VALUES
--- Thong bao chung tu Admin/BGD
-('Chuc mung nam moi 2026!',                'BGD Cong ty TNHH ABC Technology chan thanh chuc toan the CBNV mot nam moi 2026 an khang thinh vuong, hanh phuc va nhieu thanh cong moi!', 'thong_bao_chung', 2, 1, TRUE, '2026-01-02 09:00:00'),
-('Chuc mung nam moi 2026!',                'BGD Cong ty TNHH ABC Technology chan thanh chuc toan the CBNV mot nam moi 2026 an khang thinh vuong, hanh phuc va nhieu thanh cong moi!', 'thong_bao_chung', 2, 5, TRUE, '2026-01-02 09:30:00'),
-('Chuc mung nam moi 2026!',                'BGD Cong ty TNHH ABC Technology chan thanh chuc toan the CBNV mot nam moi 2026 an khang thinh vuong, hanh phuc va nhieu thanh cong moi!', 'thong_bao_chung', 2,22, TRUE, '2026-01-02 09:15:00'),
-('Chuc mung nam moi 2026!',                'BGD Cong ty TNHH ABC Technology chan thanh chuc toan the CBNV mot nam moi 2026 an khang thinh vuong, hanh phuc va nhieu thanh cong moi!', 'thong_bao_chung', 2,15, TRUE, '2026-01-02 08:55:00'),
-('Chuc mung nam moi 2026!',                'BGD Cong ty TNHH ABC Technology chan thanh chuc toan the CBNV mot nam moi 2026 an khang thinh vuong, hanh phuc va nhieu thanh cong moi!', 'thong_bao_chung', 2,33, FALSE, NULL),
--- Thong bao noi quy, quy dinh
-('Nhac nho: Chinh sach lam viec tu xa Q1/2026','Lich Work-From-Home thang 1-3/2026: Thu 4 hang tuan la ngay WFH. Vui long dang ky WFH qua he thong truoc 8h sang.','thong_bao_chung', 1, 5, TRUE, '2026-01-05 10:00:00'),
-('Nhac nho: Chinh sach lam viec tu xa Q1/2026','Lich Work-From-Home thang 1-3/2026: Thu 4 hang tuan la ngay WFH. Vui long dang ky WFH qua he thong truoc 8h sang.','thong_bao_chung', 1,22, TRUE, '2026-01-05 09:45:00'),
-('Nhac nho: Chinh sach lam viec tu xa Q1/2026','Lich Work-From-Home thang 1-3/2026: Thu 4 hang tuan la ngay WFH. Vui long dang ky WFH qua he thong truoc 8h sang.','thong_bao_chung', 1,15, FALSE, NULL),
--- Thong bao luong
-('Bang luong thang 11/2025 da san sang',   'BL thang 11/2025 da duoc phe duyet. Vui long dang nhap he thong de kiem tra chi tiet.', 'he_thong', 6, 1, TRUE, '2025-12-04 09:00:00'),
-('Bang luong thang 11/2025 da san sang',   'BL thang 11/2025 da duoc phe duyet. Vui long dang nhap he thong de kiem tra chi tiet.', 'he_thong', 6,22, TRUE, '2025-12-04 10:00:00'),
-('Bang luong thang 12/2025 da san sang',   'BL thang 12/2025 da duoc phe duyet. Vui long dang nhap he thong de kiem tra chi tiet.', 'he_thong', 6, 1, TRUE, '2026-01-06 09:00:00'),
-('Bang luong thang 12/2025 da san sang',   'BL thang 12/2025 da duoc phe duyet. Vui long dang nhap he thong de kiem tra chi tiet.', 'he_thong', 6, 5, TRUE, '2026-01-06 09:30:00'),
-('Bang luong thang 12/2025 da san sang',   'BL thang 12/2025 da duoc phe duyet. Vui long dang nhap he thong de kiem tra chi tiet.', 'he_thong', 6,22, TRUE, '2026-01-06 10:00:00'),
-('Bang luong thang 01/2026 da san sang',   'BL thang 01/2026 da duoc phe duyet. Vui long dang nhap he thong de kiem tra chi tiet.', 'he_thong', 6, 1, FALSE, NULL),
-('Bang luong thang 01/2026 da san sang',   'BL thang 01/2026 da duoc phe duyet. Vui long dang nhap he thong de kiem tra chi tiet.', 'he_thong', 6,22, FALSE, NULL),
-('Bang luong thang 01/2026 da san sang',   'BL thang 01/2026 da duoc phe duyet. Vui long dang nhap he thong de kiem tra chi tiet.', 'he_thong', 6,15, FALSE, NULL),
--- Thong bao don tu
-('Don nghi phep da duoc phe duyet',        'Don nghi phep tu 14/01/2026 cua ban da duoc phe duyet. Chuc ban nghi vui!',               'don_tu',   6,  8, TRUE, '2026-01-13 17:00:00'),
-('Don nghi phep da duoc phe duyet',        'Don nghi phep tu 22/01/2026 cua ban da duoc phe duyet.',                                    'don_tu',   6, 29, TRUE, '2026-01-21 16:00:00'),
-('Co don nghi phep moi can duyet',         'NV Le Thi Quynh Nhu (NV026) gui don nghi phep 10-13/02/2026. Vui long xem xet phe duyet.', 'don_tu',  27, 23, FALSE, NULL),
-('Yeu cau lam them da duoc phe duyet',     'Yeu cau lam them ngay 02/02/2026 (3 gio) da duoc phe duyet. Cam on ban da dong gop!',      'don_tu',  23, 25, FALSE, NULL),
--- Thong bao danh gia
-('Lich danh gia Quy 1/2026 sap dien ra',   'Dot danh gia hieu suat Q1/2026 se bat dau tu 06/04/2026. Moi CBQL chuan bi ho so va tieu chi danh gia cho NV.', 'thong_bao_chung', 6, 5, FALSE, NULL),
-('Lich danh gia Quy 1/2026 sap dien ra',   'Dot danh gia hieu suat Q1/2026 se bat dau tu 06/04/2026. Moi CBQL chuan bi ho so va tieu chi danh gia cho NV.', 'thong_bao_chung', 6,22, FALSE, NULL),
-('Lich danh gia Quy 1/2026 sap dien ra',   'Dot danh gia hieu suat Q1/2026 se bat dau tu 06/04/2026. Moi CBQL chuan bi ho so va tieu chi danh gia cho NV.', 'thong_bao_chung', 6,15, FALSE, NULL),
--- Thong bao tuyen dung
-('Yeu cau tuyen dung moi can phe duyet',   'Co yeu cau tuyen 1 NV NS moi tu Phong NS. Vui long xem xet va phe duyet.', 'don_tu', 6, 2, FALSE, NULL),
-('Hop ket qua phong van Senior Java',      'Tuan toi (09-13/02/2026) se phong van vong cuoi 2 ung vien Senior Java Backend. Moi anh/chi TP IT va HR sap xep tham du.', 'thong_bao_chung', 6, 1, FALSE, NULL),
-('Hop ket qua phong van Senior Java',      'Tuan toi (09-13/02/2026) se phong van vong cuoi 2 ung vien Senior Java Backend. Moi anh/chi TP IT va HR sap xep tham du.', 'thong_bao_chung', 6,23, FALSE, NULL);
+-- Thông báo chung tu Admin/BGD
+('Chúc mừng năm mới 2026!',                'BGD Công ty TNHH ABC Technology chân thành chúc toàn thể CBNV một năm mới 2026 an khang thịnh vượng, hạnh phúc và nhiều thành công mới!', 'thong_bao_chung', 2, 1, TRUE, '2026-01-02 09:00:00'),
+('Chúc mừng năm mới 2026!',                'BGD Công ty TNHH ABC Technology chân thành chúc toàn thể CBNV một năm mới 2026 an khang thịnh vượng, hạnh phúc và nhiều thành công mới!', 'thong_bao_chung', 2, 5, TRUE, '2026-01-02 09:30:00'),
+('Chúc mừng năm mới 2026!',                'BGD Công ty TNHH ABC Technology chân thành chúc toàn thể CBNV một năm mới 2026 an khang thịnh vượng, hạnh phúc và nhiều thành công mới!', 'thong_bao_chung', 2,22, TRUE, '2026-01-02 09:15:00'),
+('Chúc mừng năm mới 2026!',                'BGD Công ty TNHH ABC Technology chân thành chúc toàn thể CBNV một năm mới 2026 an khang thịnh vượng, hạnh phúc và nhiều thành công mới!', 'thong_bao_chung', 2,15, TRUE, '2026-01-02 08:55:00'),
+('Chúc mừng năm mới 2026!',                'BGD Công ty TNHH ABC Technology chân thành chúc toàn thể CBNV một năm mới 2026 an khang thịnh vượng, hạnh phúc và nhiều thành công mới!', 'thong_bao_chung', 2,33, FALSE, NULL),
+-- Thông báo noi quy, quy dinh
+('Nhắc nhở: Chính sách làm việc từ xa Q1/2026','Lịch Work-From-Home tháng 1-3/2026: Thu 4 hàng tuần la ngày WFH. Vui lòng đăng ký WFH qua hệ thống trước 8h sáng.','thong_bao_chung', 1, 5, TRUE, '2026-01-05 10:00:00'),
+('Nhắc nhở: Chính sách làm việc từ xa Q1/2026','Lịch Work-From-Home tháng 1-3/2026: Thu 4 hàng tuần la ngày WFH. Vui lòng đăng ký WFH qua hệ thống trước 8h sáng.','thong_bao_chung', 1,22, TRUE, '2026-01-05 09:45:00'),
+('Nhắc nhở: Chính sách làm việc từ xa Q1/2026','Lịch Work-From-Home tháng 1-3/2026: Thu 4 hàng tuần la ngày WFH. Vui lòng đăng ký WFH qua hệ thống trước 8h sáng.','thong_bao_chung', 1,15, FALSE, NULL),
+-- Thông báo luong
+('Bảng lương tháng 11/2025 da san sáng',   'BL tháng 11/2025 đã được phê duyệt. Vui lòng đăng nhập he thong để kiểm tra chi tiết.', 'he_thong', 6, 1, TRUE, '2025-12-04 09:00:00'),
+('Bảng lương tháng 11/2025 da san sáng',   'BL tháng 11/2025 đã được phê duyệt. Vui lòng đăng nhập he thong để kiểm tra chi tiết.', 'he_thong', 6,22, TRUE, '2025-12-04 10:00:00'),
+('Bảng lương tháng 12/2025 da san sáng',   'BL tháng 12/2025 đã được phê duyệt. Vui lòng đăng nhập he thong để kiểm tra chi tiết.', 'he_thong', 6, 1, TRUE, '2026-01-06 09:00:00'),
+('Bảng lương tháng 12/2025 da san sáng',   'BL tháng 12/2025 đã được phê duyệt. Vui lòng đăng nhập he thong để kiểm tra chi tiết.', 'he_thong', 6, 5, TRUE, '2026-01-06 09:30:00'),
+('Bảng lương tháng 12/2025 da san sáng',   'BL tháng 12/2025 đã được phê duyệt. Vui lòng đăng nhập he thong để kiểm tra chi tiết.', 'he_thong', 6,22, TRUE, '2026-01-06 10:00:00'),
+('Bảng lương tháng 01/2026 da san sáng',   'BL tháng 01/2026 đã được phê duyệt. Vui lòng đăng nhập he thong để kiểm tra chi tiết.', 'he_thong', 6, 1, FALSE, NULL),
+('Bảng lương tháng 01/2026 da san sáng',   'BL tháng 01/2026 đã được phê duyệt. Vui lòng đăng nhập he thong để kiểm tra chi tiết.', 'he_thong', 6,22, FALSE, NULL),
+('Bảng lương tháng 01/2026 da san sáng',   'BL tháng 01/2026 đã được phê duyệt. Vui lòng đăng nhập he thong để kiểm tra chi tiết.', 'he_thong', 6,15, FALSE, NULL),
+-- Thông báo don tu
+('Đơn nghỉ phép đã được phê duyệt',        'Đơn nghỉ phép tu 14/01/2026 của bạn đã được phê duyệt. Chúc bạn nghỉ vui!',               'don_tu',   6,  8, TRUE, '2026-01-13 17:00:00'),
+('Đơn nghỉ phép đã được phê duyệt',        'Đơn nghỉ phép tu 22/01/2026 của bạn đã được phê duyệt.',                                    'don_tu',   6, 29, TRUE, '2026-01-21 16:00:00'),
+('Có đơn nghỉ phép mới cần duyệt',         'NV Le Thi Quynh Nhu (NV026) gửi đơn nghỉ phép 10-13/02/2026. Vui lòng xem xét phê duyệt.', 'don_tu',  27, 23, FALSE, NULL),
+('Yeu cau lam them đã được phê duyệt',     'Yeu cau lam them ngày 02/02/2026 (3 giờ) đã được phê duyệt. Cảm ơn bạn đã đóng góp!',      'don_tu',  23, 25, FALSE, NULL),
+-- Thông báo danh gia
+('Lịch đánh giá Quý 1/2026 sắp diễn ra',   'Đợt đánh giá hiệu suất Q1/2026 sẽ bắt đầu từ 06/04/2026. Mời CBQL chuẩn bị hồ sơ và tiêu chí đánh giá cho NV.', 'thong_bao_chung', 6, 5, FALSE, NULL),
+('Lịch đánh giá Quý 1/2026 sắp diễn ra',   'Đợt đánh giá hiệu suất Q1/2026 sẽ bắt đầu từ 06/04/2026. Mời CBQL chuẩn bị hồ sơ và tiêu chí đánh giá cho NV.', 'thong_bao_chung', 6,22, FALSE, NULL),
+('Lịch đánh giá Quý 1/2026 sắp diễn ra',   'Đợt đánh giá hiệu suất Q1/2026 sẽ bắt đầu từ 06/04/2026. Mời CBQL chuẩn bị hồ sơ và tiêu chí đánh giá cho NV.', 'thong_bao_chung', 6,15, FALSE, NULL),
+-- Thông báo tuyen dung
+('Yêu cầu tuyển dụng mới cần phê duyệt',   'Có yêu cầu tuyển 1 NV NS mới tu Phong NS. Vui lòng xem xet va phe duyet.', 'don_tu', 6, 2, FALSE, NULL),
+('Họp kết quả phỏng vấn Senior Java',      'Tuần tới (09-13/02/2026) sẽ phỏng vấn vòng cuối 2 ứng viên Senior Java Backend. Mời anh/chị TP IT và HR sắp xếp tham dự.', 'thong_bao_chung', 6, 1, FALSE, NULL),
+('Họp kết quả phỏng vấn Senior Java',      'Tuần tới (09-13/02/2026) sẽ phỏng vấn vòng cuối 2 ứng viên Senior Java Backend. Mời anh/chị TP IT và HR sắp xếp tham dự.', 'thong_bao_chung', 6,23, FALSE, NULL);
 
 -- =====================================================
--- 17. CAU HINH PHU CAP (giu & bo sung)
+-- 17. CẤU HÌNH PHỤ CẤP (giu & bo sung)
 -- =====================================================
 DELETE FROM CAUHINH_PHUCAP;
 INSERT INTO CAUHINH_PHUCAP (loai, tenKhoan, kieuTinh, giaTri, nguon, hoatDong) VALUES
-('phu_cap', 'Phu cap an trua',              'co_dinh',   750000, 'CongTy',   1),
-('phu_cap', 'Phu cap dien thoai',           'co_dinh',   500000, 'CongTy',   1),
-('phu_cap', 'Phu cap di lai',               'co_dinh',   600000, 'CongTy',   1),
-('phu_cap', 'Phu cap tham nien (3-5 nam)',  'co_dinh',   500000, 'CongTy',   1),
-('phu_cap', 'Phu cap tham nien (5+ nam)',   'co_dinh',  1000000, 'CongTy',   1),
-('phu_cap', 'Thuong hieu qua hang thang',   'phan_tram',   5.00, 'CongTy',   1),
+('phu_cap', 'Phụ cấp ăn trưa',              'co_dinh',   750000, 'CongTy',   1),
+('phu_cap', 'Phụ cấp điện thoại',           'co_dinh',   500000, 'CongTy',   1),
+('phu_cap', 'Phụ cấp đi lại',               'co_dinh',   600000, 'CongTy',   1),
+('phu_cap', 'Phụ cấp thâm niên (3-5 nam)',  'co_dinh',   500000, 'CongTy',   1),
+('phu_cap', 'Phụ cấp thâm niên (5+ nam)',   'co_dinh',  1000000, 'CongTy',   1),
+('phu_cap', 'Thuong hieu qua hang tháng',   'phan_tram',   5.00, 'CongTy',   1),
 ('khau_tru','BHXH NLD (8%)',                'phan_tram',   8.00, 'LuatDinh', 1),
 ('khau_tru','BHYT NLD (1.5%)',              'phan_tram',   1.50, 'LuatDinh', 1),
 ('khau_tru','BHTN NLD (1%)',                'phan_tram',   1.00, 'LuatDinh', 1),
-('khau_tru','Thue TNCN',                    'phan_tram',   0.00, 'LuatDinh', 1); -- Tinh theo bieu luy tien
+('khau_tru','Thuế TNCN',                    'phan_tram',   0.00, 'LuatDinh', 1); -- Tính theo biểu lũy tiến
 
 -- =====================================================
--- 18. LOG AUDIT - Lich su thao tac he thong
+-- 18. LOG AUDIT - Lịch sử thao tac he thong
 -- =====================================================
 INSERT INTO LOG_AUDIT (maTaiKhoan, hanhDong, bangDuLieu, maBanGhi, diaChiIP, userAgent) VALUES
 (2,'LOGIN',  NULL,               NULL,  '192.168.1.10', 'Mozilla/5.0 Chrome/120'),
@@ -1242,9 +1242,15 @@ INSERT INTO LOG_AUDIT (maTaiKhoan, hanhDong, bangDuLieu, maBanGhi, diaChiIP, use
 (5,'UPDATE', 'DONXINNGHIPHEP',   '10',  '192.168.1.20', 'Mozilla/5.0 Chrome/120');
 
 SELECT '=== HRM Sample Data V2 - Inserted Successfully! ===' AS Message;
-SELECT CONCAT('Tong so nhan vien: ', COUNT(*)) AS Info FROM NHANVIEN;
-SELECT CONCAT('Tong so hop dong: ', COUNT(*)) AS Info FROM HOPDONGLAODONG;
-SELECT CONCAT('Tong so cham cong: ', COUNT(*)) AS Info FROM CHAMCONG;
-SELECT CONCAT('Tong so don nghi phep: ', COUNT(*)) AS Info FROM DONXINNGHIPHEP;
-SELECT CONCAT('Tong so ung vien: ', COUNT(*)) AS Info FROM UNGVIEN;
+SELECT CONCAT('Tổng số nhân viên: ', COUNT(*)) AS Info FROM NHANVIEN;
+SELECT CONCAT('Tổng số hợp đồng: ', COUNT(*)) AS Info FROM HOPDONGLAODONG;
+SELECT CONCAT('Tổng số chấm công: ', COUNT(*)) AS Info FROM CHAMCONG;
+SELECT CONCAT('Tổng số đơn nghỉ phép: ', COUNT(*)) AS Info FROM DONXINNGHIPHEP;
+SELECT CONCAT('Tong so ứng viên: ', COUNT(*)) AS Info FROM UNGVIEN;
+
+
+
+
+
+
 

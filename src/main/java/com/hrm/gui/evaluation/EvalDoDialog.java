@@ -30,6 +30,7 @@ public class EvalDoDialog extends JDialog {
     private final TaiKhoan currentUser;
     private final int cycleId;
     private final String cycleName;
+    private final List<TieuChiDanhGia> cycleCriteria;
 
     private JComboBox<NhanVienItem> cboEmployee;
     private JLabel lblChucVu;
@@ -49,6 +50,7 @@ public class EvalDoDialog extends JDialog {
         this.currentUser  = SessionContext.getInstance().getCurrentUser();
         this.cycleId   = cycleId;
         this.cycleName = cycleName;
+        this.cycleCriteria = evalService.getCriteriaByCycle(cycleId);
 
         initComponents();
         setupLayout();
@@ -76,11 +78,7 @@ public class EvalDoDialog extends JDialog {
         criteriaPanel.setLayout(new BoxLayout(criteriaPanel, BoxLayout.Y_AXIS));
         criteriaPanel.setBackground(UIColors.WHITE);
 
-        List<TieuChiDanhGia> criteria = evalService.getAllCriteria().stream()
-                .filter(TieuChiDanhGia::isHoatDong)
-                .collect(java.util.stream.Collectors.toList());
-
-        for (TieuChiDanhGia c : criteria) {
+        for (TieuChiDanhGia c : cycleCriteria) {
             criteriaPanel.add(buildCriteriaRow(c));
             criteriaPanel.add(Box.createVerticalStrut(6));
         }
@@ -103,6 +101,14 @@ public class EvalDoDialog extends JDialog {
         btnHuy.setPreferredSize(new Dimension(90, 38));
         btnLuu.addActionListener(e -> luuDanhGia());
         btnHuy.addActionListener(e -> dispose());
+
+        if (cycleCriteria.isEmpty()) {
+            btnLuu.setEnabled(false);
+            JOptionPane.showMessageDialog(this,
+                    "Dot danh gia nay chua duoc cau hinh tieu chi. Vui long cau hinh truoc khi danh gia.",
+                    "Thong bao",
+                    JOptionPane.WARNING_MESSAGE);
+        }
 
         // Initial preview
         updatePreview();
@@ -287,10 +293,7 @@ public class EvalDoDialog extends JDialog {
 
     private List<ChiTietDanhGia> buildScores() {
         List<ChiTietDanhGia> scores = new ArrayList<>();
-        List<TieuChiDanhGia> criteria = evalService.getAllCriteria().stream()
-                .filter(TieuChiDanhGia::isHoatDong)
-                .collect(java.util.stream.Collectors.toList());
-        for (TieuChiDanhGia c : criteria) {
+        for (TieuChiDanhGia c : cycleCriteria) {
             JSpinner spn = scoreSpinners.get(c.getId());
             JTextArea txt = commentFields.get(c.getId());
             if (spn != null) {
