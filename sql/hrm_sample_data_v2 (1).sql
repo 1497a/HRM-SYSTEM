@@ -1024,28 +1024,44 @@ INSERT INTO DOTDANHGIA (tenDot, nam, kyDanhGia, tuNgay, denNgay, moTa, trangThai
 ('Danh gia Nam 2025',        2025, 'nam',   '2026-01-12', '2026-01-23', 'Danh gia tong ket nam 2025',         'da_ket_thuc'),
 ('Danh gia Quy 1 nam 2026',  2026, 'quy_1', '2026-04-06', '2026-04-17', 'Danh gia hieu suat Quy 1/2026',     'chua_bat_dau');
 
--- Trong so tieu chi cho moi dot (6 tieu chi, tong trong so != 100 vi la trong so tuong doi)
+-- Trong so tieu chi cho moi dot (tong trong so cua moi dot = 100%)
 -- Dot 1 (Q4/2024): tap trung Ket qua va Nang luc
 INSERT INTO DOTDANHGIA_TIEUCHI (maDot, maTieuChi, trongSo, batBuoc) VALUES
-(1,1,2.0,TRUE),(1,2,2.0,TRUE),(1,3,1.0,FALSE),(1,4,2.0,TRUE),(1,5,1.0,TRUE),(1,6,1.0,TRUE),(1,7,1.0,FALSE);
+(1,1,20.0,TRUE),(1,2,20.0,TRUE),(1,3,10.0,FALSE),(1,4,20.0,TRUE),(1,5,10.0,TRUE),(1,6,10.0,TRUE),(1,7,10.0,FALSE);
 -- Dot 2 (Q1/2025)
 INSERT INTO DOTDANHGIA_TIEUCHI (maDot, maTieuChi, trongSo, batBuoc) VALUES
-(2,1,2.0,TRUE),(2,2,2.0,TRUE),(2,3,1.0,FALSE),(2,4,2.0,TRUE),(2,5,1.5,TRUE),(2,6,1.0,TRUE),(2,7,0.5,FALSE);
+(2,1,20.0,TRUE),(2,2,20.0,TRUE),(2,3,10.0,FALSE),(2,4,20.0,TRUE),(2,5,15.0,TRUE),(2,6,10.0,TRUE),(2,7,5.0,FALSE);
 -- Dot 3 (Q2/2025)
 INSERT INTO DOTDANHGIA_TIEUCHI (maDot, maTieuChi, trongSo, batBuoc) VALUES
-(3,1,2.0,TRUE),(3,2,1.5,TRUE),(3,3,1.5,FALSE),(3,4,2.0,TRUE),(3,5,1.5,TRUE),(3,6,1.0,TRUE),(3,7,0.5,FALSE);
+(3,1,20.0,TRUE),(3,2,15.0,TRUE),(3,3,15.0,FALSE),(3,4,20.0,TRUE),(3,5,15.0,TRUE),(3,6,10.0,TRUE),(3,7,5.0,FALSE);
 -- Dot 4 (Q3/2025)
 INSERT INTO DOTDANHGIA_TIEUCHI (maDot, maTieuChi, trongSo, batBuoc) VALUES
-(4,1,2.0,TRUE),(4,2,2.0,TRUE),(4,3,1.0,FALSE),(4,4,2.0,TRUE),(4,5,1.5,TRUE),(4,6,1.0,TRUE),(4,7,0.5,FALSE);
+(4,1,20.0,TRUE),(4,2,20.0,TRUE),(4,3,10.0,FALSE),(4,4,20.0,TRUE),(4,5,15.0,TRUE),(4,6,10.0,TRUE),(4,7,5.0,FALSE);
 -- Dot 5 (Nam 2025): nang cao trong so Phat trien ban than
 INSERT INTO DOTDANHGIA_TIEUCHI (maDot, maTieuChi, trongSo, batBuoc) VALUES
-(5,1,2.0,TRUE),(5,2,2.0,TRUE),(5,3,1.5,FALSE),(5,4,2.0,TRUE),(5,5,1.5,TRUE),(5,6,1.0,TRUE),(5,7,1.0,FALSE);
+(5,1,17.0,TRUE),(5,2,17.0,TRUE),(5,3,13.0,FALSE),(5,4,17.0,TRUE),(5,5,13.0,TRUE),(5,6,8.0,TRUE),(5,7,15.0,FALSE);
 -- Dot 6 (Q1/2026): chua bat dau
 INSERT INTO DOTDANHGIA_TIEUCHI (maDot, maTieuChi, trongSo, batBuoc) VALUES
-(6,1,2.0,TRUE),(6,2,2.0,TRUE),(6,3,1.0,FALSE),(6,4,2.0,TRUE),(6,5,1.5,TRUE),(6,6,1.0,TRUE),(6,7,0.5,FALSE);
+(6,1,20.0,TRUE),(6,2,20.0,TRUE),(6,3,10.0,FALSE),(6,4,20.0,TRUE),(6,5,15.0,TRUE),(6,6,10.0,TRUE),(6,7,5.0,FALSE);
 
 -- Danh gia hieu suat dot 5 (Nam 2025) - day du nhieu nhan vien
 INSERT INTO DANHGIAHIEUSUAT (maDot, maNV, nguoiDanhGia, tongDiem, xepLoai, nhanXetChung, ngayDanhGia, trangThai) VALUES
+-- Dot 1 (Q4/2024)
+(1,23, 22, 8.60,'tot',      'Khoa Nguyen hoan thanh tot muc tieu ky, team van hanh on dinh.',        '2025-01-10 10:00:00','da_xac_nhan'),
+(1,24, 23, 8.90,'tot',      'Mai Trang duy tri chat luong ky thuat cao, dong gop lon cho du an.',     '2025-01-10 11:00:00','da_xac_nhan'),
+(1,16, 15, 8.20,'tot',      'Ngoc Bich dat KPI kinh doanh va ho tro team B2B hieu qua.',              '2025-01-13 09:00:00','da_xac_nhan'),
+-- Dot 2 (Q1/2025)
+(2,23, 22, 8.70,'tot',      'Khoa Nguyen tiep tuc dan dat team backend tot, giao hang dung han.',      '2025-04-11 09:30:00','da_xac_nhan'),
+(2,29, 27, 7.70,'kha',      'Ngoc Duy tien bo ro net, can toi uu them hieu nang giao dien.',           '2025-04-11 10:30:00','da_xac_nhan'),
+(2,34, 33, 7.90,'kha',      'Dinh Khang hoan thanh chien dich marketing dung tien do.',                '2025-04-15 14:00:00','da_xac_nhan'),
+-- Dot 3 (Q2/2025)
+(3,17, 16, 8.30,'tot',      'Minh Hoang dat ket qua kinh doanh on dinh, ky nang dam phan tot.',       '2025-07-11 10:00:00','da_xac_nhan'),
+(3,31, 22, 8.10,'tot',      'Xuan Bach cai tien quy trinh QA, giam bug tai moi truong test.',         '2025-07-14 15:00:00','da_xac_nhan'),
+(3,12, 10, 8.00,'tot',      'My Linh xu ly nghiep vu ke toan chinh xac, dung han.',                    '2025-07-16 09:00:00','da_xac_nhan'),
+-- Dot 4 (Q3/2025)
+(4,18, 16, 7.50,'kha',      'Thanh Thuy giu hieu suat on dinh, can mo rong tap khach hang moi.',       '2025-10-10 16:00:00','da_xac_nhan'),
+(4,25, 23, 8.20,'tot',      'Minh Tri hoan thanh tot cac task backend, chu dong xu ly su co.',         '2025-10-14 10:00:00','da_xac_nhan'),
+(4,32, 31, 7.80,'kha',      'Ngoc Bao bao cao bug ro rang, can bo sung test automation.',              '2025-10-16 14:30:00','da_xac_nhan'),
 -- NV5 danh gia toan Phong NS (truong phong danh gia)
 (5, 6,  5, 8.20,'tot',      'Duc Vo hoan thanh tot nhiem vu, ky nang quan ly ho so tot.',        '2026-01-15 09:00:00','da_xac_nhan'),
 (5, 7,  5, 7.80,'kha',      'Lan Anh co gang, can phat trien them ky nang tuyen dung.',          '2026-01-15 10:00:00','da_xac_nhan'),
@@ -1072,11 +1088,7 @@ INSERT INTO DANHGIAHIEUSUAT (maDot, maNV, nguoiDanhGia, tongDiem, xepLoai, nhanX
 (5,13, 10, 7.80,'kha',      'Thanh Tam can nang cao ky nang xu ly ho so thue.',                 '2026-01-14 11:00:00','da_xac_nhan'),
 (5,14, 10, 7.30,'kha',      'Quoc Toan nhan vien moi, co gang hoc hoi nhieu.',                  '2026-01-14 14:00:00','da_xac_nhan'),
 -- Phong MKT
-(5,34, 33, 8.00,'tot',      'Dinh Khang sang tao trong content, cac chien dich hieu qua.',      '2026-01-15 09:00:00','da_xac_nhan'),
--- Chua danh gia (dot 6 chua bat dau)
-(6,23, 22,  0,'trung_binh', NULL, NULL, 'chua_danh_gia'),
-(6,24, 23,  0,'trung_binh', NULL, NULL, 'chua_danh_gia'),
-(6,27, 22,  0,'trung_binh', NULL, NULL, 'chua_danh_gia');
+(5,34, 33, 8.00,'tot',      'Dinh Khang sang tao trong content, cac chien dich hieu qua.',      '2026-01-15 09:00:00','da_xac_nhan');
 
 -- Chi tiet danh gia dot 5 cho NV024 (xuat sac)
 INSERT INTO CHITIETDANHGIA (maDanhGia, maTieuChi, diem, nhanXet) VALUES
