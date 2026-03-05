@@ -184,10 +184,10 @@ public class RecruitmentPanel extends JPanel {
         JPanel toolbar = new JPanel(new FlowLayout(FlowLayout.LEFT, 8, 4));
         toolbar.setOpaque(false);
 
-        btnChuyenTrangThai = UIHelper.createPrimaryButton("Chuyen trang thai");
-        btnChuyenNV = UIHelper.createSuccessButton("Chuyen thanh nhan vien");
-        btnTaoUngVien = UIHelper.createDefaultButton("+ Tao ung vien");
-        btnLamMoiUV = UIHelper.createDefaultButton("Lam moi");
+        btnChuyenTrangThai = UIHelper.createPrimaryButton("Chuyển trạng thái");
+        btnChuyenNV = UIHelper.createSuccessButton("Chuyển thành nhân viên");
+        btnTaoUngVien = UIHelper.createDefaultButton("+ Tạo ứng viên");
+        btnLamMoiUV = UIHelper.createDefaultButton("Làm mới");
 
         btnChuyenTrangThai.addActionListener(e -> chuyenTrangThaiUV());
         btnChuyenNV.addActionListener(e -> chuyenUVThanhNV());
@@ -324,21 +324,21 @@ public class RecruitmentPanel extends JPanel {
         txtLyDo.setFont(new Font("Segoe UI", Font.PLAIN, 13));
 
         JPanel form = new JPanel(new GridLayout(5, 2, 8, 8));
-        form.add(new JLabel("Phong ban (*):")); form.add(cboPhongBan);
-        form.add(new JLabel("Chuc vu / Vi tri (*):")); form.add(cboChucVu);
-        form.add(new JLabel("So luong:")); form.add(spinSoLuong);
-        form.add(new JLabel("Han tuyen dung:")); form.add(spinHan);
-        form.add(new JLabel("Ly do:")); form.add(txtLyDo);
+        form.add(new JLabel("Phòng ban (*):")); form.add(cboPhongBan);
+        form.add(new JLabel("Chức vụ / Vị trí (*):")); form.add(cboChucVu);
+        form.add(new JLabel("Số lượng:")); form.add(spinSoLuong);
+        form.add(new JLabel("Hạn tuyển dụng:")); form.add(spinHan);
+        form.add(new JLabel("Lý do:")); form.add(txtLyDo);
 
         int result = JOptionPane.showConfirmDialog(this, form,
-                "Tao yeu cau tuyen dung", JOptionPane.OK_CANCEL_OPTION, JOptionPane.PLAIN_MESSAGE);
+                "Tạo yêu cầu tuyển dụng", JOptionPane.OK_CANCEL_OPTION, JOptionPane.PLAIN_MESSAGE);
         if (result != JOptionPane.OK_OPTION) return;
 
         PhongBan pb = (PhongBan) cboPhongBan.getSelectedItem();
         ChucVu cv = (ChucVu) cboChucVu.getSelectedItem();
         if (pb == null || cv == null) {
-            JOptionPane.showMessageDialog(this, "Vui long chon phong ban va chuc vu.",
-                    "Loi", JOptionPane.WARNING_MESSAGE);
+            JOptionPane.showMessageDialog(this, "Vui lòng chọn phòng ban và chức vụ.",
+                    "Lỗi", JOptionPane.WARNING_MESSAGE);
             return;
         }
 
@@ -357,14 +357,14 @@ public class RecruitmentPanel extends JPanel {
 
             KetQua<?> sr = recruitmentService.taoYeuCau(yc);
             if (sr.isSuccess()) {
-                JOptionPane.showMessageDialog(this, "Tao yeu cau thanh cong!",
-                        "Thanh cong", JOptionPane.INFORMATION_MESSAGE);
+                JOptionPane.showMessageDialog(this, "Tạo yêu cầu thành công!",
+                        "Thành công", JOptionPane.INFORMATION_MESSAGE);
                 loadYeuCau();
             } else {
                 showError(sr.getMessage());
             }
         } catch (Exception ex) {
-            showError("Loi tao yeu cau: " + ex.getMessage());
+            showError("Lỗi tạo yêu cầu: " + ex.getMessage());
         }
     }
 
@@ -429,8 +429,8 @@ public class RecruitmentPanel extends JPanel {
 
         if (dsYCDaDuyet.isEmpty()) {
             JOptionPane.showMessageDialog(this,
-                    "Khong co yeu cau tuyen dung nao da duoc duyet. Vui long duyet yeu cau truoc.",
-                    "Thong bao", JOptionPane.WARNING_MESSAGE);
+                    "Không có yêu cầu nào đã được duyệt. Vui lòng duyệt yêu cầu trước.",
+                    "Thông báo", JOptionPane.WARNING_MESSAGE);
             return;
         }
 
@@ -461,32 +461,32 @@ public class RecruitmentPanel extends JPanel {
         spinHanNop.setEditor(new JSpinner.DateEditor(spinHanNop, "dd/MM/yyyy"));
 
         JPanel form = new JPanel(new GridLayout(5, 2, 8, 8));
-        form.add(new JLabel("Yeu cau tuyen dung:"));
+        form.add(new JLabel("Yêu cầu tuyển dụng:"));
         form.add(cboYeuCau);
-        form.add(new JLabel("Tieu de tin:"));
+        form.add(new JLabel("Tiêu đề tin:"));
         form.add(txtTieuDe);
-        form.add(new JLabel("Muc luong:"));
+        form.add(new JLabel("Mức lương:"));
         form.add(txtMucLuong);
-        form.add(new JLabel("Dia diem:"));
+        form.add(new JLabel("Địa điểm:"));
         form.add(txtDiaDiem);
-        form.add(new JLabel("Han nop ho so:"));
+        form.add(new JLabel("Hạn nộp hồ sơ:"));
         form.add(spinHanNop);
 
         int result = JOptionPane.showConfirmDialog(this, form,
-                "Dang tin tuyen dung", JOptionPane.OK_CANCEL_OPTION, JOptionPane.PLAIN_MESSAGE);
+                "Đăng tin tuyển dụng", JOptionPane.OK_CANCEL_OPTION, JOptionPane.PLAIN_MESSAGE);
         if (result != JOptionPane.OK_OPTION) return;
 
         String tieuDe = txtTieuDe.getText().trim();
         if (tieuDe.isEmpty()) {
-            JOptionPane.showMessageDialog(this, "Vui long nhap tieu de.",
-                    "Loi", JOptionPane.WARNING_MESSAGE);
+            JOptionPane.showMessageDialog(this, "Vui lòng nhập tiêu đề.",
+                    "Lỗi", JOptionPane.WARNING_MESSAGE);
             return;
         }
 
         YeuCauTuyenDung selectedYC = (YeuCauTuyenDung) cboYeuCau.getSelectedItem();
         if (selectedYC == null) {
-            JOptionPane.showMessageDialog(this, "Vui long chon yeu cau tuyen dung.",
-                    "Loi", JOptionPane.WARNING_MESSAGE);
+            JOptionPane.showMessageDialog(this, "Vui lòng chọn yêu cầu tuyển dụng.",
+                    "Lỗi", JOptionPane.WARNING_MESSAGE);
             return;
         }
 
@@ -505,14 +505,14 @@ public class RecruitmentPanel extends JPanel {
 
             KetQua<?> sr = recruitmentService.taoTin(tin);
             if (sr.isSuccess()) {
-                JOptionPane.showMessageDialog(this, "Da dang tin tuyen dung!",
-                        "Thanh cong", JOptionPane.INFORMATION_MESSAGE);
+                JOptionPane.showMessageDialog(this, "Đã đăng tin tuyển dụng!",
+                        "Thành công", JOptionPane.INFORMATION_MESSAGE);
                 loadTin();
             } else {
                 showError(sr.getMessage());
             }
         } catch (Exception ex) {
-            showError("Loi dang tin: " + ex.getMessage());
+            showError("Lỗi đăng tin: " + ex.getMessage());
         }
     }
 
@@ -566,7 +566,7 @@ public class RecruitmentPanel extends JPanel {
         int maUV = (int) modelUngVien.getValueAt(row, 0);
         UngVien uv = null;
         if (danhSachUV != null) {
-            for (UngVien item : danhSachUV) {
+            for (UngVien item : danhSachUV) {   
                 if (item.getMaUngVien() == maUV) {
                     uv = item;
                     break;
@@ -607,24 +607,45 @@ public class RecruitmentPanel extends JPanel {
         }
     }
 
-    private void chuyenUVThanhNV() {
+        private void chuyenUVThanhNV() {
         int row = tblUngVien.getSelectedRow();
         if (row < 0) {
-            JOptionPane.showMessageDialog(this, "Vui lòng chọn ứng viên.",
-                    "Thông báo", JOptionPane.WARNING_MESSAGE);
-            return;
-        }
-
-        String trangThai = (String) modelUngVien.getValueAt(row, 6);
-        if (!"Trúng tuyển".equals(trangThai)) {
-            JOptionPane.showMessageDialog(this,
-                    "Chỉ có thể chuyển ứng viên có trạng thái 'Trúng tuyển' thành nhân viên.",
-                    "Không hợp lệ", JOptionPane.WARNING_MESSAGE);
+            JOptionPane.showMessageDialog(this, "Vui long chon ung vien.",
+                    "Thong bao", JOptionPane.WARNING_MESSAGE);
             return;
         }
 
         int maUV = (int) modelUngVien.getValueAt(row, 0);
         String hoTen = (String) modelUngVien.getValueAt(row, 1);
+
+        UngVien uv = null;
+        if (danhSachUV != null) {
+            for (UngVien item : danhSachUV) {
+                if (item.getMaUngVien() == maUV) {
+                    uv = item;
+                    break;
+                }
+            }
+        }
+
+        if (uv == null) {
+            JOptionPane.showMessageDialog(this,
+                    "Không tìm thấy dữ liệu ứng viên đang chọn. Vui lòng làm mới và thử lại.",
+                    "Thông báo", JOptionPane.WARNING_MESSAGE);
+            return;
+        }
+        if (uv.getMaNV() > 0 || "da_chuyen_nhan_vien".equals(uv.getTrangThai())) {
+            JOptionPane.showMessageDialog(this,
+                    "Ứng viên này đã được chuyển thành nhân viên.",
+                    "Thông báo", JOptionPane.INFORMATION_MESSAGE);
+            return;
+        }
+        if (!"trung_tuyen".equals(uv.getTrangThai())) {
+            JOptionPane.showMessageDialog(this,
+                    "Chỉ có thể chuyển những ứng viên có trạng thái 'Trúng tuyển' thành nhân viên chính thức. Vui lòng cập nhật trạng thái ứng viên trước khi chuyển.",
+                    "Không hợp lệ", JOptionPane.WARNING_MESSAGE);
+            return;
+        }
 
         int confirm = JOptionPane.showConfirmDialog(this,
                 "Chuyển ứng viên \"" + hoTen + "\" thành nhân viên chính thức?",
@@ -645,6 +666,7 @@ public class RecruitmentPanel extends JPanel {
             showError("Lỗi chuyển ứng viên: " + ex.getMessage());
         }
     }
+
 
     // =======================
     // Helpers
@@ -684,11 +706,13 @@ public class RecruitmentPanel extends JPanel {
             setHorizontalAlignment(SwingConstants.CENTER);
             if (!isSelected && value != null) {
                 String v = value.toString();
-                if (v.contains("Đã duyệt") || v.contains("Trúng tuyển") || v.contains("Đang tuyển") || v.contains("Da chuyen thanh nhan vien")) {
+                if (v.contains("Đã duyệt") || v.contains("Trúng tuyển")
+                        || v.contains("Đang tuyển") || v.contains("Đã chuyển thành nhân viên")) {
                     c.setForeground(UIColors.SUCCESS_GREEN);
-                } else if (v.contains("Từ chối") || v.contains("Đã đóng")) {
+                } else if (v.contains("Từ chối") || v.contains("Đã đóng") || v.contains("Từ chối")) {
                     c.setForeground(UIColors.DANGER_RED);
-                } else if (v.contains("Chờ duyệt") || v.contains("Đang phỏng vấn") || v.contains("Tạm dừng")) {
+                } else if (v.contains("Chờ duyệt") || v.contains("Đang phỏng vấn")
+                        || v.contains("Tạm dừng") ) {
                     c.setForeground(UIColors.WARNING_YELLOW);
                 } else {
                     c.setForeground(UIColors.INFO_BLUE);
@@ -699,4 +723,3 @@ public class RecruitmentPanel extends JPanel {
         }
     }
 }
-
