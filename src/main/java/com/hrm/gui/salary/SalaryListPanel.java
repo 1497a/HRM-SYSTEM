@@ -33,12 +33,9 @@ public class SalaryListPanel extends JPanel {
     private JButton btnTinhLuong;
     private JButton btnDuyetBangLuong;
     private JButton btnKhoaBangLuong;
-    private JButton btnLamMoiBL;
-
     // Tab 2 - Chi tiết lương
     private JTable tblChiTiet;
     private DefaultTableModel modelChiTiet;
-    private JButton btnLamMoiCT;
 
     private JTabbedPane tabbedPane;
 
@@ -82,17 +79,13 @@ public class SalaryListPanel extends JPanel {
         btnTinhLuong = UIHelper.createSuccessButton("Tính lương tháng mới");
         btnDuyetBangLuong = UIHelper.createWarningButton("Duyệt bảng lương");
         btnKhoaBangLuong = UIHelper.createDangerButton("Khóa bảng lương");
-        btnLamMoiBL = UIHelper.createDefaultButton("Làm mới");
-
         btnTinhLuong.addActionListener(e -> tinhLuongThangMoi());
         btnDuyetBangLuong.addActionListener(e -> duyetBangLuong());
         btnKhoaBangLuong.addActionListener(e -> khoaBangLuong());
-        btnLamMoiBL.addActionListener(e -> loadBangLuong());
 
         toolbar.add(btnTinhLuong);
         toolbar.add(btnDuyetBangLuong);
         toolbar.add(btnKhoaBangLuong);
-        toolbar.add(btnLamMoiBL);
 
         // Table
         String[] cols = {"Mã BL", "Tháng", "Năm", "Tên bảng lương", "Ngày tạo", "Trạng thái"};
@@ -152,11 +145,6 @@ public class SalaryListPanel extends JPanel {
         JPanel toolbar = new JPanel(new FlowLayout(FlowLayout.LEFT, 8, 4));
         toolbar.setOpaque(false);
 
-        btnLamMoiCT = UIHelper.createDefaultButton("Làm mới");
-        btnLamMoiCT.addActionListener(e -> {
-            if (selectedMaBL >= 0) loadChiTiet(selectedMaBL);
-        });
-        toolbar.add(btnLamMoiCT);
 
         // Table
         String[] cols = {"Mã NV", "Họ tên", "Lương cơ bản", "Lương chức vụ",

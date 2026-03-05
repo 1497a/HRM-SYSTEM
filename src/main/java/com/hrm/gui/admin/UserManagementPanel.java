@@ -12,6 +12,7 @@ import javax.swing.border.EmptyBorder;
 import javax.swing.border.TitledBorder;
 import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.table.DefaultTableModel;
+import javax.swing.table.TableRowSorter;
 import java.awt.*;
 import java.util.List;
 
@@ -25,11 +26,13 @@ public class UserManagementPanel extends JPanel {
 
     private JTable table;
     private DefaultTableModel tableModel;
+    private TableRowSorter<DefaultTableModel> sorter;
     private JTextField txtSearch;
+    private JComboBox<String> cboTrangThai;
     private JButton btnCreate;
     private JButton btnEdit;
     private JButton btnDelete;
-    private JButton btnRefresh;
+
 
     public UserManagementPanel() {
         this.authService = XacThucBUS.getInstance();
@@ -51,7 +54,7 @@ public class UserManagementPanel extends JPanel {
         txtSearch.addActionListener(e -> searchUsers());
 
         // Buttons
-        btnCreate = UIHelper.createSuccessButton("Tao moi");
+        btnCreate = UIHelper.createPrimaryButton("Tao moi");
         btnCreate.addActionListener(e -> createUser());
 
         btnEdit = UIHelper.createPrimaryButton("Sua");
@@ -59,9 +62,6 @@ public class UserManagementPanel extends JPanel {
 
         btnDelete = UIHelper.createDangerButton("Xoa");
         btnDelete.addActionListener(e -> deleteUser());
-
-        btnRefresh = UIHelper.createDefaultButton("Lam moi");
-        btnRefresh.addActionListener(e -> loadData());
 
         // Table
         String[] columns = {"ID nhan vien", "Ten dang nhap", "Ho ten", "Email", "Vai tro", "Trang thai"};
@@ -101,6 +101,16 @@ public class UserManagementPanel extends JPanel {
                 return c;
             }
         });
+
+        // Sorter – sort by name (col 2) using Vietnamese locale
+        sorter = new TableRowSorter<>(tableModel);
+        table.setRowSorter(sorter);
+        sorter.setComparator(2, UIHelper.vietnameseNameComparator());
+        sorter.setSortKeys(List.of(new RowSorter.SortKey(2, SortOrder.ASCENDING)));
+
+        // Status filter combo
+        cboTrangThai = new JComboBox<>(new String[]{"Tat ca", "Hoat dong", "Khoa"});
+        cboTrangThai.addActionListener(e -> applyFilter());
     }
 
     private void setupLayout() {
@@ -112,7 +122,8 @@ public class UserManagementPanel extends JPanel {
         searchPanel.setOpaque(false);
         searchPanel.add(new JLabel("Tim kiem:"));
         searchPanel.add(txtSearch);
-        searchPanel.add(btnRefresh);
+        searchPanel.add(new JLabel("Trang thai:"));
+        searchPanel.add(cboTrangThai);
 
         JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT, 10, 0));
         buttonPanel.setOpaque(false);
@@ -156,24 +167,27 @@ public class UserManagementPanel extends JPanel {
     }
 
     private void searchUsers() {
-        String keyword = txtSearch.getText().toLowerCase().trim();
-        tableModel.setRowCount(0);
-        List<TaiKhoan> users = authService.getAllUsers();
+        applyFilter();
+    }
 
-        for (TaiKhoan user : users) {
-            if (user.getTenDangNhap().toLowerCase().contains(keyword) ||
-                user.getHoTen().toLowerCase().contains(keyword)) {
-                String status = user.isBiKhoa() ? "Khoa" : (user.isHoatDong() ? "Hoat dong" : "Ngung");
-                Object[] row = {
-                    user.getId(),
-                    user.getTenDangNhap(),
-                    user.getHoTen(),
-                    user.getEmail(),
-                    user.getVaiTros().toString(),
-                    status
-                };
-                tableModel.addRow(row);
-            }
+    private void applyFilter() {
+        String keyword = txtSearch.getText().toLowerCase().trim();
+        String trangThai = (String) cboTrangThai.getSelectedItem();
+
+        RowFilter<DefaultTableModel, Object> nameFilter = keyword.isEmpty() ? null :
+            RowFilter.regexFilter("(?i)" + java.util.regex.Pattern.quote(keyword), 1, 2);
+
+        RowFilter<DefaultTableModel, Object> statusFilter = (trangThai == null || "Tat ca".equals(trangThai)) ? null :
+            RowFilter.regexFilter("(?i)" + java.util.regex.Pattern.quote(trangThai), 5);
+
+        if (nameFilter == null && statusFilter == null) {
+            sorter.setRowFilter(null);
+        } else if (nameFilter == null) {
+            sorter.setRowFilter(statusFilter);
+        } else if (statusFilter == null) {
+            sorter.setRowFilter(nameFilter);
+        } else {
+            sorter.setRowFilter(RowFilter.andFilter(List.of(nameFilter, statusFilter)));
         }
     }
 

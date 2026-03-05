@@ -6,6 +6,7 @@ import com.hrm.model.TinTuyenDung;
 import com.hrm.model.UngVien;
 import com.hrm.util.UIColors;
 import com.hrm.util.UIHelper;
+import com.hrm.util.ValidationUtils;
 
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
@@ -150,6 +151,23 @@ public class HopThoaiTaoUngVien extends JDialog {
                 JOptionPane.showMessageDialog(this, "Ngay sinh khong hop le. Dinh dang: dd/MM/yyyy", "Loi", JOptionPane.WARNING_MESSAGE);
                 return;
             }
+            String dobErr = ValidationUtils.validateBirthDate(ngaySinh);
+            if (dobErr != null) {
+                JOptionPane.showMessageDialog(this, dobErr, "Loi", JOptionPane.WARNING_MESSAGE);
+                return;
+            }
+        }
+
+        // Validate email and phone
+        String emailErr = ValidationUtils.validateEmail(txtEmail.getText().trim());
+        if (emailErr != null) {
+            JOptionPane.showMessageDialog(this, emailErr, "Loi", JOptionPane.WARNING_MESSAGE);
+            return;
+        }
+        String phoneErr = ValidationUtils.validatePhone(txtDienThoai.getText().trim());
+        if (phoneErr != null) {
+            JOptionPane.showMessageDialog(this, phoneErr, "Loi", JOptionPane.WARNING_MESSAGE);
+            return;
         }
 
         UngVien uv = new UngVien();

@@ -8,6 +8,7 @@ import com.hrm.bus.NhanVienBUS;
 import com.hrm.bus.XacThucBUS;
 import com.hrm.bus.KetQua;
 import com.hrm.util.UIHelper;
+import com.hrm.util.ValidationUtils;
 
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
@@ -352,6 +353,11 @@ public class UserFormDialog extends JDialog {
             String email = txtEmail.getText().trim();
             if (fullName.isEmpty()) {
                 JOptionPane.showMessageDialog(this, "Vui long nhap ho ten", "Loi", JOptionPane.ERROR_MESSAGE);
+                return;
+            }
+            String emailErr = ValidationUtils.validateEmail(email);
+            if (emailErr != null) {
+                JOptionPane.showMessageDialog(this, emailErr, "Loi", JOptionPane.WARNING_MESSAGE);
                 return;
             }
 

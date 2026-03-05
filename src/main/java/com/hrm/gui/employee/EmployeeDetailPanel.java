@@ -10,15 +10,19 @@ import com.hrm.bus.ChamCongBUS;
 import com.hrm.bus.BoNhiemBUS;
 import com.hrm.bus.HopDongBUS;
 import com.hrm.bus.NhanVienBUS;
+import com.hrm.bus.KetQua;
+import com.hrm.util.SessionContext;
 import com.hrm.util.UIColors;
 
 import javax.swing.*;
-import javax.swing.border.TitledBorder;
+import javax.swing.border.Border;
 import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.table.DefaultTableModel;
+import javax.swing.text.JTextComponent;
 import java.awt.*;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeParseException;
 import java.util.List;
 
 /**
@@ -59,7 +63,7 @@ public class EmployeeDetailPanel extends JDialog {
     private static final DateTimeFormatter TIME_FMT     = DateTimeFormatter.ofPattern("HH:mm");
 
     // =====================================================================
-    // Tab 2 – appointment history table
+    // Tab 2 â€“ appointment history table
     // =====================================================================
     private static final String[] COL_BO_NHIEM = {
         "Phong ban", "Chuc vu", "Loai", "Tu ngay", "Den ngay", "Trang thai"
@@ -67,7 +71,34 @@ public class EmployeeDetailPanel extends JDialog {
     private DefaultTableModel boNhiemTableModel;
 
     // =====================================================================
-    // Tab 3 – attendance table + filter controls
+    // State
+    // =====================================================================
+    private boolean dataChanged = false;
+    private boolean personalEditMode = false;
+    private boolean statusEditMode = false;
+
+    private JButton btnSuaThongTin;
+    private JButton btnDoiTrangThai;
+    private JComboBox<String> cboTrangThaiNhanVien;
+
+    private JTextField txtHoTen;
+    private JTextField txtNgaySinh;
+    private JComboBox<String> cboGioiTinh;
+    private JTextField txtCCCD;
+    private JTextField txtDienThoai;
+    private JTextField txtEmail;
+    private JTextField txtDiaChi;
+    private JTextField txtDiaChiThuongTru;
+    private JTextField txtQueQuan;
+    private JComboBox<String> cboTinhTrangHonNhan;
+    private JTextField txtTrinhDoHocVan;
+    private JTextField txtFileCV;
+    private JTextArea txtKinhNghiem;
+
+    public boolean isDataChanged() { return dataChanged; }
+
+    // =====================================================================
+    // Tab 3 â€“ attendance table + filter controls
     // =====================================================================
     private static final String[] COL_CHAM_CONG = {
         "Ngay", "Ca lam", "Gio vao", "Gio ra", "So gio", "Trang thai"
@@ -133,13 +164,15 @@ public class EmployeeDetailPanel extends JDialog {
         JTabbedPane tabs = new JTabbedPane(JTabbedPane.TOP);
         tabs.setFont(new Font("Segoe UI", Font.BOLD, 13));
         tabs.setBackground(UIColors.LIGHT_GRAY_BG);
-        tabs.addTab("Thong tin ca nhan",  buildPersonalTab());
-        tabs.addTab("Bo nhiem hien tai",  buildAppointmentTab());
-        tabs.addTab("Lich su cham cong",  buildAttendanceTab());
+        tabs.addTab("Thông tin cá nhân",  buildPersonalTab());
+        tabs.addTab("Bổ nhiệm hiện tại",  buildAppointmentTab());
+        tabs.addTab("Lịch sử chấm công",  buildAttendanceTab());
         root.add(tabs, BorderLayout.CENTER);
 
         // Close button at the bottom
         root.add(buildFooter(), BorderLayout.SOUTH);
+        tabs.addChangeListener(e -> updateActionButtonsByTab(tabs));
+        updateActionButtonsByTab(tabs);
 
         setContentPane(root);
     }
@@ -194,7 +227,7 @@ public class EmployeeDetailPanel extends JDialog {
     }
 
     // =====================================================================
-    // Tab 1 – Personal information
+    // Tab 1 â€“ Personal information
     // =====================================================================
 
     private JScrollPane buildPersonalTab() {
@@ -215,10 +248,20 @@ public class EmployeeDetailPanel extends JDialog {
         addInfoRow(nvPanel, 2, "Ngay vao lam:",
                 nhanVien != null && nhanVien.getNgayVaoLam() != null
                         ? nhanVien.getNgayVaoLam().format(DATE_FMT) : "");
-        addInfoRow(nvPanel, 3, "Trang thai:",
-                buildStatusLabelComponent(
-                        nhanVien != null ? nhanVien.getTrangThai() : null,
-                        nhanVien != null ? nhanVien.getTrangThaiDisplay() : "Khong ro"));
+        cboTrangThaiNhanVien = new JComboBox<>(new String[]{"dang_lam_viec", "tam_nghi", "nghi_viec"});
+        cboTrangThaiNhanVien.setFont(new Font("Segoe UI", Font.PLAIN, 13));
+        cboTrangThaiNhanVien.setRenderer(new DefaultListCellRenderer() {
+            @Override
+            public Component getListCellRendererComponent(JList<?> list, Object value,
+                    int index, boolean isSelected, boolean cellHasFocus) {
+                super.getListCellRendererComponent(list, value, index, isSelected, cellHasFocus);
+                setText(statusDisplayOf(value != null ? value.toString() : ""));
+                return this;
+            }
+        });
+        cboTrangThaiNhanVien.setSelectedItem(nhanVien != null ? nhanVien.getTrangThai() : "dang_lam_viec");
+        setStatusEditMode(false);
+        addInfoRow(nvPanel, 3, "Trang thai:", cboTrangThaiNhanVien);
         content.add(nvPanel);
         content.add(Box.createVerticalStrut(16));
 
@@ -228,35 +271,36 @@ public class EmployeeDetailPanel extends JDialog {
 
         JPanel ttcnPanel = buildInfoGrid();
         if (thongTinCaNhan != null) {
-            addInfoRow(ttcnPanel, 0, "Ho va ten:",        safe(thongTinCaNhan.getHoTen()));
-            addInfoRow(ttcnPanel, 1, "Ngay sinh:",
-                    thongTinCaNhan.getNgaySinh() != null
-                            ? thongTinCaNhan.getNgaySinh().format(DATE_FMT) : "");
-            addInfoRow(ttcnPanel, 2, "Gioi tinh:",        formatGioiTinh(thongTinCaNhan.getGioiTinh()));
-            addInfoRow(ttcnPanel, 3, "CCCD:",             safe(thongTinCaNhan.getCccd()));
-            addInfoRow(ttcnPanel, 4, "So dien thoai:",    safe(thongTinCaNhan.getDienThoai()));
-            addInfoRow(ttcnPanel, 5, "Email:",            safe(thongTinCaNhan.getEmail()));
-            addInfoRow(ttcnPanel, 6, "Dia chi:",          safe(thongTinCaNhan.getDiaChi()));
-            addInfoRow(ttcnPanel, 7, "Dia chi thuong tru:",
-                    safe(thongTinCaNhan.getDiaChiThuongTru()));
-            addInfoRow(ttcnPanel, 8, "Que quan:",         safe(thongTinCaNhan.getQueQuan()));
-            addInfoRow(ttcnPanel, 9, "Tinh trang hon nhan:",
-                    formatHonNhan(thongTinCaNhan.getTinhTrangHonNhan()));
-            addInfoRow(ttcnPanel, 10, "Trinh do hoc van:",
-                    safe(thongTinCaNhan.getTrinhDoHocVan()));
-            addInfoRow(ttcnPanel, 11, "File CV:",
-                    safe(thongTinCaNhan.getFileCV()));
-            
-            // For kinh nghiem, use a JTextArea wrapped in JScrollPane if it's long, or just standard row if short
-            String exp = safe(thongTinCaNhan.getKinhNghiem());
-            JTextArea tExp = new JTextArea(exp);
-            tExp.setEditable(false);
-            tExp.setLineWrap(true);
-            tExp.setWrapStyleWord(true);
-            tExp.setBackground(UIColors.WHITE);
-            tExp.setFont(new Font("Segoe UI", Font.PLAIN, 13));
-            tExp.setBorder(BorderFactory.createEmptyBorder(2, 0, 2, 0));
-            addInfoRow(ttcnPanel, 12, "Kinh nghiem:", tExp);
+            txtHoTen = createReadOnlyTextField();
+            txtNgaySinh = createReadOnlyTextField();
+            cboGioiTinh = new JComboBox<>(new String[]{"nam", "nu", "khac"});
+            txtCCCD = createReadOnlyTextField();
+            txtDienThoai = createReadOnlyTextField();
+            txtEmail = createReadOnlyTextField();
+            txtDiaChi = createReadOnlyTextField();
+            txtDiaChiThuongTru = createReadOnlyTextField();
+            txtQueQuan = createReadOnlyTextField();
+            cboTinhTrangHonNhan = new JComboBox<>(new String[]{"doc_than", "da_ket_hon", "ly_hon"});
+            txtTrinhDoHocVan = createReadOnlyTextField();
+            txtFileCV = createReadOnlyTextField();
+            txtKinhNghiem = createReadOnlyTextArea();
+
+            addInfoRow(ttcnPanel, 0, "Ho va ten:", txtHoTen);
+            addInfoRow(ttcnPanel, 1, "Ngay sinh:", txtNgaySinh);
+            addInfoRow(ttcnPanel, 2, "Gioi tinh:", cboGioiTinh);
+            addInfoRow(ttcnPanel, 3, "CCCD:", txtCCCD);
+            addInfoRow(ttcnPanel, 4, "So dien thoai:", txtDienThoai);
+            addInfoRow(ttcnPanel, 5, "Email:", txtEmail);
+            addInfoRow(ttcnPanel, 6, "Dia chi:", txtDiaChi);
+            addInfoRow(ttcnPanel, 7, "Dia chi thuong tru:", txtDiaChiThuongTru);
+            addInfoRow(ttcnPanel, 8, "Que quan:", txtQueQuan);
+            addInfoRow(ttcnPanel, 9, "Tinh trang hon nhan:", cboTinhTrangHonNhan);
+            addInfoRow(ttcnPanel, 10, "Trinh do hoc van:", txtTrinhDoHocVan);
+            addInfoRow(ttcnPanel, 11, "File CV:", txtFileCV);
+            addInfoRow(ttcnPanel, 12, "Kinh nghiem:", new JScrollPane(txtKinhNghiem));
+
+            loadPersonalFields();
+            setPersonalEditMode(false);
         } else {
             JLabel noData = new JLabel("  Khong co thong tin ca nhan.");
             noData.setFont(new Font("Segoe UI", Font.ITALIC, 13));
@@ -306,7 +350,7 @@ public class EmployeeDetailPanel extends JDialog {
     }
 
     // =====================================================================
-    // Tab 2 – Appointment
+    // Tab 2 â€“ Appointment
     // =====================================================================
 
     private JPanel buildAppointmentTab() {
@@ -382,7 +426,7 @@ public class EmployeeDetailPanel extends JDialog {
     }
 
     // =====================================================================
-    // Tab 3 – Attendance history
+    // Tab 3 â€“ Attendance history
     // =====================================================================
 
     private JPanel buildAttendanceTab() {
@@ -523,23 +567,344 @@ public class EmployeeDetailPanel extends JDialog {
     // =====================================================================
 
     private JPanel buildFooter() {
-        JPanel footer = new JPanel(new FlowLayout(FlowLayout.RIGHT, 16, 10));
+        JPanel footer = new JPanel(new BorderLayout());
         footer.setBackground(UIColors.LIGHT_GRAY_BG);
         footer.setBorder(BorderFactory.createMatteBorder(1, 0, 0, 0, UIColors.BORDER_GRAY));
 
-        JButton btnClose = new JButton("Dong");
+        JPanel right = new JPanel(new FlowLayout(FlowLayout.RIGHT, 8, 10));
+        right.setOpaque(false);
+
+        btnSuaThongTin = new JButton("Sửa thông tin");
+        stylePrimaryButton(btnSuaThongTin);
+        btnSuaThongTin.setPreferredSize(new Dimension(130, 34));
+        btnSuaThongTin.addActionListener(e -> onSuaThongTinClick());
+
+        btnDoiTrangThai = new JButton("Đổi trạng thái");
+        styleWarningButton(btnDoiTrangThai);
+        btnDoiTrangThai.setPreferredSize(new Dimension(145, 34));
+        btnDoiTrangThai.addActionListener(e -> onDoiTrangThaiClick());
+
+        JButton btnClose = new JButton("Đóng");
         btnClose.setFont(new Font("Segoe UI", Font.BOLD, 13));
-        btnClose.setBackground(UIColors.PRIMARY_PURPLE);
-        btnClose.setForeground(UIColors.WHITE);
         btnClose.setFocusPainted(false);
-        btnClose.setBorderPainted(false);
-        btnClose.setOpaque(true);
         btnClose.setPreferredSize(new Dimension(90, 34));
         btnClose.setCursor(new Cursor(Cursor.HAND_CURSOR));
         btnClose.addActionListener(e -> dispose());
 
-        footer.add(btnClose);
+        SessionContext sc = SessionContext.getInstance();
+        boolean canUpdate = sc.coVaiTro("ADMIN") || sc.coQuyen("EMPLOYEE_UPDATE");
+        btnSuaThongTin.setVisible(canUpdate);
+        btnDoiTrangThai.setVisible(canUpdate);
+
+        right.add(btnSuaThongTin);
+        right.add(btnDoiTrangThai);
+        right.add(btnClose);
+        footer.add(right, BorderLayout.EAST);
         return footer;
+    }
+
+    private void onSuaThongTinClick() {
+        if (thongTinCaNhan == null) return;
+        if (statusEditMode) {
+            JOptionPane.showMessageDialog(this,
+                    "Dang o che do doi trang thai. Vui long luu thao tac do truoc.",
+                    "Thong bao", JOptionPane.WARNING_MESSAGE);
+            return;
+        }
+
+        if (!personalEditMode) {
+            personalEditMode = true;
+            setPersonalEditMode(true);
+            btnSuaThongTin.setText("Lưu");
+            return;
+        }
+
+        if (!hasPersonalChanges()) {
+            personalEditMode = false;
+            setPersonalEditMode(false);
+            btnSuaThongTin.setText("Sửa thông tin");
+            return;
+        }
+
+        KetQua<ThongTinCaNhan> result = savePersonalInfoInline();
+        if (!result.isSuccess()) {
+            JOptionPane.showMessageDialog(this, result.getMessage(),
+                    "Loi", JOptionPane.ERROR_MESSAGE);
+            return;
+        }
+
+        dataChanged = true;
+        personalEditMode = false;
+        btnSuaThongTin.setText("Sửa thông tin");
+        loadData();
+        buildUI();
+        revalidate();
+        repaint();
+    }
+
+    private void onDoiTrangThaiClick() {
+        if (nhanVien == null) return;
+        if (personalEditMode) {
+            JOptionPane.showMessageDialog(this,
+                    "Dang o che do sua thong tin. Vui long luu truoc.",
+                    "Thong bao", JOptionPane.WARNING_MESSAGE);
+            return;
+        }
+
+        if (!statusEditMode) {
+            statusEditMode = true;
+            setStatusEditMode(true);
+            btnDoiTrangThai.setText("Lưu trạng thái");
+            revalidate();
+            repaint();
+            return;
+        }
+
+        String trangThaiMoi = (String) cboTrangThaiNhanVien.getSelectedItem();
+        if (trangThaiMoi != null && trangThaiMoi.equals(nhanVien.getTrangThai())) {
+            statusEditMode = false;
+            setStatusEditMode(false);
+            btnDoiTrangThai.setText("Đổi trạng thái");
+            return;
+        }
+        KetQua<NhanVien> result = nvService.capNhatTrangThai(nhanVien.getId(), trangThaiMoi, "");
+        if (!result.isSuccess()) {
+            JOptionPane.showMessageDialog(this, result.getMessage(),
+                    "Loi", JOptionPane.ERROR_MESSAGE);
+            return;
+        }
+
+        dataChanged = true;
+        statusEditMode = false;
+        setStatusEditMode(false);
+        btnDoiTrangThai.setText("Đổi trạng thái");
+        loadData();
+        buildUI();
+        revalidate();
+        repaint();
+    }
+
+    private boolean hasPersonalChanges() {
+        if (thongTinCaNhan == null) return false;
+
+        String ngaySinhCu = thongTinCaNhan.getNgaySinh() != null ? thongTinCaNhan.getNgaySinh().format(DATE_FMT) : "";
+
+        if (!equalsNorm(txtHoTen.getText(), thongTinCaNhan.getHoTen())) return true;
+        if (!equalsNorm(txtNgaySinh.getText(), ngaySinhCu)) return true;
+        if (!equalsNorm((String) cboGioiTinh.getSelectedItem(), thongTinCaNhan.getGioiTinh())) return true;
+        if (!equalsNorm(txtCCCD.getText(), thongTinCaNhan.getCccd())) return true;
+        if (!equalsNorm(txtDienThoai.getText(), thongTinCaNhan.getDienThoai())) return true;
+        if (!equalsNorm(txtEmail.getText(), thongTinCaNhan.getEmail())) return true;
+        if (!equalsNorm(txtDiaChi.getText(), thongTinCaNhan.getDiaChi())) return true;
+        if (!equalsNorm(txtDiaChiThuongTru.getText(), thongTinCaNhan.getDiaChiThuongTru())) return true;
+        if (!equalsNorm(txtQueQuan.getText(), thongTinCaNhan.getQueQuan())) return true;
+        if (!equalsNorm((String) cboTinhTrangHonNhan.getSelectedItem(), thongTinCaNhan.getTinhTrangHonNhan())) return true;
+        if (!equalsNorm(txtTrinhDoHocVan.getText(), thongTinCaNhan.getTrinhDoHocVan())) return true;
+        if (!equalsNorm(txtFileCV.getText(), thongTinCaNhan.getFileCV())) return true;
+        if (!equalsNorm(txtKinhNghiem.getText(), thongTinCaNhan.getKinhNghiem())) return true;
+        return false;
+    }
+
+    private boolean equalsNorm(String a, String b) {
+        return norm(a).equals(norm(b));
+    }
+
+    private String norm(String s) {
+        return s == null ? "" : s.trim();
+    }
+
+    private KetQua<ThongTinCaNhan> savePersonalInfoInline() {
+        if (thongTinCaNhan == null) {
+            thongTinCaNhan = new ThongTinCaNhan();
+            thongTinCaNhan.setMaNV(maNV);
+        }
+
+        String hoTen = txtHoTen.getText().trim();
+        String ngaySinhStr = txtNgaySinh.getText().trim();
+        String gioiTinh = (String) cboGioiTinh.getSelectedItem();
+        String cccd = txtCCCD.getText().trim();
+        String dienThoai = txtDienThoai.getText().trim();
+        String email = txtEmail.getText().trim();
+        String diaChi = txtDiaChi.getText().trim();
+        String diaChiThuongTru = txtDiaChiThuongTru.getText().trim();
+        String queQuan = txtQueQuan.getText().trim();
+        String tinhTrangHonNhan = (String) cboTinhTrangHonNhan.getSelectedItem();
+        String trinhDoHocVan = txtTrinhDoHocVan.getText().trim();
+        String fileCV = txtFileCV.getText().trim();
+        String kinhNghiem = txtKinhNghiem.getText().trim();
+
+        if (hoTen.isEmpty()) {
+            return KetQua.error("Ho ten khong duoc de trong.");
+        }
+
+        LocalDate ngaySinh = null;
+        if (!ngaySinhStr.isEmpty()) {
+            try {
+                ngaySinh = LocalDate.parse(ngaySinhStr, DATE_FMT);
+            } catch (DateTimeParseException ex) {
+                return KetQua.error("Ngay sinh khong hop le. Dinh dang dd/MM/yyyy.");
+            }
+            if (ngaySinh.isAfter(LocalDate.now())) {
+                return KetQua.error("Ngay sinh khong the o tuong lai.");
+            }
+        }
+
+        if (!email.isEmpty() && !isValidEmail(email)) {
+            return KetQua.error("Email khong hop le.");
+        }
+
+        if (!dienThoai.isEmpty() && !isValidPhone(dienThoai)) {
+            return KetQua.error("So dien thoai khong hop le.");
+        }
+
+        thongTinCaNhan.setHoTen(hoTen);
+        thongTinCaNhan.setNgaySinh(ngaySinh);
+        thongTinCaNhan.setGioiTinh(gioiTinh);
+        thongTinCaNhan.setCccd(cccd.isEmpty() ? null : cccd);
+        thongTinCaNhan.setDienThoai(dienThoai.isEmpty() ? null : dienThoai);
+        thongTinCaNhan.setEmail(email.isEmpty() ? null : email);
+        thongTinCaNhan.setDiaChi(diaChi.isEmpty() ? null : diaChi);
+        thongTinCaNhan.setDiaChiThuongTru(diaChiThuongTru.isEmpty() ? null : diaChiThuongTru);
+        thongTinCaNhan.setQueQuan(queQuan.isEmpty() ? null : queQuan);
+        thongTinCaNhan.setTinhTrangHonNhan(tinhTrangHonNhan);
+        thongTinCaNhan.setTrinhDoHocVan(trinhDoHocVan.isEmpty() ? null : trinhDoHocVan);
+        thongTinCaNhan.setFileCV(fileCV.isEmpty() ? null : fileCV);
+        thongTinCaNhan.setKinhNghiem(kinhNghiem.isEmpty() ? null : kinhNghiem);
+
+        return nvService.capNhatThongTinCaNhan(thongTinCaNhan);
+    }
+
+    private void setStatusEditMode(boolean editable) {
+        if (cboTrangThaiNhanVien == null) return;
+        cboTrangThaiNhanVien.setEnabled(editable);
+        cboTrangThaiNhanVien.setBorder(editable
+                ? BorderFactory.createLineBorder(UIColors.PRIMARY_PURPLE, 1)
+                : BorderFactory.createEmptyBorder(1, 1, 1, 1));
+        cboTrangThaiNhanVien.setBackground(editable ? Color.WHITE : new Color(240, 240, 240));
+    }
+
+    private String statusDisplayOf(String key) {
+        if ("dang_lam_viec".equals(key)) return "Dang lam viec";
+        if ("tam_nghi".equals(key)) return "Tam nghi";
+        if ("nghi_viec".equals(key)) return "Nghi viec";
+        return key;
+    }
+
+    private JTextField createReadOnlyTextField() {
+        JTextField f = new JTextField();
+        f.setFont(new Font("Segoe UI", Font.PLAIN, 13));
+        f.setEditable(false);
+        f.setBorder(BorderFactory.createEmptyBorder(2, 0, 2, 0));
+        f.setBackground(UIColors.WHITE);
+        return f;
+    }
+
+    private JTextArea createReadOnlyTextArea() {
+        JTextArea a = new JTextArea(3, 24);
+        a.setFont(new Font("Segoe UI", Font.PLAIN, 13));
+        a.setLineWrap(true);
+        a.setWrapStyleWord(true);
+        a.setEditable(false);
+        a.setBorder(BorderFactory.createEmptyBorder(2, 0, 2, 0));
+        a.setBackground(UIColors.WHITE);
+        return a;
+    }
+
+    private void loadPersonalFields() {
+        if (thongTinCaNhan == null) return;
+        txtHoTen.setText(safe(thongTinCaNhan.getHoTen()));
+        txtNgaySinh.setText(thongTinCaNhan.getNgaySinh() != null ? thongTinCaNhan.getNgaySinh().format(DATE_FMT) : "");
+        cboGioiTinh.setSelectedItem(thongTinCaNhan.getGioiTinh() != null ? thongTinCaNhan.getGioiTinh() : "nam");
+        txtCCCD.setText(safe(thongTinCaNhan.getCccd()));
+        txtDienThoai.setText(safe(thongTinCaNhan.getDienThoai()));
+        txtEmail.setText(safe(thongTinCaNhan.getEmail()));
+        txtDiaChi.setText(safe(thongTinCaNhan.getDiaChi()));
+        txtDiaChiThuongTru.setText(safe(thongTinCaNhan.getDiaChiThuongTru()));
+        txtQueQuan.setText(safe(thongTinCaNhan.getQueQuan()));
+        cboTinhTrangHonNhan.setSelectedItem(thongTinCaNhan.getTinhTrangHonNhan() != null ? thongTinCaNhan.getTinhTrangHonNhan() : "doc_than");
+        txtTrinhDoHocVan.setText(safe(thongTinCaNhan.getTrinhDoHocVan()));
+        txtFileCV.setText(safe(thongTinCaNhan.getFileCV()));
+        txtKinhNghiem.setText(safe(thongTinCaNhan.getKinhNghiem()));
+    }
+
+    private void setPersonalEditMode(boolean editable) {
+        txtHoTen.setEditable(editable);
+        txtNgaySinh.setEditable(editable);
+        cboGioiTinh.setEnabled(editable);
+        txtCCCD.setEditable(editable);
+        txtDienThoai.setEditable(editable);
+        txtEmail.setEditable(editable);
+        txtDiaChi.setEditable(editable);
+        txtDiaChiThuongTru.setEditable(editable);
+        txtQueQuan.setEditable(editable);
+        cboTinhTrangHonNhan.setEnabled(editable);
+        txtTrinhDoHocVan.setEditable(editable);
+        txtFileCV.setEditable(editable);
+        txtKinhNghiem.setEditable(editable);
+
+        Color bg = editable ? Color.WHITE : new Color(242, 242, 242);
+        Border border = editable
+                ? BorderFactory.createLineBorder(UIColors.PRIMARY_PURPLE, 1)
+                : BorderFactory.createLineBorder(new Color(220, 220, 220), 1);
+
+        applyEditorVisual(txtHoTen, bg, border);
+        applyEditorVisual(txtNgaySinh, bg, border);
+        applyEditorVisual(txtCCCD, bg, border);
+        applyEditorVisual(txtDienThoai, bg, border);
+        applyEditorVisual(txtEmail, bg, border);
+        applyEditorVisual(txtDiaChi, bg, border);
+        applyEditorVisual(txtDiaChiThuongTru, bg, border);
+        applyEditorVisual(txtQueQuan, bg, border);
+        applyEditorVisual(txtTrinhDoHocVan, bg, border);
+        applyEditorVisual(txtFileCV, bg, border);
+        applyEditorVisual(txtKinhNghiem, bg, border);
+
+        cboGioiTinh.setBackground(bg);
+        cboTinhTrangHonNhan.setBackground(bg);
+        cboGioiTinh.setBorder(border);
+        cboTinhTrangHonNhan.setBorder(border);
+    }
+
+    private void stylePrimaryButton(JButton button) {
+        button.setFont(new Font("Segoe UI", Font.BOLD, 13));
+        button.setBackground(UIColors.PRIMARY_PURPLE);
+        button.setForeground(UIColors.WHITE);
+        button.setFocusPainted(false);
+        button.setBorderPainted(false);
+        button.setOpaque(true);
+        button.setCursor(new Cursor(Cursor.HAND_CURSOR));
+    }
+
+    private void styleWarningButton(JButton button) {
+        button.setFont(new Font("Segoe UI", Font.BOLD, 13));
+        button.setBackground(new Color(230, 120, 0));
+        button.setForeground(UIColors.WHITE);
+        button.setFocusPainted(false);
+        button.setBorderPainted(false);
+        button.setOpaque(true);
+        button.setCursor(new Cursor(Cursor.HAND_CURSOR));
+    }
+
+    private void updateActionButtonsByTab(JTabbedPane tabs) {
+        if (btnSuaThongTin == null || btnDoiTrangThai == null) return;
+        boolean isPersonalTab = tabs.getSelectedIndex() == 0;
+        SessionContext sc = SessionContext.getInstance();
+        boolean canUpdate = sc.coVaiTro("ADMIN") || sc.coQuyen("EMPLOYEE_UPDATE");
+        btnSuaThongTin.setVisible(isPersonalTab && canUpdate);
+        btnDoiTrangThai.setVisible(isPersonalTab && canUpdate);
+    }
+
+    private boolean isValidEmail(String email) {
+        return email.matches("^[A-Za-z0-9+_.-]+@[A-Za-z0-9.-]+$");
+    }
+
+    private boolean isValidPhone(String phone) {
+        return phone.matches("^\\d{9,11}$");
+    }
+
+    private void applyEditorVisual(JTextComponent comp, Color bg, Border border) {
+        comp.setBackground(bg);
+        comp.setBorder(border);
     }
 
     // =====================================================================
@@ -838,3 +1203,4 @@ public class EmployeeDetailPanel extends JDialog {
         }
     }
 }
+

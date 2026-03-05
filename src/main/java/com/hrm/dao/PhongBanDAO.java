@@ -77,7 +77,10 @@ public class PhongBanDAO {
      */
     public List<PhongBan> findActive() {
         List<PhongBan> list = new ArrayList<>();
-        String sql = "SELECT maPhongBan, tenPhongBan, phongBanCha, trangThai FROM PHONGBAN WHERE trangThai = 'hoatDong' ORDER BY maPhongBan";
+        String sql = "SELECT maPhongBan, tenPhongBan, phongBanCha, trangThai "
+                + "FROM PHONGBAN "
+                + "WHERE REPLACE(REPLACE(REPLACE(LOWER(trangThai), '_', ''), ' ', ''), '-', '') = 'hoatdong' "
+                + "ORDER BY maPhongBan";
         try (Connection conn = DatabaseConnection.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql);
              ResultSet rs = ps.executeQuery()) {
@@ -165,7 +168,10 @@ public class PhongBanDAO {
      * Kiểm tra phòng ban có phòng ban con đang hoạt động không.
      */
     public boolean hasActiveChildren(String maPhongBan) {
-        String sql = "SELECT 1 FROM PHONGBAN WHERE phongBanCha = ? AND trangThai = 'hoatDong' LIMIT 1";
+        String sql = "SELECT 1 FROM PHONGBAN "
+                + "WHERE phongBanCha = ? "
+                + "AND REPLACE(REPLACE(REPLACE(LOWER(trangThai), '_', ''), ' ', ''), '-', '') = 'hoatdong' "
+                + "LIMIT 1";
         try (Connection conn = DatabaseConnection.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setString(1, maPhongBan);

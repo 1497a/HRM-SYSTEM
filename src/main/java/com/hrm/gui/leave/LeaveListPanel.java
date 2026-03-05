@@ -12,6 +12,7 @@ import javax.swing.border.EmptyBorder;
 import javax.swing.border.TitledBorder;
 import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.table.DefaultTableModel;
+import javax.swing.table.TableRowSorter;
 import java.awt.*;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
@@ -26,11 +27,12 @@ public class LeaveListPanel extends JPanel {
 
     private JTable table;
     private DefaultTableModel tableModel;
+    private TableRowSorter<DefaultTableModel> sorter;
     private JComboBox<String> cboStatus;
     private JComboBox<Object> cboNhanVien;
     private JButton btnCreate;
     private JButton btnApprove;
-    private JButton btnRefresh;
+
     private JPanel balancePanel;
 
     private static final DateTimeFormatter DATE_FORMAT = DateTimeFormatter.ofPattern("dd/MM/yyyy");
@@ -87,9 +89,6 @@ public class LeaveListPanel extends JPanel {
         btnApprove.setEnabled(isManager);
         btnApprove.addActionListener(e -> approveRequest());
 
-        btnRefresh = UIHelper.createDefaultButton("Lam moi");
-        btnRefresh.addActionListener(e -> loadData());
-
         // Table
         String[] columns = {"ID", "Nhan vien", "Loai phep", "Tu ngay", "Den ngay",
                 "So ngay", "Ly do", "Trang thai", "Nguoi duyet"};
@@ -134,6 +133,12 @@ public class LeaveListPanel extends JPanel {
             }
         });
 
+        // Sorter – sort by employee name (col 1) using Vietnamese locale
+        sorter = new TableRowSorter<>(tableModel);
+        table.setRowSorter(sorter);
+        sorter.setComparator(1, UIHelper.vietnameseNameComparator());
+        sorter.setSortKeys(List.of(new RowSorter.SortKey(1, SortOrder.ASCENDING)));
+
         // Balance Panel
         balancePanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 20, 5));
         balancePanel.setBorder(new TitledBorder("So ngay phep con lai"));
@@ -151,7 +156,6 @@ public class LeaveListPanel extends JPanel {
         }
         filterPanel.add(new JLabel("Trang thai:"));
         filterPanel.add(cboStatus);
-        filterPanel.add(btnRefresh);
 
         JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT, 10, 0));
         buttonPanel.add(btnCreate);

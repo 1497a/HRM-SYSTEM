@@ -12,6 +12,7 @@ import javax.swing.border.EmptyBorder;
 import javax.swing.border.TitledBorder;
 import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.table.DefaultTableModel;
+import javax.swing.table.TableRowSorter;
 import java.awt.*;
 import java.util.List;
 
@@ -25,10 +26,11 @@ public class RoleManagementPanel extends JPanel {
 
     private JTable table;
     private DefaultTableModel tableModel;
+    private TableRowSorter<DefaultTableModel> sorter;
     private JButton btnCreate;
     private JButton btnEdit;
     private JButton btnDelete;
-    private JButton btnRefresh;
+
 
     public RoleManagementPanel() {
         this.authService = XacThucBUS.getInstance();
@@ -45,7 +47,7 @@ public class RoleManagementPanel extends JPanel {
         setBackground(UIColors.LIGHT_GRAY_BG);
 
         // Buttons
-        btnCreate = UIHelper.createSuccessButton("Tao moi");
+        btnCreate = UIHelper.createPrimaryButton("Tao moi");
         btnCreate.addActionListener(e -> createRole());
 
         btnEdit = UIHelper.createPrimaryButton("Sua");
@@ -53,9 +55,6 @@ public class RoleManagementPanel extends JPanel {
 
         btnDelete = UIHelper.createDangerButton("Xoa");
         btnDelete.addActionListener(e -> deleteRole());
-
-        btnRefresh = UIHelper.createDefaultButton("Lam moi");
-        btnRefresh.addActionListener(e -> loadData());
 
         // Table
         String[] columns = {"Ma vai tro", "Ten vai tro", "Mo ta", "So quyen", "He thong"};
@@ -92,16 +91,18 @@ public class RoleManagementPanel extends JPanel {
                 return c;
             }
         });
+
+        // Sorter – sort by role name (col 1) using Vietnamese locale
+        sorter = new TableRowSorter<>(tableModel);
+        table.setRowSorter(sorter);
+        sorter.setComparator(1, UIHelper.vietnameseNameComparator());
+        sorter.setSortKeys(List.of(new RowSorter.SortKey(1, SortOrder.ASCENDING)));
     }
 
     private void setupLayout() {
         // Top panel - buttons
         JPanel topPanel = new JPanel(new BorderLayout(10, 10));
         topPanel.setOpaque(false);
-
-        JPanel leftPanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 10, 0));
-        leftPanel.setOpaque(false);
-        leftPanel.add(btnRefresh);
 
         JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT, 10, 0));
         buttonPanel.setOpaque(false);
@@ -115,7 +116,6 @@ public class RoleManagementPanel extends JPanel {
             buttonPanel.add(btnDelete);
         }
 
-        topPanel.add(leftPanel, BorderLayout.WEST);
         topPanel.add(buttonPanel, BorderLayout.EAST);
 
         // Center - table

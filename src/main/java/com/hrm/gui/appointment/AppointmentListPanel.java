@@ -4,20 +4,17 @@ import com.hrm.gui.components.PurpleButton;
 import com.hrm.gui.components.PurpleTable;
 import com.hrm.model.BoNhiem;
 import com.hrm.bus.BoNhiemBUS;
-import com.hrm.bus.KetQua;
 import com.hrm.util.SessionContext;
 import com.hrm.util.UIColors;
+import com.hrm.util.UIHelper;
 
 import javax.swing.*;
 import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.table.DefaultTableModel;
 import javax.swing.table.TableRowSorter;
 import java.awt.*;
-import java.time.LocalDate;
-import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.List;
 
 /**
@@ -35,10 +32,6 @@ public class AppointmentListPanel extends JPanel {
     private JComboBox<String> cboTrangThai;
     private JTextField txtTimKiem;
     private PurpleButton btnTao;
-    private PurpleButton btnPheDuyet;
-    private PurpleButton btnTuChoi;
-    private PurpleButton btnKetThuc;
-    private PurpleButton btnLamMoi;
 
     private List<BoNhiem> danhSachHienThi = new ArrayList<>();
 
@@ -85,7 +78,7 @@ public class AppointmentListPanel extends JPanel {
         lblTrangThai.setForeground(UIColors.TEXT_DARK);
 
         cboTrangThai = new JComboBox<>(new String[]{
-            "Tất cả", "Chờ duyệt", "Hiệu lực", "Kết thúc"
+            "Tất cả", "Chờ duyệt", "Hiệu lực", "Kết thúc", "Từ chối"
         });
         cboTrangThai.setFont(new Font("Segoe UI", Font.PLAIN, 14));
         cboTrangThai.setPreferredSize(new Dimension(160, 32));
@@ -122,6 +115,9 @@ public class AppointmentListPanel extends JPanel {
 
         sorter = new TableRowSorter<>(tableModel);
         table.setRowSorter(sorter);
+        // Sort by first name (Tên) by default using Vietnamese locale
+        sorter.setComparator(2, UIHelper.vietnameseNameComparator());
+        sorter.setSortKeys(List.of(new RowSorter.SortKey(2, SortOrder.ASCENDING)));
 
         JScrollPane scroll = new JScrollPane(table);
         scroll.setBorder(BorderFactory.createLineBorder(UIColors.BORDER_GRAY));
@@ -133,16 +129,7 @@ public class AppointmentListPanel extends JPanel {
         panel.setOpaque(false);
 
         btnTao = new PurpleButton("+ Tạo bổ nhiệm");
-        btnPheDuyet = PurpleButton.success("Phê duyệt");
-        btnTuChoi = PurpleButton.danger("Từ chối");
-        btnKetThuc = PurpleButton.danger("Kết thúc");
-        btnLamMoi = PurpleButton.secondary("Làm mới");
-
         panel.add(btnTao);
-        panel.add(btnPheDuyet);
-        panel.add(btnTuChoi);
-        panel.add(btnKetThuc);
-        panel.add(btnLamMoi);
 
         return panel;
     }
@@ -153,10 +140,6 @@ public class AppointmentListPanel extends JPanel {
 
     private void setupEvents() {
         btnTao.addActionListener(e -> showCreateDialog());
-        btnPheDuyet.addActionListener(e -> pheDuyetBoNhiem());
-        btnTuChoi.addActionListener(e -> tuChoiBoNhiem());
-        btnKetThuc.addActionListener(e -> ketThucBoNhiem());
-        btnLamMoi.addActionListener(e -> loadData());
 
         cboTrangThai.addActionListener(e -> applyFilter());
         txtTimKiem.getDocument().addDocumentListener(new javax.swing.event.DocumentListener() {
@@ -180,14 +163,7 @@ public class AppointmentListPanel extends JPanel {
     // ============================
 
     private void setupPermissions() {
-        SessionContext sc = SessionContext.getInstance();
-        boolean canCreate = sc.coQuyen("APPOINTMENT_CREATE");
-        boolean canApprove = sc.coQuyen("APPOINTMENT_APPROVE");
-
-        btnTao.setVisible(canCreate);
-        btnPheDuyet.setVisible(canApprove);
-        btnTuChoi.setVisible(canApprove);
-        btnKetThuc.setVisible(canApprove);
+        btnTao.setVisible(SessionContext.getInstance().coQuyen("APPOINTMENT_CREATE"));
     }
 
     // ============================
@@ -203,7 +179,7 @@ public class AppointmentListPanel extends JPanel {
         for (BoNhiem bn : danhSachHienThi) {
             tableModel.addRow(new Object[]{
                 bn.getMaBoNhiem(),
-                bn.getMaNV(),
+                bn.getMaNhanVien() != null ? bn.getMaNhanVien() : String.valueOf(bn.getMaNV()),
                 bn.getTenNV() != null ? bn.getTenNV() : "",
                 bn.getTenPhongBan() != null ? bn.getTenPhongBan() : bn.getId(),
                 bn.getTenChucVu() != null ? bn.getTenChucVu() : bn.getChucVuId(),
@@ -236,9 +212,8 @@ public class AppointmentListPanel extends JPanel {
                     String trangThai = entry.getStringValue(10);
                     if ("Chờ duyệt".equals(trangThaiFilter) && !"Cho duyet".equals(trangThai)) return false;
                     if ("Hiệu lực".equals(trangThaiFilter) && !"Hieu luc".equals(trangThai)) return false;
-                    if ("Kết thúc".equals(trangThaiFilter)
-                            && !"Het hieu luc".equals(trangThai)
-                            && !"Tu choi".equals(trangThai)) return false;
+                    if ("Kết thúc".equals(trangThaiFilter) && !"Het hieu luc".equals(trangThai)) return false;
+                    if ("Từ chối".equals(trangThaiFilter) && !"Tu choi".equals(trangThai)) return false;
                 }
                 return true;
             }
@@ -266,129 +241,8 @@ public class AppointmentListPanel extends JPanel {
         AppointmentFormDialog dialog = new AppointmentFormDialog(
                 (Frame) SwingUtilities.getWindowAncestor(this), selected);
         dialog.setVisible(true);
-        if (dialog.isSaved()) {
+        if (dialog.isSaved() || dialog.isActionTaken()) {
             loadData();
-        }
-    }
-
-    private void pheDuyetBoNhiem() {
-        BoNhiem selected = getSelectedBoNhiem();
-        if (selected == null) {
-            JOptionPane.showMessageDialog(this,
-                    "Vui lòng chọn một bổ nhiệm để phê duyệt.",
-                    "Thông báo", JOptionPane.INFORMATION_MESSAGE);
-            return;
-        }
-        if (!"cho_duyet".equals(selected.getTrangThai())) {
-            JOptionPane.showMessageDialog(this,
-                    "Chỉ có thể phê duyệt bổ nhiệm đang ở trạng thái chờ duyệt.",
-                    "Thông báo", JOptionPane.WARNING_MESSAGE);
-            return;
-        }
-
-        int confirm = JOptionPane.showConfirmDialog(this,
-                "Xác nhận phê duyệt bổ nhiệm #" + selected.getMaBoNhiem() + "?",
-                "Xác nhận phê duyệt", JOptionPane.YES_NO_OPTION);
-        if (confirm != JOptionPane.YES_OPTION) return;
-
-        int userId = 0;
-        if (SessionContext.getInstance().getCurrentUser() != null) {
-            userId = SessionContext.getInstance().getCurrentUser().getId();
-        }
-
-        KetQua<BoNhiem> result = boNhiemService.pheDuyetBoNhiem(
-                selected.getMaBoNhiem(), userId);
-
-        if (result.isSuccess()) {
-            JOptionPane.showMessageDialog(this, result.getMessage(),
-                    "Thành công", JOptionPane.INFORMATION_MESSAGE);
-            loadData();
-        } else {
-            JOptionPane.showMessageDialog(this, result.getMessage(),
-                    "Lỗi", JOptionPane.ERROR_MESSAGE);
-        }
-    }
-
-    private void tuChoiBoNhiem() {
-        BoNhiem selected = getSelectedBoNhiem();
-        if (selected == null) {
-            JOptionPane.showMessageDialog(this,
-                    "Vui lòng chọn một bổ nhiệm để từ chối.",
-                    "Thông báo", JOptionPane.INFORMATION_MESSAGE);
-            return;
-        }
-        if (!"cho_duyet".equals(selected.getTrangThai())) {
-            JOptionPane.showMessageDialog(this,
-                    "Chỉ có thể từ chối bổ nhiệm đang ở trạng thái chờ duyệt.",
-                    "Thông báo", JOptionPane.WARNING_MESSAGE);
-            return;
-        }
-
-        JTextField txtLyDo = new JTextField(30);
-        txtLyDo.setFont(new Font("Segoe UI", Font.PLAIN, 14));
-        Object[] message = {"Lý do từ chối:", txtLyDo};
-
-        int confirm = JOptionPane.showConfirmDialog(this, message,
-                "Từ chối bổ nhiệm #" + selected.getMaBoNhiem(),
-                JOptionPane.OK_CANCEL_OPTION, JOptionPane.PLAIN_MESSAGE);
-        if (confirm != JOptionPane.OK_OPTION) return;
-
-        KetQua<BoNhiem> result = boNhiemService.tuChoiBoNhiem(
-                selected.getMaBoNhiem(), txtLyDo.getText().trim());
-
-        if (result.isSuccess()) {
-            JOptionPane.showMessageDialog(this, result.getMessage(),
-                    "Thành công", JOptionPane.INFORMATION_MESSAGE);
-            loadData();
-        } else {
-            JOptionPane.showMessageDialog(this, result.getMessage(),
-                    "Lỗi", JOptionPane.ERROR_MESSAGE);
-        }
-    }
-
-    private void ketThucBoNhiem() {
-        BoNhiem selected = getSelectedBoNhiem();
-        if (selected == null) {
-            JOptionPane.showMessageDialog(this,
-                    "Vui lòng chọn một bổ nhiệm để kết thúc.",
-                    "Thông báo", JOptionPane.INFORMATION_MESSAGE);
-            return;
-        }
-        if (!"hieu_luc".equals(selected.getTrangThai())) {
-            JOptionPane.showMessageDialog(this,
-                    "Chỉ có thể kết thúc bổ nhiệm đang hiệu lực.",
-                    "Thông báo", JOptionPane.WARNING_MESSAGE);
-            return;
-        }
-
-        // Chọn ngày kết thúc
-        SpinnerDateModel dateModel = new SpinnerDateModel(new Date(), null, null, java.util.Calendar.DAY_OF_MONTH);
-        JSpinner spnDenNgay = new JSpinner(dateModel);
-        spnDenNgay.setEditor(new JSpinner.DateEditor(spnDenNgay, "dd/MM/yyyy"));
-        spnDenNgay.setFont(new Font("Segoe UI", Font.PLAIN, 14));
-
-        Object[] message = {
-            "Ngày kết thúc bổ nhiệm #" + selected.getMaBoNhiem()
-                + " (" + (selected.getTenNV() != null ? selected.getTenNV() : "NV " + selected.getMaNV()) + "):",
-            spnDenNgay
-        };
-
-        int confirm = JOptionPane.showConfirmDialog(this, message,
-                "Kết thúc bổ nhiệm", JOptionPane.OK_CANCEL_OPTION, JOptionPane.PLAIN_MESSAGE);
-        if (confirm != JOptionPane.OK_OPTION) return;
-
-        Date chosenDate = (Date) spnDenNgay.getValue();
-        LocalDate denNgay = chosenDate.toInstant().atZone(ZoneId.systemDefault()).toLocalDate();
-
-        KetQua<BoNhiem> result = boNhiemService.ketThucBoNhiem(selected.getMaBoNhiem(), denNgay);
-
-        if (result.isSuccess()) {
-            JOptionPane.showMessageDialog(this, result.getMessage(),
-                    "Thành công", JOptionPane.INFORMATION_MESSAGE);
-            loadData();
-        } else {
-            JOptionPane.showMessageDialog(this, result.getMessage(),
-                    "Lỗi", JOptionPane.ERROR_MESSAGE);
         }
     }
 
@@ -433,7 +287,8 @@ public class AppointmentListPanel extends JPanel {
                     } else if ("Chờ duyệt".equals(val)) {
                         c.setForeground(new Color(230, 120, 0));
                         ((JLabel) c).setFont(new Font("Segoe UI", Font.BOLD, 12));
-                    } else if ("Từ chối".equals(val) || "Hết hiệu lực".equals(val)) {
+                    } else if ("Từ chối".equals(val) || "Tu choi".equals(val)
+                            || "Hết hiệu lực".equals(val) || "Het hieu luc".equals(val)) {
                         c.setForeground(UIColors.DANGER_RED);
                         ((JLabel) c).setFont(new Font("Segoe UI", Font.BOLD, 12));
                     }

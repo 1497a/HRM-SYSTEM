@@ -10,11 +10,11 @@ import com.hrm.dao.ChucVuDAO;
 import com.hrm.bus.BoNhiemBUS;
 import com.hrm.bus.NhanVienBUS;
 import com.hrm.bus.KetQua;
+import com.hrm.util.SessionContext;
 import com.hrm.util.UIColors;
 
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
-import javax.swing.border.TitledBorder;
 import java.awt.*;
 import java.time.LocalDate;
 import java.time.ZoneId;
@@ -27,6 +27,7 @@ import java.util.List;
 public class AppointmentFormDialog extends JDialog {
 
     private boolean saved = false;
+    private boolean actionTaken = false;
 
     // Mode: view (read-only khi có boNhiem)
     private final BoNhiem boNhiemHienThi;
@@ -294,6 +295,28 @@ public class AppointmentFormDialog extends JDialog {
         btnPanel.add(btnHuy);
         btnPanel.add(btnLuu);
 
+        // Action buttons for view mode (conditionally shown by status + permission)
+        if (boNhiemHienThi != null && SessionContext.getInstance().coQuyen("APPOINTMENT_APPROVE")) {
+            String status = boNhiemHienThi.getTrangThai();
+            if ("cho_duyet".equals(status)) {
+                JButton btnTuChoi = new JButton("Từ chối");
+                styleActionButton(btnTuChoi, new Color(192, 57, 43));
+                btnTuChoi.addActionListener(e -> tuChoiBoNhiem());
+
+                JButton btnPheDuyet = new JButton("Phê duyệt");
+                styleActionButton(btnPheDuyet, new Color(46, 164, 79));
+                btnPheDuyet.addActionListener(e -> pheDuyetBoNhiem());
+
+                btnPanel.add(btnTuChoi);
+                btnPanel.add(btnPheDuyet);
+            } else if ("hieu_luc".equals(status)) {
+                JButton btnKetThuc = new JButton("Kết thúc");
+                styleActionButton(btnKetThuc, new Color(192, 57, 43));
+                btnKetThuc.addActionListener(e -> ketThucBoNhiem());
+                btnPanel.add(btnKetThuc);
+            }
+        }
+
         mainPanel.add(btnPanel, BorderLayout.SOUTH);
 
         setContentPane(mainPanel);
@@ -466,11 +489,90 @@ public class AppointmentFormDialog extends JDialog {
         }
     }
 
+    private static void styleActionButton(JButton btn, Color bg) {
+        btn.setFont(new Font("Segoe UI", Font.BOLD, 13));
+        btn.setBackground(bg);
+        btn.setForeground(Color.WHITE);
+        btn.setFocusPainted(false);
+        btn.setBorderPainted(false);
+        btn.setOpaque(true);
+        btn.setCursor(new Cursor(Cursor.HAND_CURSOR));
+    }
+
     // ============================
-    // Getter
+    // Getters
     // ============================
 
-    public boolean isSaved() {
-        return saved;
+    public boolean isSaved() { return saved; }
+
+    public boolean isActionTaken() { return actionTaken; }
+
+    // ============================
+    // Action methods (view mode)
+    // ============================
+
+    private void pheDuyetBoNhiem() {
+        int confirm = JOptionPane.showConfirmDialog(this,
+                "Xác nhận phê duyệt bổ nhiệm #" + boNhiemHienThi.getMaBoNhiem() + "?",
+                "Xác nhận phê duyệt", JOptionPane.YES_NO_OPTION);
+        if (confirm != JOptionPane.YES_OPTION) return;
+
+        int userId = 0;
+        if (SessionContext.getInstance().getCurrentUser() != null) {
+            userId = SessionContext.getInstance().getCurrentUser().getId();
+        }
+        KetQua<BoNhiem> result = BoNhiemBUS.getInstance().pheDuyetBoNhiem(
+                boNhiemHienThi.getMaBoNhiem(), userId);
+        if (result.isSuccess()) {
+            JOptionPane.showMessageDialog(this, result.getMessage(), "Thành công", JOptionPane.INFORMATION_MESSAGE);
+            actionTaken = true;
+            dispose();
+        } else {
+            JOptionPane.showMessageDialog(this, result.getMessage(), "Lỗi", JOptionPane.ERROR_MESSAGE);
+        }
+    }
+
+    private void tuChoiBoNhiem() {
+        JTextField txtLyDo = new JTextField(30);
+        txtLyDo.setFont(new Font("Segoe UI", Font.PLAIN, 14));
+        int confirm = JOptionPane.showConfirmDialog(this, new Object[]{"Lý do từ chối:", txtLyDo},
+                "Từ chối bổ nhiệm #" + boNhiemHienThi.getMaBoNhiem(),
+                JOptionPane.OK_CANCEL_OPTION, JOptionPane.PLAIN_MESSAGE);
+        if (confirm != JOptionPane.OK_OPTION) return;
+
+        KetQua<BoNhiem> result = BoNhiemBUS.getInstance().tuChoiBoNhiem(
+                boNhiemHienThi.getMaBoNhiem(), txtLyDo.getText().trim());
+        if (result.isSuccess()) {
+            JOptionPane.showMessageDialog(this, result.getMessage(), "Thành công", JOptionPane.INFORMATION_MESSAGE);
+            actionTaken = true;
+            dispose();
+        } else {
+            JOptionPane.showMessageDialog(this, result.getMessage(), "Lỗi", JOptionPane.ERROR_MESSAGE);
+        }
+    }
+
+    private void ketThucBoNhiem() {
+        SpinnerDateModel dateModel = new SpinnerDateModel(new Date(), null, null, java.util.Calendar.DAY_OF_MONTH);
+        JSpinner spnDenNgay = new JSpinner(dateModel);
+        spnDenNgay.setEditor(new JSpinner.DateEditor(spnDenNgay, "dd/MM/yyyy"));
+        spnDenNgay.setFont(new Font("Segoe UI", Font.PLAIN, 14));
+
+        int confirm = JOptionPane.showConfirmDialog(this,
+                new Object[]{"Ngày kết thúc:", spnDenNgay},
+                "Kết thúc bổ nhiệm #" + boNhiemHienThi.getMaBoNhiem(),
+                JOptionPane.OK_CANCEL_OPTION, JOptionPane.PLAIN_MESSAGE);
+        if (confirm != JOptionPane.OK_OPTION) return;
+
+        LocalDate denNgay = ((Date) spnDenNgay.getValue())
+                .toInstant().atZone(ZoneId.systemDefault()).toLocalDate();
+        KetQua<BoNhiem> result = BoNhiemBUS.getInstance().ketThucBoNhiem(
+                boNhiemHienThi.getMaBoNhiem(), denNgay);
+        if (result.isSuccess()) {
+            JOptionPane.showMessageDialog(this, result.getMessage(), "Thành công", JOptionPane.INFORMATION_MESSAGE);
+            actionTaken = true;
+            dispose();
+        } else {
+            JOptionPane.showMessageDialog(this, result.getMessage(), "Lỗi", JOptionPane.ERROR_MESSAGE);
+        }
     }
 }

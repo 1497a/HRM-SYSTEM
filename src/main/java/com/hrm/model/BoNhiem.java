@@ -25,6 +25,7 @@ public class BoNhiem {
 
     // Transient display fields - khong luu trong DB, load tu JOIN
     private transient String tenNV;
+    private transient String maNhanVien;   // e.g. "NV001"
     private transient String tenPhongBan;
     private transient String tenChucVu;
     private transient String tenQuanLy;
@@ -119,6 +120,9 @@ public class BoNhiem {
 
     public String getTenNV() { return tenNV; }
     public void setTenNV(String tenNV) { this.tenNV = tenNV; }
+
+    public String getMaNhanVien() { return maNhanVien; }
+    public void setMaNhanVien(String maNhanVien) { this.maNhanVien = maNhanVien; }
 
     public String getTenPhongBan() { return tenPhongBan; }
     public void setTenPhongBan(String tenPhongBan) { this.tenPhongBan = tenPhongBan; }

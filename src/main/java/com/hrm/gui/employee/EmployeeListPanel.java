@@ -10,6 +10,7 @@ import com.hrm.bus.NhanVienBUS;
 import com.hrm.bus.KetQua;
 import com.hrm.util.SessionContext;
 import com.hrm.util.UIColors;
+import com.hrm.util.UIHelper;
 
 import javax.swing.*;
 import javax.swing.table.DefaultTableCellRenderer;
@@ -37,9 +38,6 @@ public class EmployeeListPanel extends JPanel {
     private JComboBox<String> cboPhongBan;
 
     private PurpleButton btnThem;
-    private PurpleButton btnXem;
-    private PurpleButton btnXemHoSo;
-    private PurpleButton btnDoiTrangThai;
 
     // Danh sách đang hiển thị (để lấy đối tượng khi chọn dòng)
     private List<NhanVien> danhSachHienThi = new ArrayList<>();
@@ -150,6 +148,9 @@ public class EmployeeListPanel extends JPanel {
 
         sorter = new TableRowSorter<>(tableModel);
         table.setRowSorter(sorter);
+        // Sort by first name (Tên) by default using Vietnamese locale
+        sorter.setComparator(2, UIHelper.vietnameseNameComparator());
+        sorter.setSortKeys(List.of(new RowSorter.SortKey(2, SortOrder.ASCENDING)));
 
         JScrollPane scroll = new JScrollPane(table);
         scroll.setBorder(BorderFactory.createLineBorder(UIColors.BORDER_GRAY));
@@ -160,15 +161,9 @@ public class EmployeeListPanel extends JPanel {
         JPanel panel = new JPanel(new FlowLayout(FlowLayout.LEFT, 8, 6));
         panel.setOpaque(false);
 
-        btnThem = new PurpleButton("+ Them moi");
-        btnXem = PurpleButton.info("Xem / Sua");
-        btnXemHoSo = PurpleButton.info("Xem ho so");
-        btnDoiTrangThai = PurpleButton.warning("Doi trang thai");
+        btnThem = new PurpleButton("+ Thêm mới");
 
         panel.add(btnThem);
-        panel.add(btnXem);
-        panel.add(btnXemHoSo);
-        panel.add(btnDoiTrangThai);
 
         return panel;
     }
@@ -179,9 +174,6 @@ public class EmployeeListPanel extends JPanel {
 
     private void setupEvents() {
         btnThem.addActionListener(e -> showAddDialog());
-        btnXem.addActionListener(e -> showEditDialog());
-        btnXemHoSo.addActionListener(e -> showHoSoDialog());
-        btnDoiTrangThai.addActionListener(e -> showDoiTrangThaiDialog());
 
         txtSearch.addKeyListener(new java.awt.event.KeyAdapter() {
             @Override
@@ -197,7 +189,7 @@ public class EmployeeListPanel extends JPanel {
             @Override
             public void mouseClicked(java.awt.event.MouseEvent e) {
                 if (e.getClickCount() == 2) {
-                    showEditDialog();
+                    showHoSoDialog();
                 }
             }
         });
@@ -210,10 +202,7 @@ public class EmployeeListPanel extends JPanel {
     private void setupPermissions() {
         SessionContext sc = SessionContext.getInstance();
         boolean canCreate = sc.coVaiTro("ADMIN") || sc.coQuyen("EMPLOYEE_CREATE");
-        boolean canUpdate = sc.coVaiTro("ADMIN") || sc.coQuyen("EMPLOYEE_UPDATE");
-
         btnThem.setVisible(canCreate);
-        btnDoiTrangThai.setVisible(canUpdate);
     }
 
     // ============================
@@ -314,23 +303,6 @@ public class EmployeeListPanel extends JPanel {
         }
     }
 
-    private void showEditDialog() {
-        NhanVien selected = getSelectedNhanVien();
-        if (selected == null) {
-            JOptionPane.showMessageDialog(this,
-                    "Vui long chon mot nhan vien de xem/sua.",
-                    "Thong bao", JOptionPane.INFORMATION_MESSAGE);
-            return;
-        }
-        ThongTinCaNhan ttcn = nvService.getThongTinCaNhan(selected.getId());
-        EmployeeFormDialog dialog = new EmployeeFormDialog(
-                (Frame) SwingUtilities.getWindowAncestor(this), selected, ttcn);
-        dialog.setVisible(true);
-        if (dialog.isSaved()) {
-            refreshTable();
-        }
-    }
-
     private void showHoSoDialog() {
         NhanVien selected = getSelectedNhanVien();
         if (selected == null) {
@@ -342,72 +314,8 @@ public class EmployeeListPanel extends JPanel {
         EmployeeDetailPanel dialog = new EmployeeDetailPanel(
                 (Frame) SwingUtilities.getWindowAncestor(this), selected.getId());
         dialog.setVisible(true);
-    }
-
-    private void showDoiTrangThaiDialog() {
-        NhanVien selected = getSelectedNhanVien();
-        if (selected == null) {
-            JOptionPane.showMessageDialog(this,
-                    "Vui long chon mot nhan vien.",
-                    "Thong bao", JOptionPane.INFORMATION_MESSAGE);
-            return;
-        }
-
-        // Xây dựng danh sách trạng thái hợp lệ
-        String hienTai = selected.getTrangThai();
-        List<String> optionList = new ArrayList<>();
-        if ("dang_lam_viec".equals(hienTai)) {
-            optionList.add("Tam nghi");
-            optionList.add("Nghi viec");
-        } else if ("tam_nghi".equals(hienTai)) {
-            optionList.add("Dang lam viec");
-            optionList.add("Nghi viec");
-        }
-
-        if (optionList.isEmpty()) {
-            JOptionPane.showMessageDialog(this,
-                    "Nhan vien da nghi viec, khong the doi trang thai.",
-                    "Khong the thay doi", JOptionPane.WARNING_MESSAGE);
-            return;
-        }
-
-        JComboBox<String> cboMoi = new JComboBox<>(optionList.toArray(new String[0]));
-        cboMoi.setFont(new Font("Segoe UI", Font.PLAIN, 14));
-
-        JTextField txtLyDo = new JTextField(30);
-        txtLyDo.setFont(new Font("Segoe UI", Font.PLAIN, 14));
-
-        Object[] message = {
-            "Trang thai moi:", cboMoi,
-            "Ly do:", txtLyDo
-        };
-
-        int choice = JOptionPane.showConfirmDialog(this, message,
-                "Doi trang thai nhan vien: " + selected.toString(),
-                JOptionPane.OK_CANCEL_OPTION, JOptionPane.PLAIN_MESSAGE);
-
-        if (choice != JOptionPane.OK_OPTION) return;
-
-        String trangThaiMoiVN = (String) cboMoi.getSelectedItem();
-        String trangThaiMoi;
-        if ("Tam nghi".equals(trangThaiMoiVN)) {
-            trangThaiMoi = "tam_nghi";
-        } else if ("Nghi viec".equals(trangThaiMoiVN)) {
-            trangThaiMoi = "nghi_viec";
-        } else {
-            trangThaiMoi = "dang_lam_viec";
-        }
-
-        KetQua<NhanVien> result = nvService.capNhatTrangThai(
-                selected.getId(), trangThaiMoi, txtLyDo.getText().trim());
-
-        if (result.isSuccess()) {
-            JOptionPane.showMessageDialog(this, result.getMessage(),
-                    "Thanh cong", JOptionPane.INFORMATION_MESSAGE);
+        if (dialog.isDataChanged()) {
             refreshTable();
-        } else {
-            JOptionPane.showMessageDialog(this, result.getMessage(),
-                    "Loi", JOptionPane.ERROR_MESSAGE);
         }
     }
 

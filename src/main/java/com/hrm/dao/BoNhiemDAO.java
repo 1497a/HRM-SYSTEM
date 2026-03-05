@@ -58,6 +58,7 @@ public class BoNhiemDAO {
 
     private void trySetTransient(ResultSet rs, BoNhiem bn) {
         try { bn.setTenNV(rs.getString("hoTen")); } catch (SQLException ignored) {}
+        try { bn.setMaNhanVien(rs.getString("maNhanVien")); } catch (SQLException ignored) {}
         try { bn.setTenPhongBan(rs.getString("tenPhongBan")); } catch (SQLException ignored) {}
         try { bn.setTenChucVu(rs.getString("tenChucVu")); } catch (SQLException ignored) {}
         try { bn.setTenQuanLy(rs.getString("tenQuanLy")); } catch (SQLException ignored) {}
@@ -356,9 +357,10 @@ public class BoNhiemDAO {
     // ============================
 
     private String buildJoinQuery(String whereClause, String orderAndLimit) {
-        return "SELECT b.*, t.hoTen, pb.tenPhongBan, cv.tenChucVu, t_ql.hoTen AS tenQuanLy "
+        return "SELECT b.*, t.hoTen, nv_code.maNhanVien, pb.tenPhongBan, cv.tenChucVu, t_ql.hoTen AS tenQuanLy "
                 + "FROM BONHIEM b "
                 + "LEFT JOIN THONGTINCANHAN t ON b.maNV = t.maNV "
+                + "LEFT JOIN NHANVIEN nv_code ON b.maNV = nv_code.maNV "
                 + "LEFT JOIN PHONGBAN pb ON b.maPhongBan = pb.maPhongBan "
                 + "LEFT JOIN CHUCVU cv ON b.maChucVu = cv.maChucVu "
                 + "LEFT JOIN THONGTINCANHAN t_ql ON b.maQuanLy = t_ql.maNV "

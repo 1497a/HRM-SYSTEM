@@ -6,6 +6,7 @@ import com.hrm.model.ThongTinCaNhan;
 import com.hrm.bus.NhanVienBUS;
 import com.hrm.bus.KetQua;
 import com.hrm.util.UIColors;
+import com.hrm.util.ValidationUtils;
 
 import javax.swing.*;
 import javax.swing.border.TitledBorder;
@@ -336,7 +337,15 @@ public class EmployeeFormDialog extends JDialog {
                 showError("Ngay sinh khong hop le. Dinh dang: dd/MM/yyyy");
                 return;
             }
+            String dobErr = ValidationUtils.validateBirthDate(ngaySinh);
+            if (dobErr != null) { showError(dobErr); return; }
         }
+
+        // Validate email and phone
+        String emailErr = ValidationUtils.validateEmail(email);
+        if (emailErr != null) { showError(emailErr); return; }
+        String phoneErr = ValidationUtils.validatePhone(dienThoai);
+        if (phoneErr != null) { showError(phoneErr); return; }
 
         // Build model objects
         nhanVien.setMaNhanVien(maNhanVien);

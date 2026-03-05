@@ -34,7 +34,7 @@ public class ContractListPanel extends JPanel {
     private PurpleButton btnTao;
     private PurpleButton btnThanhLy;
     private PurpleButton btnHuy;
-    private PurpleButton btnLamMoi;
+
 
     private List<HopDongLaoDong> danhSachHienThi = new ArrayList<>();
 
@@ -158,12 +158,9 @@ public class ContractListPanel extends JPanel {
         btnThanhLy = PurpleButton.warning("Thanh lý");
         btnThanhLy.setToolTipText("Thanh lý: Hai bên thỏa thuận chấm dứt hợp đồng trước thời hạn. Hợp đồng vẫn được lưu với trạng thái 'Thanh lý'.");
         btnHuy = PurpleButton.danger("Hủy hợp đồng");
-        btnLamMoi = PurpleButton.secondary("Làm mới");
-
         panel.add(btnTao);
         panel.add(btnThanhLy);
         panel.add(btnHuy);
-        panel.add(btnLamMoi);
 
         // Ghi chú giải thích các trạng thái
         JLabel lblNote = new JLabel(
@@ -183,7 +180,6 @@ public class ContractListPanel extends JPanel {
         btnTao.addActionListener(e -> showCreateDialog());
         btnThanhLy.addActionListener(e -> thanhLyHopDong());
         btnHuy.addActionListener(e -> huyHopDong());
-        btnLamMoi.addActionListener(e -> loadData());
 
         cboTrangThai.addActionListener(e -> applyFilter());
         cboNhanVien.addActionListener(e -> applyFilter());

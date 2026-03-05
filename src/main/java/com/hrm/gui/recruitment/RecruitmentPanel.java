@@ -17,6 +17,7 @@ import javax.swing.border.EmptyBorder;
 import javax.swing.border.TitledBorder;
 import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.table.DefaultTableModel;
+import javax.swing.table.TableRowSorter;
 import java.awt.*;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
@@ -34,14 +35,17 @@ public class RecruitmentPanel extends JPanel {
     // Tab 1 - Yêu cầu tuyển dụng
     private JTable tblYeuCau;
     private DefaultTableModel modelYeuCau;
+    private TableRowSorter<DefaultTableModel> sorterYeuCau;
+    private JComboBox<String> cboTrangThaiYC;
     private JButton btnTaoYeuCau;
     private JButton btnPheDuyet;
     private JButton btnTuChoi;
-    private JButton btnLamMoiYC;
 
     // Tab 2 - Tin tuyển dụng
     private JTable tblTin;
     private DefaultTableModel modelTin;
+    private TableRowSorter<DefaultTableModel> sorterTin;
+    private JComboBox<String> cboTrangThaiTin;
     private JButton btnDangTin;
     private JButton btnDongTin;
     private JButton btnLamMoiTin;
@@ -49,6 +53,8 @@ public class RecruitmentPanel extends JPanel {
     // Tab 3 - Ứng viên
     private JTable tblUngVien;
     private DefaultTableModel modelUngVien;
+    private TableRowSorter<DefaultTableModel> sorterUngVien;
+    private JComboBox<String> cboTrangThaiUV;
     private JButton btnChuyenTrangThai;
     private JButton btnChuyenNV;
     private JButton btnTaoUngVien;
@@ -91,20 +97,20 @@ public class RecruitmentPanel extends JPanel {
         JPanel toolbar = new JPanel(new FlowLayout(FlowLayout.LEFT, 8, 4));
         toolbar.setOpaque(false);
 
-        btnTaoYeuCau = UIHelper.createSuccessButton("Tạo yêu cầu");
-        btnPheDuyet = UIHelper.createPrimaryButton("Phê duyệt");
+        btnTaoYeuCau = UIHelper.createPrimaryButton("Tạo yêu cầu");
+        btnPheDuyet = UIHelper.createSuccessButton("Phê duyệt");
         btnTuChoi = UIHelper.createDangerButton("Từ chối");
-        btnLamMoiYC = UIHelper.createDefaultButton("Làm mới");
-
         btnTaoYeuCau.addActionListener(e -> taoYeuCau());
         btnPheDuyet.addActionListener(e -> pheDuyetYeuCau());
         btnTuChoi.addActionListener(e -> tuChoiYeuCau());
-        btnLamMoiYC.addActionListener(e -> loadYeuCau());
+
+        cboTrangThaiYC = new JComboBox<>(new String[]{"Tất cả", "Chờ duyệt", "Đã duyệt", "Từ chối", "Đã tuyển đủ"});
 
         toolbar.add(btnTaoYeuCau);
         toolbar.add(btnPheDuyet);
         toolbar.add(btnTuChoi);
-        toolbar.add(btnLamMoiYC);
+        toolbar.add(new JLabel("Trạng thái:"));
+        toolbar.add(cboTrangThaiYC);
 
         // Table
         String[] cols = {"Mã YC", "Vị trí", "Phòng ban", "Số lượng", "Hạn tuyển dụng", "Trạng thái"};
@@ -117,6 +123,10 @@ public class RecruitmentPanel extends JPanel {
         int[] widths = {70, 200, 180, 80, 120, 130};
         applyColWidths(tblYeuCau, widths);
         tblYeuCau.getColumnModel().getColumn(5).setCellRenderer(new StatusCellRenderer());
+
+        sorterYeuCau = new TableRowSorter<>(modelYeuCau);
+        tblYeuCau.setRowSorter(sorterYeuCau);
+        UIHelper.attachStatusFilter(sorterYeuCau, cboTrangThaiYC, 5);
 
         JScrollPane scroll = new JScrollPane(tblYeuCau);
         scroll.setBorder(new TitledBorder("Danh sách yêu cầu tuyển dụng"));
@@ -147,9 +157,13 @@ public class RecruitmentPanel extends JPanel {
         btnDongTin.addActionListener(e -> dongTin());
         btnLamMoiTin.addActionListener(e -> loadTin());
 
+        cboTrangThaiTin = new JComboBox<>(new String[]{"Tất cả", "Đang tuyển", "Tạm dừng", "Đã đóng"});
+
         toolbar.add(btnDangTin);
         toolbar.add(btnDongTin);
         toolbar.add(btnLamMoiTin);
+        toolbar.add(new JLabel("Trạng thái:"));
+        toolbar.add(cboTrangThaiTin);
 
         // Table
         String[] cols = {"Mã tin", "Tiêu đề", "Ngày đăng", "Ngày hết hạn", "Số đơn", "Trạng thái"};
@@ -162,6 +176,10 @@ public class RecruitmentPanel extends JPanel {
         int[] widths = {70, 280, 120, 130, 80, 130};
         applyColWidths(tblTin, widths);
         tblTin.getColumnModel().getColumn(5).setCellRenderer(new StatusCellRenderer());
+
+        sorterTin = new TableRowSorter<>(modelTin);
+        tblTin.setRowSorter(sorterTin);
+        UIHelper.attachStatusFilter(sorterTin, cboTrangThaiTin, 5);
 
         JScrollPane scroll = new JScrollPane(tblTin);
         scroll.setBorder(new TitledBorder("Danh sách tin tuyển dụng"));
@@ -186,7 +204,7 @@ public class RecruitmentPanel extends JPanel {
 
         btnChuyenTrangThai = UIHelper.createPrimaryButton("Chuyển trạng thái");
         btnChuyenNV = UIHelper.createSuccessButton("Chuyển thành nhân viên");
-        btnTaoUngVien = UIHelper.createDefaultButton("+ Tạo ứng viên");
+        btnTaoUngVien = UIHelper.createPrimaryButton("+ Tạo ứng viên");
         btnLamMoiUV = UIHelper.createDefaultButton("Làm mới");
 
         btnChuyenTrangThai.addActionListener(e -> chuyenTrangThaiUV());
@@ -194,10 +212,15 @@ public class RecruitmentPanel extends JPanel {
         btnTaoUngVien.addActionListener(e -> taoUngVien());
         btnLamMoiUV.addActionListener(e -> loadUngVien());
 
+        cboTrangThaiUV = new JComboBox<>(new String[]{
+            "Tất cả", "Mới", "Đang phỏng vấn", "Trúng tuyển", "Từ chối", "Đã chuyển thành nhân viên"});
+
         toolbar.add(btnTaoUngVien);
         toolbar.add(btnChuyenTrangThai);
         toolbar.add(btnChuyenNV);
         toolbar.add(btnLamMoiUV);
+        toolbar.add(new JLabel("Trạng thái:"));
+        toolbar.add(cboTrangThaiUV);
 
         // Table
         String[] cols = {"Mã UV", "Họ tên", "Email", "Điện thoại", "Vị trí ứng tuyển", "Ngày nộp", "Trạng thái"};
@@ -210,6 +233,13 @@ public class RecruitmentPanel extends JPanel {
         int[] widths = {70, 160, 200, 120, 200, 110, 130};
         applyColWidths(tblUngVien, widths);
         tblUngVien.getColumnModel().getColumn(6).setCellRenderer(new StatusCellRenderer());
+
+        // Sorter: sort by candidate name (col 1) with Vietnamese locale; filter by status (col 6)
+        sorterUngVien = new TableRowSorter<>(modelUngVien);
+        tblUngVien.setRowSorter(sorterUngVien);
+        sorterUngVien.setComparator(1, UIHelper.vietnameseNameComparator());
+        sorterUngVien.setSortKeys(List.of(new RowSorter.SortKey(1, SortOrder.ASCENDING)));
+        UIHelper.attachStatusFilter(sorterUngVien, cboTrangThaiUV, 6);
 
         JScrollPane scroll = new JScrollPane(tblUngVien);
         scroll.setBorder(new TitledBorder("Danh sách ứng viên"));
@@ -706,10 +736,11 @@ public class RecruitmentPanel extends JPanel {
             setHorizontalAlignment(SwingConstants.CENTER);
             if (!isSelected && value != null) {
                 String v = value.toString();
-                if (v.contains("Đã duyệt") || v.contains("Trúng tuyển")
+                if (v.contains("Đã duyệt") || v.contains("Đã tuyển đủ")
+                        || v.contains("Trúng tuyển")
                         || v.contains("Đang tuyển") || v.contains("Đã chuyển thành nhân viên")) {
                     c.setForeground(UIColors.SUCCESS_GREEN);
-                } else if (v.contains("Từ chối") || v.contains("Đã đóng") || v.contains("Từ chối")) {
+                } else if (v.contains("Từ chối") || v.contains("Đã đóng")) {
                     c.setForeground(UIColors.DANGER_RED);
                 } else if (v.contains("Chờ duyệt") || v.contains("Đang phỏng vấn")
                         || v.contains("Tạm dừng") ) {
