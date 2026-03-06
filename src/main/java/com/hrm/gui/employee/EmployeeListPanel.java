@@ -4,10 +4,8 @@ import com.hrm.gui.components.PurpleButton;
 import com.hrm.gui.components.PurpleTable;
 import com.hrm.model.PhongBan;
 import com.hrm.model.NhanVien;
-import com.hrm.model.ThongTinCaNhan;
 import com.hrm.bus.PhongBanBUS;
 import com.hrm.bus.NhanVienBUS;
-import com.hrm.bus.KetQua;
 import com.hrm.util.SessionContext;
 import com.hrm.util.UIColors;
 import com.hrm.util.UIHelper;
@@ -69,18 +67,12 @@ public class EmployeeListPanel extends JPanel {
         JPanel panel = new JPanel(new BorderLayout(8, 8));
         panel.setOpaque(false);
 
-        // Tiêu đề
-        JLabel lblTitle = new JLabel("HO SO NHAN VIEN");
-        lblTitle.setFont(new Font("Segoe UI", Font.BOLD, 20));
-        lblTitle.setForeground(UIColors.PRIMARY_PURPLE);
-        lblTitle.setBorder(BorderFactory.createEmptyBorder(0, 0, 8, 0));
-        panel.add(lblTitle, BorderLayout.NORTH);
 
         // Search + filter
         JPanel searchWrap = new JPanel(new BorderLayout(0, 4));
         searchWrap.setOpaque(false);
 
-        JLabel lblHint = new JLabel("Tim theo: Ma NV / Ho ten / Phong ban / Trang thai");
+        JLabel lblHint = new JLabel("Tìm theo: Mã NV / Họ tên. Nhấp đúp vào dòng để xem hồ sơ chi tiết.");
         lblHint.setFont(new Font("Segoe UI", Font.ITALIC, 12));
         lblHint.setForeground(UIColors.TEXT_DARK);
         searchWrap.add(lblHint, BorderLayout.NORTH);
@@ -88,7 +80,7 @@ public class EmployeeListPanel extends JPanel {
         JPanel searchPanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 8, 4));
         searchPanel.setOpaque(false);
 
-        JLabel lblSearch = new JLabel("Tim kiem:");
+        JLabel lblSearch = new JLabel("Tìm kiếm:");
         lblSearch.setFont(new Font("Segoe UI", Font.PLAIN, 14));
         lblSearch.setForeground(UIColors.TEXT_DARK);
 
@@ -96,27 +88,24 @@ public class EmployeeListPanel extends JPanel {
         txtSearch.setFont(new Font("Segoe UI", Font.PLAIN, 14));
         txtSearch.setPreferredSize(new Dimension(220, 32));
 
-        JLabel lblPhongBan = new JLabel("Phong ban:");
+        JLabel lblPhongBan = new JLabel("Phòng ban:");
         lblPhongBan.setFont(new Font("Segoe UI", Font.PLAIN, 14));
         lblPhongBan.setForeground(UIColors.TEXT_DARK);
 
-        cboPhongBan = new JComboBox<>(new String[]{"Tat ca phong ban"});
+        cboPhongBan = new JComboBox<>(new String[]{"Tất cả phòng ban"});
         cboPhongBan.setFont(new Font("Segoe UI", Font.PLAIN, 14));
         cboPhongBan.setPreferredSize(new Dimension(180, 32));
 
-        JLabel lblTrangThai = new JLabel("Trang thai:");
+        JLabel lblTrangThai = new JLabel("Trạng thái:");
         lblTrangThai.setFont(new Font("Segoe UI", Font.PLAIN, 14));
         lblTrangThai.setForeground(UIColors.TEXT_DARK);
 
         cboTrangThai = new JComboBox<>(new String[]{
-            "Tat ca", "Dang lam viec", "Tam nghi", "Nghi viec"
+            "Tất cả", "Đang làm việc", "Tạm nghỉ", "Nghỉ việc"
         });
         cboTrangThai.setFont(new Font("Segoe UI", Font.PLAIN, 14));
         cboTrangThai.setPreferredSize(new Dimension(160, 32));
 
-        PurpleButton btnTimKiem = new PurpleButton("Tim kiem");
-        btnTimKiem.setFont(new Font("Segoe UI", Font.BOLD, 13));
-        btnTimKiem.addActionListener(e -> applyFilter());
 
         searchPanel.add(lblSearch);
         searchPanel.add(txtSearch);
@@ -127,7 +116,6 @@ public class EmployeeListPanel extends JPanel {
         searchPanel.add(lblTrangThai);
         searchPanel.add(cboTrangThai);
         searchPanel.add(Box.createHorizontalStrut(8));
-        searchPanel.add(btnTimKiem);
 
         searchWrap.add(searchPanel, BorderLayout.CENTER);
         panel.add(searchWrap, BorderLayout.CENTER);
@@ -148,10 +136,9 @@ public class EmployeeListPanel extends JPanel {
 
         sorter = new TableRowSorter<>(tableModel);
         table.setRowSorter(sorter);
-        sorter.setComparator(0, (a, b) -> Integer.compare((Integer) a, (Integer) b));
+        // Sort by first name (Tên) by default using Vietnamese locale
         sorter.setComparator(2, UIHelper.vietnameseNameComparator());
-        // Sort by Ma NV (col 1) by default
-        sorter.setSortKeys(List.of(new RowSorter.SortKey(1, SortOrder.ASCENDING)));
+        sorter.setSortKeys(List.of(new RowSorter.SortKey(2, SortOrder.ASCENDING)));
 
         JScrollPane scroll = new JScrollPane(table);
         scroll.setBorder(BorderFactory.createLineBorder(UIColors.BORDER_GRAY));
@@ -236,7 +223,7 @@ public class EmployeeListPanel extends JPanel {
         String selected = (String) cboPhongBan.getSelectedItem();
         cboPhongBan.removeActionListener(e -> applyFilter());
         cboPhongBan.removeAllItems();
-        cboPhongBan.addItem("Tat ca phong ban");
+        cboPhongBan.addItem("Tất cả phòng ban");
         try {
             for (PhongBan d : new PhongBanBUS().getActiveDepartments()) {
                 cboPhongBan.addItem(d.getTenPhongBan());
@@ -270,7 +257,7 @@ public class EmployeeListPanel extends JPanel {
 
                 // Lọc theo phòng ban (cột 3)
                 String tenPhongBan = entry.getStringValue(3);
-                boolean matchDept = "Tat ca phong ban".equals(phongBanFilter)
+                boolean matchDept = "Tất cả phòng ban".equals(phongBanFilter)
                         || phongBanFilter == null
                         || phongBanFilter.equals(tenPhongBan);
 
@@ -308,8 +295,8 @@ public class EmployeeListPanel extends JPanel {
         NhanVien selected = getSelectedNhanVien();
         if (selected == null) {
             JOptionPane.showMessageDialog(this,
-                    "Vui long chon mot nhan vien de xem ho so.",
-                    "Thong bao", JOptionPane.INFORMATION_MESSAGE);
+                    "Vui lòng chọn một nhân viên để xem chi tiết.",
+                    "Thông báo", JOptionPane.INFORMATION_MESSAGE);
             return;
         }
         EmployeeDetailPanel dialog = new EmployeeDetailPanel(

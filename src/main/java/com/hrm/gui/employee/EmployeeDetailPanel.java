@@ -147,9 +147,9 @@ public class EmployeeDetailPanel extends JDialog {
 
     private void buildUI() {
         // Title bar label with employee name
-        String dialogTitle = "Ho so nhan vien";
+        String dialogTitle = "Hồ sơ nhân viên";
         if (nhanVien != null && nhanVien.getHoTen() != null && !nhanVien.getHoTen().isEmpty()) {
-            dialogTitle = "Ho so: " + nhanVien.getHoTen();
+            dialogTitle = "Hồ sơ: " + nhanVien.getHoTen();
         }
         setTitle(dialogTitle);
 
@@ -186,7 +186,7 @@ public class EmployeeDetailPanel extends JDialog {
         header.setBackground(UIColors.PRIMARY_PURPLE);
         header.setBorder(BorderFactory.createEmptyBorder(14, 20, 14, 20));
 
-        String name = "(Khong ro ten)";
+        String name = "(Không rõ tên)";
         String code = "#" + maNV;
         if (thongTinCaNhan != null && thongTinCaNhan.getHoTen() != null) {
             name = thongTinCaNhan.getHoTen();
@@ -237,15 +237,15 @@ public class EmployeeDetailPanel extends JDialog {
         content.setBorder(BorderFactory.createEmptyBorder(16, 20, 16, 20));
 
         // ---- Section: Thong tin nhan vien --------------------------------
-        content.add(buildSectionTitle("Thong tin nhan vien"));
+        content.add(buildSectionTitle("Thông tin nhân viên"));
         content.add(Box.createVerticalStrut(8));
 
         JPanel nvPanel = buildInfoGrid();
-        addInfoRow(nvPanel, 0, "Ma nhan vien:",
+        addInfoRow(nvPanel, 0, "Mã nhân viên:",
                 nhanVien != null ? safe(nhanVien.getMaNhanVien()) : "");
-        addInfoRow(nvPanel, 1, "Loai hop dong:",
+        addInfoRow(nvPanel, 1, "Loại hợp đồng:",
                 nhanVien != null ? safe(nhanVien.getLoaiHopDongDisplay()) : "");
-        addInfoRow(nvPanel, 2, "Ngay vao lam:",
+        addInfoRow(nvPanel, 2, "Ngày vào làm:",
                 nhanVien != null && nhanVien.getNgayVaoLam() != null
                         ? nhanVien.getNgayVaoLam().format(DATE_FMT) : "");
         cboTrangThaiNhanVien = new JComboBox<>(new String[]{"dang_lam_viec", "tam_nghi", "nghi_viec"});
@@ -261,12 +261,12 @@ public class EmployeeDetailPanel extends JDialog {
         });
         cboTrangThaiNhanVien.setSelectedItem(nhanVien != null ? nhanVien.getTrangThai() : "dang_lam_viec");
         setStatusEditMode(false);
-        addInfoRow(nvPanel, 3, "Trang thai:", cboTrangThaiNhanVien);
+        addInfoRow(nvPanel, 3, "Trạng thái:", cboTrangThaiNhanVien);
         content.add(nvPanel);
         content.add(Box.createVerticalStrut(16));
 
         // ---- Section: Thong tin ca nhan ----------------------------------
-        content.add(buildSectionTitle("Thong tin ca nhan"));
+        content.add(buildSectionTitle("Thông tin cá nhân"));
         content.add(Box.createVerticalStrut(8));
 
         JPanel ttcnPanel = buildInfoGrid();
@@ -285,24 +285,24 @@ public class EmployeeDetailPanel extends JDialog {
             txtFileCV = createReadOnlyTextField();
             txtKinhNghiem = createReadOnlyTextArea();
 
-            addInfoRow(ttcnPanel, 0, "Ho va ten:", txtHoTen);
-            addInfoRow(ttcnPanel, 1, "Ngay sinh:", txtNgaySinh);
-            addInfoRow(ttcnPanel, 2, "Gioi tinh:", cboGioiTinh);
+            addInfoRow(ttcnPanel, 0, "Họ và tên:", txtHoTen);
+            addInfoRow(ttcnPanel, 1, "Ngày sinh:", txtNgaySinh);
+            addInfoRow(ttcnPanel, 2, "Giới tính:", cboGioiTinh);
             addInfoRow(ttcnPanel, 3, "CCCD:", txtCCCD);
-            addInfoRow(ttcnPanel, 4, "So dien thoai:", txtDienThoai);
+            addInfoRow(ttcnPanel, 4, "Số điện thoại:", txtDienThoai);
             addInfoRow(ttcnPanel, 5, "Email:", txtEmail);
-            addInfoRow(ttcnPanel, 6, "Dia chi:", txtDiaChi);
-            addInfoRow(ttcnPanel, 7, "Dia chi thuong tru:", txtDiaChiThuongTru);
-            addInfoRow(ttcnPanel, 8, "Que quan:", txtQueQuan);
-            addInfoRow(ttcnPanel, 9, "Tinh trang hon nhan:", cboTinhTrangHonNhan);
-            addInfoRow(ttcnPanel, 10, "Trinh do hoc van:", txtTrinhDoHocVan);
+            addInfoRow(ttcnPanel, 6, "Địa chỉ:", txtDiaChi);
+            addInfoRow(ttcnPanel, 7, "Địa chỉ thường trú:", txtDiaChiThuongTru);
+            addInfoRow(ttcnPanel, 8, "Quê quán:", txtQueQuan);
+            addInfoRow(ttcnPanel, 9, "Tình trạng hôn nhân:", cboTinhTrangHonNhan);
+            addInfoRow(ttcnPanel, 10, "Trình độ học vấn:", txtTrinhDoHocVan);
             addInfoRow(ttcnPanel, 11, "File CV:", txtFileCV);
-            addInfoRow(ttcnPanel, 12, "Kinh nghiem:", new JScrollPane(txtKinhNghiem));
+            addInfoRow(ttcnPanel, 12, "Kinh nghiệm:", new JScrollPane(txtKinhNghiem));
 
             loadPersonalFields();
             setPersonalEditMode(false);
         } else {
-            JLabel noData = new JLabel("  Khong co thong tin ca nhan.");
+            JLabel noData = new JLabel("  Không có thông tin cá nhân.");
             noData.setFont(new Font("Segoe UI", Font.ITALIC, 13));
             noData.setForeground(UIColors.TEXT_GRAY);
             ttcnPanel.add(noData, buildGbc(0, 0, 2));
@@ -311,29 +311,29 @@ public class EmployeeDetailPanel extends JDialog {
         content.add(Box.createVerticalStrut(16));
 
         // ---- Section: Hop dong hien tai (summary only) -------------------
-        content.add(buildSectionTitle("Hop dong lao dong"));
+        content.add(buildSectionTitle("Hợp đồng lao động"));
         content.add(Box.createVerticalStrut(8));
 
         JPanel hdPanel = buildInfoGrid();
         if (hopDongHieuLuc != null) {
-            addInfoRow(hdPanel, 0, "So hop dong:",   safe(hopDongHieuLuc.getSoHopDong()));
-            addInfoRow(hdPanel, 1, "Loai hop dong:", safe(hopDongHieuLuc.getLoaiHopDongDisplay()));
-            addInfoRow(hdPanel, 2, "Ngay ky:",
+            addInfoRow(hdPanel, 0, "Số hợp đồng:",   safe(hopDongHieuLuc.getSoHopDong()));
+            addInfoRow(hdPanel, 1, "Loại hợp đồng:", safe(hopDongHieuLuc.getLoaiHopDongDisplay()));
+            addInfoRow(hdPanel, 2, "Ngày ký:",
                     hopDongHieuLuc.getNgayKy() != null
                             ? hopDongHieuLuc.getNgayKy().format(DATE_FMT) : "");
-            addInfoRow(hdPanel, 3, "Hieu luc tu:",
+            addInfoRow(hdPanel, 3, "Hiệu lực từ:",
                     hopDongHieuLuc.getNgayHieuLuc() != null
                             ? hopDongHieuLuc.getNgayHieuLuc().format(DATE_FMT) : "");
-            addInfoRow(hdPanel, 4, "Hieu luc den:",
+            addInfoRow(hdPanel, 4, "Hiệu lực đến:",
                     hopDongHieuLuc.getNgayHetHieuLuc() != null
                             ? hopDongHieuLuc.getNgayHetHieuLuc().format(DATE_FMT)
-                            : "Khong xac dinh");
-            addInfoRow(hdPanel, 5, "Trang thai:",
+                            : "Không xác định");
+            addInfoRow(hdPanel, 5, "Trạng thái:",
                     buildStatusLabelComponent(
                             hopDongHieuLuc.getTrangThai(),
                             hopDongHieuLuc.getTrangThaiDisplay()));
         } else {
-            JLabel noHd = new JLabel("  Chua co hop dong hieu luc.");
+            JLabel noHd = new JLabel("  Chưa có hợp đồng hiệu lực.");
             noHd.setFont(new Font("Segoe UI", Font.ITALIC, 13));
             noHd.setForeground(UIColors.TEXT_GRAY);
             hdPanel.add(noHd, buildGbc(0, 0, 2));
@@ -362,7 +362,7 @@ public class EmployeeDetailPanel extends JDialog {
         JPanel currentPanel = new JPanel(new BorderLayout(0, 8));
         currentPanel.setBackground(UIColors.WHITE);
 
-        currentPanel.add(buildSectionTitle("Bo nhiem chinh hien tai"), BorderLayout.NORTH);
+        currentPanel.add(buildSectionTitle("Bổ nhiệm hiện tại"), BorderLayout.NORTH);
 
         JPanel detailGrid = buildInfoGrid();
         if (boNhiemHienTai != null) {
@@ -373,22 +373,22 @@ public class EmployeeDetailPanel extends JDialog {
                     ? boNhiemHienTai.getTenChucVu()
                     : safe(String.valueOf(boNhiemHienTai.getId()));
 
-            addInfoRow(detailGrid, 0, "Phong ban:",         tenPB);
-            addInfoRow(detailGrid, 1, "Chuc vu:",           tenCV);
-            addInfoRow(detailGrid, 2, "Loai bo nhiem:",     safe(boNhiemHienTai.getLoaiBoNhiemDisplay()));
-            addInfoRow(detailGrid, 3, "Ty le huong luong:", boNhiemHienTai.getTyLeHuongLuong() + "%");
-            addInfoRow(detailGrid, 4, "Tu ngay:",
+            addInfoRow(detailGrid, 0, "Phòng ban:",         tenPB);
+            addInfoRow(detailGrid, 1, "Chức vụ:",           tenCV);
+            addInfoRow(detailGrid, 2, "Loại bổ nhiệm:",     safe(boNhiemHienTai.getLoaiBoNhiemDisplay()));
+            addInfoRow(detailGrid, 3, "Tỷ lệ hưởng lương:", boNhiemHienTai.getTyLeHuongLuong() + "%");
+            addInfoRow(detailGrid, 4, "Từ ngày:",
                     boNhiemHienTai.getTuNgay() != null
                             ? boNhiemHienTai.getTuNgay().format(DATE_FMT) : "");
-            addInfoRow(detailGrid, 5, "Den ngay:",
+            addInfoRow(detailGrid, 5, "Đến ngày:",
                     boNhiemHienTai.getDenNgay() != null
-                            ? boNhiemHienTai.getDenNgay().format(DATE_FMT) : "Khong xac dinh");
-            addInfoRow(detailGrid, 6, "Trang thai:",
+                            ? boNhiemHienTai.getDenNgay().format(DATE_FMT) : "Không xác định");
+            addInfoRow(detailGrid, 6, "Trạng thái:",
                     buildStatusLabelComponent(
                             boNhiemHienTai.getTrangThai(),
                             boNhiemHienTai.getTrangThaiDisplay()));
         } else {
-            JLabel noData = new JLabel("  Chua co bo nhiem chinh hieu luc.");
+            JLabel noData = new JLabel("  Chưa có bổ nhiệm chính hiệu lực.");
             noData.setFont(new Font("Segoe UI", Font.ITALIC, 13));
             noData.setForeground(UIColors.TEXT_GRAY);
             detailGrid.add(noData, buildGbc(0, 0, 2));
@@ -400,7 +400,7 @@ public class EmployeeDetailPanel extends JDialog {
         JPanel historyPanel = new JPanel(new BorderLayout(0, 6));
         historyPanel.setBackground(UIColors.WHITE);
 
-        JLabel histTitle = buildSectionTitle("Lich su bo nhiem");
+        JLabel histTitle = buildSectionTitle("Lịch sử bổ nhiệm");
         historyPanel.add(histTitle, BorderLayout.NORTH);
 
         boNhiemTableModel = PurpleTable.createNonEditableModel(COL_BO_NHIEM);
@@ -438,14 +438,14 @@ public class EmployeeDetailPanel extends JDialog {
         JPanel filterPanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 10, 4));
         filterPanel.setOpaque(false);
 
-        JLabel lblFilter = new JLabel("Chon thang / nam:");
+        JLabel lblFilter = new JLabel("Chọn tháng / năm:");
         lblFilter.setFont(new Font("Segoe UI", Font.PLAIN, 13));
         lblFilter.setForeground(UIColors.TEXT_DARK);
 
         String[] thangItems = {
-            "Thang 1", "Thang 2", "Thang 3", "Thang 4",
-            "Thang 5", "Thang 6", "Thang 7", "Thang 8",
-            "Thang 9", "Thang 10", "Thang 11", "Thang 12"
+            "Tháng 1", "Tháng 2", "Tháng 3", "Tháng 4",
+            "Tháng 5", "Tháng 6", "Tháng 7", "Tháng 8",
+            "Tháng 9", "Tháng 10", "Tháng 11", "Tháng 12"
         };
         cboThang = new JComboBox<>(thangItems);
         cboThang.setFont(new Font("Segoe UI", Font.PLAIN, 13));
@@ -523,7 +523,7 @@ public class EmployeeDetailPanel extends JDialog {
                     tenCV,
                     safe(bn.getLoaiBoNhiemDisplay()),
                     bn.getTuNgay() != null ? bn.getTuNgay().format(DATE_FMT) : "",
-                    bn.getDenNgay() != null ? bn.getDenNgay().format(DATE_FMT) : "Khong xac dinh",
+                    bn.getDenNgay() != null ? bn.getDenNgay().format(DATE_FMT) : "Không xác định",
                     safe(bn.getTrangThaiDisplay())
                 });
             }
@@ -607,8 +607,8 @@ public class EmployeeDetailPanel extends JDialog {
         if (thongTinCaNhan == null) return;
         if (statusEditMode) {
             JOptionPane.showMessageDialog(this,
-                    "Dang o che do doi trang thai. Vui long luu thao tac do truoc.",
-                    "Thong bao", JOptionPane.WARNING_MESSAGE);
+                    "Đang ở chế độ đổi trạng thái. Vui lòng lưu thao tác đó trước.",
+                    "Thông báo", JOptionPane.WARNING_MESSAGE);
             return;
         }
 
@@ -629,7 +629,7 @@ public class EmployeeDetailPanel extends JDialog {
         KetQua<ThongTinCaNhan> result = savePersonalInfoInline();
         if (!result.isSuccess()) {
             JOptionPane.showMessageDialog(this, result.getMessage(),
-                    "Loi", JOptionPane.ERROR_MESSAGE);
+                    "Lỗi", JOptionPane.ERROR_MESSAGE);
             return;
         }
 
@@ -646,8 +646,8 @@ public class EmployeeDetailPanel extends JDialog {
         if (nhanVien == null) return;
         if (personalEditMode) {
             JOptionPane.showMessageDialog(this,
-                    "Dang o che do sua thong tin. Vui long luu truoc.",
-                    "Thong bao", JOptionPane.WARNING_MESSAGE);
+                    "Đang ở chế độ sửa thông tin. Vui lòng lưu trước.",
+                    "Thông báo", JOptionPane.WARNING_MESSAGE);
             return;
         }
 
@@ -670,7 +670,7 @@ public class EmployeeDetailPanel extends JDialog {
         KetQua<NhanVien> result = nvService.capNhatTrangThai(nhanVien.getId(), trangThaiMoi, "");
         if (!result.isSuccess()) {
             JOptionPane.showMessageDialog(this, result.getMessage(),
-                    "Loi", JOptionPane.ERROR_MESSAGE);
+                    "Lỗi", JOptionPane.ERROR_MESSAGE);
             return;
         }
 
@@ -734,7 +734,7 @@ public class EmployeeDetailPanel extends JDialog {
         String kinhNghiem = txtKinhNghiem.getText().trim();
 
         if (hoTen.isEmpty()) {
-            return KetQua.error("Ho ten khong duoc de trong.");
+            return KetQua.error("Họ tên không được để trống.");
         }
 
         LocalDate ngaySinh = null;
@@ -742,19 +742,19 @@ public class EmployeeDetailPanel extends JDialog {
             try {
                 ngaySinh = LocalDate.parse(ngaySinhStr, DATE_FMT);
             } catch (DateTimeParseException ex) {
-                return KetQua.error("Ngay sinh khong hop le. Dinh dang dd/MM/yyyy.");
+                return KetQua.error("Ngày sinh không hợp lệ. Định dạng dd/MM/yyyy.");
             }
             if (ngaySinh.isAfter(LocalDate.now())) {
-                return KetQua.error("Ngay sinh khong the o tuong lai.");
+                return KetQua.error("Ngày sinh không thể ở tương lai.");
             }
         }
 
         if (!email.isEmpty() && !isValidEmail(email)) {
-            return KetQua.error("Email khong hop le.");
+            return KetQua.error("Email không hợp lệ.");
         }
 
         if (!dienThoai.isEmpty() && !isValidPhone(dienThoai)) {
-            return KetQua.error("So dien thoai khong hop le.");
+            return KetQua.error("Số điện thoại không hợp lệ.");
         }
 
         thongTinCaNhan.setHoTen(hoTen);
@@ -1126,11 +1126,11 @@ public class EmployeeDetailPanel extends JDialog {
 
                 if (col == 5 && value != null) {
                     String v = value.toString();
-                    if (v.contains("Hieu luc") || v.contains("hieu_luc")) {
+                    if (v.contains("Hiệu lực") || v.contains("hieu_luc")) {
                         c.setForeground(UIColors.SUCCESS_GREEN);
-                    } else if (v.contains("Cho duyet") || v.contains("cho_duyet")) {
+                    } else if (v.contains("Chờ duyệt") || v.contains("cho_duyet")) {
                         c.setForeground(new Color(230, 120, 0));
-                    } else if (v.contains("Het") || v.contains("Tu choi")) {
+                    } else if (v.contains("Hết") || v.contains("Tu choi")) {
                         c.setForeground(UIColors.DANGER_RED);
                     }
                     ((JLabel) c).setFont(new Font("Segoe UI", Font.BOLD, 12));

@@ -156,13 +156,11 @@ public class NhanVienBUS {
         if ("dang_lam_viec".equals(trangThaiHienTai) && "tam_nghi".equals(trangThaiMoi)) valid = true;
         if ("dang_lam_viec".equals(trangThaiHienTai) && "nghi_viec".equals(trangThaiMoi)) valid = true;
         if ("tam_nghi".equals(trangThaiHienTai) && "dang_lam_viec".equals(trangThaiMoi)) valid = true;
-
+        if ("tam_nghi".equals(trangThaiHienTai) && "nghi_viec".equals(trangThaiMoi)) valid = true;
         if (!valid) {
             if ("nghi_viec".equals(trangThaiHienTai)) {
                 return KetQua.error("Nhân viên đã nghỉ việc, không thể thay đổi trạng thái.");
             }
-            return KetQua.error("Không thể chuyển từ trạng thái '"
-                    + nv.getTrangThaiDisplay() + "' sang '" + trangThaiMoi + "'.");
         }
 
         nv.setTrangThai(trangThaiMoi);

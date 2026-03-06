@@ -9,7 +9,6 @@ import com.hrm.util.UIColors;
 import com.hrm.util.ValidationUtils;
 
 import javax.swing.*;
-import javax.swing.border.TitledBorder;
 import java.awt.*;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
@@ -56,7 +55,7 @@ public class EmployeeFormDialog extends JDialog {
      * @param ttcn    null = tạo mới; có giá trị = sửa
      */
     public EmployeeFormDialog(Frame parent, NhanVien nv, ThongTinCaNhan ttcn) {
-        super(parent, nv == null ? "Them moi ho so nhan vien" : "Chinh sua ho so nhan vien", true);
+        super(parent, nv == null ? "Thêm mới hồ sơ nhân viên" : "Chỉnh sửa hồ sơ nhân viên", true);
         this.nhanVien = nv != null ? nv : new NhanVien();
         this.thongTinCaNhan = ttcn != null ? ttcn : new ThongTinCaNhan();
         this.isEdit = nv != null;
@@ -84,7 +83,7 @@ public class EmployeeFormDialog extends JDialog {
         root.setBorder(BorderFactory.createEmptyBorder(12, 12, 12, 12));
 
         // Header
-        JLabel lblHeader = new JLabel(isEdit ? "Chinh sua ho so nhan vien" : "Them moi ho so nhan vien");
+        JLabel lblHeader = new JLabel(isEdit ? "Chỉnh sửa hồ sơ nhân viên" : "Thêm mới hồ sơ nhân viên");
         lblHeader.setFont(new Font("Segoe UI", Font.BOLD, 18));
         lblHeader.setForeground(UIColors.PRIMARY_PURPLE);
         lblHeader.setBorder(BorderFactory.createEmptyBorder(0, 0, 8, 0));
@@ -93,8 +92,8 @@ public class EmployeeFormDialog extends JDialog {
         // Tabbed pane
         JTabbedPane tabs = new JTabbedPane();
         tabs.setFont(new Font("Segoe UI", Font.PLAIN, 14));
-        tabs.addTab("Thong tin lao dong", buildTab1());
-        tabs.addTab("Thong tin ca nhan", buildTab2());
+        tabs.addTab("Thông tin lao động", buildTab1());
+        tabs.addTab("Thông tin cá nhân", buildTab2());
         root.add(tabs, BorderLayout.CENTER);
 
         // Buttons
@@ -111,13 +110,13 @@ public class EmployeeFormDialog extends JDialog {
         GridBagConstraints gbc = defaultGBC();
 
         // Mã nhân viên
-        addLabel(panel, "Ma nhan vien (*):", gbc, 0, 0);
+        addLabel(panel, "Mã nhân viên (*):", gbc, 0, 0);
         txtMaNhanVien = new JTextField(20);
         if (isEdit) txtMaNhanVien.setEditable(false);
         addField(panel, txtMaNhanVien, gbc, 1, 0);
 
         // Loại hợp đồng
-        addLabel(panel, "Loai hop dong:", gbc, 0, 1);
+        addLabel(panel, "Loại hợp đồng:", gbc, 0, 1);
         cboLoaiHopDong = new JComboBox<>(new String[]{
             "thu_viec", "xac_dinh_thoi_han", "khong_xac_dinh"
         });
@@ -125,12 +124,12 @@ public class EmployeeFormDialog extends JDialog {
         addField(panel, cboLoaiHopDong, gbc, 1, 1);
 
         // Ngày vào làm
-        addLabel(panel, "Ngay vao lam (*):", gbc, 0, 2);
+        addLabel(panel, "Ngày vào làm (*):", gbc, 0, 2);
         txtNgayVaoLam = new JTextField("dd/MM/yyyy", 20);
         addField(panel, txtNgayVaoLam, gbc, 1, 2);
 
         // Ghi chú
-        addLabel(panel, "Ghi chu:", gbc, 0, 3);
+        addLabel(panel, "Ghi chú:", gbc, 0, 3);
         txtGhiChu = new JTextArea(4, 20);
         txtGhiChu.setFont(new Font("Segoe UI", Font.PLAIN, 14));
         txtGhiChu.setLineWrap(true);
@@ -151,24 +150,24 @@ public class EmployeeFormDialog extends JDialog {
 
         GridBagConstraints gbc = defaultGBC();
 
-        addLabel(panel, "Ho ten (*):", gbc, 0, 0);
+        addLabel(panel, "Họ tên (*):", gbc, 0, 0);
         txtHoTen = new JTextField(25);
         addField(panel, txtHoTen, gbc, 1, 0);
 
-        addLabel(panel, "Ngay sinh:", gbc, 0, 1);
+        addLabel(panel, "Ngày sinh:", gbc, 0, 1);
         txtNgaySinh = new JTextField("dd/MM/yyyy", 20);
         addField(panel, txtNgaySinh, gbc, 1, 1);
 
-        addLabel(panel, "Gioi tinh:", gbc, 0, 2);
+        addLabel(panel, "Giới tính:", gbc, 0, 2);
         cboGioiTinh = new JComboBox<>(new String[]{"nam", "nu", "khac"});
         cboGioiTinh.setRenderer(new GioiTinhRenderer());
         addField(panel, cboGioiTinh, gbc, 1, 2);
 
-        addLabel(panel, "CCCD (12 chu so):", gbc, 0, 3);
+        addLabel(panel, "CCCD (12 chữ số):", gbc, 0, 3);
         txtCCCD = new JTextField(20);
         addField(panel, txtCCCD, gbc, 1, 3);
 
-        addLabel(panel, "Dien thoai:", gbc, 0, 4);
+        addLabel(panel, "Điện thoại:", gbc, 0, 4);
         txtDienThoai = new JTextField(20);
         addField(panel, txtDienThoai, gbc, 1, 4);
 
@@ -176,25 +175,25 @@ public class EmployeeFormDialog extends JDialog {
         txtEmail = new JTextField(25);
         addField(panel, txtEmail, gbc, 1, 5);
 
-        addLabel(panel, "Dia chi hien tai:", gbc, 0, 6);
+        addLabel(panel, "Địa chỉ hiện tại:", gbc, 0, 6);
         txtDiaChi = new JTextField(30);
         addField(panel, txtDiaChi, gbc, 1, 6);
 
-        addLabel(panel, "Dia chi thuong tru:", gbc, 0, 7);
+        addLabel(panel, "Địa chỉ thường trú:", gbc, 0, 7);
         txtDiaChiThuongTru = new JTextField(30);
         addField(panel, txtDiaChiThuongTru, gbc, 1, 7);
 
-        addLabel(panel, "Que quan:", gbc, 0, 8);
+        addLabel(panel, "Quê quán:", gbc, 0, 8);
         txtQueQuan = new JTextField(25);
         addField(panel, txtQueQuan, gbc, 1, 8);
 
-        addLabel(panel, "Tinh trang hon nhan:", gbc, 0, 9);
+        addLabel(panel, "Tình trạng hôn nhân:", gbc, 0, 9);
         cboTinhTrangHonNhan = new JComboBox<>(new String[]{"doc_than", "da_ket_hon", "ly_hon"});
         cboTinhTrangHonNhan.setRenderer(new HonNhanRenderer());
         addField(panel, cboTinhTrangHonNhan, gbc, 1, 9);
 
         // --- NEW FIELDS ---
-        addLabel(panel, "Trinh do hoc van:", gbc, 0, 10);
+        addLabel(panel, "Trình độ học vấn:", gbc, 0, 10);
         txtTrinhDoHocVan = new JTextField(25);
         addField(panel, txtTrinhDoHocVan, gbc, 1, 10);
 
@@ -202,7 +201,7 @@ public class EmployeeFormDialog extends JDialog {
         txtFileCV = new JTextField(25);
         addField(panel, txtFileCV, gbc, 1, 11);
 
-        addLabel(panel, "Kinh nghiem:", gbc, 0, 12);
+        addLabel(panel, "Kinh nghiệm:", gbc, 0, 12);
         txtKinhNghiem = new JTextArea(3, 25);
         txtKinhNghiem.setFont(new Font("Segoe UI", Font.PLAIN, 14));
         txtKinhNghiem.setLineWrap(true);
@@ -220,8 +219,8 @@ public class EmployeeFormDialog extends JDialog {
         JPanel panel = new JPanel(new FlowLayout(FlowLayout.RIGHT, 8, 4));
         panel.setOpaque(false);
 
-        PurpleButton btnLuu = new PurpleButton("Luu");
-        PurpleButton btnHuy = PurpleButton.secondary("Huy");
+        PurpleButton btnLuu = new PurpleButton("Lưu");
+        PurpleButton btnHuy = PurpleButton.secondary("Hủy");
 
         btnLuu.setPreferredSize(new Dimension(100, 36));
         btnHuy.setPreferredSize(new Dimension(100, 36));
@@ -309,11 +308,11 @@ public class EmployeeFormDialog extends JDialog {
 
         // Basic validation
         if (maNhanVien.isEmpty()) {
-            showError("Ma nhan vien khong duoc de trong.");
+            showError("Mã nhân viên không được để trống.");
             return;
         }
         if (hoTen.isEmpty()) {
-            showError("Ho ten khong duoc de trong.");
+            showError("Họ tên không được để trống.");
             return;
         }
 
@@ -323,7 +322,7 @@ public class EmployeeFormDialog extends JDialog {
             try {
                 ngayVaoLam = LocalDate.parse(ngayVaoLamStr, dtf);
             } catch (DateTimeParseException e) {
-                showError("Ngay vao lam khong hop le. Dinh dang: dd/MM/yyyy");
+                showError("Ngày vào làm không hợp lệ. Định dạng: dd/MM/yyyy");
                 return;
             }
         }
@@ -334,7 +333,7 @@ public class EmployeeFormDialog extends JDialog {
             try {
                 ngaySinh = LocalDate.parse(ngaySinhStr, dtf);
             } catch (DateTimeParseException e) {
-                showError("Ngay sinh khong hop le. Dinh dang: dd/MM/yyyy");
+                showError("Ngày sinh không hợp lệ. Định dạng: dd/MM/yyyy");
                 return;
             }
             String dobErr = ValidationUtils.validateBirthDate(ngaySinh);
@@ -377,8 +376,8 @@ public class EmployeeFormDialog extends JDialog {
                 showError(result.getMessage());
                 return;
             }
-            JOptionPane.showMessageDialog(this, "Cap nhat ho so thanh cong.",
-                    "Thanh cong", JOptionPane.INFORMATION_MESSAGE);
+            JOptionPane.showMessageDialog(this, "Cập nhật hồ sơ thành công.",
+                    "Thành công", JOptionPane.INFORMATION_MESSAGE);
         } else {
             // Tạo mới
             KetQua<NhanVien> result = nvService.taoHoSo(nhanVien, thongTinCaNhan);
@@ -387,7 +386,7 @@ public class EmployeeFormDialog extends JDialog {
                 return;
             }
             JOptionPane.showMessageDialog(this, result.getMessage(),
-                    "Thanh cong", JOptionPane.INFORMATION_MESSAGE);
+                    "Thành công", JOptionPane.INFORMATION_MESSAGE);
         }
 
         saved = true;
@@ -403,7 +402,7 @@ public class EmployeeFormDialog extends JDialog {
     // ============================
 
     private void showError(String msg) {
-        JOptionPane.showMessageDialog(this, msg, "Loi nhap lieu", JOptionPane.ERROR_MESSAGE);
+        JOptionPane.showMessageDialog(this, msg, "Lỗi nhập liệu", JOptionPane.ERROR_MESSAGE);
     }
 
     private GridBagConstraints defaultGBC() {
@@ -446,9 +445,9 @@ public class EmployeeFormDialog extends JDialog {
         public Component getListCellRendererComponent(JList<?> list, Object value,
                 int index, boolean isSelected, boolean cellHasFocus) {
             super.getListCellRendererComponent(list, value, index, isSelected, cellHasFocus);
-            if ("thu_viec".equals(value)) setText("Thu viec");
-            else if ("xac_dinh_thoi_han".equals(value)) setText("Xac dinh thoi han");
-            else if ("khong_xac_dinh".equals(value)) setText("Khong xac dinh");
+            if ("thu_viec".equals(value)) setText("Thử việc");
+            else if ("xac_dinh_thoi_han".equals(value)) setText("Xác định thời hạn");
+            else if ("khong_xac_dinh".equals(value)) setText("Không xác định");
             return this;
         }
     }
@@ -459,8 +458,8 @@ public class EmployeeFormDialog extends JDialog {
                 int index, boolean isSelected, boolean cellHasFocus) {
             super.getListCellRendererComponent(list, value, index, isSelected, cellHasFocus);
             if ("nam".equals(value)) setText("Nam");
-            else if ("nu".equals(value)) setText("Nu");
-            else if ("khac".equals(value)) setText("Khac");
+            else if ("nu".equals(value)) setText("Nữ");
+            else if ("khac".equals(value)) setText("Khác");
             return this;
         }
     }
@@ -470,9 +469,9 @@ public class EmployeeFormDialog extends JDialog {
         public Component getListCellRendererComponent(JList<?> list, Object value,
                 int index, boolean isSelected, boolean cellHasFocus) {
             super.getListCellRendererComponent(list, value, index, isSelected, cellHasFocus);
-            if ("doc_than".equals(value)) setText("Doc than");
-            else if ("da_ket_hon".equals(value)) setText("Da ket hon");
-            else if ("ly_hon".equals(value)) setText("Ly hon");
+            if ("doc_than".equals(value)) setText("Độc thân");
+            else if ("da_ket_hon".equals(value)) setText("Đã kết hôn");
+            else if ("ly_hon".equals(value)) setText("Ly hôn");
             return this;
         }
     }
