@@ -32,6 +32,7 @@ public class AppointmentListPanel extends JPanel {
     private JComboBox<String> cboTrangThai;
     private JTextField txtTimKiem;
     private PurpleButton btnTao;
+    private PurpleButton btnXemChiTiet;
 
     private List<BoNhiem> danhSachHienThi = new ArrayList<>();
 
@@ -131,6 +132,10 @@ public class AppointmentListPanel extends JPanel {
         btnTao = new PurpleButton("+ Tạo bổ nhiệm");
         panel.add(btnTao);
 
+        btnXemChiTiet = new PurpleButton("Xem chi tiết");
+        btnXemChiTiet.setEnabled(false);
+        panel.add(btnXemChiTiet);
+
         return panel;
     }
 
@@ -140,12 +145,19 @@ public class AppointmentListPanel extends JPanel {
 
     private void setupEvents() {
         btnTao.addActionListener(e -> showCreateDialog());
+        btnXemChiTiet.addActionListener(e -> showDetailDialog());
 
         cboTrangThai.addActionListener(e -> applyFilter());
         txtTimKiem.getDocument().addDocumentListener(new javax.swing.event.DocumentListener() {
             public void insertUpdate(javax.swing.event.DocumentEvent e) { applyFilter(); }
             public void removeUpdate(javax.swing.event.DocumentEvent e) { applyFilter(); }
             public void changedUpdate(javax.swing.event.DocumentEvent e) { applyFilter(); }
+        });
+
+        table.getSelectionModel().addListSelectionListener(e -> {
+            if (!e.getValueIsAdjusting()) {
+                btnXemChiTiet.setEnabled(table.getSelectedRow() != -1);
+            }
         });
 
         table.addMouseListener(new java.awt.event.MouseAdapter() {

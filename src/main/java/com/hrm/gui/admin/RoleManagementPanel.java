@@ -167,7 +167,8 @@ public class RoleManagementPanel extends JPanel {
             return;
         }
 
-        String roleCode = (String) tableModel.getValueAt(selectedRow, 0);
+        int modelRow = table.convertRowIndexToModel(selectedRow);
+        String roleCode = (String) tableModel.getValueAt(modelRow, 0);
         VaiTro role = authService.getRoleByCode(roleCode);
         if (role != null) {
             RoleFormDialog dialog = new RoleFormDialog(
@@ -189,7 +190,8 @@ public class RoleManagementPanel extends JPanel {
             return;
         }
 
-        String roleCode = (String) tableModel.getValueAt(selectedRow, 0);
+        int modelRow = table.convertRowIndexToModel(selectedRow);
+        String roleCode = (String) tableModel.getValueAt(modelRow, 0);
 
         int confirm = JOptionPane.showConfirmDialog(this,
                 "Ban co chac muon xoa vai tro '" + roleCode + "'?",

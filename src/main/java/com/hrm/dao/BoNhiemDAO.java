@@ -304,6 +304,54 @@ public class BoNhiemDAO {
     }
 
     /**
+     * Kiểm tra chức vụ đã có người giữ bổ nhiệm chính hiệu lực trong phòng ban chưa.
+     * Dùng để ngăn bổ nhiệm nhiều người vào cùng một chức vụ chính (trưởng phòng, giám đốc...).
+     */
+    public boolean hasActiveChinhForChucVuInDept(String maPhongBan, String maChucVu, int excludeBoNhiemId) {
+        String sql = "SELECT COUNT(*) FROM BONHIEM "
+                + "WHERE maPhongBan=? AND maChucVu=? AND loaiBoNhiem='chinh' "
+                + "AND trangThai IN ('hieu_luc','cho_duyet') "
+                + "AND maBoNhiem <> ?";
+        try (Connection conn = DatabaseConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setString(1, maPhongBan);
+            ps.setString(2, maChucVu);
+            ps.setInt(3, excludeBoNhiemId);
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) return rs.getInt(1) > 0;
+            }
+        } catch (SQLException e) {
+            throw new RuntimeException("Lỗi kiểm tra chức vụ độc quyền: " + e.getMessage(), e);
+        }
+        return false;
+    }
+
+    /**
+     * Tìm bổ nhiệm chính đang hiệu lực theo phòng ban + chức vụ (để tự động kết thúc khi phê duyệt).
+     */
+    public BoNhiem findBoNhiemChinhHieuLucByChucVuInDept(String maPhongBan, String maChucVu, int excludeBoNhiemId) {
+        String sql = buildJoinQuery(
+                "WHERE b.maPhongBan=? AND b.maChucVu=? AND b.loaiBoNhiem='chinh' AND b.trangThai='hieu_luc' AND b.maBoNhiem<>?",
+                "LIMIT 1");
+        try (Connection conn = DatabaseConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setString(1, maPhongBan);
+            ps.setString(2, maChucVu);
+            ps.setInt(3, excludeBoNhiemId);
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    BoNhiem bn = mapRow(rs);
+                    trySetTransient(rs, bn);
+                    return bn;
+                }
+            }
+        } catch (SQLException e) {
+            throw new RuntimeException("Lỗi tìm bổ nhiệm chính theo chức vụ + phòng ban: " + e.getMessage(), e);
+        }
+        return null;
+    }
+
+    /**
      * Kiểm tra phòng ban có bổ nhiệm đang hiệu lực không (để validate trước khi ngưng phòng ban).
      */
     public boolean hasActiveBoNhiemInDepartment(String maPhongBan) {

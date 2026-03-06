@@ -73,7 +73,7 @@ public class BoNhiemBUS {
             return KetQua.error("Tỷ lệ hưởng lương phải từ 1% đến 100%.");
         }
 
-        // Nếu là bổ nhiệm chính, kiểm tra conflict
+        // Nếu là bổ nhiệm chính, kiểm tra conflict với nhân viên
         if ("chinh".equals(bn.getLoaiBoNhiem())) {
             boolean conflict = boNhiemRepo.hasConflictingChinhBoNhiem(
                     bn.getMaNV(), bn.getTuNgay(), bn.getDenNgay(), 0);
@@ -81,6 +81,15 @@ public class BoNhiemBUS {
                 return KetQua.error(
                         "Nhân viên đã có bổ nhiệm chính hiệu lực trong khoảng thời gian này. "
                         + "Hãy kết thúc bổ nhiệm cũ trước.");
+            }
+
+            // Kiểm tra chức vụ độc nhất trong phòng ban (giám đốc, trưởng phòng...)
+            boolean chucVuDaDuocGiu = boNhiemRepo.hasActiveChinhForChucVuInDept(
+                    bn.getPhongBanId(), bn.getChucVuId(), 0);
+            if (chucVuDaDuocGiu) {
+                return KetQua.error(
+                        "Chức vụ này đã có người đảm nhiệm chính thức tại phòng ban. "
+                        + "Hãy kết thúc bổ nhiệm hiện tại trước khi bổ nhiệm người mới.");
             }
         }
 
@@ -119,11 +128,18 @@ public class BoNhiemBUS {
 
         LocalDateTime now = LocalDateTime.now();
 
-        // Nếu là bổ nhiệm chính: kết thúc bổ nhiệm chính cũ đang hiệu lực
+        // Nếu là bổ nhiệm chính: kết thúc bổ nhiệm chính cũ của nhân viên
         if ("chinh".equals(bn.getLoaiBoNhiem())) {
-            BoNhiem cuHieuLuc = boNhiemRepo.findBoNhiemChinhHieuLuc(bn.getMaNV());
-            if (cuHieuLuc != null && cuHieuLuc.getMaBoNhiem() != maBoNhiem) {
-                boNhiemRepo.endBoNhiem(cuHieuLuc.getMaBoNhiem(), bn.getTuNgay().minusDays(1));
+            BoNhiem cuHieuLucNV = boNhiemRepo.findBoNhiemChinhHieuLuc(bn.getMaNV());
+            if (cuHieuLucNV != null && cuHieuLucNV.getMaBoNhiem() != maBoNhiem) {
+                boNhiemRepo.endBoNhiem(cuHieuLucNV.getMaBoNhiem(), bn.getTuNgay().minusDays(1));
+            }
+
+            // Kết thúc bổ nhiệm chính của người đang giữ cùng chức vụ trong phòng ban
+            BoNhiem cuHieuLucChucVu = boNhiemRepo.findBoNhiemChinhHieuLucByChucVuInDept(
+                    bn.getPhongBanId(), bn.getChucVuId(), maBoNhiem);
+            if (cuHieuLucChucVu != null) {
+                boNhiemRepo.endBoNhiem(cuHieuLucChucVu.getMaBoNhiem(), bn.getTuNgay().minusDays(1));
             }
         }
 
