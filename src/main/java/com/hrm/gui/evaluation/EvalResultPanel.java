@@ -1,13 +1,12 @@
 package com.hrm.gui.evaluation;
 
+import com.hrm.bus.DanhGiaBUS;
 import com.hrm.model.ChiTietDanhGia;
 import com.hrm.model.DanhGiaHieuSuat;
+import com.hrm.model.DotDanhGia;
+import com.hrm.model.NhanVien;
 import com.hrm.model.TaiKhoan;
-import com.hrm.model.BoNhiem;
-import com.hrm.bus.DanhGiaBUS;
-import com.hrm.dao.BoNhiemDAO;
 import com.hrm.util.SessionContext;
-import com.hrm.util.UIHelper;
 
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
@@ -18,18 +17,12 @@ import java.awt.*;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
 
-/**
- * Evaluation Result Panel - view evaluation results with role-based access control.
- */
 public class EvalResultPanel extends JPanel {
     private final DanhGiaBUS evalService;
     private final TaiKhoan currentUser;
-    private final boolean isAdmin;
-    private final boolean isDirector;
-    private final boolean isDeptHead;
     private final boolean isManager;
     private final int myMaNV;
-    private final String myMaPhongBan;
+    private final int presetCycleId;
 
     private JTable submissionTable;
     private DefaultTableModel submissionModel;
@@ -37,47 +30,27 @@ public class EvalResultPanel extends JPanel {
     private DefaultTableModel detailModel;
     private JTextArea txtComment;
     private JComboBox<Object> cboNhanVien;
+    private JComboBox<Object> cboKyDanhGia;
 
-    // Cached submissions for detail view
     private List<DanhGiaHieuSuat> cachedSubmissions;
 
     private static final DateTimeFormatter DT_FORMAT = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm");
 
     public EvalResultPanel() {
+        this(-1);
+    }
+
+    public EvalResultPanel(int presetCycleId) {
         this.evalService = DanhGiaBUS.getInstance();
         this.currentUser = SessionContext.getInstance().getCurrentUser();
-        this.isAdmin    = currentUser.coQuyen("EVAL_VIEW_ALL");
-        this.isDirector = false;
-        this.isDeptHead = false;
-        this.isManager  = currentUser.coQuyen("EVAL_VIEW_ALL") || currentUser.coQuyen("EVAL_VIEW_TEAM");
+        this.isManager = currentUser.coQuyen("EVAL_VIEW_ALL") || currentUser.coQuyen("EVAL_VIEW_TEAM");
+        this.presetCycleId = presetCycleId;
 
-        int tmpMaNV = 0;
-        String tmpDept = null;
-        if (currentUser.getMaNV() != null) {
-            tmpMaNV = currentUser.getMaNV();
-            try {
-                BoNhiem bn = BoNhiemDAO.getInstance().findBoNhiemChinhHieuLuc(tmpMaNV);
-                if (bn != null) tmpDept = bn.getPhongBanId();
-            } catch (Exception ignored) {}
-        }
-        this.myMaNV = tmpMaNV;
-        this.myMaPhongBan = tmpDept;
+        this.myMaNV = currentUser.getMaNV() != null ? currentUser.getMaNV() : 0;
 
         initComponents();
         setupLayout();
         loadData();
-    }
-
-    private boolean checkDeptHead() {
-        if (currentUser.getMaNV() == null) return false;
-        try {
-            BoNhiem bn = BoNhiemDAO.getInstance().findBoNhiemChinhHieuLuc(currentUser.getMaNV());
-            if (bn != null && bn.getChucVuId() != null) {
-                String cv = bn.getChucVuId().toLowerCase();
-                return cv.contains("truong_phong") || cv.contains("truongphong");
-            }
-        } catch (Exception ignored) {}
-        return false;
     }
 
     private void initComponents() {
@@ -86,18 +59,19 @@ public class EvalResultPanel extends JPanel {
 
         cboNhanVien = new JComboBox<>();
         if (isManager) {
-            cboNhanVien.addItem("Tat ca");
-            List<com.hrm.model.NhanVien> dsNV = com.hrm.bus.NhanVienBUS.getInstance().getAllByActionScope("EVAL_VIEW", currentUser.getId());
-            for (com.hrm.model.NhanVien nv : dsNV) {
+            cboNhanVien.addItem("Tất cả");
+            List<NhanVien> dsNV = com.hrm.bus.NhanVienBUS.getInstance()
+                    .getAllByActionScope("EVAL_VIEW", currentUser.getId());
+            for (NhanVien nv : dsNV) {
                 cboNhanVien.addItem(nv);
             }
             cboNhanVien.setRenderer(new DefaultListCellRenderer() {
                 @Override
                 public Component getListCellRendererComponent(JList<?> list, Object value,
-                        int index, boolean isSelected, boolean cellHasFocus) {
+                                                              int index, boolean isSelected, boolean cellHasFocus) {
                     super.getListCellRendererComponent(list, value, index, isSelected, cellHasFocus);
-                    if (value instanceof com.hrm.model.NhanVien) {
-                        com.hrm.model.NhanVien nv = (com.hrm.model.NhanVien) value;
+                    if (value instanceof NhanVien) {
+                        NhanVien nv = (NhanVien) value;
                         setText("[" + nv.getMaNhanVien() + "] " + nv.getHoTen());
                     } else if (value != null) {
                         setText(value.toString());
@@ -105,10 +79,42 @@ public class EvalResultPanel extends JPanel {
                     return this;
                 }
             });
-            cboNhanVien.addActionListener(e -> loadData());
         }
 
-        String[] subColumns = {"ID", "Ky danh gia", "Nhan vien", "Nguoi danh gia", "Diem", "Xep loai", "Ngay"};
+        cboKyDanhGia = new JComboBox<>();
+        cboKyDanhGia.addItem("Tất cả kỳ đánh giá");
+        List<DotDanhGia> dsKy = evalService.getAllCycles();
+        if (dsKy != null) {
+            for (DotDanhGia ky : dsKy) {
+                String ten = ky.getTenDot() != null ? ky.getTenDot() : ("Đợt #" + ky.getId());
+                cboKyDanhGia.addItem(new KyDanhGiaItem(ky.getId(), ten));
+            }
+        }
+        cboKyDanhGia.setRenderer(new DefaultListCellRenderer() {
+            @Override
+            public Component getListCellRendererComponent(JList<?> list, Object value,
+                                                          int index, boolean isSelected, boolean cellHasFocus) {
+                super.getListCellRendererComponent(list, value, index, isSelected, cellHasFocus);
+                if (value instanceof KyDanhGiaItem) {
+                    setText(((KyDanhGiaItem) value).displayText);
+                } else if (value != null) {
+                    setText(value.toString());
+                }
+                return this;
+            }
+        });
+
+        if (presetCycleId > 0) {
+            for (int i = 0; i < cboKyDanhGia.getItemCount(); i++) {
+                Object item = cboKyDanhGia.getItemAt(i);
+                if (item instanceof KyDanhGiaItem && ((KyDanhGiaItem) item).cycleId == presetCycleId) {
+                    cboKyDanhGia.setSelectedIndex(i);
+                    break;
+                }
+            }
+        }
+
+        String[] subColumns = {"ID", "Kỳ đánh giá", "Nhân viên", "Người đánh giá", "Điểm", "Xếp loại", "Ngày"};
         submissionModel = new DefaultTableModel(subColumns, 0) {
             @Override public boolean isCellEditable(int row, int column) { return false; }
         };
@@ -120,21 +126,21 @@ public class EvalResultPanel extends JPanel {
         submissionTable.getColumnModel().getColumn(5).setCellRenderer(new DefaultTableCellRenderer() {
             @Override
             public Component getTableCellRendererComponent(JTable table, Object value,
-                    boolean isSelected, boolean hasFocus, int row, int column) {
+                                                           boolean isSelected, boolean hasFocus, int row, int column) {
                 Component c = super.getTableCellRendererComponent(table, value, isSelected, hasFocus, row, column);
                 if (!isSelected && value != null) {
                     String rating = value.toString();
-                    if ("Xuat sac".equals(rating))        { c.setBackground(new Color(200, 255, 200)); c.setForeground(new Color(0, 100, 0)); }
-                    else if ("Tot".equals(rating))        { c.setBackground(new Color(220, 255, 220)); c.setForeground(new Color(0, 128, 0)); }
-                    else if ("Kha".equals(rating))        { c.setBackground(new Color(255, 255, 200)); c.setForeground(new Color(128, 128, 0)); }
-                    else if ("Trung binh".equals(rating)) { c.setBackground(new Color(255, 220, 200)); c.setForeground(new Color(200, 100, 0)); }
+                    if ("Xuất sắc".equals(rating))        { c.setBackground(new Color(200, 255, 200)); c.setForeground(new Color(0, 100, 0)); }
+                    else if ("Tốt".equals(rating))        { c.setBackground(new Color(220, 255, 220)); c.setForeground(new Color(0, 128, 0)); }
+                    else if ("Khá".equals(rating))        { c.setBackground(new Color(255, 255, 200)); c.setForeground(new Color(128, 128, 0)); }
+                    else if ("Trung bình".equals(rating)) { c.setBackground(new Color(255, 220, 200)); c.setForeground(new Color(200, 100, 0)); }
                     else                                  { c.setBackground(new Color(255, 200, 200)); c.setForeground(Color.RED); }
                 }
                 return c;
             }
         });
 
-        String[] detailColumns = {"Tieu chi", "Trong so", "Diem (1-10)", "Diem quy doi", "Nhan xet"};
+        String[] detailColumns = {"Tiêu chí", "Trọng số", "Điểm (1-10)", "Điểm quy đổi", "Nhận xét"};
         detailModel = new DefaultTableModel(detailColumns, 0) {
             @Override public boolean isCellEditable(int row, int column) { return false; }
         };
@@ -146,30 +152,34 @@ public class EvalResultPanel extends JPanel {
         txtComment.setLineWrap(true);
         txtComment.setWrapStyleWord(true);
         txtComment.setBackground(new Color(245, 245, 245));
+
+        if (isManager) {
+            cboNhanVien.addActionListener(e -> loadData());
+        }
+        cboKyDanhGia.addActionListener(e -> loadData());
     }
 
     private void setupLayout() {
         JPanel topPanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 10, 5));
         if (isManager) {
-            topPanel.add(new JLabel("Nhan vien:"));
+            topPanel.add(new JLabel("Nhân viên:"));
             topPanel.add(cboNhanVien);
         }
-        JButton btnRefresh = UIHelper.createDefaultButton("Lam moi");
-        btnRefresh.addActionListener(e -> loadData());
-        topPanel.add(btnRefresh);
+        topPanel.add(new JLabel("Kỳ đánh giá:"));
+        topPanel.add(cboKyDanhGia);
 
         JSplitPane splitPane = new JSplitPane(JSplitPane.VERTICAL_SPLIT);
         splitPane.setDividerLocation(250);
 
         JScrollPane subScroll = new JScrollPane(submissionTable);
-        subScroll.setBorder(new TitledBorder("Danh sach danh gia"));
+        subScroll.setBorder(new TitledBorder("Danh sách đánh giá"));
         splitPane.setTopComponent(subScroll);
 
         JPanel detailPanel = new JPanel(new BorderLayout(10, 10));
-        detailPanel.setBorder(new TitledBorder("Chi tiet danh gia (chon hang de xem)"));
+        detailPanel.setBorder(new TitledBorder("Chi tiết đánh giá (chọn hàng để xem)"));
         JScrollPane detailScroll = new JScrollPane(detailTable);
         JPanel commentPanel = new JPanel(new BorderLayout(5, 5));
-        commentPanel.add(new JLabel("Nhan xet chung:"), BorderLayout.NORTH);
+        commentPanel.add(new JLabel("Nhận xét chung:"), BorderLayout.NORTH);
         commentPanel.add(new JScrollPane(txtComment), BorderLayout.CENTER);
         detailPanel.add(detailScroll, BorderLayout.CENTER);
         detailPanel.add(commentPanel, BorderLayout.SOUTH);
@@ -185,27 +195,30 @@ public class EvalResultPanel extends JPanel {
         txtComment.setText("");
 
         int filterMaNV = -1;
-        if (isManager && cboNhanVien.getSelectedItem() instanceof com.hrm.model.NhanVien) {
-            filterMaNV = ((com.hrm.model.NhanVien) cboNhanVien.getSelectedItem()).getId();
+        if (isManager && cboNhanVien.getSelectedItem() instanceof NhanVien) {
+            filterMaNV = ((NhanVien) cboNhanVien.getSelectedItem()).getId();
         }
 
-        // Fetch all allowed submissions using new Scope architecture
-        cachedSubmissions = evalService.getAllSubmissionsByScope(myMaNV);
+        int filterKyId = -1;
+        if (cboKyDanhGia.getSelectedItem() instanceof KyDanhGiaItem) {
+            filterKyId = ((KyDanhGiaItem) cboKyDanhGia.getSelectedItem()).cycleId;
+        }
 
+        cachedSubmissions = evalService.getAllSubmissionsByScope(myMaNV);
         if (cachedSubmissions == null) return;
+
         for (DanhGiaHieuSuat sub : cachedSubmissions) {
-            if (filterMaNV > 0 && sub.getEmployeeId() != filterMaNV) {
-                continue;   // filter locally for fast UX
-            }
+            if (filterMaNV > 0 && sub.getEmployeeId() != filterMaNV) continue;
+            if (filterKyId > 0 && sub.getDotDanhGiaId() != filterKyId) continue;
 
             submissionModel.addRow(new Object[]{
-                sub.getId(),
-                sub.getTenDot() != null ? sub.getTenDot() : "#" + sub.getDotDanhGiaId(),
-                sub.getEmployeeName() != null ? sub.getEmployeeName() : "#" + sub.getEmployeeId(),
-                sub.getTenNguoiDanhGia() != null ? sub.getTenNguoiDanhGia() : "#" + sub.getEvaluatorId(),
-                String.format("%.2f", sub.getOverallScore()),
-                sub.getXepLoai() != null ? sub.getXepLoai().getTenHienThi() : "?",
-                sub.getSubmittedAt() != null ? sub.getSubmittedAt().format(DT_FORMAT) : ""
+                    sub.getId(),
+                    sub.getTenDot() != null ? sub.getTenDot() : ("#" + sub.getDotDanhGiaId()),
+                    sub.getEmployeeName() != null ? sub.getEmployeeName() : ("#" + sub.getEmployeeId()),
+                    sub.getTenNguoiDanhGia() != null ? sub.getTenNguoiDanhGia() : ("#" + sub.getEvaluatorId()),
+                    String.format("%.2f", sub.getOverallScore()),
+                    sub.getXepLoai() != null ? sub.getXepLoai().getTenHienThi() : "?",
+                    sub.getSubmittedAt() != null ? sub.getSubmittedAt().format(DT_FORMAT) : ""
             });
         }
     }
@@ -218,22 +231,17 @@ public class EvalResultPanel extends JPanel {
             return;
         }
 
-        // Convert view index to model index (important if table is sorted)
         int modelRow = submissionTable.convertRowIndexToModel(viewRow);
-
-        // Get submission ID from column 0 of model row for accurate lookup
         int submissionId = (int) submissionModel.getValueAt(modelRow, 0);
-        DanhGiaHieuSuat sub = null;
-        for (DanhGiaHieuSuat s : cachedSubmissions) {
-            if (s.getId() == submissionId) { sub = s; break; }
-        }
+
+        DanhGiaHieuSuat sub = cachedSubmissions.stream()
+                .filter(s -> s.getId() == submissionId).findFirst().orElse(null);
         if (sub == null) {
             detailModel.setRowCount(0);
             txtComment.setText("");
             return;
         }
 
-        // If scores not yet loaded, load now
         if (sub.getScores().isEmpty()) {
             sub.setChiTietDanhGias(evalService.loadScores(sub.getId()));
         }
@@ -241,22 +249,32 @@ public class EvalResultPanel extends JPanel {
         detailModel.setRowCount(0);
         for (ChiTietDanhGia score : sub.getScores()) {
             detailModel.addRow(new Object[]{
-                score.getCriteriaName() != null ? score.getCriteriaName() : "TC#" + score.getCriteriaId(),
-                String.format("%.0f%%", score.getTrongSo()),
-                String.format("%.1f", score.getScore()),
-                String.format("%.2f", score.getWeightedScore()),
-                score.getComment() != null ? score.getComment() : ""
+                    score.getCriteriaName() != null ? score.getCriteriaName() : ("TC#" + score.getCriteriaId()),
+                    String.format("%.0f%%", score.getTrongSo()),
+                    String.format("%.1f", score.getScore()),
+                    String.format("%.2f", score.getWeightedScore()),
+                    score.getComment() != null ? score.getComment() : ""
             });
         }
 
         if (!sub.getScores().isEmpty()) {
             detailModel.addRow(new Object[]{
-                "TONG CONG", "100%", "",
-                String.format("%.2f", sub.getOverallScore()),
-                sub.getXepLoai() != null ? sub.getXepLoai().getTenHienThi() : ""
+                    "TỔNG CỘNG", "100%", "",
+                    String.format("%.2f", sub.getOverallScore()),
+                    sub.getXepLoai() != null ? sub.getXepLoai().getTenHienThi() : ""
             });
         }
 
         txtComment.setText(sub.getGeneralComment() != null ? sub.getGeneralComment() : "");
+    }
+
+    private static class KyDanhGiaItem {
+        private final int cycleId;
+        private final String displayText;
+
+        private KyDanhGiaItem(int cycleId, String displayText) {
+            this.cycleId = cycleId;
+            this.displayText = displayText;
+        }
     }
 }

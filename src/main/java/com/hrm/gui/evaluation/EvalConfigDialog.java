@@ -17,6 +17,8 @@ import java.util.List;
 public class EvalConfigDialog extends JDialog {
     private final DanhGiaBUS evalService;
 
+    private enum FormMode { ADD, EDIT }
+
     private JTable table;
     private DefaultTableModel tableModel;
     private JTextField txtName;
@@ -25,12 +27,15 @@ public class EvalConfigDialog extends JDialog {
     private JButton btnAdd;
     private JButton btnUpdate;
     private JButton btnDelete;
+    private JButton btnNew;
     private JLabel lblTotalWeight;
+    private JLabel lblMode;
 
     private int selectedId = -1;
+    private FormMode formMode = FormMode.ADD;
 
     public EvalConfigDialog(Frame parent) {
-        super(parent, "Cau Hinh Tieu Chi Danh Gia", true);
+        super(parent, "Cấu Hình Tiêu Chí Đánh Giá", true);
         this.evalService = DanhGiaBUS.getInstance();
 
         initComponents();
@@ -43,8 +48,7 @@ public class EvalConfigDialog extends JDialog {
     }
 
     private void initComponents() {
-        // Table
-        String[] columns = {"ID", "Ten tieu chi", "Mo ta", "Trong so (%)"};
+        String[] columns = {"ID", "Tên tiêu chí", "Mô tả", "Trọng số (%)"};
         tableModel = new DefaultTableModel(columns, 0) {
             @Override
             public boolean isCellEditable(int row, int column) {
@@ -59,83 +63,94 @@ public class EvalConfigDialog extends JDialog {
         table.getColumnModel().getColumn(2).setPreferredWidth(250);
         table.getColumnModel().getColumn(3).setPreferredWidth(80);
 
-        // Form fields
         txtName = new JTextField(20);
         txtDescription = new JTextArea(3, 20);
         txtDescription.setLineWrap(true);
         txtDescription.setWrapStyleWord(true);
-        spnWeight = new JSpinner(new SpinnerNumberModel(10, 1, 100, 5));
+        spnWeight = new JSpinner(new SpinnerNumberModel(10, 1, 100, 1));
 
-        // Buttons
-        btnAdd = UIHelper.createSuccessButton("Them moi");
+        btnAdd = UIHelper.createSuccessButton("Thêm mới");
+        btnUpdate = UIHelper.createPrimaryButton("Cập nhật");
+        btnDelete = UIHelper.createDangerButton("Xóa");
+        btnNew = UIHelper.createPrimaryButton("Làm mới");
 
-        btnUpdate = UIHelper.createPrimaryButton("Cap nhat");
         btnUpdate.setEnabled(false);
-
-        btnDelete = UIHelper.createDangerButton("Xoa");
         btnDelete.setEnabled(false);
 
-        // Total weight label
-        lblTotalWeight = new JLabel("Tong trong so: 0%");
+        lblTotalWeight = new JLabel("Tổng trọng số: 0%");
         lblTotalWeight.setFont(new Font("Segoe UI", Font.BOLD, 14));
+
+        lblMode = new JLabel();
+        lblMode.setFont(new Font("Segoe UI", Font.BOLD, 13));
+        updateModeLabel();
     }
 
     private void setupLayout() {
         JPanel mainPanel = new JPanel(new BorderLayout(10, 10));
         mainPanel.setBorder(new EmptyBorder(15, 15, 15, 15));
 
-        // Table panel
         JScrollPane tableScroll = new JScrollPane(table);
-        tableScroll.setBorder(new TitledBorder("Danh sach tieu chi"));
+        tableScroll.setBorder(new TitledBorder("Danh sách tiêu chí"));
 
-        // Form panel
         JPanel formPanel = new JPanel(new GridBagLayout());
-        formPanel.setBorder(new TitledBorder("Thong tin tieu chi"));
+        formPanel.setBorder(new TitledBorder("Thông tin tiêu chí"));
         GridBagConstraints gbc = new GridBagConstraints();
         gbc.insets = new Insets(5, 5, 5, 5);
         gbc.anchor = GridBagConstraints.WEST;
 
-        gbc.gridx = 0; gbc.gridy = 0;
-        formPanel.add(new JLabel("Ten tieu chi:"), gbc);
-        gbc.gridx = 1; gbc.fill = GridBagConstraints.HORIZONTAL; gbc.weightx = 1.0;
+        gbc.gridx = 0;
+        gbc.gridy = 0;
+        formPanel.add(new JLabel("Tên tiêu chí:"), gbc);
+        gbc.gridx = 1;
+        gbc.fill = GridBagConstraints.HORIZONTAL;
+        gbc.weightx = 1.0;
         formPanel.add(txtName, gbc);
 
-        gbc.gridx = 0; gbc.gridy = 1; gbc.fill = GridBagConstraints.NONE; gbc.weightx = 0;
+        gbc.gridx = 0;
+        gbc.gridy = 1;
+        gbc.fill = GridBagConstraints.NONE;
+        gbc.weightx = 0;
         gbc.anchor = GridBagConstraints.NORTHWEST;
-        formPanel.add(new JLabel("Mo ta:"), gbc);
-        gbc.gridx = 1; gbc.fill = GridBagConstraints.BOTH; gbc.weightx = 1.0; gbc.weighty = 1.0;
+        formPanel.add(new JLabel("Mô tả:"), gbc);
+        gbc.gridx = 1;
+        gbc.fill = GridBagConstraints.BOTH;
+        gbc.weightx = 1.0;
+        gbc.weighty = 1.0;
         formPanel.add(new JScrollPane(txtDescription), gbc);
 
-        gbc.gridx = 0; gbc.gridy = 2; gbc.fill = GridBagConstraints.NONE; gbc.weightx = 0; gbc.weighty = 0;
+        gbc.gridx = 0;
+        gbc.gridy = 2;
+        gbc.fill = GridBagConstraints.NONE;
+        gbc.weightx = 0;
+        gbc.weighty = 0;
         gbc.anchor = GridBagConstraints.WEST;
-        formPanel.add(new JLabel("Trong so (%):"), gbc);
+        formPanel.add(new JLabel("Trọng số (%):"), gbc);
         gbc.gridx = 1;
         formPanel.add(spnWeight, gbc);
 
-        // Button panel
-        JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 10, 5));
+        gbc.gridx = 0; gbc.gridy = 3; gbc.gridwidth = 2;
+        gbc.fill = GridBagConstraints.HORIZONTAL;
+        formPanel.add(lblMode, gbc);
+
+        JPanel buttonPanel = new JPanel(new GridLayout(2, 2, 6, 6));
         buttonPanel.add(btnAdd);
+        buttonPanel.add(btnNew);
         buttonPanel.add(btnUpdate);
         buttonPanel.add(btnDelete);
-        buttonPanel.add(Box.createHorizontalStrut(30));
-        buttonPanel.add(lblTotalWeight);
 
-        gbc.gridx = 0; gbc.gridy = 3; gbc.gridwidth = 2;
+        gbc.gridy = 4;
         formPanel.add(buttonPanel, gbc);
 
-        // Right panel
         JPanel rightPanel = new JPanel(new BorderLayout());
         rightPanel.setPreferredSize(new Dimension(350, 0));
         rightPanel.add(formPanel, BorderLayout.CENTER);
 
-        // Note panel
-        JPanel notePanel = new JPanel();
+        JPanel notePanel = new JPanel(new BorderLayout(5, 0));
         notePanel.setBackground(new Color(255, 255, 200));
-        notePanel.setBorder(new EmptyBorder(10, 10, 10, 10));
-        JLabel lblNote = new JLabel("<html><b>Luu y:</b> Tong trong so cua tat ca tieu chi phai bang 100%</html>");
-        notePanel.add(lblNote);
+        notePanel.setBorder(new EmptyBorder(8, 10, 8, 10));
+        notePanel.add(new JLabel("<html><b>Lưu ý:</b> Tổng trọng số của tất cả tiêu chí phải bằng 100%</html>"), BorderLayout.CENTER);
+        notePanel.add(lblTotalWeight, BorderLayout.EAST);
 
-        // Main layout
         mainPanel.add(tableScroll, BorderLayout.CENTER);
         mainPanel.add(rightPanel, BorderLayout.EAST);
         mainPanel.add(notePanel, BorderLayout.SOUTH);
@@ -145,20 +160,22 @@ public class EvalConfigDialog extends JDialog {
 
     private void setupEvents() {
         table.getSelectionModel().addListSelectionListener(e -> {
+            if (e.getValueIsAdjusting()) {
+                return;
+            }
             int row = table.getSelectedRow();
             if (row >= 0) {
-                selectedId = (int) tableModel.getValueAt(row, 0);
-                txtName.setText((String) tableModel.getValueAt(row, 1));
-                txtDescription.setText((String) tableModel.getValueAt(row, 2));
-                spnWeight.setValue(tableModel.getValueAt(row, 3));
-                btnUpdate.setEnabled(true);
-                btnDelete.setEnabled(true);
+                populateFormFromRow(row);
+                setFormMode(FormMode.EDIT);
+            } else {
+                setFormMode(FormMode.ADD);
             }
         });
 
         btnAdd.addActionListener(e -> addCriteria());
         btnUpdate.addActionListener(e -> updateCriteria());
         btnDelete.addActionListener(e -> deleteCriteria());
+        btnNew.addActionListener(e -> clearForm());
     }
 
     private void loadData() {
@@ -176,7 +193,7 @@ public class EvalConfigDialog extends JDialog {
 
     private void updateTotalWeight() {
         int total = evalService.getTotalWeight();
-        lblTotalWeight.setText("Tong trong so: " + total + "%");
+        lblTotalWeight.setText("Tổng trọng số: " + total + "%");
         if (total == 100) {
             lblTotalWeight.setForeground(new Color(46, 204, 113));
         } else {
@@ -189,61 +206,90 @@ public class EvalConfigDialog extends JDialog {
         txtName.setText("");
         txtDescription.setText("");
         spnWeight.setValue(10);
-        btnUpdate.setEnabled(false);
-        btnDelete.setEnabled(false);
         table.clearSelection();
+        setFormMode(FormMode.ADD);
     }
 
     private void addCriteria() {
-        String name = txtName.getText().trim();
-        String description = txtDescription.getText().trim();
-        int weight = (int) spnWeight.getValue();
-
-        DanhGiaBUS.KetQua<?> result = evalService.saveCriteria(name, description, weight);
-
-        if (result.isSuccess()) {
-            loadData();
-            JOptionPane.showMessageDialog(this, result.getMessage(),
-                    "Thanh cong", JOptionPane.INFORMATION_MESSAGE);
-        } else {
-            JOptionPane.showMessageDialog(this, result.getMessage(),
-                    "Loi", JOptionPane.ERROR_MESSAGE);
-        }
+        DanhGiaBUS.KetQua<?> result = evalService.saveCriteria(
+                txtName.getText().trim(), txtDescription.getText().trim(), getWeightValue());
+        handleResult(result);
     }
 
     private void updateCriteria() {
         if (selectedId < 0) return;
-
-        String name = txtName.getText().trim();
-        String description = txtDescription.getText().trim();
-        int weight = (int) spnWeight.getValue();
-
         DanhGiaBUS.KetQua<?> result = evalService.updateCriteria(
-                selectedId, name, description, weight);
+                selectedId, txtName.getText().trim(), txtDescription.getText().trim(), getWeightValue());
+        handleResult(result);
+    }
 
+    private void handleResult(DanhGiaBUS.KetQua<?> result) {
         if (result.isSuccess()) {
             loadData();
-            JOptionPane.showMessageDialog(this, result.getMessage(),
-                    "Thanh cong", JOptionPane.INFORMATION_MESSAGE);
+            JOptionPane.showMessageDialog(this, result.getMessage(), "Thành công", JOptionPane.INFORMATION_MESSAGE);
         } else {
-            JOptionPane.showMessageDialog(this, result.getMessage(),
-                    "Loi", JOptionPane.ERROR_MESSAGE);
+            JOptionPane.showMessageDialog(this, result.getMessage(), "Lỗi", JOptionPane.ERROR_MESSAGE);
         }
     }
 
     private void deleteCriteria() {
-        if (selectedId < 0) return;
+        if (selectedId < 0) {
+            return;
+        }
 
         int confirm = JOptionPane.showConfirmDialog(this,
-                "Ban co chac muon xoa tieu chi nay?",
-                "Xac nhan",
+                "Bạn có chắc muốn xóa tiêu chí này?",
+                "Xác nhận",
                 JOptionPane.YES_NO_OPTION);
 
         if (confirm == JOptionPane.YES_OPTION) {
             DanhGiaBUS.KetQua<?> result = evalService.deleteCriteria(selectedId);
             if (result.isSuccess()) {
                 loadData();
+            } else {
+                JOptionPane.showMessageDialog(this, result.getMessage(), "Lỗi", JOptionPane.ERROR_MESSAGE);
             }
+        }
+    }
+
+    private void populateFormFromRow(int viewRow) {
+        int row = table.convertRowIndexToModel(viewRow);
+        selectedId = (int) tableModel.getValueAt(row, 0);
+        txtName.setText((String) tableModel.getValueAt(row, 1));
+        txtDescription.setText((String) tableModel.getValueAt(row, 2));
+
+        Object weightObj = tableModel.getValueAt(row, 3);
+        if (weightObj instanceof Number) {
+            spnWeight.setValue(((Number) weightObj).intValue());
+        } else {
+            spnWeight.setValue(Integer.parseInt(String.valueOf(weightObj)));
+        }
+    }
+
+    private int getWeightValue() {
+        Object value = spnWeight.getValue();
+        if (value instanceof Number) {
+            return ((Number) value).intValue();
+        }
+        return Integer.parseInt(String.valueOf(value));
+    }
+
+    private void setFormMode(FormMode mode) {
+        formMode = mode;
+        boolean editing = mode == FormMode.EDIT && selectedId > 0;
+        btnAdd.setEnabled(mode == FormMode.ADD);
+        btnUpdate.setEnabled(editing);
+        btnDelete.setEnabled(editing);
+        updateModeLabel();
+    }
+
+    private void updateModeLabel() {
+        if (formMode == FormMode.EDIT) {
+            lblMode.setText("Chế độ: CẬP NHẬT");
+            lblMode.setForeground(new Color(41, 128, 185));
+        } else {
+            lblMode.setText("Chế độ: THÊM MỚI");
+            lblMode.setForeground(new Color(39, 174, 96));
         }
     }
 }

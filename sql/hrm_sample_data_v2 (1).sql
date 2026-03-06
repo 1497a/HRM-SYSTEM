@@ -1110,6 +1110,21 @@ INSERT INTO CHITIETDANHGIA (maDanhGia, maTieuChi, diem, nhanXet) VALUES
 ((SELECT maDanhGia FROM DANHGIAHIEUSUAT WHERE maDot=5 AND maNV=19),6, 9.0,'Cham chi, tuong xuyen di cong tac dung giờ'),
 ((SELECT maDanhGia FROM DANHGIAHIEUSUAT WHERE maDot=5 AND maNV=19),7, 9.0,'Tu hoc phan tich du lieu kinh doanh, dung Excel/CRM');
 
+-- Bo sung chi tiet danh gia cho tat ca ban ghi chua co du tieu chi trong dot
+INSERT INTO CHITIETDANHGIA (maDanhGia, maTieuChi, diem, nhanXet)
+SELECT
+    dg.maDanhGia,
+    dt.maTieuChi,
+    ROUND(LEAST(10.0, GREATEST(6.0, dg.tongDiem + ((dt.trongSo - 15) / 25))), 1) AS diem,
+    CONCAT('Bo sung du lieu chi tiet tu dong cho dot ', dg.maDot, ' - tieu chi ', dt.maTieuChi) AS nhanXet
+FROM DANHGIAHIEUSUAT dg
+JOIN DOTDANHGIA_TIEUCHI dt
+    ON dt.maDot = dg.maDot
+LEFT JOIN CHITIETDANHGIA cd
+    ON cd.maDanhGia = dg.maDanhGia
+   AND cd.maTieuChi = dt.maTieuChi
+WHERE cd.maChiTiet IS NULL;
+
 -- =====================================================
 -- 15. TUYỂN DỤNG
 -- =====================================================

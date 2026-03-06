@@ -6,11 +6,11 @@ import java.util.List;
 
 public class DanhGiaHieuSuat {
     public enum XepLoai {
-        XUAT_SAC("xuat_sac", "Xuat sac", 9.0, 10.0),
-        TOT("tot", "Tot", 8.0, 8.9),
-        KHA("kha", "Kha", 6.5, 7.9),
-        TRUNG_BINH("trung_binh", "Trung binh", 5.0, 6.4),
-        YEU("yeu", "Yeu", 0.0, 4.9);
+        XUAT_SAC("xuat_sac", "Xuất sắc", 9.0, 10.0),
+        TOT("tot", "Tốt", 8.0, 8.9),
+        KHA("kha", "Khá", 6.5, 7.9),
+        TRUNG_BINH("trung_binh", "Trung bình", 5.0, 6.4),
+        YEU("yeu", "Yếu", 0.0, 4.9);
 
         private final String dbValue;
         private final String tenHienThi;

@@ -58,10 +58,16 @@ public class TaiKhoan {
     public void xoaVaiTro(VaiTro vaiTro) { vaiTros.remove(vaiTro); }
 
     public boolean coQuyen(String maQuyen) {
+        if ("admin".equalsIgnoreCase(tenDangNhap) || coVaiTro("ADMIN")) {
+            return true;
+        }
         return vaiTros.stream().anyMatch(vt -> vt.coQuyen(maQuyen));
     }
 
     public boolean coVaiTro(String maVaiTro) {
+        if ("ADMIN".equalsIgnoreCase(maVaiTro) && "admin".equalsIgnoreCase(tenDangNhap)) {
+            return true;
+        }
         return vaiTros.stream().anyMatch(vt -> vt.getId().equals(maVaiTro));
     }
 

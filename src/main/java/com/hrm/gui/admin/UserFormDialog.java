@@ -7,6 +7,7 @@ import com.hrm.model.TaiKhoan;
 import com.hrm.bus.NhanVienBUS;
 import com.hrm.bus.XacThucBUS;
 import com.hrm.bus.KetQua;
+import com.hrm.util.SessionContext;
 import com.hrm.util.UIHelper;
 import com.hrm.util.ValidationUtils;
 
@@ -26,6 +27,7 @@ public class UserFormDialog extends JDialog {
     private final XacThucBUS authService;
     private final NhanVienBUS nhanVienService;
     private final TaiKhoan editingUser;
+    private final TaiKhoan currentUser;
     private boolean successful = false;
 
     // Create mode
@@ -52,6 +54,7 @@ public class UserFormDialog extends JDialog {
         this.authService = XacThucBUS.getInstance();
         this.nhanVienService = NhanVienBUS.getInstance();
         this.editingUser = user;
+        this.currentUser = SessionContext.getInstance().getCurrentUser();
 
         initComponents();
         setupLayout();
@@ -306,6 +309,22 @@ public class UserFormDialog extends JDialog {
                 }
             }
         }
+
+        if (isEditingProtectedAdminAccount()) {
+            if (rdoHoatDong != null) {
+                rdoHoatDong.setSelected(true);
+                rdoHoatDong.setEnabled(false);
+            }
+            if (rdoBiKhoa != null) {
+                rdoBiKhoa.setSelected(false);
+                rdoBiKhoa.setEnabled(false);
+            }
+            for (Component comp : rolesPanel.getComponents()) {
+                if (comp instanceof JRadioButton) {
+                    comp.setEnabled(false);
+                }
+            }
+        }
     }
 
     private void save() {
@@ -363,17 +382,19 @@ public class UserFormDialog extends JDialog {
 
             editingUser.setHoTen(fullName);
             editingUser.setEmail(email);
-            boolean biKhoa = rdoBiKhoa.isSelected();
-            editingUser.setHoatDong(!biKhoa);
-            editingUser.setBiKhoa(biKhoa);
+            if (!isEditingProtectedAdminAccount()) {
+                boolean biKhoa = rdoBiKhoa.isSelected();
+                editingUser.setHoatDong(!biKhoa);
+                editingUser.setBiKhoa(biKhoa);
 
-            final String roleCode = selectedRoleCode;
-            VaiTro selectedRole = authService.getAllRoles().stream()
-                    .filter(r -> r.getId().equals(roleCode))
-                    .findFirst().orElse(null);
-            if (selectedRole != null) {
-                editingUser.getVaiTros().clear();
-                editingUser.getVaiTros().add(selectedRole);
+                final String roleCode = selectedRoleCode;
+                VaiTro selectedRole = authService.getAllRoles().stream()
+                        .filter(r -> r.getId().equals(roleCode))
+                        .findFirst().orElse(null);
+                if (selectedRole != null) {
+                    editingUser.getVaiTros().clear();
+                    editingUser.getVaiTros().add(selectedRole);
+                }
             }
 
             KetQua<Void> result = authService.updateUser(editingUser);
@@ -390,6 +411,14 @@ public class UserFormDialog extends JDialog {
             successful = true;
             dispose();
         }
+    }
+
+    private boolean isEditingProtectedAdminAccount() {
+        if (editingUser == null) return false;
+        if ("admin".equalsIgnoreCase(editingUser.getTenDangNhap())) return true;
+        if (currentUser == null || currentUser.getId() != editingUser.getId()) return false;
+        return currentUser.getVaiTros() != null
+                && currentUser.getVaiTros().stream().anyMatch(v -> "ADMIN".equalsIgnoreCase(v.getId()));
     }
 
     public boolean isSuccessful() { return successful; }

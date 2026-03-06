@@ -1,7 +1,8 @@
 package com.hrm.gui.leave;
 
-import com.hrm.model.SoDungPhep;
 import com.hrm.model.DonXinNghiPhep;
+import com.hrm.model.NhanVien;
+import com.hrm.model.SoDungPhep;
 import com.hrm.model.TaiKhoan;
 import com.hrm.bus.NghiPhepBUS;
 import com.hrm.util.SessionContext;
@@ -53,15 +54,15 @@ public class LeaveListPanel extends JPanel {
 
         // Status combo
         cboStatus = new JComboBox<>(new String[]{"Tat ca", "Cho duyet", "Da duyet", "Tu choi"});
-        cboStatus.addActionListener(e -> loadData());
+        cboStatus.addActionListener(e -> applyFilter());
 
         // Nhan vien combo (only for manager/hr/director)
         cboNhanVien = new JComboBox<>();
         if (isManager) {
             cboNhanVien.addItem("Tat ca");
             int currentMaNV = currentUser.getMaNV() != null ? currentUser.getMaNV() : -1;
-            List<com.hrm.model.NhanVien> dsNV = com.hrm.bus.NhanVienBUS.getInstance().getAllByActionScope("LEAVE_VIEW", currentMaNV);
-            for (com.hrm.model.NhanVien nv : dsNV) {
+            List<NhanVien> dsNV = com.hrm.bus.NhanVienBUS.getInstance().getAllByActionScope("LEAVE_VIEW", currentMaNV);
+            for (NhanVien nv : dsNV) {
                 cboNhanVien.addItem(nv);
             }
             cboNhanVien.setRenderer(new DefaultListCellRenderer() {
@@ -69,8 +70,8 @@ public class LeaveListPanel extends JPanel {
                 public Component getListCellRendererComponent(JList<?> list, Object value,
                         int index, boolean isSelected, boolean cellHasFocus) {
                     super.getListCellRendererComponent(list, value, index, isSelected, cellHasFocus);
-                    if (value instanceof com.hrm.model.NhanVien) {
-                        com.hrm.model.NhanVien nv = (com.hrm.model.NhanVien) value;
+                    if (value instanceof NhanVien) {
+                        NhanVien nv = (NhanVien) value;
                         setText("[" + nv.getMaNhanVien() + "] " + nv.getHoTen());
                     } else if (value != null) {
                         setText(value.toString());
@@ -177,52 +178,27 @@ public class LeaveListPanel extends JPanel {
 
     private void loadData() {
         tableModel.setRowCount(0);
-        String filterStatus = (String) cboStatus.getSelectedItem();
-        
-        int filterMaNV = -1;
-        if (isManager && cboNhanVien.getSelectedItem() instanceof com.hrm.model.NhanVien) {
-            filterMaNV = ((com.hrm.model.NhanVien) cboNhanVien.getSelectedItem()).getId();
-        }
-
-        List<DonXinNghiPhep> requests;
         int empId = currentUser.getMaNV() != null ? currentUser.getMaNV() : -1;
+        int filterMaNV = isManager && cboNhanVien.getSelectedItem() instanceof NhanVien
+                ? ((NhanVien) cboNhanVien.getSelectedItem()).getId() : -1;
 
-        if (isManager) {
-            requests = leaveService.getAllRequestsByScope(empId);
-        } else {
-            requests = leaveService.getMyRequests(empId);
-        }
+        List<DonXinNghiPhep> requests = isManager
+                ? leaveService.getAllRequestsByScope(empId)
+                : leaveService.getMyRequests(empId);
 
         for (DonXinNghiPhep req : requests) {
-            // Apply Status Filter
-            if (!"Tat ca".equals(filterStatus)) {
-                String rStatus = req.getTrangThai().getTenHienThi();
-                if ("Cho duyet".equals(filterStatus) && !com.hrm.model.DonXinNghiPhep.TrangThai.CHO_DUYET.getTenHienThi().equals(rStatus)) continue;
-                if ("Da duyet".equals(filterStatus) && !com.hrm.model.DonXinNghiPhep.TrangThai.DA_DUYET.getTenHienThi().equals(rStatus)) continue;
-                if ("Tu choi".equals(filterStatus) && !com.hrm.model.DonXinNghiPhep.TrangThai.TU_CHOI.getTenHienThi().equals(rStatus)) continue;
-            }
-
-            // Apply Employee Filter
-            if (filterMaNV > 0 && req.getEmployeeId() != filterMaNV) {
-                continue;
-            }
-
-            Object[] row = {
-                req.getId(),
-                req.getEmployeeName(),
-                req.getLeaveTypeName(),
-                req.getStartDate().format(DATE_FORMAT),
-                req.getEndDate().format(DATE_FORMAT),
-                req.getTotalDays(),
-                req.getReason(),
+            if (filterMaNV > 0 && req.getEmployeeId() != filterMaNV) continue;
+            tableModel.addRow(new Object[]{
+                req.getId(), req.getEmployeeName(), req.getLeaveTypeName(),
+                req.getStartDate().format(DATE_FORMAT), req.getEndDate().format(DATE_FORMAT),
+                req.getTotalDays(), req.getReason(),
                 req.getTrangThai().getTenHienThi(),
                 req.getApproverName() != null ? req.getApproverName() : "-"
-            };
-            tableModel.addRow(row);
+            });
         }
 
-        // Update balance display
-        int targetEmpId = (filterMaNV > 0) ? filterMaNV : empId;
+        applyFilter();
+        int targetEmpId = filterMaNV > 0 ? filterMaNV : empId;
         if (targetEmpId > 0) {
             updateBalanceDisplay(targetEmpId);
         } else {
@@ -230,6 +206,11 @@ public class LeaveListPanel extends JPanel {
             balancePanel.revalidate();
             balancePanel.repaint();
         }
+    }
+
+    private void applyFilter() {
+        String s = (String) cboStatus.getSelectedItem();
+        sorter.setRowFilter("Tat ca".equals(s) ? null : RowFilter.regexFilter("^" + s + "$", 7));
     }
 
     private void updateBalanceDisplay(int empId) {
@@ -286,10 +267,11 @@ public class LeaveListPanel extends JPanel {
             return;
         }
 
-        int requestId = (int) tableModel.getValueAt(selectedRow, 0);
-        String status = (String) tableModel.getValueAt(selectedRow, 7);
+        int modelRow = table.convertRowIndexToModel(selectedRow);
+        int requestId = (int) tableModel.getValueAt(modelRow, 0);
+        String status = (String) tableModel.getValueAt(modelRow, 7);
 
-        if (!com.hrm.model.DonXinNghiPhep.TrangThai.CHO_DUYET.getTenHienThi().equals(status)) {
+        if (!DonXinNghiPhep.TrangThai.CHO_DUYET.getTenHienThi().equals(status)) {
             JOptionPane.showMessageDialog(this,
                     "Chi co the duyet don dang cho duyet",
                     "Thong bao",

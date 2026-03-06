@@ -21,7 +21,7 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * Dialog danh gia nhan vien.
+ * Dialog Đánh giá nhân viên.
  * Quan ly chon nhan vien (co hien thi chuc vu), nhap diem theo tieu chi, xem diem du kien.
  */
 public class EvalDoDialog extends JDialog {
@@ -45,7 +45,7 @@ public class EvalDoDialog extends JDialog {
     private boolean successful = false;
 
     public EvalDoDialog(Frame parent, int cycleId, String cycleName) {
-        super(parent, "Danh gia nhan vien", true);
+        super(parent, "Đánh giá nhân viên", true);
         this.evalService  = DanhGiaBUS.getInstance();
         this.currentUser  = SessionContext.getInstance().getCurrentUser();
         this.cycleId   = cycleId;
@@ -60,10 +60,10 @@ public class EvalDoDialog extends JDialog {
         setLocationRelativeTo(parent);
     }
 
-    // ── init ──────────────────────────────────────────────────────────────
+    // â”€â”€ init â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
     private void initComponents() {
-        // Employee combo — show hoTen + tenChucVu, store maNV
+        // Employee combo â€” show hoTen + tenChucVu, store maNV
         cboEmployee = new JComboBox<>();
         cboEmployee.setFont(new Font("Segoe UI", Font.PLAIN, 13));
         loadEmployees();
@@ -90,13 +90,13 @@ public class EvalDoDialog extends JDialog {
         txtNhanXetChung.setWrapStyleWord(true);
 
         // Preview
-        lblDiemDuKien = new JLabel("Diem du kien: 0.00 — Xep loai: —");
+        lblDiemDuKien = new JLabel("Điểm dự kiến: 0.00 - Xếp loại: -");
         lblDiemDuKien.setFont(new Font("Segoe UI", Font.BOLD, 15));
         lblDiemDuKien.setForeground(new Color(0, 100, 180));
 
         // Buttons
-        btnLuu  = UIHelper.createSuccessButton("Luu danh gia");
-        btnHuy  = UIHelper.createDefaultButton("Huy");
+        btnLuu  = UIHelper.createSuccessButton("Lưu đánh giá");
+        btnHuy  = UIHelper.createDefaultButton("Hủy");
         btnLuu.setPreferredSize(new Dimension(140, 38));
         btnHuy.setPreferredSize(new Dimension(90, 38));
         btnLuu.addActionListener(e -> luuDanhGia());
@@ -105,8 +105,8 @@ public class EvalDoDialog extends JDialog {
         if (cycleCriteria.isEmpty()) {
             btnLuu.setEnabled(false);
             JOptionPane.showMessageDialog(this,
-                    "Dot danh gia nay chua duoc cau hinh tieu chi. Vui long cau hinh truoc khi danh gia.",
-                    "Thong bao",
+                    "Đợt đánh giá này chưa được cấu hình tiêu chí. Vui lòng cấu hình trước khi đánh giá.",
+                    "Thông báo",
                     JOptionPane.WARNING_MESSAGE);
         }
 
@@ -147,8 +147,8 @@ public class EvalDoDialog extends JDialog {
 
         if (cboEmployee.getItemCount() == 0) {
             JOptionPane.showMessageDialog(null,
-                    "Tat ca nhan vien trong dot nay da duoc danh gia.",
-                    "Thong bao", JOptionPane.INFORMATION_MESSAGE);
+                    "Tất cả nhân viên trong đợt này đã được đánh giá.",
+                    "Thông báo", JOptionPane.INFORMATION_MESSAGE);
         }
     }
 
@@ -164,7 +164,7 @@ public class EvalDoDialog extends JDialog {
         JPanel headerRow = new JPanel(new BorderLayout());
         headerRow.setOpaque(false);
 
-        JLabel lblTen = new JLabel(c.getTenTieuChi() + "  [Trong so: " + (int) c.getDiemToiDa() + "%]");
+        JLabel lblTen = new JLabel(c.getTenTieuChi() + "  [Trọng số: " + (int) c.getDiemToiDa() + "%]");
         lblTen.setFont(new Font("Segoe UI", Font.BOLD, 13));
         headerRow.add(lblTen, BorderLayout.WEST);
 
@@ -176,7 +176,7 @@ public class EvalDoDialog extends JDialog {
 
         JPanel scoreRow = new JPanel(new FlowLayout(FlowLayout.RIGHT, 4, 0));
         scoreRow.setOpaque(false);
-        scoreRow.add(new JLabel("Diem (1–10):"));
+        scoreRow.add(new JLabel("Điểm (1-10):"));
         scoreRow.add(spn);
         headerRow.add(scoreRow, BorderLayout.EAST);
 
@@ -204,45 +204,45 @@ public class EvalDoDialog extends JDialog {
         return panel;
     }
 
-    // ── layout ───────────────────────────────────────────────────────────
+    // â”€â”€ layout â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
     private void setupLayout() {
         JPanel main = new JPanel(new BorderLayout(10, 10));
         main.setBorder(new EmptyBorder(14, 14, 10, 14));
         main.setBackground(UIColors.LIGHT_GRAY_BG);
 
-        // ── top: cycle info + employee selector ──
+        // â”€â”€ top: cycle info + employee selector â”€â”€
         JPanel topPanel = new JPanel(new GridBagLayout());
         topPanel.setBackground(UIColors.WHITE);
-        topPanel.setBorder(new TitledBorder("Thong tin danh gia"));
+        topPanel.setBorder(new TitledBorder("Thông tin đánh giá"));
         GridBagConstraints gc = new GridBagConstraints();
         gc.insets = new Insets(5, 8, 5, 8);
         gc.anchor = GridBagConstraints.WEST;
 
         gc.gridx = 0; gc.gridy = 0;
-        topPanel.add(new JLabel("Dot danh gia:"), gc);
+        topPanel.add(new JLabel("Đợt đánh giá:"), gc);
         gc.gridx = 1; gc.weightx = 1; gc.fill = GridBagConstraints.HORIZONTAL;
         JLabel lblCycleName = new JLabel(cycleName);
         lblCycleName.setFont(new Font("Segoe UI", Font.BOLD, 13));
         topPanel.add(lblCycleName, gc);
 
         gc.gridx = 0; gc.gridy = 1; gc.weightx = 0; gc.fill = GridBagConstraints.NONE;
-        topPanel.add(new JLabel("Nhan vien duoc danh gia:"), gc);
+        topPanel.add(new JLabel("Nhân viên được đánh giá:"), gc);
         gc.gridx = 1; gc.weightx = 1; gc.fill = GridBagConstraints.HORIZONTAL;
         topPanel.add(cboEmployee, gc);
 
         gc.gridx = 1; gc.gridy = 2;
         topPanel.add(lblChucVu, gc);
 
-        // ── center: criteria scroll ──
+        // â”€â”€ center: criteria scroll â”€â”€
         JScrollPane criteriaScroll = new JScrollPane(criteriaPanel);
-        criteriaScroll.setBorder(new TitledBorder("Tieu chi danh gia"));
+        criteriaScroll.setBorder(new TitledBorder("Tiêu chí đánh giá"));
         criteriaScroll.getVerticalScrollBar().setUnitIncrement(16);
 
-        // ── bottom: comment + preview + buttons ──
+        // â”€â”€ bottom: comment + preview + buttons â”€â”€
         JPanel commentPanel = new JPanel(new BorderLayout(5, 5));
         commentPanel.setOpaque(false);
-        commentPanel.setBorder(new TitledBorder("Nhan xet chung"));
+        commentPanel.setBorder(new TitledBorder("Nhận xét chung"));
         commentPanel.add(new JScrollPane(txtNhanXetChung), BorderLayout.CENTER);
 
         JPanel btnRow = new JPanel(new FlowLayout(FlowLayout.CENTER, 20, 8));
@@ -265,14 +265,14 @@ public class EvalDoDialog extends JDialog {
         updateChucVuLabel();
     }
 
-    // ── actions ──────────────────────────────────────────────────────────
+    // â”€â”€ actions â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
     private void updateChucVuLabel() {
         NhanVienItem item = (NhanVienItem) cboEmployee.getSelectedItem();
         if (item == null) { lblChucVu.setText(" "); return; }
-        StringBuilder sb = new StringBuilder("Ma NV: ").append(item.maNV);
-        if (!item.tenChucVu.isEmpty()) sb.append("  |  Chuc vu: ").append(item.tenChucVu);
-        if (!item.tenPhongBan.isEmpty()) sb.append("  |  Phong ban: ").append(item.tenPhongBan);
+        StringBuilder sb = new StringBuilder("Mã NV: ").append(item.maNV);
+        if (!item.tenChucVu.isEmpty()) sb.append("  |  Chức vụ: ").append(item.tenChucVu);
+        if (!item.tenPhongBan.isEmpty()) sb.append("  |  Phòng ban: ").append(item.tenPhongBan);
         lblChucVu.setText(sb.toString());
     }
 
@@ -281,7 +281,7 @@ public class EvalDoDialog extends JDialog {
         double total = scores.stream().mapToDouble(ChiTietDanhGia::getDiemCoTrong).sum();
         total = Math.round(total * 100.0) / 100.0;
         String xepLoai = evalService.getRatingFromScore(total).getTenHienThi();
-        lblDiemDuKien.setText(String.format("Diem du kien: %.2f — Xep loai: %s", total, xepLoai));
+        lblDiemDuKien.setText(String.format("Điểm dự kiến: %.2f - Xếp loại: %s", total, xepLoai));
 
         // Color hint
         if (total >= 9.0)      lblDiemDuKien.setForeground(new Color(0, 153, 51));
@@ -313,14 +313,14 @@ public class EvalDoDialog extends JDialog {
     private void luuDanhGia() {
         NhanVienItem selected = (NhanVienItem) cboEmployee.getSelectedItem();
         if (selected == null) {
-            JOptionPane.showMessageDialog(this, "Vui long chon nhan vien can danh gia.",
-                    "Thong bao", JOptionPane.WARNING_MESSAGE);
+            JOptionPane.showMessageDialog(this, "Vui lòng chọn nhân viên cần đánh giá.",
+                    "Thông báo", JOptionPane.WARNING_MESSAGE);
             return;
         }
         List<ChiTietDanhGia> scores = buildScores();
         if (scores.isEmpty()) {
-            JOptionPane.showMessageDialog(this, "Khong co tieu chi nao de danh gia.",
-                    "Thong bao", JOptionPane.WARNING_MESSAGE);
+            JOptionPane.showMessageDialog(this, "Không có tiêu chí nào để đánh giá.",
+                    "Thông báo", JOptionPane.WARNING_MESSAGE);
             return;
         }
 
@@ -336,18 +336,18 @@ public class EvalDoDialog extends JDialog {
 
         if (result.isSuccess()) {
             JOptionPane.showMessageDialog(this, result.getMessage(),
-                    "Thanh cong", JOptionPane.INFORMATION_MESSAGE);
+                    "Thành công", JOptionPane.INFORMATION_MESSAGE);
             successful = true;
             dispose();
         } else {
             JOptionPane.showMessageDialog(this, result.getMessage(),
-                    "Loi", JOptionPane.ERROR_MESSAGE);
+                    "Lỗi", JOptionPane.ERROR_MESSAGE);
         }
     }
 
     public boolean isSuccessful() { return successful; }
 
-    // ── inner class ──────────────────────────────────────────────────────
+    // â”€â”€ inner class â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
     private static class NhanVienItem {
         final int maNV;
@@ -365,7 +365,7 @@ public class EvalDoDialog extends JDialog {
         @Override
         public String toString() {
             StringBuilder sb = new StringBuilder("[NV").append(maNV).append("] ").append(hoTen);
-            if (!tenChucVu.isEmpty()) sb.append(" — ").append(tenChucVu);
+            if (!tenChucVu.isEmpty()) sb.append(" - ").append(tenChucVu);
             if (!tenPhongBan.isEmpty()) sb.append(" | ").append(tenPhongBan);
             return sb.toString();
         }
