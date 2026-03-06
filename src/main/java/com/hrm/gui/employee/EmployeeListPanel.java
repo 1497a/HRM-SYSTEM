@@ -148,9 +148,10 @@ public class EmployeeListPanel extends JPanel {
 
         sorter = new TableRowSorter<>(tableModel);
         table.setRowSorter(sorter);
-        // Sort by first name (Tên) by default using Vietnamese locale
+        sorter.setComparator(0, (a, b) -> Integer.compare((Integer) a, (Integer) b));
         sorter.setComparator(2, UIHelper.vietnameseNameComparator());
-        sorter.setSortKeys(List.of(new RowSorter.SortKey(2, SortOrder.ASCENDING)));
+        // Sort by Ma NV (col 1) by default
+        sorter.setSortKeys(List.of(new RowSorter.SortKey(1, SortOrder.ASCENDING)));
 
         JScrollPane scroll = new JScrollPane(table);
         scroll.setBorder(BorderFactory.createLineBorder(UIColors.BORDER_GRAY));

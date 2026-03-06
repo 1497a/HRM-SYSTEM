@@ -740,4 +740,131 @@ public class ChamCongDAO {
         pc.setHoatDong(rs.getBoolean("hoatDong"));
         return pc;
     }
+
+    // =====================================================================
+    // UTILITY — NhanVienInfo, mã hiển thị, tài khoản → nhân viên
+    // =====================================================================
+
+    /** Thông tin nhân viên dùng để hiển thị trong panel chấm công. */
+    public static class NhanVienInfo {
+        public final int    maNV;
+        public final String maNhanVien;  // VD: "NV001"
+        public final String hoTen;
+        public final String email;
+        public final String tenChucVu;
+        public final String tenPhongBan;
+        public final String trangThai;   // VD: "dang_lam_viec"
+
+        public NhanVienInfo(int maNV, String maNhanVien, String hoTen,
+                            String email, String tenChucVu, String tenPhongBan, String trangThai) {
+            this.maNV = maNV;
+            this.maNhanVien  = maNhanVien  != null ? maNhanVien  : "";
+            this.hoTen       = hoTen       != null ? hoTen       : "";
+            this.email       = email       != null ? email       : "";
+            this.tenChucVu   = tenChucVu   != null ? tenChucVu   : "";
+            this.tenPhongBan = tenPhongBan != null ? tenPhongBan : "";
+            this.trangThai   = trangThai   != null ? trangThai   : "";
+        }
+    }
+
+    /** Trả về mã hiển thị của nhân viên (VD: "NV001") từ maNV (int PK). */
+    public String getMaNhanVienById(int maNV) {
+        String sql = "SELECT maNhanVien FROM NHANVIEN WHERE maNV=?";
+        try (Connection conn = DatabaseConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setInt(1, maNV);
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) return rs.getString(1);
+            }
+        } catch (SQLException e) {
+            System.err.println("[DB] getMaNhanVienById: " + e.getMessage());
+        }
+        return "NV-" + maNV;
+    }
+
+    /** Tìm NhanVienInfo theo mã hiển thị (VD: "NV001"). */
+    public NhanVienInfo findNhanVienByMa(String maNhanVien) {
+        String sql = "SELECT n.maNV, n.maNhanVien, t.hoTen, t.email, "
+                + "cv.tenChucVu, pb.tenPhongBan, n.trangThai "
+                + "FROM NHANVIEN n "
+                + "LEFT JOIN THONGTINCANHAN t ON n.maNV = t.maNV "
+                + "LEFT JOIN BONHIEM b ON n.maNV = b.maNV "
+                + "    AND b.trangThai = 'hieu_luc' AND b.loaiBoNhiem = 'chinh' "
+                + "LEFT JOIN CHUCVU cv ON b.maChucVu = cv.maChucVu "
+                + "LEFT JOIN PHONGBAN pb ON b.maPhongBan = pb.maPhongBan "
+                + "WHERE n.maNhanVien = ?";
+        try (Connection conn = DatabaseConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setString(1, maNhanVien);
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    return new NhanVienInfo(
+                        rs.getInt("maNV"),
+                        rs.getString("maNhanVien"),
+                        rs.getString("hoTen"),
+                        rs.getString("email"),
+                        rs.getString("tenChucVu"),
+                        rs.getString("tenPhongBan"),
+                        rs.getString("trangThai")
+                    );
+                }
+            }
+        } catch (SQLException e) {
+            System.err.println("[DB] findNhanVienByMa: " + e.getMessage());
+        }
+        return null;
+    }
+
+    /** Lấy maNV (int PK) từ maTaiKhoan (int PK của TAIKHOAN). */
+    public int getMaNVByTaiKhoan(int maTaiKhoan) {
+        String sql = "SELECT maNV FROM TAIKHOAN WHERE maTaiKhoan=?";
+        try (Connection conn = DatabaseConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setInt(1, maTaiKhoan);
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) return rs.getInt(1);
+            }
+        } catch (SQLException e) {
+            System.err.println("[DB] getMaNVByTaiKhoan: " + e.getMessage());
+        }
+        return -1;
+    }
+
+    /** Alias cho findAllDangKyLamThem() — tương thích với chamcongnew. */
+    public List<com.hrm.model.DangKyLamThem> findAllDonOT() {
+        return findAllDangKyLamThem();
+    }
+
+    /** Kiểm tra nhân viên có đơn OT đã duyệt cho ngày chỉ định không. */
+    public boolean coOTDaDuyetTheoNgay(int maNV, java.time.LocalDate ngay) {
+        String sql = "SELECT COUNT(*) FROM DANGKY_LAMTHEM WHERE maNV=? AND ngay=? AND trangThai='da_duyet'";
+        try (Connection conn = DatabaseConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setInt(1, maNV);
+            ps.setDate(2, java.sql.Date.valueOf(ngay));
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) return rs.getInt(1) > 0;
+            }
+        } catch (SQLException e) {
+            System.err.println("[DB] coOTDaDuyetTheoNgay: " + e.getMessage());
+        }
+        return false;
+    }
+
+    /** Xóa đơn OT (chỉ xóa nếu đang ở trạng thái chờ duyệt). */
+    public void deleteDangKyLamThem(int maDK) {
+        String sql = "DELETE FROM DANGKY_LAMTHEM WHERE maDK=?";
+        try (Connection conn = DatabaseConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setInt(1, maDK);
+            ps.executeUpdate();
+        } catch (SQLException e) {
+            System.err.println("[DB] deleteDangKyLamThem: " + e.getMessage());
+        }
+    }
+
+    /** Alias cho findActiveCaLam() — tương thích với chamcongnew. */
+    public List<com.hrm.model.CaLam> findCaLamHoatDong() {
+        return findActiveCaLam();
+    }
 }

@@ -415,4 +415,114 @@ public class ChamCongBUS {
         repository.deactivateCauHinhPC(maPC);
         return KetQua.success(null, "Đã ngừng khoản '" + pc.getTenKhoan() + "'.");
     }
+
+    // =====================================================================
+    // CHECK-IN TỰ ĐỘNG (từ chamcongnew)
+    // =====================================================================
+
+    /**
+     * Check-in TỰ ĐỘNG — hệ thống tự nhận diện ca làm theo giờ hiện tại.
+     * Logic: ưu tiên ca đang diễn ra (now trong [gioBD-30ph, gioKT]),
+     *        fallback ca gần nhất trong vòng ±2h.
+     */
+    public KetQua<ChamCong> checkInAuto(int maNV, boolean laOT) {
+        if (repository.findChamCongByNVAndNgay(maNV, LocalDate.now()) != null)
+            return KetQua.error("Bạn đã check-in hôm nay rồi.");
+
+        if (laOT && !coOTDaDuyetHomNay(maNV))
+            return KetQua.error(
+                "Bạn chưa có đơn OT được duyệt cho hôm nay. Không thể đánh dấu ca OT.");
+
+        java.time.LocalTime nowTime = LocalDateTime.now().toLocalTime();
+        List<CaLam> dsCaLam = repository.findActiveCaLam();
+        if (dsCaLam.isEmpty())
+            return KetQua.error("Không có ca làm nào đang hoạt động.");
+
+        // Bước 1: ca đang trong cửa sổ [gioBD-30ph → gioKT]
+        CaLam caLamPhuHop = dsCaLam.stream()
+            .filter(ca -> trongCuaSoCheckIn(ca, nowTime))
+            .min(java.util.Comparator.comparingLong(ca -> khoangCachDenGioBatDau(ca, nowTime)))
+            .orElse(null);
+
+        // Bước 2: fallback — ca gần nhất trong ±2h
+        if (caLamPhuHop == null) {
+            caLamPhuHop = dsCaLam.stream()
+                .filter(ca -> khoangCachDenGioBatDau(ca, nowTime) <= 120)
+                .min(java.util.Comparator.comparingLong(ca -> khoangCachDenGioBatDau(ca, nowTime)))
+                .orElse(null);
+        }
+
+        if (caLamPhuHop == null)
+            return KetQua.error("Không tìm thấy ca làm phù hợp với giờ hiện tại ("
+                + nowTime.format(java.time.format.DateTimeFormatter.ofPattern("HH:mm")) + ").");
+
+        LocalDateTime now = LocalDateTime.now();
+        ChamCong cc = new ChamCong();
+        cc.setMaNV(maNV);
+        cc.setNgay(LocalDate.now());
+        cc.setMaCaLam(caLamPhuHop.getMaCaLam());
+        cc.setTenCaLam(caLamPhuHop.getTenCaLam());
+        cc.setGioVao(now);
+        cc.setPhuongThucChamCong(ChamCong.PhuongThuc.THU_CONG);
+        cc.setTrangThai(
+            now.toLocalTime().isAfter(caLamPhuHop.getGioBatDau().plusMinutes(PHUT_DI_MUON))
+                ? ChamCong.TrangThai.DI_MUON : ChamCong.TrangThai.DUNG_GIO);
+        cc.setLaOT(laOT);
+        repository.saveChamCong(cc);
+        String otTag = laOT ? " [CA OT]" : "";
+        return KetQua.success(cc, "Check-in thành công" + otTag + " — Ca: "
+            + caLamPhuHop.getTenCaLam()
+            + " (" + caLamPhuHop.getGioBatDau() + " - " + caLamPhuHop.getGioKetThuc() + ")");
+    }
+
+    private boolean trongCuaSoCheckIn(CaLam ca, java.time.LocalTime now) {
+        java.time.LocalTime batDau = ca.getGioBatDau().minusMinutes(30);
+        java.time.LocalTime ketThuc = ca.getGioKetThuc();
+        if (!batDau.isAfter(ketThuc)) {
+            return !now.isBefore(batDau) && !now.isAfter(ketThuc);
+        } else {
+            return !now.isBefore(batDau) || !now.isAfter(ketThuc);
+        }
+    }
+
+    private long khoangCachDenGioBatDau(CaLam ca, java.time.LocalTime now) {
+        long diff = java.time.Duration.between(now, ca.getGioBatDau()).toMinutes();
+        if (diff > 720)  diff -= 1440;
+        if (diff < -720) diff += 1440;
+        return Math.abs(diff);
+    }
+
+    /** Kiểm tra nhân viên có đơn OT được duyệt cho hôm nay không. */
+    public boolean coOTDaDuyetHomNay(int maNV) {
+        return repository.coOTDaDuyetTheoNgay(maNV, LocalDate.now());
+    }
+
+    // =====================================================================
+    // ĐĂNG KÝ LÀM THÊM — overload với khoảng giờ
+    // =====================================================================
+
+    /** Tạo đơn OT theo khoảng giờ (gioVao → gioRa), tính soGio tự động. */
+    public KetQua<DangKyLamThem> taoDonLamThem(int maNV, LocalDate ngay,
+            LocalTime gioVao, LocalTime gioRa, String lyDo) {
+        if (gioVao == null || gioRa == null)
+            return KetQua.error("Vui lòng nhập giờ bắt đầu và kết thúc OT.");
+        if (lyDo == null || lyDo.trim().isEmpty())
+            return KetQua.error("Vui lòng nhập lý do làm thêm.");
+        double soGio = DangKyLamThem.tinhSoGioOT(gioVao, gioRa);
+        if (soGio < 0.5 || soGio > 8)
+            return KetQua.error("Khoảng thời gian OT phải từ 0.5 đến 8 giờ.");
+        DangKyLamThem dk = new DangKyLamThem(maNV, ngay, gioVao, gioRa, lyDo.trim());
+        repository.saveDangKyLamThem(dk);
+        return KetQua.success(dk, "Đã tạo đơn OT: " + gioVao + " → " + gioRa
+            + " (" + String.format("%.1f", soGio) + " giờ).");
+    }
+
+    /** Xóa đơn OT đang chờ duyệt. */
+    public KetQua<Void> xoaDonLamThem(int maDK, int maNV) {
+        DangKyLamThem dk = repository.findById(maDK);
+        if (dk == null) return KetQua.error("Không tìm thấy đơn OT.");
+        if (!dk.dangChoDuyet()) return KetQua.error("Chỉ xóa được đơn đang chờ duyệt.");
+        repository.deleteDangKyLamThem(maDK);
+        return KetQua.success(null, "Đã xóa đơn OT.");
+    }
 }

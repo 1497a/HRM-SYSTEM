@@ -161,6 +161,18 @@ public class ChamCong {
     public String getGhiChu() { return ghiChu; }
     public void setGhiChu(String ghiChu) { this.ghiChu = ghiChu; }
 
+    private static final String OT_FLAG = "OT";
+    public boolean isLaOT() {
+        return ghiChu != null && OT_FLAG.equals(ghiChu.trim());
+    }
+    public void setLaOT(boolean laOT) {
+        if (laOT) {
+            this.ghiChu = OT_FLAG;
+        } else if (OT_FLAG.equals(this.ghiChu)) {
+            this.ghiChu = null;
+        }
+    }
+
     public LocalDateTime getNgayTao() { return ngayTao; }
     public void setNgayTao(LocalDateTime ngayTao) { this.ngayTao = ngayTao; }
 

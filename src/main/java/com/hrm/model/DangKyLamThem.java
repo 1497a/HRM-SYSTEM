@@ -2,6 +2,7 @@ package com.hrm.model;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.LocalTime;
 
 /**
  * Model đại diện cho bảng DANGKYLAMTHEM (Đăng ký làm thêm giờ / OT).
@@ -41,6 +42,8 @@ public class DangKyLamThem {
     private String employeeName;
     private LocalDate ngay;
     private double soGio;
+    private LocalTime gioVaoOT;   // Gío bắt đầu OT (in-memory, không lưu DB)
+    private LocalTime gioRaOT;    // Giờ kết thúc OT (in-memory, không lưu DB)
     private String lyDo;
     private double heSoOT;
     private String nhanXet;           // Nhận xét của người duyệt
@@ -65,6 +68,23 @@ public class DangKyLamThem {
         this.lyDo = lyDo;
     }
 
+    public DangKyLamThem(int maNV, LocalDate ngay, LocalTime gioVao, LocalTime gioRa, String lyDo) {
+        this();
+        this.maNV = maNV;
+        this.ngay = ngay;
+        this.gioVaoOT = gioVao;
+        this.gioRaOT = gioRa;
+        this.soGio = tinhSoGioOT(gioVao, gioRa);
+        this.lyDo = lyDo;
+    }
+
+    /** Tính số giờ OT từ giờ vào → giờ ra, hỗ trợ qua nửa đêm. */
+    public static double tinhSoGioOT(LocalTime vao, LocalTime ra) {
+        long phut = java.time.Duration.between(vao, ra).toMinutes();
+        if (phut <= 0) phut += 1440; // qua nửa đêm
+        return Math.round(phut / 60.0 * 10.0) / 10.0;
+    }
+
     // Getters & Setters
     public int getMaDK() { return maDK; }
     public void setMaDK(int maDK) { this.maDK = maDK; }
@@ -80,6 +100,18 @@ public class DangKyLamThem {
 
     public double getSoGio() { return soGio; }
     public void setSoGio(double soGio) { this.soGio = soGio; }
+
+    public LocalTime getGioVaoOT() { return gioVaoOT; }
+    public void setGioVaoOT(LocalTime gioVaoOT) {
+        this.gioVaoOT = gioVaoOT;
+        if (this.gioRaOT != null) this.soGio = tinhSoGioOT(gioVaoOT, this.gioRaOT);
+    }
+
+    public LocalTime getGioRaOT() { return gioRaOT; }
+    public void setGioRaOT(LocalTime gioRaOT) {
+        this.gioRaOT = gioRaOT;
+        if (this.gioVaoOT != null) this.soGio = tinhSoGioOT(this.gioVaoOT, gioRaOT);
+    }
 
     public String getLyDo() { return lyDo; }
     public void setLyDo(String lyDo) { this.lyDo = lyDo; }
