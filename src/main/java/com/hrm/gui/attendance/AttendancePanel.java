@@ -32,7 +32,7 @@ public class AttendancePanel extends JPanel {
     private final TaiKhoan currentUser;
     private final boolean canManage;   // ATTENDANCE_MANAGE
     private final boolean canViewTeam; // ATTENDANCE_VIEW_ALL | DEPT | TEAM
-    private int maNVCaNhan = -1;
+    private String maNVCaNhan = null;
     private final NumberFormat moneyFmt;
 
     private JTabbedPane tabbedPane;
@@ -71,7 +71,7 @@ public class AttendancePanel extends JPanel {
     private JPanel statsPanelCN;
     private javax.swing.Timer clockTimer;
     // Fields for search-based check-in/out (any employee)
-    private int maNVTimKiem = -1;
+    private String maNVTimKiem = null;
     private JTextField txtMaNVCN;
     private JPanel infoPanelCN;
     private JLabel lblHoTenCNCN, lblEmailCNCN, lblChucVuCNCN, lblPhongBanCNCN, lblTrangThaiCNCN;
@@ -109,18 +109,18 @@ public class AttendancePanel extends JPanel {
             tabbedPane.addTab("Duyet don OT", tabDuyetOT());
             tabbedPane.addTab("Phu cap & Khau tru", tabPhuCap());
             tabbedPane.addTab("Bang luong", tabBangLuong());
-            if (maNVCaNhan > 0) {
+            if (maNVCaNhan != null) {
                 tabbedPane.addTab("Cham cong ca nhan", tabCaNhan());
                 tabbedPane.addTab("Dang ky OT", tabDangKyOT());
             }
         } else if (canViewTeam) {
-            if (maNVCaNhan > 0) tabbedPane.addTab("Cham cong ca nhan", tabCaNhan());
+            if (maNVCaNhan != null) tabbedPane.addTab("Cham cong ca nhan", tabCaNhan());
             tabbedPane.addTab("Tong hop CC", tabTongHopReadOnly());
             tabbedPane.addTab("Duyet don OT", tabDuyetOT());
-            if (maNVCaNhan > 0) tabbedPane.addTab("Dang ky OT", tabDangKyOT());
+            if (maNVCaNhan != null) tabbedPane.addTab("Dang ky OT", tabDangKyOT());
         } else {
             // ATTENDANCE_VIEW_SELF hoac employee thuong
-            if (maNVCaNhan > 0) {
+            if (maNVCaNhan != null) {
                 tabbedPane.addTab("Cham cong ca nhan", tabCaNhan());
                 tabbedPane.addTab("Dang ky OT", tabDangKyOT());
             } else {
@@ -157,11 +157,11 @@ public class AttendancePanel extends JPanel {
     }
 
     /** Tra ve tap hop maNV duoc phep xem, null = tat ca (canManage). */
-    private Set<Integer> visibleMaNVSet() {
+    private Set<String> visibleMaNVSet() {
         if (canManage) return null;
         List<NhanVien> ds = NhanVienBUS.getInstance()
-            .getAllByActionScope("ATTENDANCE_VIEW", maNVCaNhan > 0 ? maNVCaNhan : -1);
-        return ds.stream().map(NhanVien::getId).collect(Collectors.toSet());
+            .getAllByActionScope("ATTENDANCE_VIEW", maNVCaNhan);
+        return ds.stream().map(NhanVien::getMaNhanVien).collect(Collectors.toSet());
     }
 
     private void loadCC() {
@@ -169,7 +169,7 @@ public class AttendancePanel extends JPanel {
         int th = Integer.parseInt((String) cboThang.getSelectedItem());
         int nm = Integer.parseInt((String) cboNam.getSelectedItem());
         List<ChamCong> ds = svc.getChamCongTheoThang(th, nm);
-        Set<Integer> allowed = visibleMaNVSet();
+        Set<String> allowed = visibleMaNVSet();
         DateTimeFormatter fN = DateTimeFormatter.ofPattern("dd/MM");
         DateTimeFormatter fG = DateTimeFormatter.ofPattern("HH:mm");
         for (ChamCong cc : ds) {
@@ -237,13 +237,13 @@ public class AttendancePanel extends JPanel {
         f.add(infoPanel, g);
         g.gridwidth = 1; g.insets = new Insets(8, 8, 8, 8);
 
-        int[] maNVRef = {-1};
+        String[] maNVRef = {null};
         btnTim.addActionListener(e -> {
             String ma = txtMaNV.getText().trim();
             if (ma.isEmpty()) { JOptionPane.showMessageDialog(d, "Vui long nhap ma nhan vien."); return; }
             ChamCongDAO.NhanVienInfo info = ChamCongDAO.getInstance().findNhanVienByMa(ma);
             if (info == null) {
-                infoPanel.setVisible(false); maNVRef[0] = -1;
+                infoPanel.setVisible(false); maNVRef[0] = null;
                 JOptionPane.showMessageDialog(d, "Khong tim thay nhan vien: " + ma, "Loi", JOptionPane.ERROR_MESSAGE);
             } else {
                 maNVRef[0] = info.maNV;
@@ -303,7 +303,7 @@ public class AttendancePanel extends JPanel {
 
         bLuu.addActionListener(e -> {
             try {
-                if (maNVRef[0] == -1) {
+                if (maNVRef[0] == null) {
                     JOptionPane.showMessageDialog(d, "Vui long tim kiem nhan vien truoc khi luu.", "Thieu thong tin", JOptionPane.WARNING_MESSAGE);
                     return;
                 }
@@ -489,8 +489,8 @@ public class AttendancePanel extends JPanel {
         String ch=(String)JOptionPane.showInputDialog(this,"Chon he so OT:","He so OT",
             JOptionPane.QUESTION_MESSAGE,null,opts,opts[0]); if(ch==null)return;
         double hs=ch.contains("2.0")?2.0:ch.contains("3.0")?3.0:1.5;
-        int maNVNguoiDuyet = getMaNVNguoiDuyet();
-        if(maNVNguoiDuyet<0){JOptionPane.showMessageDialog(this,"Khong tim thay thong tin nhan vien."); return;}
+        String maNVNguoiDuyet = getMaNVNguoiDuyet();
+        if(maNVNguoiDuyet==null){JOptionPane.showMessageDialog(this,"Khong tim thay thong tin nhan vien."); return;}
         KetQua<?> res=svc.duyetDonLamThem(maDK,maNVNguoiDuyet,hs);
         JOptionPane.showMessageDialog(this,res.getMessage()); loadOT();
     }
@@ -502,12 +502,12 @@ public class AttendancePanel extends JPanel {
         if (!DangKyLamThem.TrangThai.CHO_DUYET.getDisplayName().equals(tt)) {
             JOptionPane.showMessageDialog(this, "Don da xu ly."); return;
         }
-        int maNVNguoiDuyet = getMaNVNguoiDuyet();
-        if(maNVNguoiDuyet<0){JOptionPane.showMessageDialog(this,"Khong tim thay thong tin nhan vien."); return;}
+        String maNVNguoiDuyet = getMaNVNguoiDuyet();
+        if(maNVNguoiDuyet==null){JOptionPane.showMessageDialog(this,"Khong tim thay thong tin nhan vien."); return;}
         svc.tuChoiDonLamThem(maDK,maNVNguoiDuyet); loadOT();
     }
 
-    private int getMaNVNguoiDuyet() {
+    private String getMaNVNguoiDuyet() {
         return ChamCongDAO.getInstance().getMaNVByTaiKhoan(currentUser.getId());
     }
 
@@ -1033,7 +1033,7 @@ public class AttendancePanel extends JPanel {
             if (info == null) {
                 infoPanelCN.setVisible(false); chamCongStatusPanelCN.setVisible(false);
                 if (histPanelCN != null) histPanelCN.setVisible(false);
-                maNVTimKiem = -1;
+                maNVTimKiem = null;
                 JOptionPane.showMessageDialog(this, "Khong tim thay nhan vien: " + ma, "Loi", JOptionPane.ERROR_MESSAGE);
             } else {
                 maNVTimKiem = info.maNV;
@@ -1083,7 +1083,7 @@ public class AttendancePanel extends JPanel {
         p.add(histPanelCN, BorderLayout.CENTER);
 
         // Tu dong load thong tin nguoi dang dang nhap neu co lien ket NV
-        if (maNVCaNhan > 0) {
+        if (maNVCaNhan != null) {
             String maNhanVienStr = ChamCongDAO.getInstance().getMaNhanVienById(maNVCaNhan);
             if (maNhanVienStr != null) {
                 txtMaNVCN.setText(maNhanVienStr);
@@ -1095,7 +1095,7 @@ public class AttendancePanel extends JPanel {
     }
 
     private void refreshCaNhan(JCheckBox chkOT) {
-        if (maNVTimKiem < 0 || lblCaNhanStatus == null) return;
+        if (maNVTimKiem == null || lblCaNhanStatus == null) return;
         ChamCong cc = svc.getChamCongHomNay(maNVTimKiem);
         DateTimeFormatter fG = DateTimeFormatter.ofPattern("HH:mm");
         if (cc == null) {
@@ -1130,7 +1130,7 @@ public class AttendancePanel extends JPanel {
     }
 
     private void loadLichSuCaNhan() {
-        if (maNVTimKiem < 0 || modelLichSuCaNhan == null) return;
+        if (maNVTimKiem == null || modelLichSuCaNhan == null) return;
         modelLichSuCaNhan.setRowCount(0);
         int th = Integer.parseInt((String) cboThangCN.getSelectedItem());
         int nm = Integer.parseInt((String) cboNamCN.getSelectedItem());
@@ -1304,7 +1304,7 @@ public class AttendancePanel extends JPanel {
     }
 
     private void loadDonOTCaNhan() {
-        if (maNVCaNhan < 0 || modelDonOTCaNhan == null) return;
+        if (maNVCaNhan == null || modelDonOTCaNhan == null) return;
         modelDonOTCaNhan.setRowCount(0);
         DateTimeFormatter fDate = DateTimeFormatter.ofPattern("dd/MM/yyyy");
         DateTimeFormatter fTime = DateTimeFormatter.ofPattern("HH:mm");

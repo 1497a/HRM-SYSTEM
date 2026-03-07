@@ -9,9 +9,11 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 /**
- * Leave Management Service
+ * Service quản lý nghỉ phép.
+ * Đã cập nhật để maNV là String (ví dụ: "NV001", "NV002", ...).
  */
 public class NghiPhepBUS {
+
     private static NghiPhepBUS instance;
     private final NghiPhepDAO repository;
 
@@ -27,7 +29,7 @@ public class NghiPhepBUS {
     }
 
     /**
-     * Calculate business days between two dates (excluding weekends)
+     * Tính số ngày làm việc thực tế (loại trừ thứ 7, chủ nhật)
      */
     public int calculateBusinessDays(LocalDate startDate, LocalDate endDate) {
         if (startDate == null || endDate == null || endDate.isBefore(startDate)) {
@@ -47,132 +49,134 @@ public class NghiPhepBUS {
     }
 
     /**
-     * Create a new leave request
+     * Tạo đơn xin nghỉ phép mới
      */
-    public KetQua<DonXinNghiPhep> createRequest(int employeeId, String employeeName,
-                                                     String leaveTypeCode, LocalDate startDate,
-                                                     LocalDate endDate, String reason) {
+    public KetQua<DonXinNghiPhep> createRequest(String maNV, String tenNhanVien,
+                                                String maLoaiPhep, LocalDate tuNgay,
+                                                LocalDate denNgay, String lyDo) {
         // Validation
-        if (startDate == null || endDate == null) {
-            return KetQua.error("Vui long chon ngay bat dau va ket thuc");
+        if (maNV == null || maNV.trim().isEmpty()) {
+            return KetQua.error("Mã nhân viên không hợp lệ.");
+        }
+        if (tuNgay == null || denNgay == null) {
+            return KetQua.error("Vui lòng chọn ngày bắt đầu và kết thúc.");
+        }
+        if (tuNgay.isBefore(LocalDate.now())) {
+            return KetQua.error("Ngày bắt đầu phải từ hôm nay trở đi.");
+        }
+        if (denNgay.isBefore(tuNgay)) {
+            return KetQua.error("Ngày kết thúc phải sau ngày bắt đầu.");
         }
 
-        if (startDate.isBefore(LocalDate.now())) {
-            return KetQua.error("Ngay bat dau phai tu hom nay tro di");
+        LoaiPhep loaiPhep = repository.findLoaiPhepById(maLoaiPhep);
+        if (loaiPhep == null) {
+            return KetQua.error("Loại phép không hợp lệ.");
         }
 
-        if (endDate.isBefore(startDate)) {
-            return KetQua.error("Ngay ket thuc phai sau ngay bat dau");
+        int soNgayNghi = calculateBusinessDays(tuNgay, denNgay);
+        if (soNgayNghi == 0) {
+            return KetQua.error("Không có ngày làm việc nào trong khoảng thời gian này.");
         }
 
-        LoaiPhep leaveType = repository.findLoaiPhepById(leaveTypeCode);
-        if (leaveType == null) {
-            return KetQua.error("Loai phep khong hop le");
-        }
-
-        int totalDays = calculateBusinessDays(startDate, endDate);
-        if (totalDays == 0) {
-            return KetQua.error("Khong co ngay lam viec trong khoang thoi gian nay");
-        }
-
-        // Check balance for annual leave
-        if ("AL".equals(leaveTypeCode)) {
-            SoDungPhep balance = repository.findByMaNVAndNamAndLoai(employeeId,
-                    LocalDate.now().getYear(), leaveTypeCode);
-            if (balance == null || balance.getRemainingDays() < totalDays) {
-                int remaining = balance != null ? (int)(balance.getSoNgayDuocCap() - balance.getSoNgayDaDung()) : 0;
-                return KetQua.error("So ngay phep con lai khong du. Con lai: " + remaining + " ngay");
+        // Kiểm tra số ngày phép còn lại (chỉ áp dụng cho phép năm - AL)
+        if ("AL".equals(maLoaiPhep)) {
+            int namHienTai = LocalDate.now().getYear();
+            SoDungPhep soDu = repository.findByMaNVAndNamAndLoai(maNV, namHienTai, maLoaiPhep);
+            if (soDu == null || soDu.getRemainingDays() < soNgayNghi) {
+                double conLai = soDu != null ? soDu.getRemainingDays() : 0;
+                return KetQua.error("Số ngày phép còn lại không đủ. Còn lại: " + conLai + " ngày.");
             }
         }
 
-        // Create request
-        DonXinNghiPhep request = new DonXinNghiPhep();
-        request.setNhanVienId(employeeId);
-        request.setTenNhanVien(employeeName);
-        request.setLoaiPhepId(leaveTypeCode);
-        request.setTenLoaiPhep(leaveType.getName());
-        request.setTuNgay(startDate);
-        request.setDenNgay(endDate);
-        request.setSoNgayNghi(totalDays);
-        request.setLyDo(reason);
-        request.setTrangThai(DonXinNghiPhep.TrangThai.CHO_DUYET);
+        // Tạo đơn
+        DonXinNghiPhep don = new DonXinNghiPhep();
+        don.setNhanVienId(maNV);
+        don.setTenNhanVien(tenNhanVien);
+        don.setLoaiPhepId(maLoaiPhep);
+        don.setTenLoaiPhep(loaiPhep.getTenLoaiPhep());
+        don.setTuNgay(tuNgay);
+        don.setDenNgay(denNgay);
+        don.setSoNgayNghi(soNgayNghi);
+        don.setLyDo(lyDo != null ? lyDo.trim() : "");
+        don.setTrangThai(DonXinNghiPhep.TrangThai.CHO_DUYET);
 
-        repository.insert(request);
-        return KetQua.success(request, "Tao don nghi phep thanh cong");
+        try {
+            repository.insert(don);
+            return KetQua.success(don, "Tạo đơn xin nghỉ phép thành công.");
+        } catch (Exception e) {
+            return KetQua.error("Lỗi khi tạo đơn xin nghỉ phép: " + e.getMessage());
+        }
     }
 
     /**
-     * Approve or reject a leave request
+     * Duyệt hoặc từ chối đơn xin nghỉ phép
      */
-    public KetQua<DonXinNghiPhep> processRequest(int requestId, boolean approve,
-                                                       int approverId, String approverName, String note) {
-        DonXinNghiPhep request = repository.findById(requestId);
-        if (request == null) {
-            return KetQua.error("Khong tim thay don nghi phep");
+    public KetQua<DonXinNghiPhep> processRequest(int maDon, boolean duyet,
+                                                 String maNguoiDuyet, String tenNguoiDuyet, String ghiChu) {
+        DonXinNghiPhep don = repository.findById(maDon);
+        if (don == null) {
+            return KetQua.error("Không tìm thấy đơn xin nghỉ phép #" + maDon);
         }
 
-        if (request.getTrangThai() != DonXinNghiPhep.TrangThai.CHO_DUYET) {
-            return KetQua.error("Don nghi phep da duoc xu ly truoc do");
+        if (don.getTrangThai() != DonXinNghiPhep.TrangThai.CHO_DUYET) {
+            return KetQua.error("Đơn xin nghỉ phép đã được xử lý trước đó.");
         }
-
-        request.setNguoiDuyetId(approverId);
-        request.setTenNguoiDuyet(approverName);
-        request.setLyDoTuChoi(note);
 
         LocalDateTime now = LocalDateTime.now();
 
-        if (approve) {
-            // Deduct balance for annual leave
-            if ("AL".equals(request.getLeaveTypeCode())) {
-                SoDungPhep balance = repository.findByMaNVAndNamAndLoai(request.getEmployeeId(),
-                        LocalDate.now().getYear(), request.getLeaveTypeCode());
-                if (balance != null) {
-                    if (balance.getRemainingDays() < request.getTotalDays()) {
-                        return KetQua.error("Nhan vien khong du so ngay phep");
-                    }
-                    repository.capNhatSoDaDung(request.getEmployeeId(),
-                            LocalDate.now().getYear(), request.getLeaveTypeCode(), request.getTotalDays());
+        if (duyet) {
+            // Trừ số ngày phép nếu là phép năm
+            if ("AL".equals(don.getLoaiPhepId())) {
+                int namHienTai = LocalDate.now().getYear();
+                SoDungPhep soDu = repository.findByMaNVAndNamAndLoai(don.getNhanVienId(), namHienTai, "AL");
+                if (soDu == null || soDu.getRemainingDays() < don.getSoNgayNghi()) {
+                    return KetQua.error("Số ngày phép còn lại không đủ để duyệt đơn này.");
                 }
+                repository.capNhatSoDaDung(don.getNhanVienId(), namHienTai, "AL", don.getSoNgayNghi());
             }
-            request.setTrangThai(DonXinNghiPhep.TrangThai.DA_DUYET);
-            repository.updateTrangThai(requestId, "da_duyet", approverId, now, null);
-            return KetQua.success(request, "Da duyet don nghi phep");
+
+            don.setTrangThai(DonXinNghiPhep.TrangThai.DA_DUYET);
+            repository.updateTrangThai(maDon, "da_duyet", maNguoiDuyet, now, null);
+            return KetQua.success(don, "Đã duyệt đơn xin nghỉ phép #" + maDon);
         } else {
-            request.setTrangThai(DonXinNghiPhep.TrangThai.TU_CHOI);
-            repository.updateTrangThai(requestId, "tu_choi", approverId, now, note);
-            return KetQua.success(request, "Da tu choi don nghi phep");
+            don.setTrangThai(DonXinNghiPhep.TrangThai.TU_CHOI);
+            repository.updateTrangThai(maDon, "tu_choi", maNguoiDuyet, now, ghiChu);
+            return KetQua.success(don, "Đã từ chối đơn xin nghỉ phép #" + maDon);
         }
     }
 
     /**
-     * Cancel a leave request
+     * Hủy đơn xin nghỉ phép (chỉ người tạo được hủy)
      */
-    public KetQua<DonXinNghiPhep> cancelRequest(int requestId, int userId) {
-        DonXinNghiPhep request = repository.findById(requestId);
-        if (request == null) {
-            return KetQua.error("Khong tim thay don nghi phep");
+    public KetQua<DonXinNghiPhep> cancelRequest(int maDon, String maNVHuy) {
+        DonXinNghiPhep don = repository.findById(maDon);
+        if (don == null) {
+            return KetQua.error("Không tìm thấy đơn xin nghỉ phép #" + maDon);
         }
 
-        if (request.getEmployeeId() != userId) {
-            return KetQua.error("Ban khong co quyen huy don nay");
+        if (!maNVHuy.equals(don.getNhanVienId())) {
+            return KetQua.error("Bạn không có quyền hủy đơn này.");
         }
 
-        if (request.getTrangThai() == DonXinNghiPhep.TrangThai.DA_DUYET) {
-            // Restore balance for annual leave
-            if ("AL".equals(request.getLeaveTypeCode())) {
-                repository.capNhatSoDaDung(request.getEmployeeId(),
-                        LocalDate.now().getYear(), request.getLeaveTypeCode(), -request.getTotalDays());
+        if (don.getTrangThai() == DonXinNghiPhep.TrangThai.DA_DUYET) {
+            // Hoàn lại số ngày phép nếu là phép năm
+            if ("AL".equals(don.getLoaiPhepId())) {
+                int namHienTai = LocalDate.now().getYear();
+                repository.capNhatSoDaDung(don.getNhanVienId(), namHienTai, "AL", -don.getSoNgayNghi());
             }
         }
 
-        request.setTrangThai(DonXinNghiPhep.TrangThai.HUY);
-        repository.updateTrangThai(requestId, "huy", 0, null, null);
-        return KetQua.success(request, "Da huy don nghi phep");
+        don.setTrangThai(DonXinNghiPhep.TrangThai.HUY);
+        repository.updateTrangThai(maDon, "huy", maNVHuy, null, null);
+        return KetQua.success(don, "Đã hủy đơn xin nghỉ phép #" + maDon);
     }
 
+    // ============================
     // Query methods
-    public List<DonXinNghiPhep> getMyRequests(int employeeId) {
-        return repository.findByMaNV(employeeId);
+    // ============================
+
+    public List<DonXinNghiPhep> getMyRequests(String maNV) {
+        return repository.findByMaNV(maNV);
     }
 
     public List<DonXinNghiPhep> getPendingRequests() {
@@ -183,31 +187,34 @@ public class NghiPhepBUS {
         return repository.findAll();
     }
 
-    public List<DonXinNghiPhep> getPendingRequestsByScope(int currentUserId) {
-        com.hrm.model.DataScope scope = com.hrm.bus.XacThucBUS.getInstance().getScopeForAction("LEAVE_APPROVE");
-        return repository.findChoDuyetByScope(scope, currentUserId);
+    public List<DonXinNghiPhep> getPendingRequestsByScope(String currentMaNV) {
+        com.hrm.model.DataScope scope = com.hrm.bus.XacThucBUS.getInstance()
+                .getScopeForAction("LEAVE_APPROVE");
+        return repository.findChoDuyetByScope(scope, currentMaNV);
     }
 
-    public List<DonXinNghiPhep> getAllRequestsByScope(int currentUserId) {
-        com.hrm.model.DataScope scope = com.hrm.bus.XacThucBUS.getInstance().getScopeForAction("LEAVE_VIEW");
-        return repository.findAllByScope(scope, currentUserId);
+    public List<DonXinNghiPhep> getAllRequestsByScope(String currentMaNV) {
+        com.hrm.model.DataScope scope = com.hrm.bus.XacThucBUS.getInstance()
+                .getScopeForAction("LEAVE_VIEW");
+        return repository.findAllByScope(scope, currentMaNV);
     }
 
     public List<LoaiPhep> getAllLeaveTypes() {
         return repository.findAllLoaiPhep();
     }
 
-    public List<SoDungPhep> getBalances(int employeeId) {
-        return repository.findByMaNVAndNam(employeeId, LocalDate.now().getYear());
+    public List<SoDungPhep> getBalances(String maNV) {
+        return repository.findByMaNVAndNam(maNV, LocalDate.now().getYear());
     }
 
-    public DonXinNghiPhep getRequest(int id) {
-        return repository.findById(id);
+    public DonXinNghiPhep getRequest(int maDon) {
+        return repository.findById(maDon);
     }
 
-    /**
-     * Generic service result wrapper
-     */
+    // ============================
+    // Generic result wrapper (giữ nguyên)
+    // ============================
+
     public static class KetQua<T> {
         private boolean success;
         private String message;

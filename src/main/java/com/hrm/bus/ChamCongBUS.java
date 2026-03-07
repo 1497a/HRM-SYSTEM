@@ -123,7 +123,7 @@ public class ChamCongBUS {
     /**
      * Check-in: xác thực NV chưa check-in hôm nay, tính trạng thái đi muộn.
      */
-    public KetQua<ChamCong> checkIn(int maNV, String maCaLam, String phuongThuc) {
+    public KetQua<ChamCong> checkIn(String maNV, String maCaLam, String phuongThuc) {
         LocalDate today = LocalDate.now();
         if (repository.findChamCongByNVAndNgay(maNV, today) != null) {
             return KetQua.error("Bạn đã check-in hôm nay rồi.");
@@ -164,14 +164,14 @@ public class ChamCongBUS {
     }
 
     // Legacy: used by existing AttendancePanel
-    public KetQua<ChamCong> checkIn(int maNV, String maCaLam) {
+    public KetQua<ChamCong> checkIn(String maNV, String maCaLam) {
         return checkIn(maNV, maCaLam, "thu_cong");
     }
 
     /**
      * Check-out: tính soGioLam, gioLamThem nếu có OT đã duyệt.
      */
-    public KetQua<ChamCong> checkOut(int maNV) {
+    public KetQua<ChamCong> checkOut(String maNV) {
         LocalDate today = LocalDate.now();
         ChamCong cc = repository.findChamCongByNVAndNgay(maNV, today);
         if (cc == null) {
@@ -202,7 +202,7 @@ public class ChamCongBUS {
     /**
      * Thêm chấm công thủ công (cho admin/HR).
      */
-    public KetQua<ChamCong> themChamCongThuCong(int maNV, LocalDate ngay, String maCaLam,
+    public KetQua<ChamCong> themChamCongThuCong(String maNV, LocalDate ngay, String maCaLam,
                                                         LocalDateTime gioVao, LocalDateTime gioRa,
                                                         ChamCong.TrangThai trangThai, String ghiChu) {
         CaLam caLam = repository.findCaLamById(maCaLam);
@@ -231,11 +231,11 @@ public class ChamCongBUS {
         return KetQua.success(cc, "Đã thêm chấm công thủ công cho ngày " + ngay + ".");
     }
 
-    public ChamCong getChamCongHomNay(int maNV) {
+    public ChamCong getChamCongHomNay(String maNV) {
         return repository.findChamCongByNVAndNgay(maNV, LocalDate.now());
     }
 
-    public List<ChamCong> getChamCongTheoThang(int maNV, int thang, int nam) {
+    public List<ChamCong> getChamCongTheoThang(String maNV, int thang, int nam) {
         return repository.findByNVAndThang(maNV, thang, nam);
     }
 
@@ -243,9 +243,9 @@ public class ChamCongBUS {
         return repository.findByThang(thang, nam);
     }
 
-    public List<ChamCong> getChamCongTatCaTheoThangByScope(int thang, int nam, int currentUserId) {
+    public List<ChamCong> getChamCongTatCaTheoThangByScope(int thang, int nam, String currentMaNV) {
         com.hrm.model.DataScope scope = com.hrm.bus.XacThucBUS.getInstance().getScopeForAction("ATTENDANCE_VIEW");
-        return repository.findByThangByScope(thang, nam, scope, currentUserId);
+        return repository.findByThangByScope(thang, nam, scope, currentMaNV);
     }
 
     // Legacy compat
@@ -253,7 +253,7 @@ public class ChamCongBUS {
         return repository.findByThang(thang, nam);
     }
 
-    public List<ChamCong> getLichSuChamCong(int maNV, LocalDate tu, LocalDate den) {
+    public List<ChamCong> getLichSuChamCong(String maNV, LocalDate tu, LocalDate den) {
         // Approximate using findByNVAndThang for the month range
         return repository.findByNVAndThang(maNV, tu.getMonthValue(), tu.getYear());
     }
@@ -266,7 +266,7 @@ public class ChamCongBUS {
      * Tạo đơn đăng ký làm thêm.
      * Validate: tổng OT trong tháng không vượt quá 40 giờ.
      */
-    public KetQua<DangKyLamThem> taoDonLamThem(int maNV, LocalDate ngay, double soGio, String lyDo) {
+    public KetQua<DangKyLamThem> taoDonLamThem(String maNV, LocalDate ngay, double soGio, String lyDo) {
         if (soGio <= 0 || soGio > 8) {
             return KetQua.error("Số giờ OT phải từ 0.5 đến 8 giờ.");
         }
@@ -291,7 +291,7 @@ public class ChamCongBUS {
     /**
      * Duyệt đơn OT.
      */
-    public KetQua<DangKyLamThem> duyetDonLamThem(int maDK, int nguoiDuyetId) {
+    public KetQua<DangKyLamThem> duyetDonLamThem(int maDK, String nguoiDuyetId) {
         DangKyLamThem dk = repository.findById(maDK);
         if (dk == null) {
             return KetQua.error("Không tìm thấy đơn OT.");
@@ -310,7 +310,7 @@ public class ChamCongBUS {
     /**
      * Từ chối đơn OT.
      */
-    public KetQua<DangKyLamThem> tuChoiDonLamThem(int maDK, int nguoiDuyetId) {
+    public KetQua<DangKyLamThem> tuChoiDonLamThem(int maDK, String nguoiDuyetId) {
         DangKyLamThem dk = repository.findById(maDK);
         if (dk == null) {
             return KetQua.error("Không tìm thấy đơn OT.");
@@ -330,9 +330,9 @@ public class ChamCongBUS {
         return repository.findChoDuyet();
     }
 
-    public List<DangKyLamThem> getDonChoDuyetOTByScope(int currentUserId) {
+    public List<DangKyLamThem> getDonChoDuyetOTByScope(String currentMaNV) {
         com.hrm.model.DataScope scope = com.hrm.bus.XacThucBUS.getInstance().getScopeForAction("ATTENDANCE_APPROVE");
-        return repository.findChoDuyetOTByScope(scope, currentUserId);
+        return repository.findChoDuyetOTByScope(scope, currentMaNV);
     }
 
     // Legacy compat
@@ -340,16 +340,16 @@ public class ChamCongBUS {
         return repository.findChoDuyet();
     }
 
-    public List<DangKyLamThem> getDonByMaNV(int maNV) {
+    public List<DangKyLamThem> getDonByMaNV(String maNV) {
         return repository.findByMaNV(maNV);
     }
 
-    public List<DangKyLamThem> getDonLamThemCuaNV(int maNV) {
+    public List<DangKyLamThem> getDonLamThemCuaNV(String maNV) {
         return repository.findByMaNV(maNV);
     }
 
     // Legacy compat
-    public KetQua<DangKyLamThem> duyetDonLamThem(int maDK, int nguoiDuyetId, double heSoOT) {
+    public KetQua<DangKyLamThem> duyetDonLamThem(int maDK, String nguoiDuyetId, double heSoOT) {
         return duyetDonLamThem(maDK, nguoiDuyetId);
     }
 
@@ -359,9 +359,9 @@ public class ChamCongBUS {
     }
 
     /** Get all OT requests by scope. */
-    public List<DangKyLamThem> getDonLamThemTatCaByScope(int currentUserId) {
+    public List<DangKyLamThem> getDonLamThemTatCaByScope(String currentMaNV) {
         com.hrm.model.DataScope scope = com.hrm.bus.XacThucBUS.getInstance().getScopeForAction("ATTENDANCE_VIEW");
-        return repository.findAllDangKyLamThemByScope(scope, currentUserId);
+        return repository.findAllDangKyLamThemByScope(scope, currentMaNV);
     }
 
     /** Update heSoOT for an OT request without approving. */
@@ -425,7 +425,7 @@ public class ChamCongBUS {
      * Logic: ưu tiên ca đang diễn ra (now trong [gioBD-30ph, gioKT]),
      *        fallback ca gần nhất trong vòng ±2h.
      */
-    public KetQua<ChamCong> checkInAuto(int maNV, boolean laOT) {
+    public KetQua<ChamCong> checkInAuto(String maNV, boolean laOT) {
         if (repository.findChamCongByNVAndNgay(maNV, LocalDate.now()) != null)
             return KetQua.error("Bạn đã check-in hôm nay rồi.");
 
@@ -493,7 +493,7 @@ public class ChamCongBUS {
     }
 
     /** Kiểm tra nhân viên có đơn OT được duyệt cho hôm nay không. */
-    public boolean coOTDaDuyetHomNay(int maNV) {
+    public boolean coOTDaDuyetHomNay(String maNV) {
         return repository.coOTDaDuyetTheoNgay(maNV, LocalDate.now());
     }
 
@@ -502,7 +502,7 @@ public class ChamCongBUS {
     // =====================================================================
 
     /** Tạo đơn OT theo khoảng giờ (gioVao → gioRa), tính soGio tự động. */
-    public KetQua<DangKyLamThem> taoDonLamThem(int maNV, LocalDate ngay,
+    public KetQua<DangKyLamThem> taoDonLamThem(String maNV, LocalDate ngay,
             LocalTime gioVao, LocalTime gioRa, String lyDo) {
         if (gioVao == null || gioRa == null)
             return KetQua.error("Vui lòng nhập giờ bắt đầu và kết thúc OT.");
@@ -518,7 +518,7 @@ public class ChamCongBUS {
     }
 
     /** Xóa đơn OT đang chờ duyệt. */
-    public KetQua<Void> xoaDonLamThem(int maDK, int maNV) {
+    public KetQua<Void> xoaDonLamThem(int maDK, String maNV) {
         DangKyLamThem dk = repository.findById(maDK);
         if (dk == null) return KetQua.error("Không tìm thấy đơn OT.");
         if (!dk.dangChoDuyet()) return KetQua.error("Chỉ xóa được đơn đang chờ duyệt.");

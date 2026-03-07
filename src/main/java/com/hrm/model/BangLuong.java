@@ -2,20 +2,20 @@ package com.hrm.model;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.Objects;
 
 /**
- * Model dai dien cho bang bang_luongs trong co so du lieu.
- *
- * Moi ban ghi dai dien cho 1 ky luong (thuong la 1 thang).
- * Lien ket: bang_luongs → N chi_tiet_luongs (moi NV 1 chi tiet)
+ * Model đại diện cho bảng bang_luongs trong cơ sở dữ liệu.
+ * Mỗi bản ghi đại diện cho 1 kỳ lương (thường là 1 tháng).
+ * Liên kết: bang_luongs → N chi_tiet_luongs (mỗi nhân viên 1 chi tiết).
  */
 public class BangLuong {
 
     public enum TrangThai {
-        NHAP("nhap", "Nhap"),
-        DA_TINH("da_tinh", "Da tinh"),
-        DA_DUYET("da_duyet", "Da duyet"),
-        DA_KHOA("da_khoa", "Da khoa");
+        NHAP("nhap", "Nhập liệu"),
+        DA_TINH("da_tinh", "Đã tính"),
+        DA_DUYET("da_duyet", "Đã duyệt"),
+        DA_KHOA("da_khoa", "Đã khóa");
 
         private final String dbValue;
         private final String displayName;
@@ -25,82 +25,215 @@ public class BangLuong {
             this.displayName = displayName;
         }
 
-        public String getDbValue() { return dbValue; }
-        public String getDisplayName() { return displayName; }
+        public String getDbValue() {
+            return dbValue;
+        }
+
+        public String getDisplayName() {
+            return displayName;
+        }
 
         public static TrangThai fromDbValue(String value) {
+            if (value == null) return NHAP;
             for (TrangThai t : values()) {
-                if (t.dbValue.equals(value)) return t;
+                if (t.dbValue.equalsIgnoreCase(value.trim())) {
+                    return t;
+                }
             }
-            return NHAP;
+            return NHAP; // fallback
+        }
+
+        @Override
+        public String toString() {
+            return displayName;
         }
     }
 
-    private int id;
+    private int maBL;                     // Khóa chính (auto-increment)
     private int thang;
     private int nam;
-    private String tenBangLuong;
+    private String tenBangLuong;          // Ví dụ: "Bảng lương tháng 03/2025"
+    private LocalDate ngayBatDau;         // Ngày đầu kỳ lương
+    private LocalDate ngayKetThuc;        // Ngày cuối kỳ lương
     private LocalDateTime ngayTao;
-    private LocalDateTime ngayKhoa;
     private LocalDateTime ngayDuyet;
-    private String nguoiTao;
-    private String nguoiKhoa;
-    private String nguoiDuyet;
+    private LocalDateTime ngayKhoa;
+    private String nguoiTao;              // maNV hoặc username người tạo
+    private String nguoiDuyet;            // maNV hoặc username người duyệt
+    private String nguoiKhoa;             // maNV hoặc username người khóa
     private TrangThai trangThai;
+    private String ghiChu;                // Ghi chú chung cho bảng lương
+    private Double tongThuNhap;           // Tổng thu nhập tất cả nhân viên (tùy chọn, có thể tính động)
+    private Double tongThucNhan;          // Tổng thực nhận tất cả nhân viên (tùy chọn)
 
+    // Constructor mặc định
     public BangLuong() {
         this.trangThai = TrangThai.NHAP;
         this.ngayTao = LocalDateTime.now();
     }
 
-    public BangLuong(int thang, int nam, String tenBangLuong) {
+    // Constructor phổ biến khi tạo mới bảng lương
+    public BangLuong(int thang, int nam) {
         this();
         this.thang = thang;
         this.nam = nam;
-        this.tenBangLuong = tenBangLuong;
+        this.tenBangLuong = String.format("Bảng lương tháng %02d/%d", thang, nam);
+        this.ngayBatDau = LocalDate.of(nam, thang, 1);
+        this.ngayKetThuc = this.ngayBatDau.withDayOfMonth(this.ngayBatDau.lengthOfMonth());
     }
 
     // Getters & Setters
-    public int getId() { return id; }
-    public void setId(int id) { this.id = id; }
+    public int getMaBL() {
+        return maBL;
+    }
 
-    public int getThang() { return thang; }
-    public void setThang(int thang) { this.thang = thang; }
+    public void setMaBL(int maBL) {
+        this.maBL = maBL;
+    }
 
-    public int getNam() { return nam; }
-    public void setNam(int nam) { this.nam = nam; }
+    public int getThang() {
+        return thang;
+    }
 
-    public String getTenBangLuong() { return tenBangLuong; }
-    public void setTenBangLuong(String tenBangLuong) { this.tenBangLuong = tenBangLuong; }
+    public void setThang(int thang) {
+        this.thang = thang;
+    }
 
-    public LocalDateTime getNgayTao() { return ngayTao; }
-    public void setNgayTao(LocalDateTime ngayTao) { this.ngayTao = ngayTao; }
+    public int getNam() {
+        return nam;
+    }
 
-    public LocalDateTime getNgayKhoa() { return ngayKhoa; }
-    public void setNgayKhoa(LocalDateTime ngayKhoa) { this.ngayKhoa = ngayKhoa; }
+    public void setNam(int nam) {
+        this.nam = nam;
+    }
 
-    public LocalDateTime getNgayDuyet() { return ngayDuyet; }
-    public void setNgayDuyet(LocalDateTime ngayDuyet) { this.ngayDuyet = ngayDuyet; }
+    public String getTenBangLuong() {
+        return tenBangLuong;
+    }
 
-    public String getNguoiTao() { return nguoiTao; }
-    public void setNguoiTao(String nguoiTao) { this.nguoiTao = nguoiTao; }
+    public void setTenBangLuong(String tenBangLuong) {
+        this.tenBangLuong = tenBangLuong;
+    }
 
-    public String getNguoiKhoa() { return nguoiKhoa; }
-    public void setNguoiKhoa(String nguoiKhoa) { this.nguoiKhoa = nguoiKhoa; }
+    public LocalDate getNgayBatDau() {
+        return ngayBatDau;
+    }
 
-    public String getNguoiDuyet() { return nguoiDuyet; }
-    public void setNguoiDuyet(String nguoiDuyet) { this.nguoiDuyet = nguoiDuyet; }
+    public void setNgayBatDau(LocalDate ngayBatDau) {
+        this.ngayBatDau = ngayBatDau;
+    }
 
-    public TrangThai getTrangThai() { return trangThai; }
-    public void setTrangThai(TrangThai trangThai) { this.trangThai = trangThai; }
+    public LocalDate getNgayKetThuc() {
+        return ngayKetThuc;
+    }
 
-    // Legacy compatibility - old code may reference maBL
-    public int getMaBL() { return id; }
-    public void setMaBL(int maBL) { this.id = maBL; }
+    public void setNgayKetThuc(LocalDate ngayKetThuc) {
+        this.ngayKetThuc = ngayKetThuc;
+    }
+
+    public LocalDateTime getNgayTao() {
+        return ngayTao;
+    }
+
+    public void setNgayTao(LocalDateTime ngayTao) {
+        this.ngayTao = ngayTao;
+    }
+
+    public LocalDateTime getNgayDuyet() {
+        return ngayDuyet;
+    }
+
+    public void setNgayDuyet(LocalDateTime ngayDuyet) {
+        this.ngayDuyet = ngayDuyet;
+    }
+
+    public LocalDateTime getNgayKhoa() {
+        return ngayKhoa;
+    }
+
+    public void setNgayKhoa(LocalDateTime ngayKhoa) {
+        this.ngayKhoa = ngayKhoa;
+    }
+
+    public String getNguoiTao() {
+        return nguoiTao;
+    }
+
+    public void setNguoiTao(String nguoiTao) {
+        this.nguoiTao = nguoiTao;
+    }
+
+    public String getNguoiDuyet() {
+        return nguoiDuyet;
+    }
+
+    public void setNguoiDuyet(String nguoiDuyet) {
+        this.nguoiDuyet = nguoiDuyet;
+    }
+
+    public String getNguoiKhoa() {
+        return nguoiKhoa;
+    }
+
+    public void setNguoiKhoa(String nguoiKhoa) {
+        this.nguoiKhoa = nguoiKhoa;
+    }
+
+    public TrangThai getTrangThai() {
+        return trangThai;
+    }
+
+    public void setTrangThai(TrangThai trangThai) {
+        this.trangThai = trangThai;
+    }
+
+    public String getGhiChu() {
+        return ghiChu;
+    }
+
+    public void setGhiChu(String ghiChu) {
+        this.ghiChu = ghiChu;
+    }
+
+    public Double getTongThuNhap() {
+        return tongThuNhap;
+    }
+
+    public void setTongThuNhap(Double tongThuNhap) {
+        this.tongThuNhap = tongThuNhap;
+    }
+
+    public Double getTongThucNhan() {
+        return tongThucNhan;
+    }
+
+    public void setTongThucNhan(Double tongThucNhan) {
+        this.tongThucNhan = tongThucNhan;
+    }
 
     @Override
     public String toString() {
-        return "BangLuong{id=" + id + ", thang=" + thang + "/" + nam
-                + ", " + (trangThai != null ? trangThai.toString() : "") + "}";
+        return "BangLuong{" +
+                "maBL=" + maBL +
+                ", thang=" + thang +
+                ", nam=" + nam +
+                ", tenBangLuong='" + tenBangLuong + '\'' +
+                ", trangThai=" + (trangThai != null ? trangThai.getDisplayName() : "null") +
+                ", ngayBatDau=" + ngayBatDau +
+                ", ngayKetThuc=" + ngayKetThuc +
+                '}';
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        BangLuong bangLuong = (BangLuong) o;
+        return maBL == bangLuong.maBL;
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(maBL);
     }
 }

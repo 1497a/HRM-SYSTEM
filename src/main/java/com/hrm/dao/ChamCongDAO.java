@@ -171,7 +171,7 @@ public class ChamCongDAO {
                 + "VALUES (?,?,?,?,?,?,?,?,?,?)";
         try (Connection conn = DatabaseConnection.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
-            ps.setInt(1, cc.getMaNV());
+            ps.setString(1, cc.getMaNV());
             ps.setDate(2, Date.valueOf(cc.getNgay()));
             ps.setString(3, cc.getMaCaLam());
             ps.setTimestamp(4, cc.getGioVao() != null ? Timestamp.valueOf(cc.getGioVao()) : null);
@@ -214,14 +214,14 @@ public class ChamCongDAO {
         }
     }
 
-    public ChamCong findChamCongByNVAndNgay(int nhanVienId, LocalDate ngay) {
+    public ChamCong findChamCongByNVAndNgay(String nhanVienId, LocalDate ngay) {
         String sql = "SELECT c.maChamCong, c.maNV, c.ngay, c.maCaLam, c.gioVao, c.gioRa, c.soGioLam, c.gioLamThem, c.trangThai, c.phuongThucChamCong, c.ghiChu, t.hoTen, ca.tenCaLam FROM CHAMCONG c "
                 + "LEFT JOIN THONGTINCANHAN t ON c.maNV = t.maNV "
                 + "LEFT JOIN CALAM ca ON c.maCaLam = ca.maCaLam "
                 + "WHERE c.maNV=? AND c.ngay=?";
         try (Connection conn = DatabaseConnection.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
-            ps.setInt(1, nhanVienId);
+            ps.setString(1, nhanVienId);
             ps.setDate(2, Date.valueOf(ngay));
             try (ResultSet rs = ps.executeQuery()) {
                 if (rs.next()) {
@@ -234,7 +234,7 @@ public class ChamCongDAO {
         return null;
     }
 
-    public List<ChamCong> findByNVAndThang(int nhanVienId, int thang, int nam) {
+    public List<ChamCong> findByNVAndThang(String nhanVienId, int thang, int nam) {
         String sql = "SELECT c.maChamCong, c.maNV, c.ngay, c.maCaLam, c.gioVao, c.gioRa, c.soGioLam, c.gioLamThem, c.trangThai, c.phuongThucChamCong, c.ghiChu, t.hoTen, ca.tenCaLam FROM CHAMCONG c "
                 + "LEFT JOIN THONGTINCANHAN t ON c.maNV = t.maNV "
                 + "LEFT JOIN CALAM ca ON c.maCaLam = ca.maCaLam "
@@ -242,7 +242,7 @@ public class ChamCongDAO {
         List<ChamCong> result = new ArrayList<>();
         try (Connection conn = DatabaseConnection.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
-            ps.setInt(1, nhanVienId);
+            ps.setString(1, nhanVienId);
             ps.setInt(2, thang);
             ps.setInt(3, nam);
             try (ResultSet rs = ps.executeQuery()) {
@@ -277,7 +277,7 @@ public class ChamCongDAO {
         return result;
     }
 
-    public List<ChamCong> findByThangByScope(int thang, int nam, com.hrm.model.DataScope scope, int currentUserId) {
+    public List<ChamCong> findByThangByScope(int thang, int nam, com.hrm.model.DataScope scope, String currentMaNV) {
         List<ChamCong> result = new ArrayList<>();
         if (scope == com.hrm.model.DataScope.NONE) return result;
 
@@ -311,7 +311,7 @@ public class ChamCongDAO {
             ps.setInt(1, thang);
             ps.setInt(2, nam);
             if (scope != com.hrm.model.DataScope.ALL) {
-                ps.setInt(3, currentUserId);
+                ps.setString(3, currentMaNV);
             }
             try (ResultSet rs = ps.executeQuery()) {
                 while (rs.next()) {
@@ -324,12 +324,12 @@ public class ChamCongDAO {
         return result;
     }
 
-    public double getTongGioLamThemTrongThang(int nhanVienId, int thang, int nam) {
+    public double getTongGioLamThemTrongThang(String nhanVienId, int thang, int nam) {
         String sql = "SELECT COALESCE(SUM(gioLamThem), 0) FROM CHAMCONG "
                 + "WHERE maNV=? AND MONTH(ngay)=? AND YEAR(ngay)=?";
         try (Connection conn = DatabaseConnection.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
-            ps.setInt(1, nhanVienId);
+            ps.setString(1, nhanVienId);
             ps.setInt(2, thang);
             ps.setInt(3, nam);
             try (ResultSet rs = ps.executeQuery()) {
@@ -344,7 +344,7 @@ public class ChamCongDAO {
     private ChamCong mapChamCong(ResultSet rs) throws SQLException {
         ChamCong cc = new ChamCong();
         cc.setMaChamCong(rs.getInt("maChamCong"));
-        cc.setMaNV(rs.getInt("maNV"));
+        cc.setMaNV(rs.getString("maNV"));
         Date ngay = rs.getDate("ngay");
         if (ngay != null) cc.setNgay(ngay.toLocalDate());
         cc.setMaCaLam(rs.getString("maCaLam"));
@@ -383,7 +383,7 @@ public class ChamCongDAO {
         String sql = "INSERT INTO DANGKY_LAMTHEM (maNV, ngay, soGio, heSoOT, lyDo, trangThai) VALUES (?,?,?,?,?,?)";
         try (Connection conn = DatabaseConnection.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
-            ps.setInt(1, dk.getMaNV());
+            ps.setString(1, dk.getMaNV());
             ps.setDate(2, Date.valueOf(dk.getNgay()));
             ps.setDouble(3, dk.getSoGio());
             ps.setDouble(4, dk.getHeSoOT() > 0 ? dk.getHeSoOT() : 1.5);
@@ -403,12 +403,12 @@ public class ChamCongDAO {
         return 0;
     }
 
-    public void updateTrangThai(int id, String trangThai, int nguoiDuyet, LocalDateTime ngayDuyet) {
+    public void updateTrangThai(int id, String trangThai, String nguoiDuyet, LocalDateTime ngayDuyet) {
         String sql = "UPDATE DANGKY_LAMTHEM SET trangThai=?, nguoiDuyet=?, ngayDuyet=? WHERE maDK=?";
         try (Connection conn = DatabaseConnection.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setString(1, trangThai);
-            ps.setInt(2, nguoiDuyet);
+            if (nguoiDuyet != null && !nguoiDuyet.isEmpty()) ps.setString(2, nguoiDuyet); else ps.setNull(2, Types.VARCHAR);
             ps.setTimestamp(3, ngayDuyet != null ? Timestamp.valueOf(ngayDuyet) : null);
             ps.setInt(4, id);
             ps.executeUpdate();
@@ -417,14 +417,14 @@ public class ChamCongDAO {
         }
     }
 
-    public List<DangKyLamThem> findByMaNV(int nhanVienId) {
+    public List<DangKyLamThem> findByMaNV(String nhanVienId) {
         String sql = "SELECT d.maDK, d.maNV, d.ngay, d.soGio, d.heSoOT, d.lyDo, d.trangThai, d.nguoiDuyet, d.ngayDuyet, t.hoTen FROM DANGKY_LAMTHEM d "
                 + "LEFT JOIN THONGTINCANHAN t ON d.maNV = t.maNV "
                 + "WHERE d.maNV=? ORDER BY d.ngay DESC";
         List<DangKyLamThem> result = new ArrayList<>();
         try (Connection conn = DatabaseConnection.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
-            ps.setInt(1, nhanVienId);
+            ps.setString(1, nhanVienId);
             try (ResultSet rs = ps.executeQuery()) {
                 while (rs.next()) {
                     result.add(mapDangKyLamThem(rs));
@@ -473,11 +473,11 @@ public class ChamCongDAO {
     }
 
     /** Returns true if there is an approved OT request for this employee on this day. */
-    public boolean hasDuyetForNVAndNgay(int nhanVienId, LocalDate ngay) {
+    public boolean hasDuyetForNVAndNgay(String nhanVienId, LocalDate ngay) {
         String sql = "SELECT COUNT(*) FROM DANGKY_LAMTHEM WHERE maNV=? AND ngay=? AND trangThai='da_duyet'";
         try (Connection conn = DatabaseConnection.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
-            ps.setInt(1, nhanVienId);
+            ps.setString(1, nhanVienId);
             ps.setDate(2, Date.valueOf(ngay));
             try (ResultSet rs = ps.executeQuery()) {
                 if (rs.next()) return rs.getInt(1) > 0;
@@ -489,12 +489,12 @@ public class ChamCongDAO {
     }
 
     /** Sum of approved OT hours for this employee in the given month/year. */
-    public double getTongGioOTDaDuyetTrongThang(int nhanVienId, int thang, int nam) {
+    public double getTongGioOTDaDuyetTrongThang(String nhanVienId, int thang, int nam) {
         String sql = "SELECT COALESCE(SUM(soGio), 0) FROM DANGKY_LAMTHEM "
                 + "WHERE maNV=? AND MONTH(ngay)=? AND YEAR(ngay)=? AND trangThai='da_duyet'";
         try (Connection conn = DatabaseConnection.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
-            ps.setInt(1, nhanVienId);
+            ps.setString(1, nhanVienId);
             ps.setInt(2, thang);
             ps.setInt(3, nam);
             try (ResultSet rs = ps.executeQuery()) {
@@ -509,14 +509,14 @@ public class ChamCongDAO {
     private DangKyLamThem mapDangKyLamThem(ResultSet rs) throws SQLException {
         DangKyLamThem dk = new DangKyLamThem();
         dk.setMaDK(rs.getInt("maDK"));
-        dk.setMaNV(rs.getInt("maNV"));
+        dk.setMaNV(rs.getString("maNV"));
         Date ngay = rs.getDate("ngay");
         if (ngay != null) dk.setNgay(ngay.toLocalDate());
         dk.setSoGio(rs.getDouble("soGio"));
         try { double hs = rs.getDouble("heSoOT"); if (!rs.wasNull() && hs > 0) dk.setHeSoOT(hs); } catch (SQLException ignored) {}
         dk.setLyDo(rs.getString("lyDo"));
-        int nd = rs.getInt("nguoiDuyet");
-        if (!rs.wasNull()) dk.setNguoiDuyet(nd);
+        String nd = rs.getString("nguoiDuyet");
+        if (nd != null) dk.setNguoiDuyet(nd);
         Timestamp ngayDuyet = rs.getTimestamp("ngayDuyet");
         if (ngayDuyet != null) dk.setNgayDuyet(ngayDuyet.toLocalDateTime());
         String tt = rs.getString("trangThai");
@@ -533,12 +533,12 @@ public class ChamCongDAO {
     // Count working days in a month for a specific employee (not absent)
     // =====================================================================
 
-    public int countNgayCong(int nhanVienId, int thang, int nam) {
+    public int countNgayCong(String nhanVienId, int thang, int nam) {
         String sql = "SELECT COUNT(*) FROM CHAMCONG WHERE maNV=? AND MONTH(ngay)=? AND YEAR(ngay)=? "
                 + "AND trangThai != 'vang_mat'";
         try (Connection conn = DatabaseConnection.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
-            ps.setInt(1, nhanVienId);
+            ps.setString(1, nhanVienId);
             ps.setInt(2, thang);
             ps.setInt(3, nam);
             try (ResultSet rs = ps.executeQuery()) {
@@ -572,15 +572,15 @@ public class ChamCongDAO {
         return result;
     }
 
-    public List<DangKyLamThem> findAllDangKyLamThemByScope(com.hrm.model.DataScope scope, int currentUserId) {
-        return getOTByScopeAndStatus(scope, currentUserId, null);
+    public List<DangKyLamThem> findAllDangKyLamThemByScope(com.hrm.model.DataScope scope, String currentMaNV) {
+        return getOTByScopeAndStatus(scope, currentMaNV, null);
     }
 
-    public List<DangKyLamThem> findChoDuyetOTByScope(com.hrm.model.DataScope scope, int currentUserId) {
-        return getOTByScopeAndStatus(scope, currentUserId, "cho_duyet");
+    public List<DangKyLamThem> findChoDuyetOTByScope(com.hrm.model.DataScope scope, String currentMaNV) {
+        return getOTByScopeAndStatus(scope, currentMaNV, "cho_duyet");
     }
 
-    private List<DangKyLamThem> getOTByScopeAndStatus(com.hrm.model.DataScope scope, int currentUserId, String statusValue) {
+    private List<DangKyLamThem> getOTByScopeAndStatus(com.hrm.model.DataScope scope, String currentMaNV, String statusValue) {
         List<DangKyLamThem> result = new ArrayList<>();
         if (scope == com.hrm.model.DataScope.NONE) return result;
 
@@ -615,7 +615,7 @@ public class ChamCongDAO {
              PreparedStatement ps = conn.prepareStatement(sql)) {
             
             if (scope != com.hrm.model.DataScope.ALL) {
-                ps.setInt(1, currentUserId);
+                ps.setString(1, currentMaNV);
             }
             try (ResultSet rs = ps.executeQuery()) {
                 while (rs.next()) {
@@ -747,18 +747,18 @@ public class ChamCongDAO {
 
     /** Thông tin nhân viên dùng để hiển thị trong panel chấm công. */
     public static class NhanVienInfo {
-        public final int    maNV;
-        public final String maNhanVien;  // VD: "NV001"
+        public final String maNV;        // VD: "NV001"
+        public final String maNhanVien;  // alias = maNV
         public final String hoTen;
         public final String email;
         public final String tenChucVu;
         public final String tenPhongBan;
-        public final String trangThai;   // VD: "dang_lam_viec"
+        public final String trangThai;
 
-        public NhanVienInfo(int maNV, String maNhanVien, String hoTen,
+        public NhanVienInfo(String maNV, String hoTen,
                             String email, String tenChucVu, String tenPhongBan, String trangThai) {
-            this.maNV = maNV;
-            this.maNhanVien  = maNhanVien  != null ? maNhanVien  : "";
+            this.maNV        = maNV        != null ? maNV        : "";
+            this.maNhanVien  = this.maNV;
             this.hoTen       = hoTen       != null ? hoTen       : "";
             this.email       = email       != null ? email       : "";
             this.tenChucVu   = tenChucVu   != null ? tenChucVu   : "";
@@ -767,24 +767,14 @@ public class ChamCongDAO {
         }
     }
 
-    /** Trả về mã hiển thị của nhân viên (VD: "NV001") từ maNV (int PK). */
-    public String getMaNhanVienById(int maNV) {
-        String sql = "SELECT maNhanVien FROM NHANVIEN WHERE maNV=?";
-        try (Connection conn = DatabaseConnection.getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql)) {
-            ps.setInt(1, maNV);
-            try (ResultSet rs = ps.executeQuery()) {
-                if (rs.next()) return rs.getString(1);
-            }
-        } catch (SQLException e) {
-            System.err.println("[DB] getMaNhanVienById: " + e.getMessage());
-        }
-        return "NV-" + maNV;
+    /** Trả về maNV (VD: "NV001") — sau refactor maNV đã là VARCHAR PK. */
+    public String getMaNhanVienById(String maNV) {
+        return maNV != null ? maNV : "";
     }
 
-    /** Tìm NhanVienInfo theo mã hiển thị (VD: "NV001"). */
-    public NhanVienInfo findNhanVienByMa(String maNhanVien) {
-        String sql = "SELECT n.maNV, n.maNhanVien, t.hoTen, t.email, "
+    /** Tìm NhanVienInfo theo maNV (VD: "NV001"). */
+    public NhanVienInfo findNhanVienByMa(String maNV) {
+        String sql = "SELECT n.maNV, t.hoTen, t.email, "
                 + "cv.tenChucVu, pb.tenPhongBan, n.trangThai "
                 + "FROM NHANVIEN n "
                 + "LEFT JOIN THONGTINCANHAN t ON n.maNV = t.maNV "
@@ -792,15 +782,14 @@ public class ChamCongDAO {
                 + "    AND b.trangThai = 'hieu_luc' AND b.loaiBoNhiem = 'chinh' "
                 + "LEFT JOIN CHUCVU cv ON b.maChucVu = cv.maChucVu "
                 + "LEFT JOIN PHONGBAN pb ON b.maPhongBan = pb.maPhongBan "
-                + "WHERE n.maNhanVien = ?";
+                + "WHERE n.maNV = ?";
         try (Connection conn = DatabaseConnection.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
-            ps.setString(1, maNhanVien);
+            ps.setString(1, maNV);
             try (ResultSet rs = ps.executeQuery()) {
                 if (rs.next()) {
                     return new NhanVienInfo(
-                        rs.getInt("maNV"),
-                        rs.getString("maNhanVien"),
+                        rs.getString("maNV"),
                         rs.getString("hoTen"),
                         rs.getString("email"),
                         rs.getString("tenChucVu"),
@@ -815,19 +804,19 @@ public class ChamCongDAO {
         return null;
     }
 
-    /** Lấy maNV (int PK) từ maTaiKhoan (int PK của TAIKHOAN). */
-    public int getMaNVByTaiKhoan(int maTaiKhoan) {
+    /** Lấy maNV (VARCHAR PK) từ maTaiKhoan (int PK của TAIKHOAN). */
+    public String getMaNVByTaiKhoan(int maTaiKhoan) {
         String sql = "SELECT maNV FROM TAIKHOAN WHERE maTaiKhoan=?";
         try (Connection conn = DatabaseConnection.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setInt(1, maTaiKhoan);
             try (ResultSet rs = ps.executeQuery()) {
-                if (rs.next()) return rs.getInt(1);
+                if (rs.next()) return rs.getString(1);
             }
         } catch (SQLException e) {
             System.err.println("[DB] getMaNVByTaiKhoan: " + e.getMessage());
         }
-        return -1;
+        return null;
     }
 
     /** Alias cho findAllDangKyLamThem() — tương thích với chamcongnew. */
@@ -836,11 +825,11 @@ public class ChamCongDAO {
     }
 
     /** Kiểm tra nhân viên có đơn OT đã duyệt cho ngày chỉ định không. */
-    public boolean coOTDaDuyetTheoNgay(int maNV, java.time.LocalDate ngay) {
+    public boolean coOTDaDuyetTheoNgay(String maNV, java.time.LocalDate ngay) {
         String sql = "SELECT COUNT(*) FROM DANGKY_LAMTHEM WHERE maNV=? AND ngay=? AND trangThai='da_duyet'";
         try (Connection conn = DatabaseConnection.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
-            ps.setInt(1, maNV);
+            ps.setString(1, maNV);
             ps.setDate(2, java.sql.Date.valueOf(ngay));
             try (ResultSet rs = ps.executeQuery()) {
                 if (rs.next()) return rs.getInt(1) > 0;

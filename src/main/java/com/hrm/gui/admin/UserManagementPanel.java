@@ -14,6 +14,7 @@ import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.table.DefaultTableModel;
 import javax.swing.table.TableRowSorter;
 import java.awt.*;
+import java.util.Comparator;
 import java.util.List;
 
 /**
@@ -105,8 +106,20 @@ public class UserManagementPanel extends JPanel {
         // Sorter – sort by name (col 2) using Vietnamese locale
         sorter = new TableRowSorter<>(tableModel);
         table.setRowSorter(sorter);
-        sorter.setComparator(2, UIHelper.vietnameseNameComparator());
-        sorter.setSortKeys(List.of(new RowSorter.SortKey(2, SortOrder.ASCENDING)));
+
+        // Chỉ cho sort cột 0 (ID) và cột 2 (Họ tên)
+        for (int i = 0; i < 6; i++) {
+            sorter.setSortable(i, false);
+        }
+        sorter.setSortable(0, true); // ID
+        sorter.setSortable(2, true); // Họ tên
+
+        // Comparator đúng kiểu
+        sorter.setComparator(0, Comparator.comparingInt(a -> (Integer) a)); // sort số nguyên
+        sorter.setComparator(2, UIHelper.vietnameseNameComparator());       // sort tiếng Việt
+
+        // Mặc định sort theo ID tăng dần
+        sorter.setSortKeys(List.of(new RowSorter.SortKey(0, SortOrder.ASCENDING)));
 
         // Status filter combo
         cboTrangThai = new JComboBox<>(new String[]{"Tat ca", "Hoat dong", "Khoa"});
@@ -210,7 +223,8 @@ public class UserManagementPanel extends JPanel {
             return;
         }
 
-        int userId = (int) tableModel.getValueAt(selectedRow, 0);
+        int modelRow = table.convertRowIndexToModel(selectedRow);
+        int userId = (int) tableModel.getValueAt(modelRow, 0);
         TaiKhoan user = authService.getAllUsers().stream()
                 .filter(u -> u.getId() == userId)
                 .findFirst()
@@ -235,7 +249,8 @@ public class UserManagementPanel extends JPanel {
             return;
         }
 
-        int userId = (int) tableModel.getValueAt(selectedRow, 0);
+        int modelRow = table.convertRowIndexToModel(selectedRow);
+        int userId = (int) tableModel.getValueAt(modelRow, 0);
         String username = (String) tableModel.getValueAt(selectedRow, 1);
 
         int confirm = JOptionPane.showConfirmDialog(this,

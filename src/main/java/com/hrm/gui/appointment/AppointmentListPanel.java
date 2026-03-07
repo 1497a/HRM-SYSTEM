@@ -116,9 +116,19 @@ public class AppointmentListPanel extends JPanel {
 
         sorter = new TableRowSorter<>(tableModel);
         table.setRowSorter(sorter);
-        // Sort by first name (Tên) by default using Vietnamese locale
+
+        // Chỉ cho phép sort cột 1 (Mã NV) và cột 2 (Họ tên)
+        for (int i = 0; i < COL_NAMES.length; i++) {
+            sorter.setSortable(i, false); // tắt hết trước
+        }
+        sorter.setSortable(1, true); // Mã NV
+        sorter.setSortable(2, true); // Họ tên
+
+        // Comparator tiếng Việt cho cột Họ tên
         sorter.setComparator(2, UIHelper.vietnameseNameComparator());
-        sorter.setSortKeys(List.of(new RowSorter.SortKey(2, SortOrder.ASCENDING)));
+
+        // Mặc định sort theo Mã NV tăng dần
+        sorter.setSortKeys(List.of(new RowSorter.SortKey(1, SortOrder.ASCENDING)));
 
         JScrollPane scroll = new JScrollPane(table);
         scroll.setBorder(BorderFactory.createLineBorder(UIColors.BORDER_GRAY));
@@ -184,7 +194,7 @@ public class AppointmentListPanel extends JPanel {
 
     public void loadData() {
         com.hrm.model.TaiKhoan currentUser = SessionContext.getInstance().getCurrentUser();
-        int currentMaNV = (currentUser != null && currentUser.getMaNV() != null) ? currentUser.getMaNV() : -1;
+        String currentMaNV = (currentUser != null) ? currentUser.getNhanVienId() : null;
         danhSachHienThi = boNhiemService.getAllByScope(currentMaNV);
         tableModel.setRowCount(0);
 
@@ -195,7 +205,7 @@ public class AppointmentListPanel extends JPanel {
                 bn.getTenNV() != null ? bn.getTenNV() : "",
                 bn.getTenPhongBan() != null ? bn.getTenPhongBan() : bn.getId(),
                 bn.getTenChucVu() != null ? bn.getTenChucVu() : bn.getChucVuId(),
-                bn.getTenQuanLy() != null ? bn.getTenQuanLy() : (bn.getQuanLyId() > 0 ? String.valueOf(bn.getQuanLyId()) : "-"),
+                bn.getTenQuanLy() != null ? bn.getTenQuanLy() : (bn.getQuanLyId() != null ? bn.getQuanLyId() : "-"),
                 bn.getLoaiBoNhiemDisplay(),
                 String.format("%.0f%%", bn.getTyLeHuongLuong()),
                 bn.getTuNgay() != null ? bn.getTuNgay().format(dtf) : "",

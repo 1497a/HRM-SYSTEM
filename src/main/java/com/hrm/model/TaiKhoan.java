@@ -11,7 +11,7 @@ public class TaiKhoan {
     private String email;
     private boolean hoatDong;
     private boolean biKhoa;
-    private Integer nhanVienId;
+    private String nhanVienId;
     private List<VaiTro> vaiTros;
 
     public TaiKhoan() {
@@ -45,10 +45,8 @@ public class TaiKhoan {
     public void setHoatDong(boolean hoatDong) { this.hoatDong = hoatDong; }
     public boolean isBiKhoa() { return biKhoa; }
     public void setBiKhoa(boolean biKhoa) { this.biKhoa = biKhoa; }
-    public Integer getNhanVienId() { return nhanVienId; }
-    public void setNhanVienId(Integer nhanVienId) { this.nhanVienId = nhanVienId; }
-    public Integer getMaNV() { return nhanVienId; }
-    public void setMaNV(Integer maNV) { this.nhanVienId = maNV; }
+    public String getNhanVienId() { return nhanVienId; }
+    public void setNhanVienId(String nhanVienId) { this.nhanVienId = nhanVienId; }
     public List<VaiTro> getVaiTros() { return vaiTros; }
     public void setVaiTros(List<VaiTro> vaiTros) { this.vaiTros = vaiTros; }
 

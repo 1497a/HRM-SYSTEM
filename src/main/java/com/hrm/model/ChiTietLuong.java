@@ -36,7 +36,7 @@ public class ChiTietLuong {
 
     private int maChiTietLuong;
     private int maBL;            // FK → BANGLUONG
-    private int maNV;            // FK → NHANVIEN
+    private String maNV;         // FK → NHANVIEN
     private String tenNV;        // Transient — để hiển thị
 
     // Các khoản lương
@@ -85,8 +85,8 @@ public class ChiTietLuong {
     public int getMaBL() { return maBL; }
     public void setMaBL(int maBL) { this.maBL = maBL; }
 
-    public int getMaNV() { return maNV; }
-    public void setMaNV(int maNV) { this.maNV = maNV; }
+    public String getMaNV() { return maNV; }
+    public void setMaNV(String maNV) { this.maNV = maNV; }
 
     public String getTenNV() { return tenNV; }
     public void setTenNV(String tenNV) { this.tenNV = tenNV; }

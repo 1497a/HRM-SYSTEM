@@ -211,15 +211,17 @@ public class EvalConfigDialog extends JDialog {
     }
 
     private void addCriteria() {
+        int w = getWeightValue();
         DanhGiaBUS.KetQua<?> result = evalService.saveCriteria(
-                txtName.getText().trim(), txtDescription.getText().trim(), getWeightValue());
+                txtName.getText().trim(), txtDescription.getText().trim(), "", w, w);
         handleResult(result);
     }
 
     private void updateCriteria() {
         if (selectedId < 0) return;
+        int w = getWeightValue();
         DanhGiaBUS.KetQua<?> result = evalService.updateCriteria(
-                selectedId, txtName.getText().trim(), txtDescription.getText().trim(), getWeightValue());
+                selectedId, txtName.getText().trim(), txtDescription.getText().trim(), "", w, w);
         handleResult(result);
     }
 

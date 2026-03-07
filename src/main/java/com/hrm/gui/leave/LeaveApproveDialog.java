@@ -174,7 +174,7 @@ public class LeaveApproveDialog extends JDialog {
         NghiPhepBUS.KetQua<?> result = leaveService.processRequest(
                 requestId,
                 approve,
-                currentUser.getId(),
+                currentUser.getNhanVienId(),
                 currentUser.getHoTen(),
                 note);
 

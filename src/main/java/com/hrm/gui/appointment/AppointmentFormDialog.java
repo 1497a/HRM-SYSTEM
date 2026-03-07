@@ -344,7 +344,7 @@ public class AppointmentFormDialog extends JDialog {
     private void fillForm(BoNhiem bn) {
         // Pre-select nhân viên
         for (int i = 0; i < cboNhanVien.getItemCount(); i++) {
-            if (cboNhanVien.getItemAt(i).getId() == bn.getMaNV()) {
+            if (cboNhanVien.getItemAt(i).getMaNhanVien().equals(bn.getMaNV())) {
                 cboNhanVien.setSelectedIndex(i);
                 break;
             }
@@ -387,10 +387,10 @@ public class AppointmentFormDialog extends JDialog {
         }
 
         // Cấp trên trực tiếp
-        if (bn.getMaQuanLy() > 0) {
+        if (bn.getMaQuanLy() != null && !bn.getMaQuanLy().isEmpty()) {
             for (int i = 1; i < cboQuanLy.getItemCount(); i++) {
                 Object item = cboQuanLy.getItemAt(i);
-                if (item instanceof NhanVien && ((NhanVien) item).getId() == bn.getMaQuanLy()) {
+                if (item instanceof NhanVien && ((NhanVien) item).getMaNhanVien().equals(bn.getMaQuanLy())) {
                     cboQuanLy.setSelectedIndex(i);
                     break;
                 }
@@ -426,7 +426,7 @@ public class AppointmentFormDialog extends JDialog {
                     "Lỗi nhập liệu", JOptionPane.ERROR_MESSAGE);
             return;
         }
-        int maNV = selectedNV.getId();
+        String maNV = selectedNV.getMaNhanVien();
 
         // Validate phòng ban
         PhongBan selectedDept = (PhongBan) cboPhongBan.getSelectedItem();
@@ -458,10 +458,10 @@ public class AppointmentFormDialog extends JDialog {
         String ghiChu = txtGhiChu.getText().trim();
 
         // Cấp trên trực tiếp
-        int maQuanLy = 0;
+        String maQuanLy = null;
         Object quanLyItem = cboQuanLy.getSelectedItem();
         if (quanLyItem instanceof NhanVien) {
-            maQuanLy = ((NhanVien) quanLyItem).getId();
+            maQuanLy = ((NhanVien) quanLyItem).getMaNhanVien();
         }
 
         // Tạo BoNhiem object

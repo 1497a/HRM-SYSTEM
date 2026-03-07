@@ -78,7 +78,7 @@ public class ChamCong {
     }
 
     private int id;                         // PRIMARY KEY — AUTO_INCREMENT
-    private int nhanVienId;                 // FK -> nhan_viens — NOT NULL
+    private String nhanVienId;              // FK -> NHANVIEN — NOT NULL
     private String employeeName;            // TRANSIENT — Khong luu DB, chi de hien thi
     private LocalDate ngay;                 // NOT NULL — Ngay cham cong
     private String caLamId;                 // FK -> ca_lams — co the NULL
@@ -100,7 +100,7 @@ public class ChamCong {
         this.ngayTao = LocalDateTime.now();
     }
 
-    public ChamCong(int nhanVienId, LocalDate ngay, String caLamId) {
+    public ChamCong(String nhanVienId, LocalDate ngay, String caLamId) {
         this();
         this.nhanVienId = nhanVienId;
         this.ngay = ngay;
@@ -115,12 +115,12 @@ public class ChamCong {
     public int getMaChamCong() { return id; }
     public void setMaChamCong(int maChamCong) { this.id = maChamCong; }
 
-    public int getNhanVienId() { return nhanVienId; }
-    public void setNhanVienId(int nhanVienId) { this.nhanVienId = nhanVienId; }
+    public String getNhanVienId() { return nhanVienId; }
+    public void setNhanVienId(String nhanVienId) { this.nhanVienId = nhanVienId; }
 
     // Legacy compatibility
-    public int getMaNV() { return nhanVienId; }
-    public void setMaNV(int maNV) { this.nhanVienId = maNV; }
+    public String getMaNV() { return nhanVienId; }
+    public void setMaNV(String maNV) { this.nhanVienId = maNV; }
 
     public String getEmployeeName() { return employeeName; }
     public void setEmployeeName(String employeeName) { this.employeeName = employeeName; }

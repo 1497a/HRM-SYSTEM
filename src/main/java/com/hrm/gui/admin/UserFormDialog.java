@@ -147,7 +147,7 @@ public class UserFormDialog extends JDialog {
 
         String dob = "";
         try {
-            ThongTinCaNhan ttcn = nhanVienService.getThongTinCaNhan(selectedNV.getId());
+            ThongTinCaNhan ttcn = nhanVienService.getThongTinCaNhan(selectedNV.getMaNhanVien());
             if (ttcn != null && ttcn.getNgaySinh() != null) {
                 dob = ttcn.getNgaySinh().format(DateTimeFormatter.ofPattern("ddMMyyyy"));
             }
@@ -279,12 +279,12 @@ public class UserFormDialog extends JDialog {
         txtFullName.setText(editingUser.getHoTen() != null ? editingUser.getHoTen() : "");
         txtEmail.setText(editingUser.getEmail() != null ? editingUser.getEmail() : "");
 
-        if (editingUser.getMaNV() != null) {
+        if (editingUser.getNhanVienId() != null) {
             try {
-                NhanVien nv = nhanVienService.getById(editingUser.getMaNV());
-                txtMaNV.setText(nv != null ? nv.getMaNhanVien() + " (ID: " + editingUser.getMaNV() + ")" : String.valueOf(editingUser.getMaNV()));
+                NhanVien nv = nhanVienService.getById(editingUser.getNhanVienId());
+                txtMaNV.setText(nv != null ? nv.getMaNhanVien() + " - " + editingUser.getNhanVienId() : editingUser.getNhanVienId());
             } catch (Exception e) {
-                txtMaNV.setText(String.valueOf(editingUser.getMaNV()));
+                txtMaNV.setText(editingUser.getNhanVienId());
             }
         } else {
             txtMaNV.setText("(Chua lien ket nhan vien)");
@@ -352,11 +352,11 @@ public class UserFormDialog extends JDialog {
             String username = selectedNV.getMaNhanVien();
             String email = null;
             try {
-                ThongTinCaNhan ttcn = nhanVienService.getThongTinCaNhan(selectedNV.getId());
+                ThongTinCaNhan ttcn = nhanVienService.getThongTinCaNhan(selectedNV.getMaNhanVien());
                 if (ttcn != null) email = ttcn.getEmail();
             } catch (Exception ex) { /* ignore */ }
 
-            KetQua<Integer> result = authService.createUser(username, password, selectedNV.getId(), selectedRoleCode, email);
+            KetQua<Integer> result = authService.createUser(username, password, selectedNV.getMaNhanVien(), selectedRoleCode, email);
             if (!result.isSuccess()) {
                 JOptionPane.showMessageDialog(this, result.getMessage(), "Loi", JOptionPane.ERROR_MESSAGE);
                 return;

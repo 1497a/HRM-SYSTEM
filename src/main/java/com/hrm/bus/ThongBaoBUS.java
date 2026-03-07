@@ -51,7 +51,7 @@ public class ThongBaoBUS {
      * Gửi thông báo đến nhân viên qua mã nhân viên (maNV).
      * Tìm tài khoản liên kết với maNV rồi gửi.
      */
-    public void guiThongBaoChoMaNV(int maNV, String tieuDe, String noiDung) {
+    public void guiThongBaoChoMaNV(String maNV, String tieuDe, String noiDung) {
         // Tìm tài khoản theo maNV
         TaiKhoan user = findTaiKhoanByMaNV(maNV);
         if (user == null) {
@@ -77,7 +77,7 @@ public class ThongBaoBUS {
     /**
      * Gửi thông báo cá nhân từ người dùng đến một nhân viên cụ thể.
      */
-    public void guiThongBaoCaNhan(int nguoiGui, int maNVNhan, String tieuDe, String noiDung) {
+    public void guiThongBaoCaNhan(int nguoiGui, String maNVNhan, String tieuDe, String noiDung) {
         TaiKhoan nguoiNhan = findUserByMaNVDirect(maNVNhan);
         if (nguoiNhan == null) {
             System.err.println("ThongBaoBUS: Khong tim thay tai khoan cho maNV=" + maNVNhan);
@@ -155,25 +155,15 @@ public class ThongBaoBUS {
     // Private helpers
     // ============================
 
-    private TaiKhoan findTaiKhoanByMaNV(int maNV) {
-        // Tìm tài khoản có maNV tương ứng
-        try {
-            java.util.List<TaiKhoan> all = taiKhoanRepo.findAll();
-            for (TaiKhoan u : all) {
-                // TaiKhoan.getId() = maTaiKhoan, không phải maNV
-                // Dùng truy vấn trực tiếp thông qua TaiKhoanDAO
-            }
-        } catch (Exception e) {
-            System.err.println("Lỗi findTaiKhoanByMaNV: " + e.getMessage());
-        }
+    private TaiKhoan findTaiKhoanByMaNV(String maNV) {
         return findUserByMaNVDirect(maNV);
     }
 
-    private TaiKhoan findUserByMaNVDirect(int maNV) {
+    private TaiKhoan findUserByMaNVDirect(String maNV) {
         String sql = "SELECT tk.maTaiKhoan FROM TAIKHOAN tk WHERE tk.maNV = ?";
         try (Connection conn = com.hrm.util.DatabaseConnection.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
-            ps.setInt(1, maNV);
+            ps.setString(1, maNV);
             try (ResultSet rs = ps.executeQuery()) {
                 if (rs.next()) {
                     int maTaiKhoan = rs.getInt("maTaiKhoan");

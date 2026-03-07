@@ -8,7 +8,7 @@ import java.time.LocalDate;
  */
 public class ThongTinCaNhan {
 
-    private int maNV;
+    private String maNV;
     private String hoTen;
     private LocalDate ngaySinh;
     private String gioiTinh;        // "nam", "nu", "khac"
@@ -26,7 +26,7 @@ public class ThongTinCaNhan {
     public ThongTinCaNhan() {
     }
 
-    public ThongTinCaNhan(int maNV, String hoTen, LocalDate ngaySinh, String gioiTinh,
+    public ThongTinCaNhan(String maNV, String hoTen, LocalDate ngaySinh, String gioiTinh,
                           String cccd, String dienThoai, String email,
                           String diaChi, String diaChiThuongTru, String queQuan,
                           String tinhTrangHonNhan) {
@@ -47,11 +47,11 @@ public class ThongTinCaNhan {
     // Getters & Setters
     // ============================
 
-    public int getMaNV() {
+    public String getMaNV() {
         return maNV;
     }
 
-    public void setMaNV(int maNV) {
+    public void setMaNV(String maNV) {
         this.maNV = maNV;
     }
 

@@ -41,9 +41,6 @@ public class TuyenDungBUS {
         return recruitmentRepo.findAllYeuCau();
     }
 
-    /**
-     * Tạo yêu cầu tuyển dụng mới.
-     */
     public KetQua<YeuCauTuyenDung> taoYeuCau(YeuCauTuyenDung yc) {
         // Validate vị trí
         if (yc.getMaChucVu() == null || yc.getMaChucVu().trim().isEmpty()) {
@@ -69,46 +66,36 @@ public class TuyenDungBUS {
         }
     }
 
-    /**
-     * Phê duyệt yêu cầu tuyển dụng.
-     */
     public KetQua<Void> duyetYeuCau(int maYC) {
         YeuCauTuyenDung yc = recruitmentRepo.findYeuCauById(maYC);
         if (yc == null) {
-            return KetQua.error("Không tìm thấy yêu cầu tuyển dụng.");
+            return KetQua.error("Không tìm thấy yêu cầu tuyển dụng #" + maYC);
         }
         if (!"cho_duyet".equals(yc.getTrangThai())) {
             return KetQua.error("Yêu cầu này không ở trạng thái chờ duyệt.");
         }
 
-        int nguoiDuyetId = 0;
-        if (SessionContext.getInstance().getCurrentUser() != null) {
-            nguoiDuyetId = SessionContext.getInstance().getCurrentUser().getId();
-        }
+        int nguoiDuyetId = SessionContext.getInstance().getCurrentUser() != null
+                ? SessionContext.getInstance().getCurrentUser().getId() : 0;
 
         recruitmentRepo.updateYeuCauTrangThai(maYC, "da_duyet", nguoiDuyetId, LocalDateTime.now());
-        return KetQua.success(null, "Đã phê duyệt yêu cầu tuyển dụng.");
+        return KetQua.success(null, "Đã phê duyệt yêu cầu tuyển dụng #" + maYC);
     }
 
-    /**
-     * Từ chối yêu cầu tuyển dụng.
-     */
     public KetQua<Void> tuChoiYeuCau(int maYC) {
         YeuCauTuyenDung yc = recruitmentRepo.findYeuCauById(maYC);
         if (yc == null) {
-            return KetQua.error("Không tìm thấy yêu cầu tuyển dụng.");
+            return KetQua.error("Không tìm thấy yêu cầu tuyển dụng #" + maYC);
         }
         if (!"cho_duyet".equals(yc.getTrangThai())) {
             return KetQua.error("Yêu cầu này không ở trạng thái chờ duyệt.");
         }
 
-        int nguoiDuyetId = 0;
-        if (SessionContext.getInstance().getCurrentUser() != null) {
-            nguoiDuyetId = SessionContext.getInstance().getCurrentUser().getId();
-        }
+        int nguoiDuyetId = SessionContext.getInstance().getCurrentUser() != null
+                ? SessionContext.getInstance().getCurrentUser().getId() : 0;
 
         recruitmentRepo.updateYeuCauTrangThai(maYC, "tu_choi", nguoiDuyetId, LocalDateTime.now());
-        return KetQua.success(null, "Đã từ chối yêu cầu tuyển dụng.");
+        return KetQua.success(null, "Đã từ chối yêu cầu tuyển dụng #" + maYC);
     }
 
     // ============================
@@ -119,27 +106,21 @@ public class TuyenDungBUS {
         return recruitmentRepo.findAllTin();
     }
 
-    /**
-     * Tạo tin tuyển dụng mới.
-     */
     public KetQua<TinTuyenDung> taoTin(TinTuyenDung tin) {
-        // Validate tiêu đề
         if (tin.getTieuDe() == null || tin.getTieuDe().trim().isEmpty()) {
             return KetQua.error("Tiêu đề tin tuyển dụng không được để trống.");
         }
-        // Validate mã yêu cầu
         if (tin.getMaYeuCau() <= 0) {
             return KetQua.error("Vui lòng chọn yêu cầu tuyển dụng liên kết.");
         }
 
-        // Thiết lập trạng thái và ngày đăng
         tin.setTrangThai("dang_tuyen");
         tin.setNgayTao(LocalDate.now());
 
         try {
             int maTin = recruitmentRepo.insertTin(tin);
             if (maTin <= 0) {
-                return KetQua.error("Không thể tạo tin tuyển dụng. Vui lòng thử lại.");
+                return KetQua.error("Không thể tạo tin tuyển dụng.");
             }
             tin.setMaTin(maTin);
             return KetQua.success(tin, "Tạo tin tuyển dụng thành công.");
@@ -148,13 +129,10 @@ public class TuyenDungBUS {
         }
     }
 
-    /**
-     * Đóng tin tuyển dụng.
-     */
     public KetQua<Void> dongTin(int maTin) {
         TinTuyenDung tin = recruitmentRepo.findTinById(maTin);
         if (tin == null) {
-            return KetQua.error("Không tìm thấy tin tuyển dụng.");
+            return KetQua.error("Không tìm thấy tin tuyển dụng #" + maTin);
         }
         if ("da_dong".equals(tin.getTrangThai())) {
             return KetQua.error("Tin tuyển dụng đã được đóng.");
@@ -163,7 +141,7 @@ public class TuyenDungBUS {
         tin.setTrangThai("da_dong");
         try {
             recruitmentRepo.updateTin(tin);
-            return KetQua.success(null, "Đã đóng tin tuyển dụng.");
+            return KetQua.success(null, "Đã đóng tin tuyển dụng #" + maTin);
         } catch (Exception e) {
             return KetQua.error("Lỗi đóng tin tuyển dụng: " + e.getMessage());
         }
@@ -177,31 +155,24 @@ public class TuyenDungBUS {
         return recruitmentRepo.findAllUngVien();
     }
 
-    /**
-     * Tiếp nhận ứng viên nộp hồ sơ.
-     */
     public KetQua<UngVien> tiepNhanUngVien(UngVien uv) {
-        // Validate họ tên
         if (uv.getHoTen() == null || uv.getHoTen().trim().isEmpty()) {
             return KetQua.error("Họ tên ứng viên không được để trống.");
         }
-        // Validate email
         if (uv.getEmail() == null || uv.getEmail().trim().isEmpty()) {
             return KetQua.error("Email ứng viên không được để trống.");
         }
-        // Validate mã tin
         if (uv.getMaTin() <= 0) {
             return KetQua.error("Vui lòng chọn tin tuyển dụng liên kết.");
         }
 
-        // Thiết lập trạng thái và ngày nộp
         uv.setTrangThai("moi");
         uv.setNgayTao(LocalDate.now());
 
         try {
             int maUV = recruitmentRepo.insertUngVien(uv);
             if (maUV <= 0) {
-                return KetQua.error("Không thể tiếp nhận ứng viên. Vui lòng thử lại.");
+                return KetQua.error("Không thể tiếp nhận ứng viên.");
             }
             uv.setMaUngVien(maUV);
             return KetQua.success(uv, "Tiếp nhận ứng viên thành công.");
@@ -210,45 +181,43 @@ public class TuyenDungBUS {
         }
     }
 
-    /**
-     * Cập nhật trạng thái ứng viên.
-     */
-        public KetQua<Void> capNhatTrangThaiUV(int maUV, String trangThai) {
+    public KetQua<Void> capNhatTrangThaiUV(int maUV, String trangThai) {
         UngVien uv = recruitmentRepo.findById(maUV);
         if (uv == null) {
-            return KetQua.error("Khong tim thay ung vien.");
+            return KetQua.error("Không tìm thấy ứng viên #" + maUV);
         }
-        if (uv.getMaNV() > 0) {
-            return KetQua.error("Ung vien da duoc chuyen thanh nhan vien, khong the cap nhat trang thai tuyen dung.");
+
+        // Kiểm tra đã chuyển thành nhân viên chưa (maNV là String)
+        if (uv.getMaNV() != null && !uv.getMaNV().trim().isEmpty()) {
+            return KetQua.error("Ứng viên đã được chuyển thành nhân viên (mã NV: " + uv.getMaNV() + "), không thể cập nhật trạng thái tuyển dụng.");
         }
 
         uv.setTrangThai(trangThai);
         try {
             recruitmentRepo.updateUngVien(uv);
-            return KetQua.success(null, "Cap nhat trang thai ung vien thanh cong.");
+            return KetQua.success(null, "Cập nhật trạng thái ứng viên thành công.");
         } catch (Exception e) {
-            return KetQua.error("Loi cap nhat trang thai ung vien: " + e.getMessage());
+            return KetQua.error("Lỗi cập nhật trạng thái ứng viên: " + e.getMessage());
         }
     }
 
-
-    /**
-     * Chuyển ứng viên trúng tuyển thành nhân viên chính thức.
-     */
-        public KetQua<Void> chuyenUVThanhNV(int maUV) {
+    public KetQua<Void> chuyenUVThanhNV(int maUV) {
         UngVien uv = recruitmentRepo.findById(maUV);
         if (uv == null) {
-            return KetQua.error("Khong tim thay ung vien.");
+            return KetQua.error("Không tìm thấy ứng viên #" + maUV);
         }
-        if (uv.getMaNV() > 0) {
-            return KetQua.error("Ung vien nay da duoc chuyen thanh nhan vien (maNV=" + uv.getMaNV() + ").");
+
+        // Kiểm tra đã chuyển thành nhân viên chưa
+        if (uv.getMaNV() != null && !uv.getMaNV().trim().isEmpty()) {
+            return KetQua.error("Ứng viên này đã được chuyển thành nhân viên (mã NV: " + uv.getMaNV() + ").");
         }
+
         if (!"trung_tuyen".equals(uv.getTrangThai())) {
-            return KetQua.error("Chi co the chuyen ung vien co trang thai 'Trung tuyen' thanh nhan vien.");
+            return KetQua.error("Chỉ có thể chuyển ứng viên trạng thái 'Trúng tuyển' thành nhân viên.");
         }
 
         try {
-            // Tao nhan vien moi tu thong tin ung vien
+            // Tạo nhân viên mới từ thông tin ứng viên
             NhanVien nv = new NhanVien();
             nv.setMaNhanVien(NhanVienBUS.getInstance().generateMaNhanVien());
             nv.setTrangThai("dang_lam_viec");
@@ -265,66 +234,67 @@ public class TuyenDungBUS {
             ttcn.setKinhNghiem(uv.getKinhNghiem());
             ttcn.setFileCV(uv.getFileCV());
 
-            KetQua<NhanVien> ketQua = NhanVienBUS.getInstance().taoHoSo(nv, ttcn);
-            if (!ketQua.isSuccess()) {
-                return KetQua.error("Loi tao ho so nhan vien: " + ketQua.getMessage());
+            // Tạo hồ sơ nhân viên
+            KetQua<NhanVien> ketQuaNV = NhanVienBUS.getInstance().taoHoSo(nv, ttcn);
+            if (!ketQuaNV.isSuccess()) {
+                return KetQua.error("Lỗi tạo hồ sơ nhân viên: " + ketQuaNV.getMessage());
             }
 
+            String newMaNV = ketQuaNV.getData().getMaNhanVien();  // Lấy mã String
+
+            // Tự động bổ nhiệm (không block nếu thất bại)
+            String boNhiemNote = "";
             TinTuyenDung tin = recruitmentRepo.findTinById(uv.getMaTin());
-            if (tin == null) {
-                return KetQua.error("Khong tim thay tin tuyen dung lien ket cua ung vien.");
-            }
-            YeuCauTuyenDung yc = recruitmentRepo.findYeuCauById(tin.getMaYeuCau());
-            if (yc == null) {
-                return KetQua.error("Khong tim thay yeu cau tuyen dung lien ket cua ung vien.");
-            }
-            if (yc.getId() == null || yc.getId().trim().isEmpty() || yc.getMaChucVu() == null || yc.getMaChucVu().trim().isEmpty()) {
-                return KetQua.error("Yeu cau tuyen dung thieu phong ban/chuc vu, khong the tao bo nhiem tu dong.");
+            if (tin != null) {
+                YeuCauTuyenDung yc = recruitmentRepo.findYeuCauById(tin.getMaYeuCau());
+                if (yc != null && yc.getId() != null && !yc.getId().trim().isEmpty()
+                        && yc.getMaChucVu() != null && !yc.getMaChucVu().trim().isEmpty()) {
+
+                    BoNhiem boNhiem = new BoNhiem();
+                    boNhiem.setNhanVienId(newMaNV);  // String
+                    boNhiem.setPhongBanId(yc.getId());
+                    boNhiem.setChucVuId(yc.getMaChucVu());
+                    boNhiem.setLoaiBoNhiem("chinh");
+                    boNhiem.setTyLeHuongLuong(100);
+                    boNhiem.setQuanLyId(null);  // hoặc mã quản lý nếu có
+                    boNhiem.setTuNgay(LocalDate.now());
+                    boNhiem.setLyDo("Tự động bổ nhiệm khi chuyển ứng viên #" + uv.getMaUngVien());
+
+                    KetQua<BoNhiem> kqBoNhiem = BoNhiemBUS.getInstance().taoBoNhiem(boNhiem);
+                    if (kqBoNhiem.isSuccess()) {
+                        int nguoiDuyetId = SessionContext.getInstance().getCurrentUser() != null
+                                ? SessionContext.getInstance().getCurrentUser().getId() : 0;
+                        KetQua<BoNhiem> kqPheDuyet = BoNhiemBUS.getInstance()
+                                .pheDuyetBoNhiem(kqBoNhiem.getData().getMaBoNhiem(), nguoiDuyetId);
+                        boNhiemNote = kqPheDuyet.isSuccess()
+                                ? " | Bổ nhiệm đã được tạo và phê duyệt"
+                                : " | Bổ nhiệm tạo nhưng chưa phê duyệt: " + kqPheDuyet.getMessage();
+                    } else {
+                        boNhiemNote = " | Bổ nhiệm thất bại (cần tạo thủ công): " + kqBoNhiem.getMessage();
+                    }
+                } else {
+                    boNhiemNote = " | Thiếu thông tin phòng ban/chức vụ, bổ nhiệm cần tạo thủ công";
+                }
+            } else {
+                boNhiemNote = " | Không tìm thấy tin tuyển dụng để tạo bổ nhiệm";
             }
 
-            BoNhiem boNhiem = new BoNhiem();
-            boNhiem.setMaNV(ketQua.getData().getId());
-            boNhiem.setPhongBanId(yc.getId());
-            boNhiem.setChucVuId(yc.getMaChucVu());
-            boNhiem.setLoaiBoNhiem("chinh");
-            boNhiem.setTyLeHuongLuong(100);
-            boNhiem.setMaQuanLy(0);
-            boNhiem.setTuNgay(LocalDate.now());
-            boNhiem.setLyDo("Tu dong bo nhiem khi chuyen ung vien #" + uv.getMaUngVien() + " thanh nhan vien");
-
-            KetQua<BoNhiem> kqBoNhiem = BoNhiemBUS.getInstance().taoBoNhiem(boNhiem);
-            if (!kqBoNhiem.isSuccess()) {
-                return KetQua.error("Da tao nhan vien nhung tao bo nhiem that bai: " + kqBoNhiem.getMessage());
-            }
-
-            int nguoiDuyetId = 0;
-            if (SessionContext.getInstance().getCurrentUser() != null) {
-                nguoiDuyetId = SessionContext.getInstance().getCurrentUser().getId();
-            }
-            KetQua<BoNhiem> kqPheDuyet = BoNhiemBUS.getInstance()
-                    .pheDuyetBoNhiem(kqBoNhiem.getData().getMaBoNhiem(), nguoiDuyetId);
-            if (!kqPheDuyet.isSuccess()) {
-                return KetQua.error("Da tao nhan vien va bo nhiem nhung phe duyet bo nhiem that bai: " + kqPheDuyet.getMessage());
-            }
-
-            // Lien ket ung vien voi nhan vien va cap nhat trang thai
-            uv.setMaNV(ketQua.getData().getId());
+            // LUÔN cập nhật trạng thái ứng viên
+            uv.setMaNV(newMaNV);
             uv.setTrangThai("da_chuyen_nhan_vien");
             recruitmentRepo.updateUngVien(uv);
 
-            com.hrm.model.TaiKhoan tk = XacThucBUS.getInstance().findByMaNV(ketQua.getData().getId());
-            String thongTinTK = (tk != null)
-                    ? (" | Tai khoan: " + tk.getTenDangNhap())
-                    : " | Tai khoan chua duoc tao";
+            // Kiểm tra tài khoản
+            com.hrm.model.TaiKhoan tk = XacThucBUS.getInstance().findByMaNV(newMaNV);
+            String thongTinTK = tk != null
+                    ? " | Tài khoản: " + tk.getTenDangNhap()
+                    : " | Tài khoản chưa được tạo";
 
             return KetQua.success(null,
-                    "Chuyen ung vien thanh nhan vien thanh cong. Ma NV: " + nv.getMaNhanVien()
-                            + " | Bo nhiem da duoc tao va phe duyet" + thongTinTK);
+                    "Chuyển ứng viên thành nhân viên thành công.\n"
+                            + "Mã NV: " + newMaNV + boNhiemNote + thongTinTK);
         } catch (Exception e) {
-            return KetQua.error("Loi chuyen ung vien thanh nhan vien: " + e.getMessage());
+            return KetQua.error("Lỗi chuyển ứng viên thành nhân viên: " + e.getMessage());
         }
     }
 }
-
-
-

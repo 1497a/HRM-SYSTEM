@@ -20,13 +20,14 @@ import javax.swing.table.DefaultTableModel;
 import javax.swing.table.TableRowSorter;
 import java.awt.*;
 import java.time.format.DateTimeFormatter;
+import java.util.Comparator;
 import java.util.List;
 
 /**
  * Panel quản lý tuyển dụng.
- * Tab 1: Yêu cầu tuyển dụng.
- * Tab 2: Tin tuyển dụng.
- * Tab 3: Ứng viên.
+ * Tab 1: Yêu cầu tuyển dụng
+ * Tab 2: Tin tuyển dụng
+ * Tab 3: Ứng viên
  */
 public class RecruitmentPanel extends JPanel {
 
@@ -84,22 +85,22 @@ public class RecruitmentPanel extends JPanel {
         loadAll();
     }
 
-    // =======================
-    // Build Tab 1 - Yêu cầu
-    // =======================
+    // ────────────────────────────────────────────────
+    // Tab 1: Yêu cầu tuyển dụng
+    // ────────────────────────────────────────────────
 
     private JPanel buildYeuCauTab() {
         JPanel panel = new JPanel(new BorderLayout(8, 8));
         panel.setBackground(UIColors.LIGHT_GRAY_BG);
         panel.setBorder(new EmptyBorder(12, 12, 12, 12));
 
-        // Toolbar
         JPanel toolbar = new JPanel(new FlowLayout(FlowLayout.LEFT, 8, 4));
         toolbar.setOpaque(false);
 
-        btnTaoYeuCau = UIHelper.createPrimaryButton("Tạo yêu cầu");
-        btnPheDuyet = UIHelper.createSuccessButton("Phê duyệt");
-        btnTuChoi = UIHelper.createDangerButton("Từ chối");
+        btnTaoYeuCau   = UIHelper.createPrimaryButton("Tạo yêu cầu");
+        btnPheDuyet    = UIHelper.createSuccessButton("Phê duyệt");
+        btnTuChoi      = UIHelper.createDangerButton("Từ chối");
+
         btnTaoYeuCau.addActionListener(e -> taoYeuCau());
         btnPheDuyet.addActionListener(e -> pheDuyetYeuCau());
         btnTuChoi.addActionListener(e -> tuChoiYeuCau());
@@ -112,16 +113,16 @@ public class RecruitmentPanel extends JPanel {
         toolbar.add(new JLabel("Trạng thái:"));
         toolbar.add(cboTrangThaiYC);
 
-        // Table
         String[] cols = {"Mã YC", "Vị trí", "Phòng ban", "Số lượng", "Hạn tuyển dụng", "Trạng thái"};
         modelYeuCau = new DefaultTableModel(cols, 0) {
-            @Override
-            public boolean isCellEditable(int row, int col) { return false; }
+            @Override public boolean isCellEditable(int row, int col) { return false; }
+            @Override public Class<?> getColumnClass(int columnIndex) {
+                return (columnIndex == 0 || columnIndex == 3) ? Integer.class : String.class;
+            }
         };
-        tblYeuCau = buildTable(modelYeuCau);
 
-        int[] widths = {70, 200, 180, 80, 120, 130};
-        applyColWidths(tblYeuCau, widths);
+        tblYeuCau = buildTable(modelYeuCau);
+        applyColWidths(tblYeuCau, new int[]{70, 200, 180, 80, 120, 130});
         tblYeuCau.getColumnModel().getColumn(5).setCellRenderer(new StatusCellRenderer());
 
         sorterYeuCau = new TableRowSorter<>(modelYeuCau);
@@ -136,22 +137,21 @@ public class RecruitmentPanel extends JPanel {
         return panel;
     }
 
-    // =======================
-    // Build Tab 2 - Tin
-    // =======================
+    // ────────────────────────────────────────────────
+    // Tab 2: Tin tuyển dụng
+    // ────────────────────────────────────────────────
 
     private JPanel buildTinTab() {
         JPanel panel = new JPanel(new BorderLayout(8, 8));
         panel.setBackground(UIColors.LIGHT_GRAY_BG);
         panel.setBorder(new EmptyBorder(12, 12, 12, 12));
 
-        // Toolbar
         JPanel toolbar = new JPanel(new FlowLayout(FlowLayout.LEFT, 8, 4));
         toolbar.setOpaque(false);
 
-        btnDangTin = UIHelper.createSuccessButton("Đăng tin");
-        btnDongTin = UIHelper.createDangerButton("Đóng tin");
-        btnLamMoiTin = UIHelper.createDefaultButton("Làm mới");
+        btnDangTin    = UIHelper.createSuccessButton("Đăng tin");
+        btnDongTin    = UIHelper.createDangerButton("Đóng tin");
+        btnLamMoiTin  = UIHelper.createDefaultButton("Làm mới");
 
         btnDangTin.addActionListener(e -> dangTin());
         btnDongTin.addActionListener(e -> dongTin());
@@ -165,16 +165,16 @@ public class RecruitmentPanel extends JPanel {
         toolbar.add(new JLabel("Trạng thái:"));
         toolbar.add(cboTrangThaiTin);
 
-        // Table
-        String[] cols = {"Mã tin", "Tiêu đề", "Ngày đăng", "Ngày hết hạn", "Số đơn", "Trạng thái"};
+        String[] cols = {"Mã tin", "Tiêu đề", "Ngày đăng", "Hạn nộp", "Số đơn", "Trạng thái"};
         modelTin = new DefaultTableModel(cols, 0) {
-            @Override
-            public boolean isCellEditable(int row, int col) { return false; }
+            @Override public boolean isCellEditable(int row, int col) { return false; }
+            @Override public Class<?> getColumnClass(int columnIndex) {
+                return columnIndex == 0 ? Integer.class : String.class;
+            }
         };
-        tblTin = buildTable(modelTin);
 
-        int[] widths = {70, 280, 120, 130, 80, 130};
-        applyColWidths(tblTin, widths);
+        tblTin = buildTable(modelTin);
+        applyColWidths(tblTin, new int[]{70, 280, 120, 130, 80, 130});
         tblTin.getColumnModel().getColumn(5).setCellRenderer(new StatusCellRenderer());
 
         sorterTin = new TableRowSorter<>(modelTin);
@@ -189,31 +189,31 @@ public class RecruitmentPanel extends JPanel {
         return panel;
     }
 
-    // =======================
-    // Build Tab 3 - Ứng viên
-    // =======================
+    // ────────────────────────────────────────────────
+    // Tab 3: Ứng viên
+    // ────────────────────────────────────────────────
 
     private JPanel buildUngVienTab() {
         JPanel panel = new JPanel(new BorderLayout(8, 8));
         panel.setBackground(UIColors.LIGHT_GRAY_BG);
         panel.setBorder(new EmptyBorder(12, 12, 12, 12));
 
-        // Toolbar
         JPanel toolbar = new JPanel(new FlowLayout(FlowLayout.LEFT, 8, 4));
         toolbar.setOpaque(false);
 
-        btnChuyenTrangThai = UIHelper.createPrimaryButton("Chuyển trạng thái");
-        btnChuyenNV = UIHelper.createSuccessButton("Chuyển thành nhân viên");
-        btnTaoUngVien = UIHelper.createPrimaryButton("+ Tạo ứng viên");
-        btnLamMoiUV = UIHelper.createDefaultButton("Làm mới");
+        btnTaoUngVien       = UIHelper.createPrimaryButton("+ Tạo ứng viên");
+        btnChuyenTrangThai  = UIHelper.createPrimaryButton("Chuyển trạng thái");
+        btnChuyenNV         = UIHelper.createSuccessButton("Chuyển thành NV");
+        btnLamMoiUV         = UIHelper.createDefaultButton("Làm mới");
 
+        btnTaoUngVien.addActionListener(e -> taoUngVien());
         btnChuyenTrangThai.addActionListener(e -> chuyenTrangThaiUV());
         btnChuyenNV.addActionListener(e -> chuyenUVThanhNV());
-        btnTaoUngVien.addActionListener(e -> taoUngVien());
         btnLamMoiUV.addActionListener(e -> loadUngVien());
 
         cboTrangThaiUV = new JComboBox<>(new String[]{
-            "Tất cả", "Mới", "Đang phỏng vấn", "Trúng tuyển", "Từ chối", "Đã chuyển thành nhân viên"});
+                "Tất cả", "Mới", "Đang phỏng vấn", "Trúng tuyển", "Từ chối", "Đã chuyển thành nhân viên"
+        });
 
         toolbar.add(btnTaoUngVien);
         toolbar.add(btnChuyenTrangThai);
@@ -222,23 +222,33 @@ public class RecruitmentPanel extends JPanel {
         toolbar.add(new JLabel("Trạng thái:"));
         toolbar.add(cboTrangThaiUV);
 
-        // Table
-        String[] cols = {"Mã UV", "Họ tên", "Email", "Điện thoại", "Vị trí ứng tuyển", "Ngày nộp", "Trạng thái"};
+        String[] cols = {"Mã UV", "Họ tên", "Email", "Điện thoại", "Vị trí", "Ngày nộp", "Trạng thái"};
         modelUngVien = new DefaultTableModel(cols, 0) {
-            @Override
-            public boolean isCellEditable(int row, int col) { return false; }
+            @Override public boolean isCellEditable(int row, int col) { return false; }
+            @Override public Class<?> getColumnClass(int columnIndex) {
+                return columnIndex == 0 ? Integer.class : String.class;
+            }
         };
-        tblUngVien = buildTable(modelUngVien);
 
-        int[] widths = {70, 160, 200, 120, 200, 110, 130};
-        applyColWidths(tblUngVien, widths);
+        tblUngVien = buildTable(modelUngVien);
+        applyColWidths(tblUngVien, new int[]{70, 160, 200, 120, 200, 110, 130});
         tblUngVien.getColumnModel().getColumn(6).setCellRenderer(new StatusCellRenderer());
 
-        // Sorter: sort by candidate name (col 1) with Vietnamese locale; filter by status (col 6)
         sorterUngVien = new TableRowSorter<>(modelUngVien);
         tblUngVien.setRowSorter(sorterUngVien);
+
+        // Chỉ cho phép sort một số cột
+        for (int i = 0; i < modelUngVien.getColumnCount(); i++) {
+            sorterUngVien.setSortable(i, false);
+        }
+        sorterUngVien.setSortable(0, true); // Mã UV
+        sorterUngVien.setSortable(1, true); // Họ tên
+
+        sorterUngVien.setComparator(0, Comparator.comparingInt(a -> (Integer) a));
         sorterUngVien.setComparator(1, UIHelper.vietnameseNameComparator());
-        sorterUngVien.setSortKeys(List.of(new RowSorter.SortKey(1, SortOrder.ASCENDING)));
+
+        sorterUngVien.setSortKeys(List.of(new RowSorter.SortKey(0, SortOrder.ASCENDING)));
+
         UIHelper.attachStatusFilter(sorterUngVien, cboTrangThaiUV, 6);
 
         JScrollPane scroll = new JScrollPane(tblUngVien);
@@ -249,9 +259,9 @@ public class RecruitmentPanel extends JPanel {
         return panel;
     }
 
-    // =======================
-    // Data loading
-    // =======================
+    // ────────────────────────────────────────────────
+    // Load dữ liệu
+    // ────────────────────────────────────────────────
 
     private void loadAll() {
         loadYeuCau();
@@ -264,18 +274,18 @@ public class RecruitmentPanel extends JPanel {
         try {
             danhSachYC = recruitmentService.getAllYeuCau();
             for (YeuCauTuyenDung yc : danhSachYC) {
-                String ngayTao = yc.getHanTuyenDung() != null ? yc.getHanTuyenDung().format(DATE_FORMAT) : "";
+                String han = yc.getHanTuyenDung() != null ? yc.getHanTuyenDung().format(DATE_FORMAT) : "";
                 modelYeuCau.addRow(new Object[]{
                         yc.getMaYeuCau(),
-                        yc.getTenChucVu() != null ? yc.getTenChucVu() : yc.getId(),
+                        yc.getTenChucVu() != null ? yc.getTenChucVu() : yc.getMaChucVu(),
                         yc.getTenPhongBan() != null ? yc.getTenPhongBan() : yc.getId(),
                         yc.getSoLuong(),
-                        ngayTao,
+                        han,
                         yc.getTrangThaiDisplay()
                 });
             }
-        } catch (Exception ex) {
-            showError("Lỗi tải yêu cầu tuyển dụng: " + ex.getMessage());
+        } catch (Exception e) {
+            showError("Lỗi tải yêu cầu tuyển dụng: " + e.getMessage());
         }
     }
 
@@ -284,19 +294,19 @@ public class RecruitmentPanel extends JPanel {
         try {
             danhSachTin = recruitmentService.getAllTinTuyenDung();
             for (TinTuyenDung tin : danhSachTin) {
-                String ngayDang = tin.getNgayTao() != null ? tin.getNgayTao().format(DATE_FORMAT) : "";
-                String ngayHetHan = tin.getHanNopHoSo() != null ? tin.getHanNopHoSo().format(DATE_FORMAT) : "";
+                String dang = tin.getNgayTao() != null ? tin.getNgayTao().format(DATE_FORMAT) : "";
+                String het  = tin.getHanNopHoSo() != null ? tin.getHanNopHoSo().format(DATE_FORMAT) : "";
                 modelTin.addRow(new Object[]{
                         tin.getMaTin(),
                         tin.getTieuDe(),
-                        ngayDang,
-                        ngayHetHan,
+                        dang,
+                        het,
                         tin.getSoUngVien(),
                         tin.getTrangThaiDisplay()
                 });
             }
-        } catch (Exception ex) {
-            showError("Lỗi tải tin tuyển dụng: " + ex.getMessage());
+        } catch (Exception e) {
+            showError("Lỗi tải tin tuyển dụng: " + e.getMessage());
         }
     }
 
@@ -305,27 +315,28 @@ public class RecruitmentPanel extends JPanel {
         try {
             danhSachUV = recruitmentService.getAllUngVien();
             for (UngVien uv : danhSachUV) {
-                String ngayNop = uv.getNgayTao() != null ? uv.getNgayTao().format(DATE_FORMAT) : "";
+                String nop = uv.getNgayTao() != null ? uv.getNgayTao().format(DATE_FORMAT) : "";
+                String viTri = uv.getTenTin() != null ? uv.getTenTin() : ("Mã tin: " + uv.getMaTin());
                 modelUngVien.addRow(new Object[]{
                         uv.getMaUngVien(),
                         uv.getHoTen(),
                         uv.getEmail(),
                         uv.getDienThoai(),
-                        uv.getTenTin() != null ? uv.getTenTin() : "Mã tin: " + uv.getMaTin(),
-                        ngayNop,
+                        viTri,
+                        nop,
                         uv.getTrangThaiDisplay()
                 });
             }
-        } catch (Exception ex) {
-            showError("Lỗi tải danh sách ứng viên: " + ex.getMessage());
+        } catch (Exception e) {
+            showError("Lỗi tải ứng viên: " + e.getMessage());
         }
     }
 
-    // =======================
-    // Actions - Tab 1
-    // =======================
+    // ────────────────────────────────────────────────
+    // Hành động - Tab 1
+    // ────────────────────────────────────────────────
 
-    private void taoYeuCau() {
+ private void taoYeuCau() {
         PhongBanBUS pbBUS = new PhongBanBUS();
         ChucVuBUS cvBUS = new ChucVuBUS();
         java.util.List<PhongBan> dsPhongBan = pbBUS.getActiveDepartments();
@@ -398,22 +409,23 @@ public class RecruitmentPanel extends JPanel {
         }
     }
 
+
     private void pheDuyetYeuCau() {
-        int row = tblYeuCau.getSelectedRow();
-        if (row < 0) {
-            JOptionPane.showMessageDialog(this, "Vui lòng chọn yêu cầu cần phê duyệt.",
-                    "Thông báo", JOptionPane.WARNING_MESSAGE);
+        int viewRow = tblYeuCau.getSelectedRow();
+        if (viewRow < 0) {
+            JOptionPane.showMessageDialog(this, "Vui lòng chọn yêu cầu.", "Thông báo", JOptionPane.WARNING_MESSAGE);
             return;
         }
-        int maYC = (int) modelYeuCau.getValueAt(row, 0);
+        int modelRow = tblYeuCau.convertRowIndexToModel(viewRow);
+        int maYC = (Integer) modelYeuCau.getValueAt(modelRow, 0);
+
         try {
-            KetQua<?> sr = recruitmentService.duyetYeuCau(maYC);
-            if (sr.isSuccess()) {
-                JOptionPane.showMessageDialog(this, "Đã phê duyệt yêu cầu.",
-                        "Thành công", JOptionPane.INFORMATION_MESSAGE);
+            KetQua<?> r = recruitmentService.duyetYeuCau(maYC);
+            if (r.isSuccess()) {
+                JOptionPane.showMessageDialog(this, "Đã phê duyệt.", "Thành công", JOptionPane.INFORMATION_MESSAGE);
                 loadYeuCau();
             } else {
-                showError(sr.getMessage());
+                showError(r.getMessage());
             }
         } catch (Exception ex) {
             showError("Lỗi phê duyệt: " + ex.getMessage());
@@ -421,38 +433,37 @@ public class RecruitmentPanel extends JPanel {
     }
 
     private void tuChoiYeuCau() {
-        int row = tblYeuCau.getSelectedRow();
-        if (row < 0) {
-            JOptionPane.showMessageDialog(this, "Vui lòng chọn yêu cầu cần từ chối.",
-                    "Thông báo", JOptionPane.WARNING_MESSAGE);
+        int viewRow = tblYeuCau.getSelectedRow();
+        if (viewRow < 0) {
+            JOptionPane.showMessageDialog(this, "Vui lòng chọn yêu cầu.", "Thông báo", JOptionPane.WARNING_MESSAGE);
             return;
         }
-        int maYC = (int) modelYeuCau.getValueAt(row, 0);
-        int confirm = JOptionPane.showConfirmDialog(this,
-                "Từ chối yêu cầu tuyển dụng #" + maYC + "?",
-                "Xác nhận", JOptionPane.YES_NO_OPTION);
-        if (confirm != JOptionPane.YES_OPTION) return;
+        int modelRow = tblYeuCau.convertRowIndexToModel(viewRow);
+        int maYC = (Integer) modelYeuCau.getValueAt(modelRow, 0);
+
+        int opt = JOptionPane.showConfirmDialog(this,
+                "Từ chối yêu cầu #" + maYC + "?", "Xác nhận",
+                JOptionPane.YES_NO_OPTION, JOptionPane.QUESTION_MESSAGE);
+        if (opt != JOptionPane.YES_OPTION) return;
 
         try {
-            KetQua<?> sr = recruitmentService.tuChoiYeuCau(maYC);
-            if (sr.isSuccess()) {
-                JOptionPane.showMessageDialog(this, "Đã từ chối yêu cầu.",
-                        "Thành công", JOptionPane.INFORMATION_MESSAGE);
+            KetQua<?> r = recruitmentService.tuChoiYeuCau(maYC);
+            if (r.isSuccess()) {
+                JOptionPane.showMessageDialog(this, "Đã từ chối.", "Thành công", JOptionPane.INFORMATION_MESSAGE);
                 loadYeuCau();
             } else {
-                showError(sr.getMessage());
+                showError(r.getMessage());
             }
         } catch (Exception ex) {
             showError("Lỗi từ chối: " + ex.getMessage());
         }
     }
 
-    // =======================
-    // Actions - Tab 2
-    // =======================
+    // ────────────────────────────────────────────────
+    // Hành động - Tab 2
+    // ────────────────────────────────────────────────
 
-    private void dangTin() {
-        // Ch? ch?n YeuCau da duyet
+private void dangTin() {
         java.util.List<YeuCauTuyenDung> dsYCDaDuyet = recruitmentService.getAllYeuCau().stream()
                 .filter(yc -> "da_duyet".equals(yc.getTrangThai()))
                 .collect(java.util.stream.Collectors.toList());
@@ -482,7 +493,6 @@ public class RecruitmentPanel extends JPanel {
         JTextField txtDiaDiem = new JTextField(20);
         txtDiaDiem.setFont(new Font("Segoe UI", Font.PLAIN, 14));
 
-        // Date picker for hanNopHoSo
         SpinnerDateModel dateModel = new SpinnerDateModel(
                 java.util.Date.from(java.time.LocalDate.now().plusMonths(1)
                         .atStartOfDay(java.time.ZoneId.systemDefault()).toInstant()),
@@ -545,37 +555,36 @@ public class RecruitmentPanel extends JPanel {
             showError("Lỗi đăng tin: " + ex.getMessage());
         }
     }
-
     private void dongTin() {
-        int row = tblTin.getSelectedRow();
-        if (row < 0) {
-            JOptionPane.showMessageDialog(this, "Vui lòng chọn tin cần đóng.",
-                    "Thông báo", JOptionPane.WARNING_MESSAGE);
+        int viewRow = tblTin.getSelectedRow();
+        if (viewRow < 0) {
+            JOptionPane.showMessageDialog(this, "Vui lòng chọn tin.", "Thông báo", JOptionPane.WARNING_MESSAGE);
             return;
         }
-        int maTin = (int) modelTin.getValueAt(row, 0);
-        int confirm = JOptionPane.showConfirmDialog(this,
-                "Đóng tin tuyển dụng #" + maTin + "?",
-                "Xác nhận", JOptionPane.YES_NO_OPTION);
-        if (confirm != JOptionPane.YES_OPTION) return;
+        int modelRow = tblTin.convertRowIndexToModel(viewRow);
+        int maTin = (Integer) modelTin.getValueAt(modelRow, 0);
+
+        int opt = JOptionPane.showConfirmDialog(this,
+                "Đóng tin #" + maTin + "?", "Xác nhận",
+                JOptionPane.YES_NO_OPTION, JOptionPane.QUESTION_MESSAGE);
+        if (opt != JOptionPane.YES_OPTION) return;
 
         try {
-            KetQua<?> sr = recruitmentService.dongTin(maTin);
-            if (sr.isSuccess()) {
-                JOptionPane.showMessageDialog(this, "Đã đóng tin tuyển dụng.",
-                        "Thành công", JOptionPane.INFORMATION_MESSAGE);
+            KetQua<?> r = recruitmentService.dongTin(maTin);
+            if (r.isSuccess()) {
+                JOptionPane.showMessageDialog(this, "Đã đóng tin.", "Thành công", JOptionPane.INFORMATION_MESSAGE);
                 loadTin();
             } else {
-                showError(sr.getMessage());
+                showError(r.getMessage());
             }
         } catch (Exception ex) {
             showError("Lỗi đóng tin: " + ex.getMessage());
         }
     }
 
-    // =======================
-    // Actions - Tab 3
-    // =======================
+    // ────────────────────────────────────────────────
+    // Hành động - Tab 3
+    // ────────────────────────────────────────────────
 
     private void taoUngVien() {
         HopThoaiTaoUngVien dialog = new HopThoaiTaoUngVien(
@@ -587,137 +596,131 @@ public class RecruitmentPanel extends JPanel {
     }
 
     private void chuyenTrangThaiUV() {
-        int row = tblUngVien.getSelectedRow();
-        if (row < 0) {
-            JOptionPane.showMessageDialog(this, "Vui lòng chọn ứng viên.",
+        int viewRow = tblUngVien.getSelectedRow();
+        if (viewRow < 0) {
+            JOptionPane.showMessageDialog(this, "Vui lòng chọn ứng viên.", "Thông báo", JOptionPane.WARNING_MESSAGE);
+            return;
+        }
+        int modelRow = tblUngVien.convertRowIndexToModel(viewRow);
+        int maUV = (Integer) modelUngVien.getValueAt(modelRow, 0);
+
+        UngVien uv = findUngVien(maUV);
+        if (uv == null) {
+            showError("Không tìm thấy ứng viên.");
+            return;
+        }
+
+        if (uv.getMaNV() != null && !uv.getMaNV().trim().isEmpty()) {
+            JOptionPane.showMessageDialog(this,
+                    "Ứng viên đã được chuyển thành nhân viên → không thể thay đổi trạng thái tuyển dụng.",
                     "Thông báo", JOptionPane.WARNING_MESSAGE);
             return;
         }
-        int maUV = (int) modelUngVien.getValueAt(row, 0);
-        UngVien uv = null;
-        if (danhSachUV != null) {
-            for (UngVien item : danhSachUV) {   
-                if (item.getMaUngVien() == maUV) {
-                    uv = item;
-                    break;
-                }
-            }
-        }
-        if (uv != null && uv.getMaNV() > 0) {
-            JOptionPane.showMessageDialog(this,
-                    "Ung vien nay da duoc chuyen thanh nhan vien, khong the doi trang thai tuyen dung.",
-                    "Thong bao", JOptionPane.WARNING_MESSAGE);
-            return;
-        }
 
-        String[] options = {"moi", "dang_phong_van", "trung_tuyen", "tu_choi"};
-        String[] displayOptions = {"Mới", "Đang phỏng vấn", "Trúng tuyển", "Từ chối"};
+        String[] codes  = {"moi", "dang_phong_van", "trung_tuyen", "tu_choi"};
+        String[] labels = {"Mới", "Đang phỏng vấn", "Trúng tuyển", "Từ chối"};
 
-        JComboBox<String> cbo = new JComboBox<>(displayOptions);
+        JComboBox<String> cbo = new JComboBox<>(labels);
         cbo.setFont(new Font("Segoe UI", Font.PLAIN, 14));
 
-        int result = JOptionPane.showConfirmDialog(this,
-                new Object[]{"Chọn trạng thái mới:", cbo},
-                "Chuyển trạng thái ứng viên", JOptionPane.OK_CANCEL_OPTION, JOptionPane.PLAIN_MESSAGE);
-        if (result != JOptionPane.OK_OPTION) return;
+        int opt = JOptionPane.showConfirmDialog(this,
+                new Object[]{"Trạng thái mới:", cbo},
+                "Chuyển trạng thái ứng viên", JOptionPane.OK_CANCEL_OPTION);
 
-        String trangThaiMoi = options[cbo.getSelectedIndex()];
+        if (opt != JOptionPane.OK_OPTION) return;
+
+        String newStatus = codes[cbo.getSelectedIndex()];
 
         try {
-            KetQua<?> sr = recruitmentService.capNhatTrangThaiUV(maUV, trangThaiMoi);
-            if (sr.isSuccess()) {
-                JOptionPane.showMessageDialog(this, "Đã cập nhật trạng thái ứng viên.",
-                        "Thành công", JOptionPane.INFORMATION_MESSAGE);
+            KetQua<?> r = recruitmentService.capNhatTrangThaiUV(maUV, newStatus);
+            if (r.isSuccess()) {
+                JOptionPane.showMessageDialog(this, "Đã cập nhật trạng thái.", "Thành công", JOptionPane.INFORMATION_MESSAGE);
                 loadUngVien();
             } else {
-                showError(sr.getMessage());
+                showError(r.getMessage());
             }
         } catch (Exception ex) {
-            showError("Lỗi cập nhật: " + ex.getMessage());
+            showError("Lỗi cập nhật trạng thái: " + ex.getMessage());
         }
     }
 
-        private void chuyenUVThanhNV() {
-        int row = tblUngVien.getSelectedRow();
-        if (row < 0) {
-            JOptionPane.showMessageDialog(this, "Vui long chon ung vien.",
-                    "Thong bao", JOptionPane.WARNING_MESSAGE);
+    private void chuyenUVThanhNV() {
+        int viewRow = tblUngVien.getSelectedRow();
+        if (viewRow < 0) {
+            JOptionPane.showMessageDialog(this, "Vui lòng chọn ứng viên.", "Thông báo", JOptionPane.WARNING_MESSAGE);
             return;
         }
+        int modelRow = tblUngVien.convertRowIndexToModel(viewRow);
+        int maUV = (Integer) modelUngVien.getValueAt(modelRow, 0);
+        String hoTen = (String) modelUngVien.getValueAt(modelRow, 1);
 
-        int maUV = (int) modelUngVien.getValueAt(row, 0);
-        String hoTen = (String) modelUngVien.getValueAt(row, 1);
-
-        UngVien uv = null;
-        if (danhSachUV != null) {
-            for (UngVien item : danhSachUV) {
-                if (item.getMaUngVien() == maUV) {
-                    uv = item;
-                    break;
-                }
-            }
-        }
-
+        UngVien uv = findUngVien(maUV);
         if (uv == null) {
-            JOptionPane.showMessageDialog(this,
-                    "Không tìm thấy dữ liệu ứng viên đang chọn. Vui lòng làm mới và thử lại.",
-                    "Thông báo", JOptionPane.WARNING_MESSAGE);
+            showError("Không tìm thấy ứng viên.");
             return;
         }
-        if (uv.getMaNV() > 0 || "da_chuyen_nhan_vien".equals(uv.getTrangThai())) {
-            JOptionPane.showMessageDialog(this,
-                    "Ứng viên này đã được chuyển thành nhân viên.",
-                    "Thông báo", JOptionPane.INFORMATION_MESSAGE);
+
+        if (uv.getMaNV() != null && !uv.getMaNV().trim().isEmpty()) {
+            JOptionPane.showMessageDialog(this, "Ứng viên đã được chuyển thành nhân viên.", "Thông báo", JOptionPane.INFORMATION_MESSAGE);
             return;
         }
+
         if (!"trung_tuyen".equals(uv.getTrangThai())) {
             JOptionPane.showMessageDialog(this,
-                    "Chỉ có thể chuyển những ứng viên có trạng thái 'Trúng tuyển' thành nhân viên chính thức. Vui lòng cập nhật trạng thái ứng viên trước khi chuyển.",
+                    "Chỉ ứng viên trạng thái \"Trúng tuyển\" mới có thể chuyển thành nhân viên.",
                     "Không hợp lệ", JOptionPane.WARNING_MESSAGE);
             return;
         }
 
-        int confirm = JOptionPane.showConfirmDialog(this,
-                "Chuyển ứng viên \"" + hoTen + "\" thành nhân viên chính thức?",
+        int opt = JOptionPane.showConfirmDialog(this,
+                "Chuyển \"" + hoTen + "\" thành nhân viên chính thức?",
                 "Xác nhận", JOptionPane.YES_NO_OPTION, JOptionPane.QUESTION_MESSAGE);
-        if (confirm != JOptionPane.YES_OPTION) return;
+
+        if (opt != JOptionPane.YES_OPTION) return;
 
         try {
-            KetQua<?> sr = recruitmentService.chuyenUVThanhNV(maUV);
-            if (sr.isSuccess()) {
+            KetQua<?> r = recruitmentService.chuyenUVThanhNV(maUV);
+            if (r.isSuccess()) {
                 JOptionPane.showMessageDialog(this,
-                        "Đã chuyển ứng viên \"" + hoTen + "\" thành nhân viên thành công!",
+                        "Đã chuyển thành nhân viên thành công!\n" + r.getMessage(),
                         "Thành công", JOptionPane.INFORMATION_MESSAGE);
                 loadUngVien();
             } else {
-                showError(sr.getMessage());
+                showError(r.getMessage());
             }
         } catch (Exception ex) {
-            showError("Lỗi chuyển ứng viên: " + ex.getMessage());
+            showError("Lỗi chuyển thành nhân viên: " + ex.getMessage());
         }
     }
 
+    // ────────────────────────────────────────────────
+    // Helper methods
+    // ────────────────────────────────────────────────
 
-    // =======================
-    // Helpers
-    // =======================
-
-    private JTable buildTable(DefaultTableModel model) {
-        JTable table = new JTable(model);
-        table.setRowHeight(28);
-        table.setFont(new Font("Segoe UI", Font.PLAIN, 13));
-        table.getTableHeader().setFont(new Font("Segoe UI", Font.BOLD, 13));
-        table.getTableHeader().setBackground(UIColors.PRIMARY_PURPLE);
-        table.getTableHeader().setForeground(UIColors.TEXT_DARK);
-        table.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
-        table.setSelectionBackground(UIColors.LIGHT_PURPLE);
-        table.setSelectionForeground(UIColors.TEXT_DARK);
-        return table;
+    private UngVien findUngVien(int maUV) {
+        if (danhSachUV == null) return null;
+        for (UngVien u : danhSachUV) {
+            if (u.getMaUngVien() == maUV) return u;
+        }
+        return null;
     }
 
-    private void applyColWidths(JTable table, int[] widths) {
-        for (int i = 0; i < widths.length && i < table.getColumnCount(); i++) {
-            table.getColumnModel().getColumn(i).setPreferredWidth(widths[i]);
+    private JTable buildTable(DefaultTableModel model) {
+        JTable t = new JTable(model);
+        t.setRowHeight(28);
+        t.setFont(new Font("Segoe UI", Font.PLAIN, 13));
+        t.getTableHeader().setFont(new Font("Segoe UI", Font.BOLD, 13));
+        t.getTableHeader().setBackground(UIColors.PRIMARY_PURPLE);
+        t.getTableHeader().setForeground(UIColors.TEXT_DARK);
+        t.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+        t.setSelectionBackground(UIColors.LIGHT_PURPLE);
+        t.setSelectionForeground(UIColors.TEXT_DARK);
+        return t;
+    }
+
+    private void applyColWidths(JTable t, int[] w) {
+        for (int i = 0; i < w.length && i < t.getColumnCount(); i++) {
+            t.getColumnModel().getColumn(i).setPreferredWidth(w[i]);
         }
     }
 
@@ -725,25 +728,22 @@ public class RecruitmentPanel extends JPanel {
         JOptionPane.showMessageDialog(this, msg, "Lỗi", JOptionPane.ERROR_MESSAGE);
     }
 
-    /**
-     * Custom renderer for trạng thái columns.
-     */
     private static class StatusCellRenderer extends DefaultTableCellRenderer {
         @Override
         public Component getTableCellRendererComponent(JTable table, Object value,
                 boolean isSelected, boolean hasFocus, int row, int col) {
             Component c = super.getTableCellRendererComponent(table, value, isSelected, hasFocus, row, col);
-            setHorizontalAlignment(SwingConstants.CENTER);
+            setHorizontalAlignment(CENTER);
             if (!isSelected && value != null) {
                 String v = value.toString();
-                if (v.contains("Đã duyệt") || v.contains("Đã tuyển đủ")
-                        || v.contains("Trúng tuyển")
-                        || v.contains("Đang tuyển") || v.contains("Đã chuyển thành nhân viên")) {
+                if (v.contains("Đã duyệt") || v.contains("Đã tuyển đủ") ||
+                    v.contains("Trúng tuyển") || v.contains("Đang tuyển") ||
+                    v.contains("Đã chuyển thành nhân viên")) {
                     c.setForeground(UIColors.SUCCESS_GREEN);
                 } else if (v.contains("Từ chối") || v.contains("Đã đóng")) {
                     c.setForeground(UIColors.DANGER_RED);
-                } else if (v.contains("Chờ duyệt") || v.contains("Đang phỏng vấn")
-                        || v.contains("Tạm dừng") ) {
+                } else if (v.contains("Chờ duyệt") || v.contains("Đang phỏng vấn") ||
+                           v.contains("Tạm dừng")) {
                     c.setForeground(UIColors.WARNING_YELLOW);
                 } else {
                     c.setForeground(UIColors.INFO_BLUE);

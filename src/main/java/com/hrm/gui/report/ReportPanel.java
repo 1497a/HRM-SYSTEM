@@ -153,7 +153,7 @@ public class ReportPanel extends JPanel {
                 // Lấy số dư phép nghỉ năm hiện tại
                 try {
                     List<com.hrm.model.SoDungPhep> balances =
-                            leaveRepo.findByMaNVAndNam(nv.getId(), currentYear);
+                            leaveRepo.findByMaNVAndNam(nv.getMaNhanVien(), currentYear);
                     if (balances.isEmpty()) {
                         // Show row with zeros if no balance records
                         model.addRow(new Object[]{

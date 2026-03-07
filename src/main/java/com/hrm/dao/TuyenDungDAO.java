@@ -306,8 +306,7 @@ public class TuyenDungDAO {
         uv.setNguonUngTuyen(rs.getString("nguonUngTuyen"));
         uv.setTrangThai(rs.getString("trangThai"));
         uv.setNhanXet(rs.getString("nhanXet"));
-        int maNV = rs.getInt("maNV");
-        uv.setMaNV(rs.wasNull() ? 0 : maNV);
+        uv.setMaNV(rs.getString("maNV"));
         Date ngayTao = rs.getDate("ngayTao");
         if (ngayTao != null) uv.setNgayTao(ngayTao.toLocalDate());
         return uv;
@@ -355,10 +354,10 @@ public class TuyenDungDAO {
              PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setString(1, uv.getTrangThai());
             ps.setString(2, uv.getNhanXet());
-            if (uv.getMaNV() == 0) {
-                ps.setNull(3, Types.INTEGER);
+            if (uv.getMaNV() == null || uv.getMaNV().isEmpty()) {
+                ps.setNull(3, Types.VARCHAR);
             } else {
-                ps.setInt(3, uv.getMaNV());
+                ps.setString(3, uv.getMaNV());
             }
             ps.setInt(4, uv.getMaUngVien());
             ps.executeUpdate();
@@ -443,11 +442,11 @@ public class TuyenDungDAO {
     /**
      * Liên kết ứng viên trúng tuyển với nhân viên mới.
      */
-    public void linkToNhanVien(int maUngVien, int maNV) {
+    public void linkToNhanVien(int maUngVien, String maNV) {
         String sql = "UPDATE UNGVIEN SET maNV = ?, trangThai = 'trung_tuyen' WHERE maUngVien = ?";
         try (Connection conn = DatabaseConnection.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
-            ps.setInt(1, maNV);
+            ps.setString(1, maNV);
             ps.setInt(2, maUngVien);
             ps.executeUpdate();
         } catch (SQLException e) {

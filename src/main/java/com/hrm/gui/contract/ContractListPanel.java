@@ -98,7 +98,7 @@ public class ContractListPanel extends JPanel {
         boolean isManager = currentUser.coQuyen("CONTRACT_VIEW_ALL") || currentUser.coQuyen("CONTRACT_VIEW_TEAM");
 
         if (isManager) {
-            List<com.hrm.model.NhanVien> dsNV = com.hrm.bus.NhanVienBUS.getInstance().getAllByActionScope("EMPLOYEE_VIEW", currentUser.getId());
+            List<com.hrm.model.NhanVien> dsNV = com.hrm.bus.NhanVienBUS.getInstance().getAllByActionScope("EMPLOYEE_VIEW", currentUser.getNhanVienId());
             for (com.hrm.model.NhanVien nv : dsNV) {
                 cboNhanVien.addItem(nv);
             }
@@ -236,23 +236,19 @@ public class ContractListPanel extends JPanel {
     private void applyFilter() {
         String trangThaiFilter = (String) cboTrangThai.getSelectedItem();
         
-        int tempMaNV = -1;
+        String tempMaNV = null;
         if (cboNhanVien != null && cboNhanVien.getSelectedItem() instanceof com.hrm.model.NhanVien) {
-            tempMaNV = ((com.hrm.model.NhanVien) cboNhanVien.getSelectedItem()).getId();
+            tempMaNV = ((com.hrm.model.NhanVien) cboNhanVien.getSelectedItem()).getMaNhanVien();
         }
-        final int filterMaNV = tempMaNV;
+        final String filterMaNV = tempMaNV;
 
         RowFilter<DefaultTableModel, Object> rf = new RowFilter<DefaultTableModel, Object>() {
             @Override
             public boolean include(Entry<? extends DefaultTableModel, ? extends Object> entry) {
                 // Check Employee filter
-                if (filterMaNV > 0) {
+                if (filterMaNV != null) {
                     Object nvIdObj = entry.getValue(2);
-                    if (nvIdObj instanceof Integer) {
-                        if ((Integer) nvIdObj != filterMaNV) return false;
-                    } else if (nvIdObj != null) {
-                        if (!nvIdObj.toString().equals(String.valueOf(filterMaNV))) return false;
-                    }
+                    if (nvIdObj != null && !nvIdObj.toString().equals(filterMaNV)) return false;
                 }
 
                 // Check Status filter

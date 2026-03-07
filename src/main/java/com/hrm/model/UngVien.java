@@ -21,7 +21,7 @@ public class UngVien {
     private String nguonUngTuyen;
     private String trangThai; // "moi","dang_phong_van","trung_tuyen","tu_choi"
     private String nhanXet;
-    private int maNV;          // 0 = chưa liên kết nhân viên
+    private String maNV;       // null = chưa liên kết nhân viên
     private LocalDate ngayTao;
 
     // Transient - dùng để hiển thị
@@ -150,11 +150,11 @@ public class UngVien {
         this.nhanXet = nhanXet;
     }
 
-    public int getMaNV() {
+    public String getMaNV() {
         return maNV;
     }
 
-    public void setMaNV(int maNV) {
+    public void setMaNV(String maNV) {
         this.maNV = maNV;
     }
 
@@ -178,7 +178,7 @@ public class UngVien {
      * Trả về tên trạng thái bằng tiếng Việt.
      */
     public String getTrangThaiDisplay() {
-        if (maNV > 0) return "Đã chuyển thành nhân viên";
+        if (maNV != null && !maNV.isEmpty()) return "Đã chuyển thành nhân viên";
         if (trangThai == null) return "";
         switch (trangThai) {
             case "moi":             return "Mới";

@@ -1,35 +1,43 @@
 package com.hrm.model;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.util.Objects;
 
 /**
- * Model cho bảng HOPDONGLAODONG (Hợp đồng lao động).
+ * Model đại diện cho bảng HOPDONGLAODONG (Hợp đồng lao động).
  * Lưu thông tin hợp đồng giữa doanh nghiệp và nhân viên.
  */
 public class HopDongLaoDong {
 
-    private int maHopDong;
-    private String soHopDong;
-    private int maNV;
-    private String loaiHopDong;         // "thu_viec", "xac_dinh_thoi_han", "khong_xac_dinh"
-    private long luongCoSo;
-    private LocalDate ngayKy;
-    private LocalDate ngayHieuLuc;
-    private LocalDate ngayHetHieuLuc;   // null nếu không xác định thời hạn
-    private String fileDinhKem;
-    private String noiDung;
-    private String trangThai;           // "hieu_luc", "het_han", "thanh_ly", "huy"
+    private int maHopDong;                // Khóa chính (auto-increment)
+    private String soHopDong;             // Số hợp đồng (ví dụ: HD001/2025)
+    private String maNV;                  // Mã nhân viên (String: "NV001", "NV002", ...)
+    private String loaiHopDong;           // "thu_viec", "xac_dinh_thoi_han", "khong_xac_dinh"
+    private long luongCoSo;               // Lương cơ bản theo hợp đồng
+    private LocalDate ngayKy;             // Ngày ký hợp đồng
+    private LocalDate ngayHieuLuc;        // Ngày hợp đồng có hiệu lực
+    private LocalDate ngayHetHieuLuc;     // Ngày hết hiệu lực (null nếu không xác định thời hạn)
+    private String fileDinhKem;           // Đường dẫn file hợp đồng (PDF, ảnh, ...)
+    private String noiDung;               // Nội dung hợp đồng (tóm tắt hoặc full text)
+    private String trangThai;             // "hieu_luc", "sap_het_han", "het_han", "thanh_ly", "huy"
+    private LocalDate ngayThanhLy;        // Ngày thanh lý (nếu có)
+    private String lyDoThanhLy;           // Lý do thanh lý/hủy
+    private String ghiChu;                // Ghi chú bổ sung
 
-    // Transient display field
+    // Transient (không lưu DB) - dùng để hiển thị
     private transient String tenNV;
 
     public HopDongLaoDong() {
+        this.trangThai = "hieu_luc";
     }
 
-    public HopDongLaoDong(int maHopDong, String soHopDong, int maNV, String loaiHopDong,
+    // Constructor đầy đủ
+    public HopDongLaoDong(int maHopDong, String soHopDong, String maNV, String loaiHopDong,
                           long luongCoSo, LocalDate ngayKy, LocalDate ngayHieuLuc,
                           LocalDate ngayHetHieuLuc, String fileDinhKem, String noiDung,
-                          String trangThai) {
+                          String trangThai, LocalDate ngayThanhLy, String lyDoThanhLy,
+                          String ghiChu) {
         this.maHopDong = maHopDong;
         this.soHopDong = soHopDong;
         this.maNV = maNV;
@@ -41,6 +49,9 @@ public class HopDongLaoDong {
         this.fileDinhKem = fileDinhKem;
         this.noiDung = noiDung;
         this.trangThai = trangThai;
+        this.ngayThanhLy = ngayThanhLy;
+        this.lyDoThanhLy = lyDoThanhLy;
+        this.ghiChu = ghiChu;
     }
 
     // ============================
@@ -63,11 +74,11 @@ public class HopDongLaoDong {
         this.soHopDong = soHopDong;
     }
 
-    public int getMaNV() {
+    public String getMaNV() {
         return maNV;
     }
 
-    public void setMaNV(int maNV) {
+    public void setMaNV(String maNV) {
         this.maNV = maNV;
     }
 
@@ -135,6 +146,30 @@ public class HopDongLaoDong {
         this.trangThai = trangThai;
     }
 
+    public LocalDate getNgayThanhLy() {
+        return ngayThanhLy;
+    }
+
+    public void setNgayThanhLy(LocalDate ngayThanhLy) {
+        this.ngayThanhLy = ngayThanhLy;
+    }
+
+    public String getLyDoThanhLy() {
+        return lyDoThanhLy;
+    }
+
+    public void setLyDoThanhLy(String lyDoThanhLy) {
+        this.lyDoThanhLy = lyDoThanhLy;
+    }
+
+    public String getGhiChu() {
+        return ghiChu;
+    }
+
+    public void setGhiChu(String ghiChu) {
+        this.ghiChu = ghiChu;
+    }
+
     public String getTenNV() {
         return tenNV;
     }
@@ -144,41 +179,89 @@ public class HopDongLaoDong {
     }
 
     // ============================
-    // Display helpers
+    // Display & Business Helpers
     // ============================
 
-    public String getTrangThaiDisplay() {
-        if (trangThai == null) return "";
-        switch (trangThai) {
-            case "hieu_luc":  return "Hiệu lực";
-            case "het_han":   return "Hết hạn";
-            case "thanh_ly":  return "Thanh lý";
-            case "huy":       return "Hủy";
-            default:          return trangThai;
-        }
+    public String getLoaiHopDongDisplay() {
+        if (loaiHopDong == null) return "Không xác định";
+        return switch (loaiHopDong) {
+            case "thu_viec"             -> "Thử việc";
+            case "xac_dinh_thoi_han"    -> "Xác định thời hạn";
+            case "khong_xac_dinh"       -> "Không xác định thời hạn";
+            default                     -> loaiHopDong;
+        };
     }
 
-    public String getLoaiHopDongDisplay() {
-        if (loaiHopDong == null) return "";
-        switch (loaiHopDong) {
-            case "thu_viec":              return "Thử việc";
-            case "xac_dinh_thoi_han":     return "Xác định thời hạn";
-            case "khong_xac_dinh":        return "Không xác định";
-            default:                      return loaiHopDong;
-        }
+    public String getTrangThaiDisplay() {
+        if (trangThai == null) return "Không xác định";
+        return switch (trangThai) {
+            case "hieu_luc"     -> "Hiệu lực";
+            case "sap_het_han"  -> "Sắp hết hạn";
+            case "het_han"      -> "Hết hạn";
+            case "thanh_ly"     -> "Thanh lý";
+            case "huy"          -> "Hủy";
+            default             -> trangThai;
+        };
     }
 
     /**
-     * Kiểm tra hợp đồng sắp hết hạn (trong vòng 30 ngày).
+     * Kiểm tra hợp đồng đang hiệu lực (ngày hiện tại nằm trong khoảng hiệu lực).
+     */
+    public boolean isHieuLuc() {
+        LocalDate today = LocalDate.now();
+        return "hieu_luc".equals(trangThai)
+                && ngayHieuLuc != null && !today.isBefore(ngayHieuLuc)
+                && (ngayHetHieuLuc == null || !today.isAfter(ngayHetHieuLuc));
+    }
+
+    /**
+     * Kiểm tra hợp đồng sắp hết hạn (còn dưới 30 ngày).
      */
     public boolean isSapHetHan() {
         return ngayHetHieuLuc != null
-                && ngayHetHieuLuc.minusDays(30).isBefore(LocalDate.now());
+                && LocalDate.now().plusDays(30).isAfter(ngayHetHieuLuc)
+                && !LocalDate.now().isAfter(ngayHetHieuLuc);
+    }
+
+    /**
+     * Kiểm tra hợp đồng đã hết hạn.
+     */
+    public boolean isHetHan() {
+        return ngayHetHieuLuc != null && LocalDate.now().isAfter(ngayHetHieuLuc);
+    }
+
+    /**
+     * Kiểm tra hợp đồng có thể thanh lý/hủy (đang hiệu lực và chưa thanh lý).
+     */
+    public boolean coTheThanhLy() {
+        return "hieu_luc".equals(trangThai) && !isHetHan();
     }
 
     @Override
     public String toString() {
-        return "HopDongLaoDong{maHopDong=" + maHopDong + ", soHopDong='" + soHopDong
-                + "', maNV=" + maNV + ", trangThai='" + trangThai + "'}";
+        return "HopDongLaoDong{" +
+                "maHopDong=" + maHopDong +
+                ", soHopDong='" + soHopDong + '\'' +
+                ", maNV='" + maNV + '\'' +
+                ", loaiHopDong='" + getLoaiHopDongDisplay() + '\'' +
+                ", trangThai='" + getTrangThaiDisplay() + '\'' +
+                ", ngayHieuLuc=" + ngayHieuLuc +
+                ", ngayHetHieuLuc=" + ngayHetHieuLuc +
+                '}';
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        HopDongLaoDong that = (HopDongLaoDong) o;
+        return maHopDong == that.maHopDong &&
+               Objects.equals(soHopDong, that.soHopDong) &&
+               Objects.equals(maNV, that.maNV);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(maHopDong, soHopDong, maNV);
     }
 }

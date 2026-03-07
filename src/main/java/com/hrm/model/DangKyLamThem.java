@@ -38,7 +38,7 @@ public class DangKyLamThem {
     }
 
     private int maDK;
-    private int maNV;
+    private String maNV;
     private String employeeName;
     private LocalDate ngay;
     private double soGio;
@@ -48,7 +48,7 @@ public class DangKyLamThem {
     private double heSoOT;
     private String nhanXet;           // Nhận xét của người duyệt
 
-    private Integer nguoiDuyet;
+    private String nguoiDuyet;
     private String approverName;
     private LocalDateTime ngayDuyet;
     private TrangThai trangThai;
@@ -60,7 +60,7 @@ public class DangKyLamThem {
         this.ngayTao = LocalDateTime.now();
     }
 
-    public DangKyLamThem(int maNV, LocalDate ngay, double soGio, String lyDo) {
+    public DangKyLamThem(String maNV, LocalDate ngay, double soGio, String lyDo) {
         this();
         this.maNV = maNV;
         this.ngay = ngay;
@@ -68,7 +68,7 @@ public class DangKyLamThem {
         this.lyDo = lyDo;
     }
 
-    public DangKyLamThem(int maNV, LocalDate ngay, LocalTime gioVao, LocalTime gioRa, String lyDo) {
+    public DangKyLamThem(String maNV, LocalDate ngay, LocalTime gioVao, LocalTime gioRa, String lyDo) {
         this();
         this.maNV = maNV;
         this.ngay = ngay;
@@ -89,8 +89,8 @@ public class DangKyLamThem {
     public int getMaDK() { return maDK; }
     public void setMaDK(int maDK) { this.maDK = maDK; }
 
-    public int getMaNV() { return maNV; }
-    public void setMaNV(int maNV) { this.maNV = maNV; }
+    public String getMaNV() { return maNV; }
+    public void setMaNV(String maNV) { this.maNV = maNV; }
 
     public String getEmployeeName() { return employeeName; }
     public void setEmployeeName(String employeeName) { this.employeeName = employeeName; }
@@ -122,8 +122,8 @@ public class DangKyLamThem {
     public String getNhanXet() { return nhanXet; }
     public void setNhanXet(String nhanXet) { this.nhanXet = nhanXet; }
 
-    public Integer getNguoiDuyet() { return nguoiDuyet; }
-    public void setNguoiDuyet(Integer nguoiDuyet) { this.nguoiDuyet = nguoiDuyet; }
+    public String getNguoiDuyet() { return nguoiDuyet; }
+    public void setNguoiDuyet(String nguoiDuyet) { this.nguoiDuyet = nguoiDuyet; }
 
     public String getApproverName() { return approverName; }
     public void setApproverName(String approverName) { this.approverName = approverName; }
@@ -145,13 +145,13 @@ public class DangKyLamThem {
         return soGio * heSoOT * luongMotGio;
     }
 
-    public void duyet(int maNguoiDuyet) {
+    public void duyet(String maNguoiDuyet) {
         this.trangThai = TrangThai.DA_DUYET;
         this.nguoiDuyet = maNguoiDuyet;
         this.ngayDuyet = LocalDateTime.now();
     }
 
-    public void tuChoi(int maNguoiDuyet) {
+    public void tuChoi(String maNguoiDuyet) {
         this.trangThai = TrangThai.TU_CHOI;
         this.nguoiDuyet = maNguoiDuyet;
         this.ngayDuyet = LocalDateTime.now();

@@ -7,7 +7,7 @@ USE hrm_db;
 -- =====================================================
 -- 1. NHANVIEN (15 nhan vien mau)
 -- =====================================================
-INSERT INTO NHANVIEN (maNhanVien, loaiHopDong, ngayVaoLam, trangThai, ghiChu) VALUES
+INSERT INTO NHANVIEN (maNV, loaiHopDong, ngayVaoLam, trangThai, ghiChu) VALUES
 ('NV001', 'khong_xac_dinh',   '2020-01-15', 'dang_lam_viec', 'Nhan vien lau nam'),
 ('NV002', 'khong_xac_dinh',   '2020-03-01', 'dang_lam_viec', NULL),
 ('NV003', 'xac_dinh_thoi_han','2021-06-01', 'dang_lam_viec', NULL),
@@ -28,41 +28,41 @@ INSERT INTO NHANVIEN (maNhanVien, loaiHopDong, ngayVaoLam, trangThai, ghiChu) VA
 -- 2. THONGTINCANHAN
 -- =====================================================
 INSERT INTO THONGTINCANHAN (maNV, hoTen, ngaySinh, gioiTinh, cccd, dienThoai, email, diaChi, diaChiThuongTru, queQuan, danToc, tonGiao, tinhTrangHonNhan) VALUES
-(1,  'Nguyen Van An',    '1985-04-20', 'nam', '001085004201', '0901234501', 'an.nguyen@abc.com',     '12 Le Loi, Q1, TP.HCM',          '12 Le Loi, Q1, TP.HCM',          'Ha Noi',      'Kinh', 'Khong', 'da_ket_hon'),
-(2,  'Tran Thi Binh',    '1988-09-15', 'nu',  '079088009151', '0901234502', 'binh.tran@abc.com',     '45 Hai Ba Trung, Q3, TP.HCM',    '45 Hai Ba Trung, Q3, TP.HCM',    'TP.HCM',     'Kinh', 'Khong', 'da_ket_hon'),
-(3,  'Le Minh Cuong',    '1990-12-05', 'nam', '079090012051', '0901234503', 'cuong.le@abc.com',      '78 Dinh Tien Hoang, BT, TP.HCM', '78 Dinh Tien Hoang, BT, TP.HCM', 'Da Nang',    'Kinh', 'Khong', 'da_ket_hon'),
-(4,  'Pham Thi Dung',    '1982-07-30', 'nu',  '079082007301', '0901234504', 'dung.pham@abc.com',     '23 Nguyen Hue, Q1, TP.HCM',      '23 Nguyen Hue, Q1, TP.HCM',      'Can Tho',    'Kinh', 'Khong', 'da_ket_hon'),
-(5,  'Hoang Van Em',     '1993-03-18', 'nam', '079093003181', '0901234505', 'em.hoang@abc.com',      '56 Phan Dinh Phung, PN, TP.HCM', '56 Phan Dinh Phung, PN, TP.HCM', 'Nghe An',    'Kinh', 'Khong', 'doc_than'),
-(6,  'Ngo Thi Phuong',   '1991-11-22', 'nu',  '079091011221', '0901234506', 'phuong.ngo@abc.com',    '34 Ly Tu Trong, Q1, TP.HCM',     '34 Ly Tu Trong, Q1, TP.HCM',     'Binh Dinh',  'Kinh', 'Khong', 'da_ket_hon'),
-(7,  'Vu Thanh Giang',   '1980-06-10', 'nam', '079080006101', '0901234507', 'giang.vu@abc.com',      '90 CMT8, Q3, TP.HCM',            '90 CMT8, Q3, TP.HCM',            'Hai Phong',  'Kinh', 'Khong', 'da_ket_hon'),
-(8,  'Dang Thi Hoa',     '1995-02-14', 'nu',  '079095002141', '0901234508', 'hoa.dang@abc.com',      '67 Tran Hung Dao, Q5, TP.HCM',   '67 Tran Hung Dao, Q5, TP.HCM',   'TP.HCM',     'Kinh', 'Khong', 'doc_than'),
-(9,  'Bui Quoc Hung',    '1998-08-25', 'nam', '079098008251', '0901234509', 'hung.bui@abc.com',      '15 Vo Van Tan, Q3, TP.HCM',      '15 Vo Van Tan, Q3, TP.HCM',      'Ha Noi',     'Kinh', 'Khong', 'doc_than'),
-(10, 'Trinh Thi Kim',    '1990-05-07', 'nu',  '079090005071', '0901234510', 'kim.trinh@abc.com',     '88 Nguyen Trai, Q5, TP.HCM',     '88 Nguyen Trai, Q5, TP.HCM',     'Hue',        'Kinh', 'Khong', 'da_ket_hon'),
-(11, 'Dinh Van Long',    '1987-01-19', 'nam', '079087001191', '0901234511', 'long.dinh@abc.com',     '22 Hoang Dieu, Q4, TP.HCM',      '22 Hoang Dieu, Q4, TP.HCM',      'Quang Nam',  'Kinh', 'Khong', 'da_ket_hon'),
-(12, 'Phan Thi Mai',     '1994-10-03', 'nu',  '079094010031', '0901234512', 'mai.phan@abc.com',      '11 Bui Vien, Q1, TP.HCM',        '11 Bui Vien, Q1, TP.HCM',        'Vinh Long',  'Kinh', 'Khong', 'doc_than'),
-(13, 'Ly Van Nhan',      '1996-07-28', 'nam', '079096007281', '0901234513', 'nhan.ly@abc.com',       '33 Pasteur, Q1, TP.HCM',         '33 Pasteur, Q1, TP.HCM',         'Tien Giang', 'Kinh', 'Khong', 'doc_than'),
-(14, 'Cao Thi Oanh',     '2000-04-15', 'nu',  '079100004151', '0901234514', 'oanh.cao@abc.com',      '77 Nam Ky Khoi Nghia, Q3',       '77 Nam Ky Khoi Nghia, Q3',       'TP.HCM',     'Kinh', 'Khong', 'doc_than'),
-(15, 'Nguyen Thi Phuc',  '1992-12-20', 'nu',  '079092012201', '0901234515', 'phuc.nguyen@abc.com',   '99 Le Van Sy, Q3, TP.HCM',       '99 Le Van Sy, Q3, TP.HCM',       'Ben Tre',    'Kinh', 'Khong', 'da_ket_hon');
+('NV001', 'Nguyen Van An',    '1985-04-20', 'nam', '001085004201', '0901234501', 'an.nguyen@abc.com',     '12 Le Loi, Q1, TP.HCM',          '12 Le Loi, Q1, TP.HCM',          'Ha Noi',      'Kinh', 'Khong', 'da_ket_hon'),
+('NV002', 'Tran Thi Binh',    '1988-09-15', 'nu',  '079088009151', '0901234502', 'binh.tran@abc.com',     '45 Hai Ba Trung, Q3, TP.HCM',    '45 Hai Ba Trung, Q3, TP.HCM',    'TP.HCM',     'Kinh', 'Khong', 'da_ket_hon'),
+('NV003', 'Le Minh Cuong',    '1990-12-05', 'nam', '079090012051', '0901234503', 'cuong.le@abc.com',      '78 Dinh Tien Hoang, BT, TP.HCM', '78 Dinh Tien Hoang, BT, TP.HCM', 'Da Nang',    'Kinh', 'Khong', 'da_ket_hon'),
+('NV004', 'Pham Thi Dung',    '1982-07-30', 'nu',  '079082007301', '0901234504', 'dung.pham@abc.com',     '23 Nguyen Hue, Q1, TP.HCM',      '23 Nguyen Hue, Q1, TP.HCM',      'Can Tho',    'Kinh', 'Khong', 'da_ket_hon'),
+('NV005', 'Hoang Van Em',     '1993-03-18', 'nam', '079093003181', '0901234505', 'em.hoang@abc.com',      '56 Phan Dinh Phung, PN, TP.HCM', '56 Phan Dinh Phung, PN, TP.HCM', 'Nghe An',    'Kinh', 'Khong', 'doc_than'),
+('NV006', 'Ngo Thi Phuong',   '1991-11-22', 'nu',  '079091011221', '0901234506', 'phuong.ngo@abc.com',    '34 Ly Tu Trong, Q1, TP.HCM',     '34 Ly Tu Trong, Q1, TP.HCM',     'Binh Dinh',  'Kinh', 'Khong', 'da_ket_hon'),
+('NV007', 'Vu Thanh Giang',   '1980-06-10', 'nam', '079080006101', '0901234507', 'giang.vu@abc.com',      '90 CMT8, Q3, TP.HCM',            '90 CMT8, Q3, TP.HCM',            'Hai Phong',  'Kinh', 'Khong', 'da_ket_hon'),
+('NV008', 'Dang Thi Hoa',     '1995-02-14', 'nu',  '079095002141', '0901234508', 'hoa.dang@abc.com',      '67 Tran Hung Dao, Q5, TP.HCM',   '67 Tran Hung Dao, Q5, TP.HCM',   'TP.HCM',     'Kinh', 'Khong', 'doc_than'),
+('NV009', 'Bui Quoc Hung',    '1998-08-25', 'nam', '079098008251', '0901234509', 'hung.bui@abc.com',      '15 Vo Van Tan, Q3, TP.HCM',      '15 Vo Van Tan, Q3, TP.HCM',      'Ha Noi',     'Kinh', 'Khong', 'doc_than'),
+('NV010', 'Trinh Thi Kim',    '1990-05-07', 'nu',  '079090005071', '0901234510', 'kim.trinh@abc.com',     '88 Nguyen Trai, Q5, TP.HCM',     '88 Nguyen Trai, Q5, TP.HCM',     'Hue',        'Kinh', 'Khong', 'da_ket_hon'),
+('NV011', 'Dinh Van Long',    '1987-01-19', 'nam', '079087001191', '0901234511', 'long.dinh@abc.com',     '22 Hoang Dieu, Q4, TP.HCM',      '22 Hoang Dieu, Q4, TP.HCM',      'Quang Nam',  'Kinh', 'Khong', 'da_ket_hon'),
+('NV012', 'Phan Thi Mai',     '1994-10-03', 'nu',  '079094010031', '0901234512', 'mai.phan@abc.com',      '11 Bui Vien, Q1, TP.HCM',        '11 Bui Vien, Q1, TP.HCM',        'Vinh Long',  'Kinh', 'Khong', 'doc_than'),
+('NV013', 'Ly Van Nhan',      '1996-07-28', 'nam', '079096007281', '0901234513', 'nhan.ly@abc.com',       '33 Pasteur, Q1, TP.HCM',         '33 Pasteur, Q1, TP.HCM',         'Tien Giang', 'Kinh', 'Khong', 'doc_than'),
+('NV014', 'Cao Thi Oanh',     '2000-04-15', 'nu',  '079100004151', '0901234514', 'oanh.cao@abc.com',      '77 Nam Ky Khoi Nghia, Q3',       '77 Nam Ky Khoi Nghia, Q3',       'TP.HCM',     'Kinh', 'Khong', 'doc_than'),
+('NV015', 'Nguyen Thi Phuc',  '1992-12-20', 'nu',  '079092012201', '0901234515', 'phuc.nguyen@abc.com',   '99 Le Van Sy, Q3, TP.HCM',       '99 Le Van Sy, Q3, TP.HCM',       'Ben Tre',    'Kinh', 'Khong', 'da_ket_hon');
 
 -- =====================================================
 -- 3. BONHIEM
 -- =====================================================
 INSERT INTO BONHIEM (maNV, maPhongBan, maChucVu, loaiBoNhiem, tyLeHuongLuong, maQuanLy, tuNgay, trangThai, lyDo) VALUES
-(4,  'CONGTY',   'GD',  'chinh', 100.00, NULL, '2019-08-15', 'hieu_luc', 'Bo nhiem Giam doc'),
-(1,  'PHONGNS',  'TP',  'chinh', 100.00, 4,    '2020-01-15', 'hieu_luc', 'Bo nhiem Truong phong Nhan su'),
-(2,  'PHONGNS',  'PP',  'chinh', 100.00, 1,    '2020-03-01', 'hieu_luc', 'Bo nhiem Pho phong Nhan su'),
-(3,  'PHONGNS',  'NV',  'chinh', 100.00, 1,    '2021-06-01', 'hieu_luc', 'Nhan vien Nhan su'),
-(5,  'PHONGNS',  'NV',  'chinh', 100.00, 1,    '2022-01-10', 'hieu_luc', 'Nhan vien Nhan su'),
-(6,  'PHONGNS',  'NV',  'chinh', 100.00, 1,    '2022-04-01', 'hieu_luc', 'Nhan vien Nhan su'),
-(15, 'PHONGNS',  'NV',  'chinh', 100.00, 1,    '2021-03-01', 'hieu_luc', 'Nhan vien Nhan su'),
-(7,  'PHONGIT',  'TP',  'chinh', 100.00, 4,    '2018-11-20', 'hieu_luc', 'Bo nhiem Truong phong IT'),
-(8,  'PHONGIT',  'NV',  'chinh', 100.00, 7,    '2023-02-01', 'hieu_luc', 'Nhan vien IT'),
-(9,  'PHONGIT',  'NV',  'chinh', 100.00, 7,    '2025-11-01', 'hieu_luc', 'Nhan vien IT thu viec'),
-(10, 'PHONGIT',  'NV',  'chinh', 100.00, 7,    '2021-09-15', 'hieu_luc', 'Nhan vien IT'),
-(11, 'PHONGKT',  'TP',  'chinh', 100.00, 4,    '2020-07-01', 'hieu_luc', 'Truong phong Ke toan'),
-(12, 'PHONGKT',  'NV',  'chinh', 100.00, 11,   '2022-10-01', 'hieu_luc', 'Nhan vien Ke toan'),
-(13, 'PHONGKD',  'NV',  'chinh', 100.00, 4,    '2023-05-15', 'hieu_luc', 'Nhan vien Kinh doanh'),
-(14, 'PHONGKD',  'NV',  'chinh', 100.00, 4,    '2025-12-01', 'hieu_luc', 'Nhan vien Kinh doanh thu viec');
+('NV004', 'CONGTY',   'GD',  'chinh', 100.00, NULL,    '2019-08-15', 'hieu_luc', 'Bo nhiem Giam doc'),
+('NV001', 'PHONGNS',  'TP',  'chinh', 100.00, 'NV004', '2020-01-15', 'hieu_luc', 'Bo nhiem Truong phong Nhan su'),
+('NV002', 'PHONGNS',  'PP',  'chinh', 100.00, 'NV001', '2020-03-01', 'hieu_luc', 'Bo nhiem Pho phong Nhan su'),
+('NV003', 'PHONGNS',  'NV',  'chinh', 100.00, 'NV001', '2021-06-01', 'hieu_luc', 'Nhan vien Nhan su'),
+('NV005', 'PHONGNS',  'NV',  'chinh', 100.00, 'NV001', '2022-01-10', 'hieu_luc', 'Nhan vien Nhan su'),
+('NV006', 'PHONGNS',  'NV',  'chinh', 100.00, 'NV001', '2022-04-01', 'hieu_luc', 'Nhan vien Nhan su'),
+('NV015', 'PHONGNS',  'NV',  'chinh', 100.00, 'NV001', '2021-03-01', 'hieu_luc', 'Nhan vien Nhan su'),
+('NV007', 'PHONGIT',  'TP',  'chinh', 100.00, 'NV004', '2018-11-20', 'hieu_luc', 'Bo nhiem Truong phong IT'),
+('NV008', 'PHONGIT',  'NV',  'chinh', 100.00, 'NV007', '2023-02-01', 'hieu_luc', 'Nhan vien IT'),
+('NV009', 'PHONGIT',  'NV',  'chinh', 100.00, 'NV007', '2025-11-01', 'hieu_luc', 'Nhan vien IT thu viec'),
+('NV010', 'PHONGIT',  'NV',  'chinh', 100.00, 'NV007', '2021-09-15', 'hieu_luc', 'Nhan vien IT'),
+('NV011', 'PHONGKT',  'TP',  'chinh', 100.00, 'NV004', '2020-07-01', 'hieu_luc', 'Truong phong Ke toan'),
+('NV012', 'PHONGKT',  'NV',  'chinh', 100.00, 'NV011', '2022-10-01', 'hieu_luc', 'Nhan vien Ke toan'),
+('NV013', 'PHONGKD',  'NV',  'chinh', 100.00, 'NV004', '2023-05-15', 'hieu_luc', 'Nhan vien Kinh doanh'),
+('NV014', 'PHONGKD',  'NV',  'chinh', 100.00, 'NV004', '2025-12-01', 'hieu_luc', 'Nhan vien Kinh doanh thu viec');
 
 -- =====================================================
 -- 4. VAITRO & QUYEN (phai insert truoc TAIKHOAN vi co FK)
@@ -185,150 +185,150 @@ INSERT IGNORE INTO VAITRO_QUYEN (maVaiTro, maQuyen) VALUES
 -- 5. TAIKHOAN
 -- =====================================================
 INSERT INTO TAIKHOAN (tenDangNhap, matKhau, maNV, maVaiTro, email, hoatDong) VALUES
-('an.nguyen',   'Password@123', 1,  'HR',       'an.nguyen@abc.com',   TRUE),
-('binh.tran',   'Password@123', 2,  'HR',       'binh.tran@abc.com',   TRUE),
-('cuong.le',    'Password@123', 3,  'EMPLOYEE', 'cuong.le@abc.com',    TRUE),
-('dung.pham',   'Password@123', 4,  'ADMIN',    'dung.pham@abc.com',   TRUE),
-('em.hoang',    'Password@123', 5,  'EMPLOYEE', 'em.hoang@abc.com',    TRUE),
-('phuong.ngo',  'Password@123', 6,  'EMPLOYEE', 'phuong.ngo@abc.com',  TRUE),
-('giang.vu',    'Password@123', 7,  'MANAGER',  'giang.vu@abc.com',    TRUE),
-('hoa.dang',    'Password@123', 8,  'EMPLOYEE', 'hoa.dang@abc.com',    TRUE),
-('hung.bui',    'Password@123', 9,  'EMPLOYEE', 'hung.bui@abc.com',    TRUE),
-('kim.trinh',   'Password@123', 10, 'EMPLOYEE', 'kim.trinh@abc.com',   TRUE),
-('long.dinh',   'Password@123', 11, 'MANAGER',  'long.dinh@abc.com',   TRUE),
-('mai.phan',    'Password@123', 12, 'EMPLOYEE', 'mai.phan@abc.com',    TRUE),
-('nhan.ly',     'Password@123', 13, 'EMPLOYEE', 'nhan.ly@abc.com',     TRUE),
-('oanh.cao',    'Password@123', 14, 'EMPLOYEE', 'oanh.cao@abc.com',    TRUE),
-('phuc.nguyen', 'Password@123', 15, 'EMPLOYEE', 'phuc.nguyen@abc.com', FALSE);
+('an.nguyen',   'Password@123', 'NV001', 'HR',       'an.nguyen@abc.com',   TRUE),
+('binh.tran',   'Password@123', 'NV002', 'HR',       'binh.tran@abc.com',   TRUE),
+('cuong.le',    'Password@123', 'NV003', 'EMPLOYEE', 'cuong.le@abc.com',    TRUE),
+('dung.pham',   'Password@123', 'NV004', 'ADMIN',    'dung.pham@abc.com',   TRUE),
+('em.hoang',    'Password@123', 'NV005', 'EMPLOYEE', 'em.hoang@abc.com',    TRUE),
+('phuong.ngo',  'Password@123', 'NV006', 'EMPLOYEE', 'phuong.ngo@abc.com',  TRUE),
+('giang.vu',    'Password@123', 'NV007', 'MANAGER',  'giang.vu@abc.com',    TRUE),
+('hoa.dang',    'Password@123', 'NV008', 'EMPLOYEE', 'hoa.dang@abc.com',    TRUE),
+('hung.bui',    'Password@123', 'NV009', 'EMPLOYEE', 'hung.bui@abc.com',    TRUE),
+('kim.trinh',   'Password@123', 'NV010', 'EMPLOYEE', 'kim.trinh@abc.com',   TRUE),
+('long.dinh',   'Password@123', 'NV011', 'MANAGER',  'long.dinh@abc.com',   TRUE),
+('mai.phan',    'Password@123', 'NV012', 'EMPLOYEE', 'mai.phan@abc.com',    TRUE),
+('nhan.ly',     'Password@123', 'NV013', 'EMPLOYEE', 'nhan.ly@abc.com',     TRUE),
+('oanh.cao',    'Password@123', 'NV014', 'EMPLOYEE', 'oanh.cao@abc.com',    TRUE),
+('phuc.nguyen', 'Password@123', 'NV015', 'EMPLOYEE', 'phuc.nguyen@abc.com', FALSE);
 
 -- =====================================================
 -- 5. HOPDONGLAODONG
 -- =====================================================
 INSERT INTO HOPDONGLAODONG (soHopDong, maNV, loaiHopDong, luongCoSo, ngayKy, ngayHieuLuc, ngayHetHieuLuc, trangThai) VALUES
-('HD2020-001', 1,  'khong_xac_dinh',    15000000, '2020-01-10', '2020-01-15', NULL,         'hieu_luc'),
-('HD2020-002', 2,  'khong_xac_dinh',    12000000, '2020-02-25', '2020-03-01', NULL,         'hieu_luc'),
-('HD2021-001', 3,  'xac_dinh_thoi_han',  9000000, '2021-05-25', '2021-06-01', '2023-06-01', 'het_han'),
-('HD2023-001', 3,  'xac_dinh_thoi_han', 11000000, '2023-06-01', '2023-06-01', '2025-06-01', 'het_han'),
-('HD2025-001', 3,  'xac_dinh_thoi_han', 12000000, '2025-06-01', '2025-06-01', '2027-06-01', 'hieu_luc'),
-('HD2019-001', 4,  'khong_xac_dinh',    50000000, '2019-08-10', '2019-08-15', NULL,         'hieu_luc'),
-('HD2022-001', 5,  'xac_dinh_thoi_han',  8500000, '2022-01-05', '2022-01-10', '2024-01-10', 'het_han'),
-('HD2024-001', 5,  'xac_dinh_thoi_han',  9500000, '2024-01-10', '2024-01-10', '2026-01-10', 'hieu_luc'),
-('HD2022-002', 6,  'xac_dinh_thoi_han',  8000000, '2022-03-25', '2022-04-01', '2024-04-01', 'het_han'),
-('HD2024-002', 6,  'xac_dinh_thoi_han',  9000000, '2024-04-01', '2024-04-01', '2026-04-01', 'hieu_luc'),
-('HD2018-001', 7,  'khong_xac_dinh',    20000000, '2018-11-15', '2018-11-20', NULL,         'hieu_luc'),
-('HD2023-002', 8,  'xac_dinh_thoi_han', 10000000, '2023-01-25', '2023-02-01', '2025-02-01', 'het_han'),
-('HD2025-002', 8,  'xac_dinh_thoi_han', 11000000, '2025-02-01', '2025-02-01', '2027-02-01', 'hieu_luc'),
-('HD2025-003', 9,  'thu_viec',           7000000, '2025-11-01', '2025-11-01', '2026-02-01', 'hieu_luc'),
-('HD2021-002', 10, 'xac_dinh_thoi_han',  9000000, '2021-09-10', '2021-09-15', '2023-09-15', 'het_han'),
-('HD2023-003', 10, 'xac_dinh_thoi_han', 10000000, '2023-09-15', '2023-09-15', '2025-09-15', 'het_han'),
-('HD2025-004', 10, 'xac_dinh_thoi_han', 11500000, '2025-09-15', '2025-09-15', '2027-09-15', 'hieu_luc'),
-('HD2020-003', 11, 'khong_xac_dinh',    18000000, '2020-06-25', '2020-07-01', NULL,         'hieu_luc'),
-('HD2022-003', 12, 'xac_dinh_thoi_han',  8500000, '2022-09-25', '2022-10-01', '2024-10-01', 'het_han'),
-('HD2024-003', 12, 'xac_dinh_thoi_han',  9500000, '2024-10-01', '2024-10-01', '2026-10-01', 'hieu_luc'),
-('HD2023-004', 13, 'xac_dinh_thoi_han',  9000000, '2023-05-10', '2023-05-15', '2025-05-15', 'het_han'),
-('HD2025-005', 13, 'xac_dinh_thoi_han', 10000000, '2025-05-15', '2025-05-15', '2027-05-15', 'hieu_luc'),
-('HD2025-006', 14, 'thu_viec',           7000000, '2025-12-01', '2025-12-01', '2026-03-01', 'hieu_luc'),
-('HD2021-003', 15, 'xac_dinh_thoi_han',  9000000, '2021-02-25', '2021-03-01', '2023-03-01', 'het_han'),
-('HD2023-005', 15, 'xac_dinh_thoi_han', 10000000, '2023-03-01', '2023-03-01', '2025-03-01', 'het_han'),
-('HD2025-007', 15, 'xac_dinh_thoi_han', 11000000, '2025-03-01', '2025-03-01', '2027-03-01', 'hieu_luc');
+('HD2020-001', 'NV001', 'khong_xac_dinh',    15000000, '2020-01-10', '2020-01-15', NULL,         'hieu_luc'),
+('HD2020-002', 'NV002', 'khong_xac_dinh',    12000000, '2020-02-25', '2020-03-01', NULL,         'hieu_luc'),
+('HD2021-001', 'NV003', 'xac_dinh_thoi_han',  9000000, '2021-05-25', '2021-06-01', '2023-06-01', 'het_han'),
+('HD2023-001', 'NV003', 'xac_dinh_thoi_han', 11000000, '2023-06-01', '2023-06-01', '2025-06-01', 'het_han'),
+('HD2025-001', 'NV003', 'xac_dinh_thoi_han', 12000000, '2025-06-01', '2025-06-01', '2027-06-01', 'hieu_luc'),
+('HD2019-001', 'NV004', 'khong_xac_dinh',    50000000, '2019-08-10', '2019-08-15', NULL,         'hieu_luc'),
+('HD2022-001', 'NV005', 'xac_dinh_thoi_han',  8500000, '2022-01-05', '2022-01-10', '2024-01-10', 'het_han'),
+('HD2024-001', 'NV005', 'xac_dinh_thoi_han',  9500000, '2024-01-10', '2024-01-10', '2026-01-10', 'hieu_luc'),
+('HD2022-002', 'NV006', 'xac_dinh_thoi_han',  8000000, '2022-03-25', '2022-04-01', '2024-04-01', 'het_han'),
+('HD2024-002', 'NV006', 'xac_dinh_thoi_han',  9000000, '2024-04-01', '2024-04-01', '2026-04-01', 'hieu_luc'),
+('HD2018-001', 'NV007', 'khong_xac_dinh',    20000000, '2018-11-15', '2018-11-20', NULL,         'hieu_luc'),
+('HD2023-002', 'NV008', 'xac_dinh_thoi_han', 10000000, '2023-01-25', '2023-02-01', '2025-02-01', 'het_han'),
+('HD2025-002', 'NV008', 'xac_dinh_thoi_han', 11000000, '2025-02-01', '2025-02-01', '2027-02-01', 'hieu_luc'),
+('HD2025-003', 'NV009', 'thu_viec',           7000000, '2025-11-01', '2025-11-01', '2026-02-01', 'hieu_luc'),
+('HD2021-002', 'NV010', 'xac_dinh_thoi_han',  9000000, '2021-09-10', '2021-09-15', '2023-09-15', 'het_han'),
+('HD2023-003', 'NV010', 'xac_dinh_thoi_han', 10000000, '2023-09-15', '2023-09-15', '2025-09-15', 'het_han'),
+('HD2025-004', 'NV010', 'xac_dinh_thoi_han', 11500000, '2025-09-15', '2025-09-15', '2027-09-15', 'hieu_luc'),
+('HD2020-003', 'NV011', 'khong_xac_dinh',    18000000, '2020-06-25', '2020-07-01', NULL,         'hieu_luc'),
+('HD2022-003', 'NV012', 'xac_dinh_thoi_han',  8500000, '2022-09-25', '2022-10-01', '2024-10-01', 'het_han'),
+('HD2024-003', 'NV012', 'xac_dinh_thoi_han',  9500000, '2024-10-01', '2024-10-01', '2026-10-01', 'hieu_luc'),
+('HD2023-004', 'NV013', 'xac_dinh_thoi_han',  9000000, '2023-05-10', '2023-05-15', '2025-05-15', 'het_han'),
+('HD2025-005', 'NV013', 'xac_dinh_thoi_han', 10000000, '2025-05-15', '2025-05-15', '2027-05-15', 'hieu_luc'),
+('HD2025-006', 'NV014', 'thu_viec',           7000000, '2025-12-01', '2025-12-01', '2026-03-01', 'hieu_luc'),
+('HD2021-003', 'NV015', 'xac_dinh_thoi_han',  9000000, '2021-02-25', '2021-03-01', '2023-03-01', 'het_han'),
+('HD2023-005', 'NV015', 'xac_dinh_thoi_han', 10000000, '2023-03-01', '2023-03-01', '2025-03-01', 'het_han'),
+('HD2025-007', 'NV015', 'xac_dinh_thoi_han', 11000000, '2025-03-01', '2025-03-01', '2027-03-01', 'hieu_luc');
 
 -- =====================================================
 -- 6. CHAMCONG (Thang 2/2026)
 -- =====================================================
 INSERT INTO CHAMCONG (maNV, ngay, maCaLam, gioVao, gioRa, soGioLam, gioLamThem, trangThai, phuongThucChamCong) VALUES
-(1,'2026-02-02','HANH_CHINH','2026-02-02 08:05:00','2026-02-02 17:00:00',8.00,0.00,'dung_gio','the_tu'),
-(1,'2026-02-03','HANH_CHINH','2026-02-03 07:58:00','2026-02-03 17:00:00',8.00,0.00,'dung_gio','the_tu'),
-(1,'2026-02-04','HANH_CHINH','2026-02-04 08:20:00','2026-02-04 17:00:00',7.67,0.00,'di_muon','the_tu'),
-(1,'2026-02-05','HANH_CHINH','2026-02-05 08:00:00','2026-02-05 17:00:00',8.00,0.00,'dung_gio','the_tu'),
-(1,'2026-02-06','HANH_CHINH','2026-02-06 08:00:00','2026-02-06 19:00:00',8.00,2.00,'dung_gio','the_tu'),
-(1,'2026-02-09','HANH_CHINH','2026-02-09 08:00:00','2026-02-09 17:00:00',8.00,0.00,'dung_gio','the_tu'),
-(1,'2026-02-10','HANH_CHINH','2026-02-10 08:00:00','2026-02-10 17:00:00',8.00,0.00,'dung_gio','the_tu'),
-(1,'2026-02-11',NULL,NULL,NULL,0.00,0.00,'nghi_phep','thu_cong'),
-(1,'2026-02-12','HANH_CHINH','2026-02-12 08:00:00','2026-02-12 17:00:00',8.00,0.00,'dung_gio','the_tu'),
-(1,'2026-02-13','HANH_CHINH','2026-02-13 08:00:00','2026-02-13 17:00:00',8.00,0.00,'dung_gio','the_tu'),
-(1,'2026-02-16','HANH_CHINH','2026-02-16 08:00:00','2026-02-16 17:00:00',8.00,0.00,'dung_gio','the_tu'),
-(1,'2026-02-17','HANH_CHINH','2026-02-17 08:00:00','2026-02-17 17:00:00',8.00,0.00,'dung_gio','the_tu'),
-(1,'2026-02-18','HANH_CHINH','2026-02-18 08:00:00','2026-02-18 17:00:00',8.00,0.00,'dung_gio','the_tu'),
-(1,'2026-02-19','HANH_CHINH','2026-02-19 08:30:00','2026-02-19 17:00:00',7.50,0.00,'di_muon','the_tu'),
-(1,'2026-02-20','HANH_CHINH','2026-02-20 08:00:00','2026-02-20 19:30:00',8.00,2.50,'dung_gio','the_tu'),
-(1,'2026-02-23','HANH_CHINH','2026-02-23 08:00:00','2026-02-23 17:00:00',8.00,0.00,'dung_gio','the_tu'),
-(1,'2026-02-24','HANH_CHINH','2026-02-24 08:00:00','2026-02-24 17:00:00',8.00,0.00,'dung_gio','the_tu'),
-(1,'2026-02-25','HANH_CHINH','2026-02-25 08:00:00','2026-02-25 17:00:00',8.00,0.00,'dung_gio','the_tu'),
-(1,'2026-02-26','HANH_CHINH','2026-02-26 08:00:00','2026-02-26 17:00:00',8.00,0.00,'dung_gio','the_tu'),
-(7,'2026-02-02','HANH_CHINH','2026-02-02 08:00:00','2026-02-02 17:00:00',8.00,0.00,'dung_gio','van_tay'),
-(7,'2026-02-03','HANH_CHINH','2026-02-03 08:00:00','2026-02-03 17:00:00',8.00,0.00,'dung_gio','van_tay'),
-(7,'2026-02-04','HANH_CHINH','2026-02-04 08:00:00','2026-02-04 17:00:00',8.00,0.00,'dung_gio','van_tay'),
-(7,'2026-02-05','HANH_CHINH','2026-02-05 08:00:00','2026-02-05 17:00:00',8.00,0.00,'dung_gio','van_tay'),
-(7,'2026-02-06','HANH_CHINH','2026-02-06 08:00:00','2026-02-06 20:00:00',8.00,3.00,'dung_gio','van_tay'),
-(7,'2026-02-09','HANH_CHINH','2026-02-09 08:00:00','2026-02-09 17:00:00',8.00,0.00,'dung_gio','van_tay'),
-(7,'2026-02-10','HANH_CHINH','2026-02-10 08:00:00','2026-02-10 17:00:00',8.00,0.00,'dung_gio','van_tay'),
-(7,'2026-02-11','HANH_CHINH','2026-02-11 08:00:00','2026-02-11 17:00:00',8.00,0.00,'dung_gio','van_tay'),
-(7,'2026-02-12','HANH_CHINH','2026-02-12 08:00:00','2026-02-12 17:00:00',8.00,0.00,'dung_gio','van_tay'),
-(7,'2026-02-13','HANH_CHINH','2026-02-13 08:00:00','2026-02-13 17:00:00',8.00,0.00,'dung_gio','van_tay'),
-(7,'2026-02-16','HANH_CHINH','2026-02-16 08:00:00','2026-02-16 17:00:00',8.00,0.00,'dung_gio','van_tay'),
-(7,'2026-02-17','HANH_CHINH','2026-02-17 08:00:00','2026-02-17 17:00:00',8.00,0.00,'dung_gio','van_tay'),
-(7,'2026-02-18','HANH_CHINH','2026-02-18 08:00:00','2026-02-18 17:00:00',8.00,0.00,'dung_gio','van_tay'),
-(7,'2026-02-19','HANH_CHINH','2026-02-19 08:00:00','2026-02-19 17:00:00',8.00,0.00,'dung_gio','van_tay'),
-(7,'2026-02-20','HANH_CHINH','2026-02-20 08:00:00','2026-02-20 17:00:00',8.00,0.00,'dung_gio','van_tay'),
-(8,'2026-02-02','HANH_CHINH','2026-02-02 08:10:00','2026-02-02 17:00:00',7.83,0.00,'dung_gio','van_tay'),
-(8,'2026-02-03','HANH_CHINH','2026-02-03 08:00:00','2026-02-03 17:00:00',8.00,0.00,'dung_gio','van_tay'),
-(8,'2026-02-04',NULL,NULL,NULL,0.00,0.00,'vang_mat','thu_cong'),
-(8,'2026-02-05','HANH_CHINH','2026-02-05 08:00:00','2026-02-05 17:00:00',8.00,0.00,'dung_gio','van_tay'),
-(8,'2026-02-06','HANH_CHINH','2026-02-06 08:00:00','2026-02-06 17:00:00',8.00,0.00,'dung_gio','van_tay'),
-(8,'2026-02-09','HANH_CHINH','2026-02-09 08:00:00','2026-02-09 17:00:00',8.00,0.00,'dung_gio','van_tay'),
-(8,'2026-02-10','HANH_CHINH','2026-02-10 08:00:00','2026-02-10 17:00:00',8.00,0.00,'dung_gio','van_tay'),
-(8,'2026-02-11','HANH_CHINH','2026-02-11 08:00:00','2026-02-11 17:00:00',8.00,0.00,'dung_gio','van_tay'),
-(8,'2026-02-12','HANH_CHINH','2026-02-12 08:00:00','2026-02-12 17:00:00',8.00,0.00,'dung_gio','van_tay'),
-(8,'2026-02-13','HANH_CHINH','2026-02-13 08:00:00','2026-02-13 17:30:00',8.00,1.50,'dung_gio','van_tay'),
-(11,'2026-02-02','HANH_CHINH','2026-02-02 08:00:00','2026-02-02 17:00:00',8.00,0.00,'dung_gio','the_tu'),
-(11,'2026-02-03','HANH_CHINH','2026-02-03 08:00:00','2026-02-03 17:00:00',8.00,0.00,'dung_gio','the_tu'),
-(11,'2026-02-04','HANH_CHINH','2026-02-04 08:00:00','2026-02-04 17:00:00',8.00,0.00,'dung_gio','the_tu'),
-(11,'2026-02-05','HANH_CHINH','2026-02-05 08:00:00','2026-02-05 17:00:00',8.00,0.00,'dung_gio','the_tu'),
-(11,'2026-02-06','HANH_CHINH','2026-02-06 08:00:00','2026-02-06 17:00:00',8.00,0.00,'dung_gio','the_tu');
+('NV001','2026-02-02','HANH_CHINH','2026-02-02 08:05:00','2026-02-02 17:00:00',8.00,0.00,'dung_gio','the_tu'),
+('NV001','2026-02-03','HANH_CHINH','2026-02-03 07:58:00','2026-02-03 17:00:00',8.00,0.00,'dung_gio','the_tu'),
+('NV001','2026-02-04','HANH_CHINH','2026-02-04 08:20:00','2026-02-04 17:00:00',7.67,0.00,'di_muon','the_tu'),
+('NV001','2026-02-05','HANH_CHINH','2026-02-05 08:00:00','2026-02-05 17:00:00',8.00,0.00,'dung_gio','the_tu'),
+('NV001','2026-02-06','HANH_CHINH','2026-02-06 08:00:00','2026-02-06 19:00:00',8.00,2.00,'dung_gio','the_tu'),
+('NV001','2026-02-09','HANH_CHINH','2026-02-09 08:00:00','2026-02-09 17:00:00',8.00,0.00,'dung_gio','the_tu'),
+('NV001','2026-02-10','HANH_CHINH','2026-02-10 08:00:00','2026-02-10 17:00:00',8.00,0.00,'dung_gio','the_tu'),
+('NV001','2026-02-11',NULL,NULL,NULL,0.00,0.00,'nghi_phep','thu_cong'),
+('NV001','2026-02-12','HANH_CHINH','2026-02-12 08:00:00','2026-02-12 17:00:00',8.00,0.00,'dung_gio','the_tu'),
+('NV001','2026-02-13','HANH_CHINH','2026-02-13 08:00:00','2026-02-13 17:00:00',8.00,0.00,'dung_gio','the_tu'),
+('NV001','2026-02-16','HANH_CHINH','2026-02-16 08:00:00','2026-02-16 17:00:00',8.00,0.00,'dung_gio','the_tu'),
+('NV001','2026-02-17','HANH_CHINH','2026-02-17 08:00:00','2026-02-17 17:00:00',8.00,0.00,'dung_gio','the_tu'),
+('NV001','2026-02-18','HANH_CHINH','2026-02-18 08:00:00','2026-02-18 17:00:00',8.00,0.00,'dung_gio','the_tu'),
+('NV001','2026-02-19','HANH_CHINH','2026-02-19 08:30:00','2026-02-19 17:00:00',7.50,0.00,'di_muon','the_tu'),
+('NV001','2026-02-20','HANH_CHINH','2026-02-20 08:00:00','2026-02-20 19:30:00',8.00,2.50,'dung_gio','the_tu'),
+('NV001','2026-02-23','HANH_CHINH','2026-02-23 08:00:00','2026-02-23 17:00:00',8.00,0.00,'dung_gio','the_tu'),
+('NV001','2026-02-24','HANH_CHINH','2026-02-24 08:00:00','2026-02-24 17:00:00',8.00,0.00,'dung_gio','the_tu'),
+('NV001','2026-02-25','HANH_CHINH','2026-02-25 08:00:00','2026-02-25 17:00:00',8.00,0.00,'dung_gio','the_tu'),
+('NV001','2026-02-26','HANH_CHINH','2026-02-26 08:00:00','2026-02-26 17:00:00',8.00,0.00,'dung_gio','the_tu'),
+('NV007','2026-02-02','HANH_CHINH','2026-02-02 08:00:00','2026-02-02 17:00:00',8.00,0.00,'dung_gio','van_tay'),
+('NV007','2026-02-03','HANH_CHINH','2026-02-03 08:00:00','2026-02-03 17:00:00',8.00,0.00,'dung_gio','van_tay'),
+('NV007','2026-02-04','HANH_CHINH','2026-02-04 08:00:00','2026-02-04 17:00:00',8.00,0.00,'dung_gio','van_tay'),
+('NV007','2026-02-05','HANH_CHINH','2026-02-05 08:00:00','2026-02-05 17:00:00',8.00,0.00,'dung_gio','van_tay'),
+('NV007','2026-02-06','HANH_CHINH','2026-02-06 08:00:00','2026-02-06 20:00:00',8.00,3.00,'dung_gio','van_tay'),
+('NV007','2026-02-09','HANH_CHINH','2026-02-09 08:00:00','2026-02-09 17:00:00',8.00,0.00,'dung_gio','van_tay'),
+('NV007','2026-02-10','HANH_CHINH','2026-02-10 08:00:00','2026-02-10 17:00:00',8.00,0.00,'dung_gio','van_tay'),
+('NV007','2026-02-11','HANH_CHINH','2026-02-11 08:00:00','2026-02-11 17:00:00',8.00,0.00,'dung_gio','van_tay'),
+('NV007','2026-02-12','HANH_CHINH','2026-02-12 08:00:00','2026-02-12 17:00:00',8.00,0.00,'dung_gio','van_tay'),
+('NV007','2026-02-13','HANH_CHINH','2026-02-13 08:00:00','2026-02-13 17:00:00',8.00,0.00,'dung_gio','van_tay'),
+('NV007','2026-02-16','HANH_CHINH','2026-02-16 08:00:00','2026-02-16 17:00:00',8.00,0.00,'dung_gio','van_tay'),
+('NV007','2026-02-17','HANH_CHINH','2026-02-17 08:00:00','2026-02-17 17:00:00',8.00,0.00,'dung_gio','van_tay'),
+('NV007','2026-02-18','HANH_CHINH','2026-02-18 08:00:00','2026-02-18 17:00:00',8.00,0.00,'dung_gio','van_tay'),
+('NV007','2026-02-19','HANH_CHINH','2026-02-19 08:00:00','2026-02-19 17:00:00',8.00,0.00,'dung_gio','van_tay'),
+('NV007','2026-02-20','HANH_CHINH','2026-02-20 08:00:00','2026-02-20 17:00:00',8.00,0.00,'dung_gio','van_tay'),
+('NV008','2026-02-02','HANH_CHINH','2026-02-02 08:10:00','2026-02-02 17:00:00',7.83,0.00,'dung_gio','van_tay'),
+('NV008','2026-02-03','HANH_CHINH','2026-02-03 08:00:00','2026-02-03 17:00:00',8.00,0.00,'dung_gio','van_tay'),
+('NV008','2026-02-04',NULL,NULL,NULL,0.00,0.00,'vang_mat','thu_cong'),
+('NV008','2026-02-05','HANH_CHINH','2026-02-05 08:00:00','2026-02-05 17:00:00',8.00,0.00,'dung_gio','van_tay'),
+('NV008','2026-02-06','HANH_CHINH','2026-02-06 08:00:00','2026-02-06 17:00:00',8.00,0.00,'dung_gio','van_tay'),
+('NV008','2026-02-09','HANH_CHINH','2026-02-09 08:00:00','2026-02-09 17:00:00',8.00,0.00,'dung_gio','van_tay'),
+('NV008','2026-02-10','HANH_CHINH','2026-02-10 08:00:00','2026-02-10 17:00:00',8.00,0.00,'dung_gio','van_tay'),
+('NV008','2026-02-11','HANH_CHINH','2026-02-11 08:00:00','2026-02-11 17:00:00',8.00,0.00,'dung_gio','van_tay'),
+('NV008','2026-02-12','HANH_CHINH','2026-02-12 08:00:00','2026-02-12 17:00:00',8.00,0.00,'dung_gio','van_tay'),
+('NV008','2026-02-13','HANH_CHINH','2026-02-13 08:00:00','2026-02-13 17:30:00',8.00,1.50,'dung_gio','van_tay'),
+('NV011','2026-02-02','HANH_CHINH','2026-02-02 08:00:00','2026-02-02 17:00:00',8.00,0.00,'dung_gio','the_tu'),
+('NV011','2026-02-03','HANH_CHINH','2026-02-03 08:00:00','2026-02-03 17:00:00',8.00,0.00,'dung_gio','the_tu'),
+('NV011','2026-02-04','HANH_CHINH','2026-02-04 08:00:00','2026-02-04 17:00:00',8.00,0.00,'dung_gio','the_tu'),
+('NV011','2026-02-05','HANH_CHINH','2026-02-05 08:00:00','2026-02-05 17:00:00',8.00,0.00,'dung_gio','the_tu'),
+('NV011','2026-02-06','HANH_CHINH','2026-02-06 08:00:00','2026-02-06 17:00:00',8.00,0.00,'dung_gio','the_tu');
 
 -- =====================================================
 -- 7. DANGKY_LAMTHEM
 -- =====================================================
 INSERT INTO DANGKY_LAMTHEM (maNV, ngay, soGio, lyDo, nguoiDuyet, ngayDuyet, trangThai) VALUES
-(1, '2026-02-06', 2.0, 'Hoan thien bao cao nhan su thang 2', 4, '2026-02-05 16:00:00', 'da_duyet'),
-(1, '2026-02-20', 2.5, 'Xu ly ho so nhan vien moi',          4, '2026-02-19 17:00:00', 'da_duyet'),
-(7, '2026-02-06', 3.0, 'Deploy he thong len production',     4, '2026-02-05 17:00:00', 'da_duyet'),
-(8, '2026-02-13', 1.5, 'Fix bug he thong HRM',               7, '2026-02-12 16:30:00', 'da_duyet'),
-(5, '2026-02-27', 2.0, 'Ho tro phong van ung vien',          1, NULL,                  'cho_duyet'),
-(13,'2026-02-28', 3.0, 'Gap khach hang ngoai gio',           4, NULL,                  'cho_duyet');
+('NV001', '2026-02-06', 2.0, 'Hoan thien bao cao nhan su thang 2', 'NV004', '2026-02-05 16:00:00', 'da_duyet'),
+('NV001', '2026-02-20', 2.5, 'Xu ly ho so nhan vien moi',          'NV004', '2026-02-19 17:00:00', 'da_duyet'),
+('NV007', '2026-02-06', 3.0, 'Deploy he thong len production',     'NV004', '2026-02-05 17:00:00', 'da_duyet'),
+('NV008', '2026-02-13', 1.5, 'Fix bug he thong HRM',               'NV007', '2026-02-12 16:30:00', 'da_duyet'),
+('NV005', '2026-02-27', 2.0, 'Ho tro phong van ung vien',          'NV001', NULL,                  'cho_duyet'),
+('NV013', '2026-02-28', 3.0, 'Gap khach hang ngoai gio',           'NV004', NULL,                  'cho_duyet');
 
 -- =====================================================
 -- 8. SODUNGPHEP
 -- =====================================================
 INSERT INTO SODUNGPHEP (maNV, nam, maLoaiPhep, soNgayDuocCap, soNgayDaDung) VALUES
-(1, 2025, 'PHEP_NAM', 12, 8), (1, 2025, 'PHEP_OM', 0, 2), (1, 2026, 'PHEP_NAM', 12, 1),
-(2, 2025, 'PHEP_NAM', 12, 5), (2, 2026, 'PHEP_NAM', 12, 0),
-(3, 2025, 'PHEP_NAM', 12, 3), (3, 2026, 'PHEP_NAM', 12, 0),
-(4, 2025, 'PHEP_NAM', 12, 10),(4, 2026, 'PHEP_NAM', 12, 0),
-(5, 2025, 'PHEP_NAM', 12, 4), (5, 2026, 'PHEP_NAM', 12, 0),
-(6, 2025, 'PHEP_NAM', 12, 6), (6, 2026, 'PHEP_NAM', 12, 0),
-(7, 2025, 'PHEP_NAM', 12, 9), (7, 2026, 'PHEP_NAM', 12, 0),
-(8, 2025, 'PHEP_NAM', 12, 2), (8, 2026, 'PHEP_NAM', 12, 0),
-(9, 2025, 'PHEP_NAM', 3,  0), (9, 2026, 'PHEP_NAM', 3,  0),
-(10,2025, 'PHEP_NAM', 12, 7), (10,2026, 'PHEP_NAM', 12, 0),
-(11,2025, 'PHEP_NAM', 12, 11),(11,2026, 'PHEP_NAM', 12, 0),
-(12,2025, 'PHEP_NAM', 12, 3), (12,2026, 'PHEP_NAM', 12, 0),
-(13,2025, 'PHEP_NAM', 12, 5), (13,2026, 'PHEP_NAM', 12, 0),
-(14,2025, 'PHEP_NAM', 3,  0), (14,2026, 'PHEP_NAM', 3,  0),
-(15,2025, 'PHEP_NAM', 12, 12),(15,2025, 'PHEP_THAI_SAN', 180, 90);
+('NV001', 2025, 'PHEP_NAM', 12, 8), ('NV001', 2025, 'PHEP_OM', 0, 2), ('NV001', 2026, 'PHEP_NAM', 12, 1),
+('NV002', 2025, 'PHEP_NAM', 12, 5), ('NV002', 2026, 'PHEP_NAM', 12, 0),
+('NV003', 2025, 'PHEP_NAM', 12, 3), ('NV003', 2026, 'PHEP_NAM', 12, 0),
+('NV004', 2025, 'PHEP_NAM', 12, 10),('NV004', 2026, 'PHEP_NAM', 12, 0),
+('NV005', 2025, 'PHEP_NAM', 12, 4), ('NV005', 2026, 'PHEP_NAM', 12, 0),
+('NV006', 2025, 'PHEP_NAM', 12, 6), ('NV006', 2026, 'PHEP_NAM', 12, 0),
+('NV007', 2025, 'PHEP_NAM', 12, 9), ('NV007', 2026, 'PHEP_NAM', 12, 0),
+('NV008', 2025, 'PHEP_NAM', 12, 2), ('NV008', 2026, 'PHEP_NAM', 12, 0),
+('NV009', 2025, 'PHEP_NAM', 3,  0), ('NV009', 2026, 'PHEP_NAM', 3,  0),
+('NV010', 2025, 'PHEP_NAM', 12, 7), ('NV010', 2026, 'PHEP_NAM', 12, 0),
+('NV011', 2025, 'PHEP_NAM', 12, 11),('NV011', 2026, 'PHEP_NAM', 12, 0),
+('NV012', 2025, 'PHEP_NAM', 12, 3), ('NV012', 2026, 'PHEP_NAM', 12, 0),
+('NV013', 2025, 'PHEP_NAM', 12, 5), ('NV013', 2026, 'PHEP_NAM', 12, 0),
+('NV014', 2025, 'PHEP_NAM', 3,  0), ('NV014', 2026, 'PHEP_NAM', 3,  0),
+('NV015', 2025, 'PHEP_NAM', 12, 12),('NV015', 2025, 'PHEP_THAI_SAN', 180, 90);
 
 -- =====================================================
 -- 9. DONXINNGHIPHEP
 -- =====================================================
 INSERT INTO DONXINNGHIPHEP (maNV, maLoaiPhep, tuNgay, denNgay, soNgayNghi, lyDo, nguoiDuyet, ngayDuyet, trangThai) VALUES
-(1,  'PHEP_NAM',       '2026-02-11', '2026-02-11', 1.0,   'Viec ca nhan',          1, '2026-02-09 10:00:00', 'da_duyet'),
-(3,  'PHEP_NAM',       '2026-01-20', '2026-01-22', 3.0,   'Du lich gia dinh',      1, '2026-01-18 09:00:00', 'da_duyet'),
-(5,  'PHEP_OM',        '2026-01-15', '2026-01-16', 2.0,   'Bi cam cum',            1, '2026-01-14 17:00:00', 'da_duyet'),
-(8,  'PHEP_NAM',       '2026-03-10', '2026-03-12', 3.0,   'Viec gia dinh',         7, NULL,                  'cho_duyet'),
-(10, 'PHEP_CUOI',      '2026-04-01', '2026-04-03', 3.0,   'Dam cuoi ban than',     7, NULL,                  'cho_duyet'),
-(15, 'PHEP_THAI_SAN',  '2025-09-01', '2026-03-01', 180.0, 'Nghi thai san',         1, '2025-08-25 08:00:00', 'da_duyet'),
-(7,  'PHEP_NAM',       '2025-12-25', '2026-01-02', 5.0,   'Nghi Tet som',          4, '2025-12-20 16:00:00', 'da_duyet'),
-(2,  'PHEP_NAM',       '2026-02-27', '2026-02-27', 1.0,   'Kham benh dinh ky',     1, NULL,                  'cho_duyet');
+('NV001', 'PHEP_NAM',       '2026-02-11', '2026-02-11', 1.0,   'Viec ca nhan',          'NV001', '2026-02-09 10:00:00', 'da_duyet'),
+('NV003', 'PHEP_NAM',       '2026-01-20', '2026-01-22', 3.0,   'Du lich gia dinh',      'NV001', '2026-01-18 09:00:00', 'da_duyet'),
+('NV005', 'PHEP_OM',        '2026-01-15', '2026-01-16', 2.0,   'Bi cam cum',            'NV001', '2026-01-14 17:00:00', 'da_duyet'),
+('NV008', 'PHEP_NAM',       '2026-03-10', '2026-03-12', 3.0,   'Viec gia dinh',         'NV007', NULL,                  'cho_duyet'),
+('NV010', 'PHEP_CUOI',      '2026-04-01', '2026-04-03', 3.0,   'Dam cuoi ban than',     'NV007', NULL,                  'cho_duyet'),
+('NV015', 'PHEP_THAI_SAN',  '2025-09-01', '2026-03-01', 180.0, 'Nghi thai san',         'NV001', '2025-08-25 08:00:00', 'da_duyet'),
+('NV007', 'PHEP_NAM',       '2025-12-25', '2026-01-02', 5.0,   'Nghi Tet som',          'NV004', '2025-12-20 16:00:00', 'da_duyet'),
+('NV002', 'PHEP_NAM',       '2026-02-27', '2026-02-27', 1.0,   'Kham benh dinh ky',     'NV001', NULL,                  'cho_duyet');
 
 -- =====================================================
 -- 10. BANGLUONG + CHITIETLUONG + THANHPHANLUONG
@@ -340,14 +340,14 @@ INSERT INTO BANGLUONG (thang, nam, tenBangLuong, nguoiTao, trangThai) VALUES
 (2, 2026, 'Bang luong thang 2-2026', 1, 'dang_xu_ly');
 
 INSERT INTO CHITIETLUONG (maBangLuong, maNV, luongCoSo, tongLuongChucVu, luongLamThem, tongThuNhap, tongKhauTru, luongThucLanh, soNgayCong, soGioLamThem) VALUES
-(1,1,  15000000,5000000,1800000,21800000,2180000,19620000,22.0,10.0),
-(1,2,  12000000,3000000,0,      15000000,1500000,13500000,22.0,0.0),
-(1,3,  12000000,0,      0,      12000000,1200000,10800000,22.0,0.0),
-(1,4,  50000000,10000000,0,     60000000,6000000,54000000,22.0,0.0),
-(1,5,  9500000, 0,      0,      9500000, 950000, 8550000, 22.0,0.0),
-(1,7,  20000000,5000000,2250000,27250000,2725000,24525000,22.0,15.0),
-(1,8,  11000000,0,      900000, 11900000,1190000,10710000,22.0,5.0),
-(1,11, 18000000,5000000,0,      23000000,2300000,20700000,22.0,0.0);
+(1,'NV001',15000000,5000000,1800000,21800000,2180000,19620000,22.0,10.0),
+(1,'NV002',12000000,3000000,0,      15000000,1500000,13500000,22.0,0.0),
+(1,'NV003',12000000,0,      0,      12000000,1200000,10800000,22.0,0.0),
+(1,'NV004',50000000,10000000,0,     60000000,6000000,54000000,22.0,0.0),
+(1,'NV005',9500000, 0,      0,      9500000, 950000, 8550000, 22.0,0.0),
+(1,'NV007',20000000,5000000,2250000,27250000,2725000,24525000,22.0,15.0),
+(1,'NV008',11000000,0,      900000, 11900000,1190000,10710000,22.0,5.0),
+(1,'NV011',18000000,5000000,0,      23000000,2300000,20700000,22.0,0.0);
 
 INSERT INTO THANHPHANLUONG (maChiTiet, tenThanhPhan, loai, soTien) VALUES
 (1,'Luong co so',         'thu_nhap',15000000),
@@ -394,13 +394,13 @@ INSERT INTO DOTDANHGIA_TIEUCHI (maDot, maTieuChi, trongSo, batBuoc) VALUES
 -- DANHGIAHIEUSUAT - Ky 1 (maDot=1: Quy4/2024)
 -- ==========================================
 INSERT INTO DANHGIAHIEUSUAT (maDot, maNV, nguoiDanhGia, tongDiem, xepLoai, nhanXetChung, ngayDanhGia, trangThai) VALUES
-(1,3, 1, 7.80,'kha',      'Le Minh Cuong co gang, can phat trien them ky nang',  '2025-01-08 09:00:00','da_xac_nhan'),
-(1,5, 1, 8.40,'tot',      'Hoang Van Em hoan thanh tot cac nhiem vu duoc giao',  '2025-01-08 10:00:00','da_xac_nhan'),
-(1,6, 1, 9.10,'xuat_sac', 'Ngo Thi Phuong xuat sac, vuot ca chi tieu',           '2025-01-08 11:00:00','da_xac_nhan'),
-(1,8, 7, 7.60,'kha',      'Dang Thi Hoa lam viec kha on, can co gang hon',       '2025-01-09 09:00:00','da_xac_nhan'),
-(1,10,7, 8.80,'tot',      'Trinh Thi Kim tich cuc, ky nang tot',                 '2025-01-09 10:00:00','da_xac_nhan'),
-(1,12,11,7.00,'kha',      'Phan Thi Mai can nang cao hieu suat lam viec',        '2025-01-10 09:00:00','da_xac_nhan'),
-(1,13,4, 8.00,'tot',      'Ly Van Nhan nhan vien moi co nhieu tiem nang',        '2025-01-10 10:00:00','da_xac_nhan');
+(1,'NV003','NV001',7.80,'kha',      'Le Minh Cuong co gang, can phat trien them ky nang',  '2025-01-08 09:00:00','da_xac_nhan'),
+(1,'NV005','NV001',8.40,'tot',      'Hoang Van Em hoan thanh tot cac nhiem vu duoc giao',  '2025-01-08 10:00:00','da_xac_nhan'),
+(1,'NV006','NV001',9.10,'xuat_sac', 'Ngo Thi Phuong xuat sac, vuot ca chi tieu',           '2025-01-08 11:00:00','da_xac_nhan'),
+(1,'NV008','NV007',7.60,'kha',      'Dang Thi Hoa lam viec kha on, can co gang hon',       '2025-01-09 09:00:00','da_xac_nhan'),
+(1,'NV010','NV007',8.80,'tot',      'Trinh Thi Kim tich cuc, ky nang tot',                 '2025-01-09 10:00:00','da_xac_nhan'),
+(1,'NV012','NV011',7.00,'kha',      'Phan Thi Mai can nang cao hieu suat lam viec',        '2025-01-10 09:00:00','da_xac_nhan'),
+(1,'NV013','NV004',8.00,'tot',      'Ly Van Nhan nhan vien moi co nhieu tiem nang',        '2025-01-10 10:00:00','da_xac_nhan');
 
 -- Chi tiet danh gia ky 1 (maDanhGia 1-7)
 -- Danh gia #1: Le Minh Cuong (maDanhGia=1)
@@ -436,13 +436,13 @@ INSERT INTO CHITIETDANHGIA (maDanhGia, maTieuChi, diem, nhanXet) VALUES
 -- DANHGIAHIEUSUAT - Ky 2 (maDot=2: Quy4/2025)
 -- ==========================================
 INSERT INTO DANHGIAHIEUSUAT (maDot, maNV, nguoiDanhGia, tongDiem, xepLoai, nhanXetChung, ngayDanhGia, trangThai) VALUES
-(2,3, 1, 8.20,'tot',      'Le Minh Cuong da co nhieu tien bo trong nam',          '2026-01-10 09:00:00','da_xac_nhan'),
-(2,5, 1, 7.50,'kha',      'Hoang Van Em can cai thien ky nang chuyen mon',        '2026-01-10 10:00:00','da_xac_nhan'),
-(2,6, 1, 9.00,'xuat_sac', 'Ngo Thi Phuong tiep tuc xuat sac trong nhieu quy',     '2026-01-10 11:00:00','da_xac_nhan'),
-(2,8, 7, 7.80,'kha',      'Dang Thi Hoa hoan thanh tot cac nhiem vu duoc giao',   '2026-01-11 09:00:00','da_xac_nhan'),
-(2,10,7, 8.50,'tot',      'Trinh Thi Kim nhan vien tich cuc, ky nang tot',        '2026-01-11 10:00:00','da_xac_nhan'),
-(2,12,11,7.20,'kha',      'Phan Thi Mai can nang cao hieu suat',                  '2026-01-12 09:00:00','da_xac_nhan'),
-(2,9, 7, 7.00,'kha',      'Bui Quoc Hung thu viec, tiem nang tot',               '2026-01-12 10:00:00','da_xac_nhan');
+(2,'NV003','NV001',8.20,'tot',      'Le Minh Cuong da co nhieu tien bo trong nam',          '2026-01-10 09:00:00','da_xac_nhan'),
+(2,'NV005','NV001',7.50,'kha',      'Hoang Van Em can cai thien ky nang chuyen mon',        '2026-01-10 10:00:00','da_xac_nhan'),
+(2,'NV006','NV001',9.00,'xuat_sac', 'Ngo Thi Phuong tiep tuc xuat sac trong nhieu quy',     '2026-01-10 11:00:00','da_xac_nhan'),
+(2,'NV008','NV007',7.80,'kha',      'Dang Thi Hoa hoan thanh tot cac nhiem vu duoc giao',   '2026-01-11 09:00:00','da_xac_nhan'),
+(2,'NV010','NV007',8.50,'tot',      'Trinh Thi Kim nhan vien tich cuc, ky nang tot',        '2026-01-11 10:00:00','da_xac_nhan'),
+(2,'NV012','NV011',7.20,'kha',      'Phan Thi Mai can nang cao hieu suat',                  '2026-01-12 09:00:00','da_xac_nhan'),
+(2,'NV009','NV007',7.00,'kha',      'Bui Quoc Hung thu viec, tiem nang tot',               '2026-01-12 10:00:00','da_xac_nhan');
 
 -- Chi tiet danh gia ky 2 (maDanhGia 8-14)
 -- Danh gia #8: Le Minh Cuong
@@ -478,15 +478,15 @@ INSERT INTO CHITIETDANHGIA (maDanhGia, maTieuChi, diem, nhanXet) VALUES
 -- DANHGIAHIEUSUAT - Ky 3 (maDot=3: Nam 2025)
 -- ==========================================
 INSERT INTO DANHGIAHIEUSUAT (maDot, maNV, nguoiDanhGia, tongDiem, xepLoai, nhanXetChung, ngayDanhGia, trangThai) VALUES
-(3,3, 1, 8.00,'tot',      'Nam 2025: Le Minh Cuong on dinh, co tien bo ro ret',   '2026-01-20 09:00:00','da_xac_nhan'),
-(3,5, 1, 7.70,'kha',      'Nam 2025: Hoang Van Em can co gang chuyen mon hon',    '2026-01-20 10:00:00','da_xac_nhan'),
-(3,6, 1, 9.20,'xuat_sac', 'Nam 2025: Ngo Thi Phuong - nhan vien xuat sac nhat',  '2026-01-20 11:00:00','da_xac_nhan'),
-(3,8, 7, 8.00,'tot',      'Nam 2025: Dang Thi Hoa co tien bo tot',                '2026-01-21 09:00:00','da_xac_nhan'),
-(3,10,7, 8.70,'tot',      'Nam 2025: Trinh Thi Kim lien tuc hoan thanh tot',      '2026-01-21 10:00:00','da_xac_nhan'),
-(3,12,11,7.50,'kha',      'Nam 2025: Phan Thi Mai co tien bo trong nua sau nam',  '2026-01-22 09:00:00','da_xac_nhan'),
-(3,13,4, 8.20,'tot',      'Nam 2025: Ly Van Nhan nhan vien tiem nang cao',        '2026-01-22 10:00:00','da_xac_nhan'),
-(3,7, 4, 9.10,'xuat_sac', 'Nam 2025: Vu Thanh Giang quan ly xuat sac, giang day tot nhiệm vu', '2026-01-23 09:00:00','da_xac_nhan'),
-(3,11,4, 8.90,'tot',      'Nam 2025: Dinh Van Long quan ly ke toan hieu qua',     '2026-01-23 10:00:00','da_xac_nhan');
+(3,'NV003','NV001',8.00,'tot',      'Nam 2025: Le Minh Cuong on dinh, co tien bo ro ret',   '2026-01-20 09:00:00','da_xac_nhan'),
+(3,'NV005','NV001',7.70,'kha',      'Nam 2025: Hoang Van Em can co gang chuyen mon hon',    '2026-01-20 10:00:00','da_xac_nhan'),
+(3,'NV006','NV001',9.20,'xuat_sac', 'Nam 2025: Ngo Thi Phuong - nhan vien xuat sac nhat',  '2026-01-20 11:00:00','da_xac_nhan'),
+(3,'NV008','NV007',8.00,'tot',      'Nam 2025: Dang Thi Hoa co tien bo tot',                '2026-01-21 09:00:00','da_xac_nhan'),
+(3,'NV010','NV007',8.70,'tot',      'Nam 2025: Trinh Thi Kim lien tuc hoan thanh tot',      '2026-01-21 10:00:00','da_xac_nhan'),
+(3,'NV012','NV011',7.50,'kha',      'Nam 2025: Phan Thi Mai co tien bo trong nua sau nam',  '2026-01-22 09:00:00','da_xac_nhan'),
+(3,'NV013','NV004',8.20,'tot',      'Nam 2025: Ly Van Nhan nhan vien tiem nang cao',        '2026-01-22 10:00:00','da_xac_nhan'),
+(3,'NV007','NV004',9.10,'xuat_sac', 'Nam 2025: Vu Thanh Giang quan ly xuat sac, giang day tot nhiem vu', '2026-01-23 09:00:00','da_xac_nhan'),
+(3,'NV011','NV004',8.90,'tot',      'Nam 2025: Dinh Van Long quan ly ke toan hieu qua',     '2026-01-23 10:00:00','da_xac_nhan');
 
 -- Chi tiet danh gia ky 3 (maDanhGia 15-23)
 -- #15: Le Minh Cuong

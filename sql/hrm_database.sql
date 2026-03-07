@@ -54,8 +54,7 @@ CREATE TABLE LICHSU_HESOLUONG (
 -- =====================================================
 
 CREATE TABLE NHANVIEN (
-    maNV INT AUTO_INCREMENT PRIMARY KEY,
-    maNhanVien VARCHAR(20) UNIQUE NOT NULL,
+    maNV VARCHAR(20) PRIMARY KEY,
     loaiHopDong ENUM('thu_viec', 'xac_dinh_thoi_han', 'khong_xac_dinh') DEFAULT 'thu_viec',
     ngayVaoLam DATE NOT NULL,
     trangThai ENUM('dang_lam_viec', 'tam_nghi', 'nghi_viec') DEFAULT 'dang_lam_viec',
@@ -65,7 +64,7 @@ CREATE TABLE NHANVIEN (
 ) ENGINE=InnoDB;
 
 CREATE TABLE THONGTINCANHAN (
-    maNV INT PRIMARY KEY,
+    maNV VARCHAR(20) PRIMARY KEY,
     hoTen NVARCHAR(100) NOT NULL,
     ngaySinh DATE,
     gioiTinh ENUM('nam', 'nu', 'khac'),
@@ -93,13 +92,13 @@ CREATE TABLE THONGTINCANHAN (
 
 CREATE TABLE BONHIEM (
     maBoNhiem INT AUTO_INCREMENT PRIMARY KEY,
-    maNV INT NOT NULL,
+    maNV VARCHAR(20) NOT NULL,
     maPhongBan VARCHAR(20) NOT NULL,
     maChucVu VARCHAR(20) NOT NULL,
     loaiBoNhiem ENUM('chinh', 'kiem_nhiem') DEFAULT 'chinh',
     tyLeHuongLuong DECIMAL(5,2) DEFAULT 100.00,
-    maQuanLy INT NULL,
-    nguoiDuyet INT NULL,
+    maQuanLy VARCHAR(20) NULL,
+    nguoiDuyet VARCHAR(20) NULL,
     tuNgay DATE NOT NULL,
     denNgay DATE NULL,
     ngayPheDuyet DATETIME NULL,
@@ -131,7 +130,7 @@ CREATE TABLE CALAM (
 
 CREATE TABLE CHAMCONG (
     maChamCong INT AUTO_INCREMENT PRIMARY KEY,
-    maNV INT NOT NULL,
+    maNV VARCHAR(20) NOT NULL,
     ngay DATE NOT NULL,
     maCaLam VARCHAR(20),
     gioVao DATETIME,
@@ -149,12 +148,12 @@ CREATE TABLE CHAMCONG (
 
 CREATE TABLE DANGKY_LAMTHEM (
     maDK INT AUTO_INCREMENT PRIMARY KEY,
-    maNV INT NOT NULL,
+    maNV VARCHAR(20) NOT NULL,
     ngay DATE NOT NULL,
     soGio DECIMAL(4,2) NOT NULL,
     heSoOT DECIMAL(4,2) NOT NULL DEFAULT 1.50,
     lyDo NVARCHAR(500),
-    nguoiDuyet INT,
+    nguoiDuyet VARCHAR(20),
     ngayDuyet DATETIME,
     trangThai ENUM('cho_duyet', 'da_duyet', 'tu_choi') DEFAULT 'cho_duyet',
     ngayTao DATETIME DEFAULT CURRENT_TIMESTAMP,
@@ -169,7 +168,7 @@ CREATE TABLE DANGKY_LAMTHEM (
 CREATE TABLE HOPDONGLAODONG (
     maHopDong INT AUTO_INCREMENT PRIMARY KEY,
     soHopDong VARCHAR(50) UNIQUE NOT NULL,
-    maNV INT NOT NULL,
+    maNV VARCHAR(20) NOT NULL,
     loaiHopDong ENUM('thu_viec', 'xac_dinh_thoi_han', 'khong_xac_dinh') NOT NULL,
     luongCoSo DECIMAL(15,2) NOT NULL,
     ngayKy DATE NOT NULL,
@@ -205,7 +204,7 @@ CREATE TABLE BANGLUONG (
 CREATE TABLE CHITIETLUONG (
     maChiTiet INT AUTO_INCREMENT PRIMARY KEY,
     maBangLuong INT NOT NULL,
-    maNV INT NOT NULL,
+    maNV VARCHAR(20) NOT NULL,
     luongCoSo DECIMAL(15,2) NOT NULL,
     tongLuongChucVu DECIMAL(15,2) DEFAULT 0,
     luongLamThem DECIMAL(15,2) DEFAULT 0,
@@ -247,7 +246,7 @@ CREATE TABLE LOAIPHEP (
 
 CREATE TABLE SODUNGPHEP (
     maSoDu INT AUTO_INCREMENT PRIMARY KEY,
-    maNV INT NOT NULL,
+    maNV VARCHAR(20) NOT NULL,
     nam INT NOT NULL,
     maLoaiPhep VARCHAR(20) NOT NULL,
     soNgayDuocCap DECIMAL(4,1) DEFAULT 12,
@@ -262,14 +261,14 @@ CREATE TABLE SODUNGPHEP (
 
 CREATE TABLE DONXINNGHIPHEP (
     maDon INT AUTO_INCREMENT PRIMARY KEY,
-    maNV INT NOT NULL,
+    maNV VARCHAR(20) NOT NULL,
     maLoaiPhep VARCHAR(20) NOT NULL,
     tuNgay DATE NOT NULL,
     denNgay DATE NOT NULL,
     soNgayNghi DECIMAL(4,1) NOT NULL,
     lyDo NVARCHAR(500),
     fileDinhKem VARCHAR(255),
-    nguoiDuyet INT,
+    nguoiDuyet VARCHAR(20),
     ngayDuyet DATETIME,
     lyDoTuChoi NVARCHAR(500),
     trangThai ENUM('cho_duyet', 'da_duyet', 'tu_choi', 'huy') DEFAULT 'cho_duyet',
@@ -319,8 +318,8 @@ CREATE TABLE DOTDANHGIA_TIEUCHI (
 CREATE TABLE DANHGIAHIEUSUAT (
     maDanhGia INT AUTO_INCREMENT PRIMARY KEY,
     maDot INT NOT NULL,
-    maNV INT NOT NULL,
-    nguoiDanhGia INT NOT NULL,
+    maNV VARCHAR(20) NOT NULL,
+    nguoiDanhGia VARCHAR(20) NOT NULL,
     tongDiem DECIMAL(5,2) DEFAULT 0,
     xepLoai ENUM('xuat_sac', 'tot', 'kha', 'trung_binh', 'yeu') DEFAULT 'trung_binh',
     nhanXetChung NVARCHAR(1000),
@@ -377,7 +376,7 @@ CREATE TABLE TAIKHOAN (
     maTaiKhoan INT AUTO_INCREMENT PRIMARY KEY,
     tenDangNhap VARCHAR(50) UNIQUE NOT NULL,
     matKhau VARCHAR(255) NOT NULL,
-    maNV INT UNIQUE,
+    maNV VARCHAR(20) UNIQUE,
     maVaiTro VARCHAR(20) NOT NULL,
     email VARCHAR(100),
     hoatDong BOOLEAN DEFAULT TRUE,
@@ -462,7 +461,7 @@ CREATE TABLE UNGVIEN (
     nguonUngTuyen NVARCHAR(100),
     trangThai ENUM('moi', 'dang_phong_van', 'trung_tuyen', 'da_chuyen_nhan_vien', 'tu_choi') DEFAULT 'moi',
     nhanXet NVARCHAR(1000),
-    maNV INT NULL,
+    maNV VARCHAR(20) NULL,
     ngayTao DATETIME DEFAULT CURRENT_TIMESTAMP,
     ngayCapNhat DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     FOREIGN KEY (maTin) REFERENCES TINTUYENDUNG(maTin) ON DELETE CASCADE,

@@ -10,6 +10,7 @@ import java.util.List;
 /**
  * Repository cho bảng NHANVIEN.
  * Singleton pattern - sử dụng MySQL JDBC.
+ * Mã nhân viên (maNV) là String (ví dụ: NV001, NV002, ...).
  */
 public class NhanVienDAO {
 
@@ -31,8 +32,7 @@ public class NhanVienDAO {
 
     private NhanVien mapRow(ResultSet rs) throws SQLException {
         NhanVien nv = new NhanVien();
-        nv.setId(rs.getInt("maNV"));
-        nv.setMaNhanVien(rs.getString("maNhanVien"));
+        nv.setMaNhanVien(rs.getString("maNV"));
         nv.setLoaiHopDong(rs.getString("loaiHopDong"));
         Date ngayVaoLam = rs.getDate("ngayVaoLam");
         if (ngayVaoLam != null) {
@@ -44,37 +44,24 @@ public class NhanVienDAO {
     }
 
     // ============================
-    // findById - with hoTen from THONGTINCANHAN
-    // ============================
-
-    public NhanVien findById(int maNV) {
-        String sql = "SELECT n.*, t.hoTen FROM NHANVIEN n "
-                + "LEFT JOIN THONGTINCANHAN t ON n.maNV = t.maNV "
-                + "WHERE n.maNV = ?";
-        try (Connection conn = DatabaseConnection.getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql)) {
-            ps.setInt(1, maNV);
-            try (ResultSet rs = ps.executeQuery()) {
-                if (rs.next()) {
-                    NhanVien nv = mapRow(rs);
-                    nv.setHoTen(rs.getString("hoTen"));
-                    return nv;
-                }
-            }
-        } catch (SQLException e) {
-            throw new RuntimeException("Lỗi tìm nhân viên theo maNV: " + e.getMessage(), e);
-        }
-        return null;
-    }
-
-    // ============================
-    // findByMaNhanVien
+    // findByMaNhanVien (chính thức, dùng String)
     // ============================
 
     public NhanVien findByMaNhanVien(String maNhanVien) {
-        String sql = "SELECT n.*, t.hoTen FROM NHANVIEN n "
+        if (maNhanVien == null || maNhanVien.trim().isEmpty()) {
+            return null;
+        }
+
+        String sql = "SELECT n.*, t.hoTen, pb.maPhongBan AS maPhongBanHT, "
+                + "pb.tenPhongBan, cv.tenChucVu "
+                + "FROM NHANVIEN n "
                 + "LEFT JOIN THONGTINCANHAN t ON n.maNV = t.maNV "
-                + "WHERE n.maNhanVien = ?";
+                + "LEFT JOIN BONHIEM b ON n.maNV = b.maNV "
+                + "  AND b.trangThai = 'hieu_luc' AND b.loaiBoNhiem = 'chinh' "
+                + "LEFT JOIN PHONGBAN pb ON b.maPhongBan = pb.maPhongBan "
+                + "LEFT JOIN CHUCVU cv ON b.maChucVu = cv.maChucVu "
+                + "WHERE n.maNV = ?";
+
         try (Connection conn = DatabaseConnection.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setString(1, maNhanVien);
@@ -82,17 +69,20 @@ public class NhanVienDAO {
                 if (rs.next()) {
                     NhanVien nv = mapRow(rs);
                     nv.setHoTen(rs.getString("hoTen"));
+                    nv.setMaPhongBanHienTai(rs.getString("maPhongBanHT"));
+                    nv.setTenPhongBanHienTai(rs.getString("tenPhongBan"));
+                    nv.setTenChucVuHienTai(rs.getString("tenChucVu"));
                     return nv;
                 }
             }
         } catch (SQLException e) {
-            throw new RuntimeException("Lỗi tìm nhân viên theo maNhanVien: " + e.getMessage(), e);
+            throw new RuntimeException("Lỗi tìm nhân viên theo maNV: " + maNhanVien + " - " + e.getMessage(), e);
         }
         return null;
     }
 
     // ============================
-    // findAll - with hoTen + phongban/chucvu current from BONHIEM chinh hieu_luc
+    // findAll - with hoTen + phongban/chucvu current
     // ============================
 
     public List<NhanVien> findAll() {
@@ -105,6 +95,7 @@ public class NhanVienDAO {
                 + "LEFT JOIN PHONGBAN pb ON b.maPhongBan = pb.maPhongBan "
                 + "LEFT JOIN CHUCVU cv ON b.maChucVu = cv.maChucVu "
                 + "ORDER BY n.maNV";
+
         List<NhanVien> result = new ArrayList<>();
         try (Connection conn = DatabaseConnection.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql);
@@ -127,7 +118,7 @@ public class NhanVienDAO {
     // findAllByScope 
     // ============================
 
-    public List<NhanVien> findAllByScope(com.hrm.model.DataScope scope, int currentUserId) {
+    public List<NhanVien> findAllByScope(com.hrm.model.DataScope scope, String currentMaNV) {
         List<NhanVien> result = new ArrayList<>();
         if (scope == com.hrm.model.DataScope.NONE) return result;
 
@@ -138,7 +129,7 @@ public class NhanVienDAO {
                 + "LEFT JOIN BONHIEM b ON n.maNV = b.maNV AND b.trangThai = 'hieu_luc' AND b.loaiBoNhiem = 'chinh' "
                 + "LEFT JOIN PHONGBAN pb ON b.maPhongBan = pb.maPhongBan "
                 + "LEFT JOIN CHUCVU cv ON b.maChucVu = cv.maChucVu ";
-        
+
         String sqlCondition = "";
         switch (scope) {
             case ALL:
@@ -161,12 +152,12 @@ public class NhanVienDAO {
 
         try (Connection conn = DatabaseConnection.getConnection();
              PreparedStatement ps = conn.prepareStatement(finalSql)) {
-            
+
             if (scope == com.hrm.model.DataScope.TEAM) {
-                ps.setInt(1, currentUserId);
-                ps.setInt(2, currentUserId);
+                ps.setString(1, currentMaNV);
+                ps.setString(2, currentMaNV);
             } else if (scope != com.hrm.model.DataScope.ALL) {
-                ps.setInt(1, currentUserId);
+                ps.setString(1, currentMaNV);
             }
 
             try (ResultSet rs = ps.executeQuery()) {
@@ -200,6 +191,7 @@ public class NhanVienDAO {
                 + "LEFT JOIN CHUCVU cv ON b.maChucVu = cv.maChucVu "
                 + "WHERE n.trangThai = ? "
                 + "ORDER BY n.maNV";
+
         List<NhanVien> result = new ArrayList<>();
         try (Connection conn = DatabaseConnection.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
@@ -229,57 +221,43 @@ public class NhanVienDAO {
     }
 
     // ============================
-    // insert - returns generated maNV
+    // insert - trả về mã NV đã insert (String)
     // ============================
 
-    public int insert(NhanVien nv) throws SQLException {
-        String sql = "INSERT INTO NHANVIEN (maNhanVien, loaiHopDong, ngayVaoLam, trangThai, ghiChu) "
+    public String insert(NhanVien nv) throws SQLException {
+        String sql = "INSERT INTO NHANVIEN (maNV, loaiHopDong, ngayVaoLam, trangThai, ghiChu) "
                 + "VALUES (?, ?, ?, ?, ?)";
         try (Connection conn = DatabaseConnection.getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
+             PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setString(1, nv.getMaNhanVien());
             ps.setString(2, nv.getLoaiHopDong());
             ps.setDate(3, nv.getNgayVaoLam() != null ? Date.valueOf(nv.getNgayVaoLam()) : null);
             ps.setString(4, nv.getTrangThai());
             ps.setString(5, nv.getGhiChu());
             ps.executeUpdate();
-            try (ResultSet keys = ps.getGeneratedKeys()) {
-                if (keys.next()) {
-                    int id = keys.getInt(1);
-                    nv.setId(id);
-                    return id;
-                }
-            }
+            return nv.getMaNhanVien(); // trả về mã đã insert
         }
-        throw new SQLException("Không lấy được maNV sau khi insert.");
     }
 
     /**
      * Insert dùng Connection đã có (dùng cho transaction).
      */
-    public int insert(Connection conn, NhanVien nv) throws SQLException {
-        String sql = "INSERT INTO NHANVIEN (maNhanVien, loaiHopDong, ngayVaoLam, trangThai, ghiChu) "
+    public String insert(Connection conn, NhanVien nv) throws SQLException {
+        String sql = "INSERT INTO NHANVIEN (maNV, loaiHopDong, ngayVaoLam, trangThai, ghiChu) "
                 + "VALUES (?, ?, ?, ?, ?)";
-        try (PreparedStatement ps = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
+        try (PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setString(1, nv.getMaNhanVien());
             ps.setString(2, nv.getLoaiHopDong());
             ps.setDate(3, nv.getNgayVaoLam() != null ? Date.valueOf(nv.getNgayVaoLam()) : null);
             ps.setString(4, nv.getTrangThai());
             ps.setString(5, nv.getGhiChu());
             ps.executeUpdate();
-            try (ResultSet keys = ps.getGeneratedKeys()) {
-                if (keys.next()) {
-                    int id = keys.getInt(1);
-                    nv.setId(id);
-                    return id;
-                }
-            }
+            return nv.getMaNhanVien();
         }
-        throw new SQLException("Không lấy được maNV sau khi insert.");
     }
 
     // ============================
-    // update - loaiHopDong, trangThai, ghiChu
+    // update - chỉ cập nhật các trường cơ bản
     // ============================
 
     public void update(NhanVien nv) {
@@ -289,10 +267,10 @@ public class NhanVienDAO {
             ps.setString(1, nv.getLoaiHopDong());
             ps.setString(2, nv.getTrangThai());
             ps.setString(3, nv.getGhiChu());
-            ps.setInt(4, nv.getId());
+            ps.setString(4, nv.getMaNhanVien());
             ps.executeUpdate();
         } catch (SQLException e) {
-            throw new RuntimeException("Lỗi cập nhật nhân viên: " + e.getMessage(), e);
+            throw new RuntimeException("Lỗi cập nhật nhân viên " + nv.getMaNhanVien() + ": " + e.getMessage(), e);
         }
     }
 
@@ -301,39 +279,39 @@ public class NhanVienDAO {
     // ============================
 
     public boolean existsByMaNhanVien(String maNhanVien) {
-        String sql = "SELECT COUNT(*) FROM NHANVIEN WHERE maNhanVien = ?";
+        if (maNhanVien == null || maNhanVien.trim().isEmpty()) return false;
+
+        String sql = "SELECT 1 FROM NHANVIEN WHERE maNV = ? LIMIT 1";
         try (Connection conn = DatabaseConnection.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setString(1, maNhanVien);
             try (ResultSet rs = ps.executeQuery()) {
-                if (rs.next()) {
-                    return rs.getInt(1) > 0;
-                }
+                return rs.next();
             }
         } catch (SQLException e) {
-            throw new RuntimeException("Lỗi kiểm tra maNhanVien: " + e.getMessage(), e);
+            throw new RuntimeException("Lỗi kiểm tra tồn tại maNV: " + maNhanVien + " - " + e.getMessage(), e);
         }
-        return false;
     }
 
     // ============================
-    // findNhanVienByMaQuanLy
+    // findNhanVienByMaQuanLy (dùng String cho maQuanLy)
     // ============================
-    
-    public List<NhanVien> findNhanVienByMaQuanLy(int maQuanLy) {
+
+    public List<NhanVien> findNhanVienByMaQuanLy(String maQuanLy) {
         String sql = "SELECT n.*, t.hoTen, pb.maPhongBan AS maPhongBanHT, "
-                   + "pb.tenPhongBan, cv.tenChucVu "
-                   + "FROM NHANVIEN n "
-                   + "LEFT JOIN THONGTINCANHAN t ON n.maNV = t.maNV "
-                   + "JOIN BONHIEM b ON n.maNV = b.maNV "
-                   + "LEFT JOIN PHONGBAN pb ON b.maPhongBan = pb.maPhongBan "
-                   + "LEFT JOIN CHUCVU cv ON b.maChucVu = cv.maChucVu "
-                   + "WHERE b.trangThai = 'hieu_luc' AND b.maQuanLy = ? "
-                   + "ORDER BY n.maNV";
+                + "pb.tenPhongBan, cv.tenChucVu "
+                + "FROM NHANVIEN n "
+                + "LEFT JOIN THONGTINCANHAN t ON n.maNV = t.maNV "
+                + "JOIN BONHIEM b ON n.maNV = b.maNV "
+                + "LEFT JOIN PHONGBAN pb ON b.maPhongBan = pb.maPhongBan "
+                + "LEFT JOIN CHUCVU cv ON b.maChucVu = cv.maChucVu "
+                + "WHERE b.trangThai = 'hieu_luc' AND b.maQuanLy = ? "
+                + "ORDER BY n.maNV";
+
         List<NhanVien> result = new ArrayList<>();
         try (Connection conn = DatabaseConnection.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
-            ps.setInt(1, maQuanLy);
+            ps.setString(1, maQuanLy);
             try (ResultSet rs = ps.executeQuery()) {
                 while (rs.next()) {
                     NhanVien nv = mapRow(rs);
@@ -345,7 +323,7 @@ public class NhanVienDAO {
                 }
             }
         } catch (SQLException e) {
-            throw new RuntimeException("Lỗi tìm nhân viên theo quản lý: " + e.getMessage(), e);
+            throw new RuntimeException("Lỗi tìm nhân viên theo quản lý " + maQuanLy + ": " + e.getMessage(), e);
         }
         return result;
     }
@@ -355,7 +333,7 @@ public class NhanVienDAO {
     // ============================
 
     public String generateMaNhanVien() {
-        String sql = "SELECT MAX(maNhanVien) FROM NHANVIEN WHERE maNhanVien LIKE 'NV%'";
+        String sql = "SELECT MAX(maNV) FROM NHANVIEN WHERE maNV LIKE 'NV%' ORDER BY maNV DESC LIMIT 1";
         try (Connection conn = DatabaseConnection.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql);
              ResultSet rs = ps.executeQuery()) {

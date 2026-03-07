@@ -45,9 +45,9 @@ public class DanhGiaHieuSuat {
     private int id;
     private int dotDanhGiaId;
     private String tenDot;
-    private int nhanVienId;
+    private String nhanVienId;
     private String tenNhanVien;
-    private int nguoiDanhGiaId;
+    private String nguoiDanhGiaId;
     private String tenNguoiDanhGia;
     private List<ChiTietDanhGia> chiTietDanhGias;
     private double tongDiem;
@@ -75,12 +75,12 @@ public class DanhGiaHieuSuat {
     public void setDotDanhGiaId(int dotDanhGiaId) { this.dotDanhGiaId = dotDanhGiaId; }
     public String getTenDot() { return tenDot; }
     public void setTenDot(String tenDot) { this.tenDot = tenDot; }
-    public int getNhanVienId() { return nhanVienId; }
-    public void setNhanVienId(int nhanVienId) { this.nhanVienId = nhanVienId; }
+    public String getNhanVienId() { return nhanVienId; }
+    public void setNhanVienId(String nhanVienId) { this.nhanVienId = nhanVienId; }
     public String getTenNhanVien() { return tenNhanVien; }
     public void setTenNhanVien(String tenNhanVien) { this.tenNhanVien = tenNhanVien; }
-    public int getNguoiDanhGiaId() { return nguoiDanhGiaId; }
-    public void setNguoiDanhGiaId(int nguoiDanhGiaId) { this.nguoiDanhGiaId = nguoiDanhGiaId; }
+    public String getNguoiDanhGiaId() { return nguoiDanhGiaId; }
+    public void setNguoiDanhGiaId(String nguoiDanhGiaId) { this.nguoiDanhGiaId = nguoiDanhGiaId; }
     public String getTenNguoiDanhGia() { return tenNguoiDanhGia; }
     public void setTenNguoiDanhGia(String tenNguoiDanhGia) { this.tenNguoiDanhGia = tenNguoiDanhGia; }
     public List<ChiTietDanhGia> getChiTietDanhGias() { return chiTietDanhGias; }
@@ -98,9 +98,9 @@ public class DanhGiaHieuSuat {
 
     // Legacy compat
     public int getCycleId() { return dotDanhGiaId; }
-    public int getEmployeeId() { return nhanVienId; }
+    public String getEmployeeId() { return nhanVienId; }
     public String getEmployeeName() { return tenNhanVien; }
-    public int getEvaluatorId() { return nguoiDanhGiaId; }
+    public String getEvaluatorId() { return nguoiDanhGiaId; }
     public List<ChiTietDanhGia> getScores() { return chiTietDanhGias; }
     public double getOverallScore() { return tongDiem; }
     public String getGeneralComment() { return nhanXetChung; }

@@ -60,7 +60,7 @@ public class LeaveListPanel extends JPanel {
         cboNhanVien = new JComboBox<>();
         if (isManager) {
             cboNhanVien.addItem("Tat ca");
-            int currentMaNV = currentUser.getMaNV() != null ? currentUser.getMaNV() : -1;
+            String currentMaNV = currentUser.getNhanVienId();
             List<NhanVien> dsNV = com.hrm.bus.NhanVienBUS.getInstance().getAllByActionScope("LEAVE_VIEW", currentMaNV);
             for (NhanVien nv : dsNV) {
                 cboNhanVien.addItem(nv);
@@ -137,8 +137,19 @@ public class LeaveListPanel extends JPanel {
         // Sorter – sort by employee name (col 1) using Vietnamese locale
         sorter = new TableRowSorter<>(tableModel);
         table.setRowSorter(sorter);
+
+        // Chỉ cho sort cột 0 (ID) và cột 1 (Nhân viên)
+        for (int i = 0; i < 9; i++) {
+            sorter.setSortable(i, false);
+        }
+        sorter.setSortable(0, true); // ID
+        sorter.setSortable(1, true); // Nhân viên
+
+        // Comparator tiếng Việt cho cột Nhân viên
         sorter.setComparator(1, UIHelper.vietnameseNameComparator());
-        sorter.setSortKeys(List.of(new RowSorter.SortKey(1, SortOrder.ASCENDING)));
+
+        // Mặc định sort theo ID tăng dần
+        sorter.setSortKeys(List.of(new RowSorter.SortKey(0, SortOrder.ASCENDING)));
 
         // Balance Panel
         balancePanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 20, 5));
@@ -178,16 +189,16 @@ public class LeaveListPanel extends JPanel {
 
     private void loadData() {
         tableModel.setRowCount(0);
-        int empId = currentUser.getMaNV() != null ? currentUser.getMaNV() : -1;
-        int filterMaNV = isManager && cboNhanVien.getSelectedItem() instanceof NhanVien
-                ? ((NhanVien) cboNhanVien.getSelectedItem()).getId() : -1;
+        String empId = currentUser.getNhanVienId();
+        String filterMaNV = isManager && cboNhanVien.getSelectedItem() instanceof NhanVien
+                ? ((NhanVien) cboNhanVien.getSelectedItem()).getMaNhanVien() : null;
 
         List<DonXinNghiPhep> requests = isManager
                 ? leaveService.getAllRequestsByScope(empId)
                 : leaveService.getMyRequests(empId);
 
         for (DonXinNghiPhep req : requests) {
-            if (filterMaNV > 0 && req.getEmployeeId() != filterMaNV) continue;
+            if (filterMaNV != null && !filterMaNV.equals(req.getEmployeeId())) continue;
             tableModel.addRow(new Object[]{
                 req.getId(), req.getEmployeeName(), req.getLeaveTypeName(),
                 req.getStartDate().format(DATE_FORMAT), req.getEndDate().format(DATE_FORMAT),
@@ -198,8 +209,8 @@ public class LeaveListPanel extends JPanel {
         }
 
         applyFilter();
-        int targetEmpId = filterMaNV > 0 ? filterMaNV : empId;
-        if (targetEmpId > 0) {
+        String targetEmpId = filterMaNV != null ? filterMaNV : empId;
+        if (targetEmpId != null) {
             updateBalanceDisplay(targetEmpId);
         } else {
             balancePanel.removeAll();
@@ -213,7 +224,7 @@ public class LeaveListPanel extends JPanel {
         sorter.setRowFilter("Tat ca".equals(s) ? null : RowFilter.regexFilter("^" + s + "$", 7));
     }
 
-    private void updateBalanceDisplay(int empId) {
+    private void updateBalanceDisplay(String empId) {
         balancePanel.removeAll();
         List<SoDungPhep> balances = leaveService.getBalances(empId);
         for (SoDungPhep balance : balances) {

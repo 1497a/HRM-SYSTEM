@@ -505,7 +505,7 @@ public class NotificationPanel extends JPanel {
                 thongBaoService.guiThongBaoTatCa(currentUser.getId(), tieuDe, noiDung);
             } else if ("Nhan vien cu the".equals(recipientType)) {
                 NhanVien nv = (NhanVien) cboNhanVien.getSelectedItem();
-                thongBaoService.guiThongBaoCaNhan(currentUser.getId(), nv.getId(), tieuDe, noiDung);
+                thongBaoService.guiThongBaoCaNhan(currentUser.getId(), nv.getMaNhanVien(), tieuDe, noiDung);
             } else if ("Phong ban".equals(recipientType)) {
                 PhongBan dept = (PhongBan) cboPhongBan.getSelectedItem();
                 thongBaoService.guiThongBaoPhongBan(currentUser.getId(), dept.getId(), tieuDe, noiDung);

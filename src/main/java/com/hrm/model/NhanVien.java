@@ -8,7 +8,6 @@ import java.time.LocalDate;
  */
 public class NhanVien {
 
-    private int id;
     private String maNhanVien;
     private String loaiHopDong; // "thu_viec", "xac_dinh_thoi_han", "khong_xac_dinh"
     private LocalDate ngayVaoLam;
@@ -24,8 +23,7 @@ public class NhanVien {
     public NhanVien() {
     }
 
-    public NhanVien(int id, String maNhanVien, String loaiHopDong, LocalDate ngayVaoLam, String trangThai, String ghiChu) {
-        this.id = id;
+    public NhanVien(String maNhanVien, String loaiHopDong, LocalDate ngayVaoLam, String trangThai, String ghiChu) {
         this.maNhanVien = maNhanVien;
         this.loaiHopDong = loaiHopDong;
         this.ngayVaoLam = ngayVaoLam;
@@ -36,14 +34,6 @@ public class NhanVien {
     // ============================
     // Getters & Setters - core fields
     // ============================
-
-    public int getId() {
-        return id;
-    }
-
-    public void setId(int id) {
-        this.id = id;
-    }
 
     public String getMaNhanVien() {
         return maNhanVien;

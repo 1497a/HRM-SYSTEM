@@ -2,7 +2,7 @@ package com.hrm.model;
 
 public class SoDungPhep {
     private int id;
-    private int nhanVienId;
+    private String nhanVienId;
     private String loaiPhepId;
     private int nam;
     private double soNgayDuocCap;
@@ -10,7 +10,7 @@ public class SoDungPhep {
 
     public SoDungPhep() {}
 
-    public SoDungPhep(int nhanVienId, String loaiPhepId, int nam, double soNgayDuocCap) {
+    public SoDungPhep(String nhanVienId, String loaiPhepId, int nam, double soNgayDuocCap) {
         this.nhanVienId = nhanVienId;
         this.loaiPhepId = loaiPhepId;
         this.nam = nam;
@@ -24,8 +24,8 @@ public class SoDungPhep {
 
     public int getId() { return id; }
     public void setId(int id) { this.id = id; }
-    public int getNhanVienId() { return nhanVienId; }
-    public void setNhanVienId(int nhanVienId) { this.nhanVienId = nhanVienId; }
+    public String getNhanVienId() { return nhanVienId; }
+    public void setNhanVienId(String nhanVienId) { this.nhanVienId = nhanVienId; }
     public String getLoaiPhepId() { return loaiPhepId; }
     public void setLoaiPhepId(String loaiPhepId) { this.loaiPhepId = loaiPhepId; }
     public int getNam() { return nam; }
@@ -36,7 +36,7 @@ public class SoDungPhep {
     public void setSoNgayDaDung(double soNgayDaDung) { this.soNgayDaDung = soNgayDaDung; }
 
     // Legacy compat
-    public int getEmployeeId() { return nhanVienId; }
+    public String getEmployeeId() { return nhanVienId; }
     public String getLeaveTypeCode() { return loaiPhepId; }
     public int getYear() { return nam; }
     public double getTotalDays() { return soNgayDuocCap; }

@@ -13,15 +13,18 @@ import javax.swing.border.EmptyBorder;
 import javax.swing.border.TitledBorder;
 import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.table.DefaultTableModel;
+import javax.swing.table.TableRowSorter;
+
 import java.awt.*;
 import java.time.format.DateTimeFormatter;
+import java.util.Comparator;
 import java.util.List;
 
 public class EvalResultPanel extends JPanel {
     private final DanhGiaBUS evalService;
     private final TaiKhoan currentUser;
     private final boolean isManager;
-    private final int myMaNV;
+    private final String myMaNV;
     private final int presetCycleId;
 
     private JTable submissionTable;
@@ -46,7 +49,7 @@ public class EvalResultPanel extends JPanel {
         this.isManager = currentUser.coQuyen("EVAL_VIEW_ALL") || currentUser.coQuyen("EVAL_VIEW_TEAM");
         this.presetCycleId = presetCycleId;
 
-        this.myMaNV = currentUser.getMaNV() != null ? currentUser.getMaNV() : 0;
+        this.myMaNV = currentUser.getNhanVienId();
 
         initComponents();
         setupLayout();
@@ -61,7 +64,7 @@ public class EvalResultPanel extends JPanel {
         if (isManager) {
             cboNhanVien.addItem("Tất cả");
             List<NhanVien> dsNV = com.hrm.bus.NhanVienBUS.getInstance()
-                    .getAllByActionScope("EVAL_VIEW", currentUser.getId());
+                    .getAllByActionScope("EVAL_VIEW", currentUser.getNhanVienId());
             for (NhanVien nv : dsNV) {
                 cboNhanVien.addItem(nv);
             }
@@ -139,7 +142,21 @@ public class EvalResultPanel extends JPanel {
                 return c;
             }
         });
+        TableRowSorter<DefaultTableModel> submissionSorter = new TableRowSorter<>(submissionModel);
+        submissionTable.setRowSorter(submissionSorter);
 
+        // Chỉ cho sort cột 0 (ID) và cột 2 (Nhân viên)
+        for (int i = 0; i < 7; i++) {
+            submissionSorter.setSortable(i, false);
+        }
+        submissionSorter.setComparator(0, Comparator.comparingInt(a -> (Integer) a));
+        submissionSorter.setSortable(2, true); // Nhân viên
+
+        // Comparator tiếng Việt cho cột Nhân viên
+        submissionSorter.setComparator(2, com.hrm.util.UIHelper.vietnameseNameComparator());
+
+        // Mặc định sort theo ID tăng dần
+        submissionSorter.setSortKeys(List.of(new RowSorter.SortKey(0, SortOrder.ASCENDING)));
         String[] detailColumns = {"Tiêu chí", "Trọng số", "Điểm (1-10)", "Điểm quy đổi", "Nhận xét"};
         detailModel = new DefaultTableModel(detailColumns, 0) {
             @Override public boolean isCellEditable(int row, int column) { return false; }
@@ -194,9 +211,9 @@ public class EvalResultPanel extends JPanel {
         detailModel.setRowCount(0);
         txtComment.setText("");
 
-        int filterMaNV = -1;
+        String filterMaNV = null;
         if (isManager && cboNhanVien.getSelectedItem() instanceof NhanVien) {
-            filterMaNV = ((NhanVien) cboNhanVien.getSelectedItem()).getId();
+            filterMaNV = ((NhanVien) cboNhanVien.getSelectedItem()).getMaNhanVien();
         }
 
         int filterKyId = -1;
@@ -208,7 +225,7 @@ public class EvalResultPanel extends JPanel {
         if (cachedSubmissions == null) return;
 
         for (DanhGiaHieuSuat sub : cachedSubmissions) {
-            if (filterMaNV > 0 && sub.getEmployeeId() != filterMaNV) continue;
+            if (filterMaNV != null && !filterMaNV.equals(sub.getEmployeeId())) continue;
             if (filterKyId > 0 && sub.getDotDanhGiaId() != filterKyId) continue;
 
             submissionModel.addRow(new Object[]{

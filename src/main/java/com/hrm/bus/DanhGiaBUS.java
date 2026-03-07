@@ -3,15 +3,20 @@ package com.hrm.bus;
 import com.hrm.model.*;
 import com.hrm.dao.DanhGiaDAO;
 
+import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
 /**
- * Performance Evaluation Service
+ * Service quản lý đánh giá hiệu suất nhân viên (Performance Evaluation).
+ * Singleton pattern.
+ * Đã cập nhật để maNV là String (ví dụ: "NV001", "NV002", ...).
  */
 public class DanhGiaBUS {
+
     private static DanhGiaBUS instance;
     private final DanhGiaDAO repository;
 
@@ -26,66 +31,75 @@ public class DanhGiaBUS {
         return instance;
     }
 
-    // Cycle Management
+    // ============================
+    // Quản lý đợt đánh giá (Cycle)
+    // ============================
+
     public List<DotDanhGia> getAllCycles() {
-        return repository.getAllCycles();
+        return repository.findAllCycles();
     }
 
     public List<DotDanhGia> getOpenCycles() {
         return repository.getOpenCycles();
     }
 
-    public DotDanhGia getCycle(int id) {
-        return repository.getCycle(id);
+    public DotDanhGia getCycle(int maDot) {
+        return repository.findCycleById(maDot);
     }
 
-    public KetQua<DotDanhGia> openCycle(int cycleId) {
-        DotDanhGia cycle = repository.getCycle(cycleId);
-        if (cycle == null) {
-            return KetQua.error("Khong tim thay ky danh gia");
+    public KetQua<DotDanhGia> openCycle(int maDot) {
+        DotDanhGia dot = repository.findCycleById(maDot);
+        if (dot == null) {
+            return KetQua.error("Không tìm thấy đợt đánh giá #" + maDot);
         }
-        if (cycle.getTrangThai() == DotDanhGia.TrangThai.DANG_DIEN_RA) {
-            return KetQua.error("Ky danh gia da dang mo");
+        if (dot.getTrangThai() == DotDanhGia.TrangThai.DANG_DIEN_RA) {
+            return KetQua.error("Đợt đánh giá đã được mở rồi.");
         }
-        if (cycle.getTrangThai() == DotDanhGia.TrangThai.DA_KET_THUC) {
-            return KetQua.error("Ky danh gia da dong, khong the mo lai");
+        if (dot.getTrangThai() == DotDanhGia.TrangThai.DA_KET_THUC) {
+            return KetQua.error("Đợt đánh giá đã kết thúc, không thể mở lại.");
         }
-        cycle.setTrangThai(DotDanhGia.TrangThai.DANG_DIEN_RA);
-        repository.updateCycle(cycle);
-        return KetQua.success(cycle, "Da mo ky danh gia thanh cong");
+
+        dot.setTrangThai(DotDanhGia.TrangThai.DANG_DIEN_RA);
+        repository.updateCycle(dot);
+        return KetQua.success(dot, "Đã mở đợt đánh giá thành công.");
     }
 
-    public KetQua<DotDanhGia> closeCycle(int cycleId) {
-        DotDanhGia cycle = repository.getCycle(cycleId);
-        if (cycle == null) {
-            return KetQua.error("Khong tim thay ky danh gia");
+    public KetQua<DotDanhGia> closeCycle(int maDot) {
+        DotDanhGia dot = repository.findCycleById(maDot);
+        if (dot == null) {
+            return KetQua.error("Không tìm thấy đợt đánh giá #" + maDot);
         }
-        if (cycle.getTrangThai() != DotDanhGia.TrangThai.DANG_DIEN_RA) {
-            return KetQua.error("Chi co the dong ky danh gia dang mo");
+        if (dot.getTrangThai() != DotDanhGia.TrangThai.DANG_DIEN_RA) {
+            return KetQua.error("Chỉ có thể đóng đợt đang diễn ra.");
         }
-        cycle.setTrangThai(DotDanhGia.TrangThai.DA_KET_THUC);
-        repository.updateCycle(cycle);
-        return KetQua.success(cycle, "Da dong ky danh gia thanh cong");
+
+        dot.setTrangThai(DotDanhGia.TrangThai.DA_KET_THUC);
+        repository.updateCycle(dot);
+        return KetQua.success(dot, "Đã đóng đợt đánh giá thành công.");
     }
 
     public KetQua<DotDanhGia> taoDotDanhGia(String tenDot, int nam, String kyDanhGia,
-                                              java.time.LocalDate tuNgay, java.time.LocalDate denNgay,
-                                              List<TieuChiDanhGia> selectedCriteria) {
+                                            LocalDate tuNgay, LocalDate denNgay,
+                                            List<TieuChiDanhGia> selectedCriteria) {
         if (tenDot == null || tenDot.trim().isEmpty()) {
-            return KetQua.error("Ten dot danh gia khong duoc de trong");
+            return KetQua.error("Tên đợt đánh giá không được để trống.");
         }
         if (tuNgay == null || denNgay == null) {
-            return KetQua.error("Vui long chon ngay bat dau va ngay ket thuc");
+            return KetQua.error("Vui lòng chọn ngày bắt đầu và ngày kết thúc.");
         }
         if (!denNgay.isAfter(tuNgay)) {
-            return KetQua.error("Ngay ket thuc phai sau ngay bat dau");
+            return KetQua.error("Ngày kết thúc phải sau ngày bắt đầu.");
         }
         if (selectedCriteria == null || selectedCriteria.isEmpty()) {
-            return KetQua.error("Vui long chon it nhat mot tieu chi danh gia");
+            return KetQua.error("Vui lòng chọn ít nhất một tiêu chí đánh giá.");
         }
-        int totalWeight = selectedCriteria.stream().mapToInt(c -> (int) c.getDiemToiDa()).sum();
-        if (totalWeight != 100) {
-            return KetQua.error("Tong trong so cua cac tieu chi duoc chon phai bang 100% (hien tai: " + totalWeight + "%)");
+
+        // Kiểm tra tổng trọng số = 100% (cho phép sai số nhỏ)
+        double tongTrongSo = selectedCriteria.stream()
+                .mapToDouble(TieuChiDanhGia::getTrongSo)
+                .sum();
+        if (Math.abs(tongTrongSo - 100.0) > 0.01) {
+            return KetQua.error(String.format("Tổng trọng số phải bằng 100%% (hiện tại: %.2f%%)", tongTrongSo));
         }
 
         DotDanhGia dot = new DotDanhGia();
@@ -95,260 +109,249 @@ public class DanhGiaBUS {
         dot.setTuNgay(tuNgay);
         dot.setDenNgay(denNgay);
         dot.setTrangThai(DotDanhGia.TrangThai.CHUA_BAT_DAU);
-        
-        repository.insertCycle(dot);
-        repository.setCriteriasForDot(dot.getId(), selectedCriteria);
-        
-        return KetQua.success(dot, "Da tao dot danh gia thanh cong");
+
+        int maDot = repository.insertCycle(dot);
+        if (maDot <= 0) {
+            return KetQua.error("Không thể tạo đợt đánh giá.");
+        }
+
+        // Gán tiêu chí cho đợt
+        repository.setCriteriasForDot(maDot, selectedCriteria);
+
+        dot.setId(maDot);
+        return KetQua.success(dot, "Đã tạo đợt đánh giá thành công.");
     }
 
-    // Criteria Management
+    // ============================
+    // Quản lý tiêu chí đánh giá (Criteria)
+    // ============================
+
     public List<TieuChiDanhGia> getAllCriteria() {
-        return repository.getAllCriteria();
+        return repository.findAllCriteria();
     }
 
-    public List<TieuChiDanhGia> getCriteriaByCycle(int cycleId) {
-        return repository.findCriteriaByDot(cycleId);
+    public List<TieuChiDanhGia> getCriteriaByCycle(int maDot) {
+        return repository.findCriteriaByDot(maDot);
     }
 
-    public KetQua<TieuChiDanhGia> saveCriteria(String name, String description, int weight) {
-        if (name == null || name.trim().isEmpty()) {
-            return KetQua.error("Ten tieu chi khong duoc de trong");
+    public KetQua<TieuChiDanhGia> saveCriteria(String tenTieuChi, String moTa, String nhomTieuChi,
+                                               double diemToiDa, double trongSo) {
+        if (tenTieuChi == null || tenTieuChi.trim().isEmpty()) {
+            return KetQua.error("Tên tiêu chí không được để trống.");
+        }
+        if (diemToiDa <= 0) {
+            return KetQua.error("Điểm tối đa phải lớn hơn 0.");
+        }
+        if (trongSo < 0 || trongSo > 100) {
+            return KetQua.error("Trọng số phải từ 0 đến 100.");
         }
 
-        if (weight <= 0 || weight > 100) {
-            return KetQua.error("Trong so phai tu 1 den 100");
-        }
+        TieuChiDanhGia tc = new TieuChiDanhGia();
+        tc.setTenTieuChi(tenTieuChi.trim());
+        tc.setMoTa(moTa != null ? moTa.trim() : "");
+        tc.setNhomTieuChi(nhomTieuChi != null ? nhomTieuChi.trim() : "");
+        tc.setDiemToiDa(diemToiDa);
+        tc.setTrongSo(trongSo);
+        tc.setHoatDong(true);
 
-        TieuChiDanhGia criteria = new TieuChiDanhGia();
-        criteria.setTenTieuChi(name.trim());
-        criteria.setMoTa(description);
-        criteria.setDiemToiDa(weight);
-
-        repository.saveCriteria(criteria);
-        return KetQua.success(criteria, "Da luu tieu chi");
+        repository.saveCriteria(tc);
+        return KetQua.success(tc, "Đã lưu tiêu chí đánh giá thành công.");
     }
 
-    public KetQua<TieuChiDanhGia> updateCriteria(int id, String name, String description, int weight) {
-        TieuChiDanhGia criteria = repository.getCriteria(id);
-        if (criteria == null) {
-            return KetQua.error("Khong tim thay tieu chi");
+    public KetQua<TieuChiDanhGia> updateCriteria(int maTieuChi, String tenTieuChi, String moTa,
+                                                 String nhomTieuChi, double diemToiDa, double trongSo) {
+        TieuChiDanhGia tc = repository.getCriteria(maTieuChi);
+        if (tc == null) {
+            return KetQua.error("Không tìm thấy tiêu chí #" + maTieuChi);
         }
 
-        if (name == null || name.trim().isEmpty()) {
-            return KetQua.error("Ten tieu chi khong duoc de trong");
+        if (tenTieuChi == null || tenTieuChi.trim().isEmpty()) {
+            return KetQua.error("Tên tiêu chí không được để trống.");
+        }
+        if (diemToiDa <= 0) {
+            return KetQua.error("Điểm tối đa phải lớn hơn 0.");
+        }
+        if (trongSo < 0 || trongSo > 100) {
+            return KetQua.error("Trọng số phải từ 0 đến 100.");
         }
 
-        if (weight <= 0 || weight > 100) {
-            return KetQua.error("Trong so phai tu 1 den 100");
-        }
+        tc.setTenTieuChi(tenTieuChi.trim());
+        tc.setMoTa(moTa != null ? moTa.trim() : tc.getMoTa());
+        tc.setNhomTieuChi(nhomTieuChi != null ? nhomTieuChi.trim() : tc.getNhomTieuChi());
+        tc.setDiemToiDa(diemToiDa);
+        tc.setTrongSo(trongSo);
 
-        criteria.setTenTieuChi(name.trim());
-        criteria.setMoTa(description);
-        criteria.setDiemToiDa(weight);
-        repository.saveCriteria(criteria);
-        return KetQua.success(criteria, "Da cap nhat tieu chi");
+        repository.saveCriteria(tc);
+        return KetQua.success(tc, "Đã cập nhật tiêu chí đánh giá thành công.");
     }
 
-    public KetQua<Void> deleteCriteria(int id) {
-        TieuChiDanhGia criteria = repository.getCriteria(id);
-        if (criteria == null) {
-            return KetQua.error("Khong tim thay tieu chi");
+    public KetQua<Void> deleteCriteria(int maTieuChi) {
+        TieuChiDanhGia tc = repository.getCriteria(maTieuChi);
+        if (tc == null) {
+            return KetQua.error("Không tìm thấy tiêu chí #" + maTieuChi);
         }
-
-        repository.deleteCriteria(id);
-        return KetQua.success(null, "Da xoa tieu chi");
+        repository.deleteCriteria(maTieuChi);
+        return KetQua.success(null, "Đã vô hiệu hóa tiêu chí đánh giá thành công.");
     }
 
     public int getTotalWeight() {
         return repository.getAllCriteria().stream()
-                .filter(c -> c.isHoatDong())
-                .mapToInt(c -> (int) c.getDiemToiDa())
+                .filter(TieuChiDanhGia::isHoatDong)
+                .mapToInt(c -> (int) c.getTrongSo())
                 .sum();
     }
 
-    // Evaluation Submission
-    public KetQua<DanhGiaHieuSuat> submitEvaluation(int cycleId, int employeeId, String employeeName,
-                                                          int evaluatorId, String evaluatorName,
-                                                          List<ChiTietDanhGia> scores, String generalComment) {
-        DotDanhGia cycle = repository.getCycle(cycleId);
-        if (cycle == null) {
-            return KetQua.error("Khong tim thay ky danh gia");
+    // ============================
+    // Nộp đánh giá (Submission)
+    // ============================
+
+    public KetQua<DanhGiaHieuSuat> submitEvaluation(int maDot, String maNV, String tenNV,
+                                                    String maNguoiDanhGia, String tenNguoiDanhGia,
+                                                    List<ChiTietDanhGia> chiTiets, String nhanXetChung) {
+        DotDanhGia dot = repository.findCycleById(maDot);
+        if (dot == null) {
+            return KetQua.error("Không tìm thấy đợt đánh giá #" + maDot);
         }
 
-        if (!cycle.dangDienRa()) {
-            return KetQua.error("Ky danh gia chua mo hoac da dong");
+        if (!dot.dangDienRa()) {
+            return KetQua.error("Đợt đánh giá chưa mở hoặc đã kết thúc.");
         }
 
-        // Check if already submitted
-        DanhGiaHieuSuat existing = repository.findSubmission(cycleId, employeeId);
+        // Kiểm tra đã đánh giá chưa
+        DanhGiaHieuSuat existing = repository.findSubmissionByDotAndNV(maDot, maNV);
         if (existing != null) {
-            return KetQua.error("Nhan vien nay da duoc danh gia trong ky nay");
+            return KetQua.error("Nhân viên này đã được đánh giá trong đợt này.");
         }
 
-        // Validate scores
-        if (scores == null || scores.isEmpty()) {
-            return KetQua.error("Vui long nhap diem cho cac tieu chi");
+        // Validate chi tiết điểm
+        if (chiTiets == null || chiTiets.isEmpty()) {
+            return KetQua.error("Vui lòng nhập điểm cho các tiêu chí.");
         }
 
-        for (ChiTietDanhGia score : scores) {
-            if (score.getScore() < 1 || score.getScore() > 10) {
-                return KetQua.error("Diem phai tu 1 den 10");
+        List<TieuChiDanhGia> tieuChis = repository.findCriteriaByDot(maDot);
+        if (tieuChis == null || tieuChis.isEmpty()) {
+            return KetQua.error("Đợt đánh giá chưa được cấu hình tiêu chí.");
+        }
+
+        Set<Integer> validTieuChiIds = new HashSet<>();
+        for (TieuChiDanhGia tc : tieuChis) {
+            validTieuChiIds.add(tc.getMaTieuChi());
+        }
+
+        double tongDiem = 0.0;
+        for (ChiTietDanhGia ct : chiTiets) {
+            if (!validTieuChiIds.contains(ct.getTieuChiId())) {
+                return KetQua.error("Có tiêu chí không thuộc đợt đánh giá này.");
             }
-        }
-
-        List<TieuChiDanhGia> cycleCriteria = repository.findCriteriaByDot(cycleId);
-        if (cycleCriteria == null || cycleCriteria.isEmpty()) {
-            return KetQua.error("Dot danh gia chua duoc cau hinh tieu chi");
-        }
-        Set<Integer> cycleCriteriaIds = new HashSet<>();
-        for (TieuChiDanhGia c : cycleCriteria) {
-            cycleCriteriaIds.add(c.getId());
-        }
-        for (ChiTietDanhGia score : scores) {
-            if (!cycleCriteriaIds.contains(score.getCriteriaId())) {
-                return KetQua.error("Danh sach diem co tieu chi khong thuoc dot danh gia");
+            if (ct.getDiem() < 0 || ct.getDiem() > 10) {
+                return KetQua.error("Điểm phải từ 0 đến 10.");
             }
+            tongDiem += ct.getDiem() * ct.getTrongSo() / 100.0;
         }
 
-        // Create submission
-        DanhGiaHieuSuat submission = new DanhGiaHieuSuat();
-        submission.setDotDanhGiaId(cycleId);
-        submission.setTenDot(cycle.getName());
-        submission.setNhanVienId(employeeId);
-        submission.setTenNhanVien(employeeName);
-        submission.setNguoiDanhGiaId(evaluatorId);
-        submission.setTenNguoiDanhGia(evaluatorName);
-        submission.setChiTietDanhGias(new ArrayList<>(scores));
-        submission.setNhanXetChung(generalComment);
-        submission.tinhTong();
+        // Tạo đánh giá
+        DanhGiaHieuSuat dg = new DanhGiaHieuSuat();
+        dg.setDotDanhGiaId(maDot);
+        dg.setTenDot(dot.getTenDot());
+        dg.setNhanVienId(maNV);
+        dg.setTenNhanVien(tenNV);
+        dg.setNguoiDanhGiaId(maNguoiDanhGia);
+        dg.setTenNguoiDanhGia(tenNguoiDanhGia);
+        dg.setChiTietDanhGias(new ArrayList<>(chiTiets));
+        dg.setNhanXetChung(nhanXetChung != null ? nhanXetChung.trim() : "");
+        dg.setTongDiem(tongDiem);
+        dg.setXepLoai(DanhGiaHieuSuat.XepLoai.tuDiem(tongDiem));
+        dg.setNgayDanhGia(LocalDateTime.now());
 
-        repository.saveSubmission(submission);
-
-        // CRITICAL: save per-criterion scores to CHITIETDANHGIA
-        if (submission.getId() > 0) {
-            repository.saveScores(submission.getId(), scores);
+        int maDanhGia = repository.insertSubmission(dg);
+        if (maDanhGia <= 0) {
+            return KetQua.error("Không thể lưu đánh giá.");
         }
 
-        return KetQua.success(submission, "Da luu danh gia. Diem tong: " +
-                String.format("%.2f", submission.getOverallScore()) + " - " +
-                submission.getXepLoai().toString());
+        // Lưu chi tiết điểm
+        repository.saveScores(maDanhGia, chiTiets);
+
+        dg.setId(maDanhGia);
+        return KetQua.success(dg, String.format("Đã lưu đánh giá thành công. Tổng điểm: %.2f - Xếp loại: %s",
+                tongDiem, dg.getXepLoai().name()));
     }
 
+    // ============================
+    // Truy vấn đánh giá
+    // ============================
 
-    // Query methods
-    public List<DanhGiaHieuSuat> getSubmissionsByCycle(int cycleId) {
-        List<DanhGiaHieuSuat> list = repository.getSubmissionsByCycle(cycleId);
-        if (list != null) {
-            for (DanhGiaHieuSuat s : list) {
-                s.setChiTietDanhGias(repository.findScoresByDanhGia(s.getId()));
-            }
-        }
+    public List<DanhGiaHieuSuat> getSubmissionsByCycle(int maDot) {
+        List<DanhGiaHieuSuat> list = repository.findByDot(maDot);
+        loadChiTietForList(list);
         return list;
     }
 
-    public List<DanhGiaHieuSuat> getSubmissionsByEmployee(int employeeId) {
-        List<DanhGiaHieuSuat> list = repository.getSubmissionsByEmployee(employeeId);
-        if (list != null) {
-            for (DanhGiaHieuSuat s : list) {
-                s.setChiTietDanhGias(repository.findScoresByDanhGia(s.getId()));
-            }
-        }
+    public List<DanhGiaHieuSuat> getSubmissionsByEmployee(String maNV) {
+        List<DanhGiaHieuSuat> list = repository.getSubmissionsByEmployee(maNV);
+        loadChiTietForList(list);
         return list;
     }
 
-    public List<DanhGiaHieuSuat> getSubmissionsRelatedToUser(int userId) {
-        List<DanhGiaHieuSuat> list = repository.getSubmissionsRelatedToUser(userId);
-        if (list != null) {
-            for (DanhGiaHieuSuat s : list) {
-                s.setChiTietDanhGias(repository.findScoresByDanhGia(s.getId()));
-            }
-        }
+    public List<DanhGiaHieuSuat> getSubmissionsRelatedToUser(String maNV) {
+        List<DanhGiaHieuSuat> list = repository.getSubmissionsRelatedToUser(maNV);
+        loadChiTietForList(list);
         return list;
     }
 
-    public List<DanhGiaHieuSuat> getSubmissionsForManagedEmployees(int managerMaNV) {
-        List<DanhGiaHieuSuat> list = repository.getSubmissionsForManagedEmployees(managerMaNV);
-        if (list != null) {
-            for (DanhGiaHieuSuat s : list) {
-                s.setChiTietDanhGias(repository.findScoresByDanhGia(s.getId()));
-            }
-        }
+    public List<DanhGiaHieuSuat> getSubmissionsForManagedEmployees(String maQuanLy) {
+        List<DanhGiaHieuSuat> list = repository.getSubmissionsForManagedEmployees(maQuanLy);
+        loadChiTietForList(list);
         return list;
     }
 
     public List<DanhGiaHieuSuat> getSubmissionsForDepartment(String maPhongBan) {
         List<DanhGiaHieuSuat> list = repository.getSubmissionsForDepartment(maPhongBan);
-        if (list != null) {
-            for (DanhGiaHieuSuat s : list) {
-                s.setChiTietDanhGias(repository.findScoresByDanhGia(s.getId()));
-            }
-        }
+        loadChiTietForList(list);
         return list;
     }
 
-    public List<Integer> getEvaluatedMaNVInCycle(int cycleId) {
-        return repository.getEvaluatedMaNVInCycle(cycleId);
+    public List<String> getEvaluatedMaNVInCycle(int maDot) {
+        return repository.getEvaluatedMaNVInCycle(maDot);
     }
 
-    /** Load detail scores for a specific evaluation (lazy load). */
-    public java.util.List<ChiTietDanhGia> loadScores(int maDanhGia) {
-        return repository.findScoresByDanhGia(maDanhGia);
-    }
-
-    public DanhGiaHieuSuat getSubmission(int cycleId, int employeeId) {
-        DanhGiaHieuSuat sub = repository.findSubmission(cycleId, employeeId);
-        if (sub != null) {
-            sub.setChiTietDanhGias(repository.findScoresByDanhGia(sub.getId()));
+    public DanhGiaHieuSuat getSubmission(int maDot, String maNV) {
+        DanhGiaHieuSuat dg = repository.findSubmissionByDotAndNV(maDot, maNV);
+        if (dg != null) {
+            dg.setChiTietDanhGias(repository.findScoresByDanhGia(dg.getId()));
         }
-        return sub;
+        return dg;
     }
 
     public List<DanhGiaHieuSuat> getAllSubmissions() {
-        List<DanhGiaHieuSuat> list = repository.getAllSubmissions();
-        if (list != null) {
-            for (DanhGiaHieuSuat s : list) {
-                s.setChiTietDanhGias(repository.findScoresByDanhGia(s.getId()));
-            }
-        }
+        List<DanhGiaHieuSuat> list = repository.findAll();
+        loadChiTietForList(list);
         return list;
     }
 
-    public List<DanhGiaHieuSuat> getAllSubmissionsByScope(int currentUserId) {
-        com.hrm.model.DataScope scope = com.hrm.bus.XacThucBUS.getInstance().getScopeForAction("EVAL_VIEW");
-        List<DanhGiaHieuSuat> list = repository.findAllByScope(scope, currentUserId);
-        if (list != null) {
-            for (DanhGiaHieuSuat s : list) {
-                s.setChiTietDanhGias(repository.findScoresByDanhGia(s.getId()));
-            }
-        }
+    public List<DanhGiaHieuSuat> getAllSubmissionsByScope(String currentMaNV) {
+        com.hrm.model.DataScope scope = com.hrm.bus.XacThucBUS.getInstance()
+                .getScopeForAction("EVAL_VIEW");
+        List<DanhGiaHieuSuat> list = repository.findAllByScope(scope, currentMaNV);
+        loadChiTietForList(list);
         return list;
     }
 
-    /**
-     * Calculate overall score from weighted scores
-     */
-    public double calculateOverallScore(List<ChiTietDanhGia> scores) {
-        if (scores == null || scores.isEmpty()) {
-            return 0;
+    // Helper: tải chi tiết điểm cho danh sách đánh giá
+    private void loadChiTietForList(List<DanhGiaHieuSuat> list) {
+        if (list == null || list.isEmpty()) return;
+        for (DanhGiaHieuSuat dg : list) {
+            dg.setChiTietDanhGias(repository.findScoresByDanhGia(dg.getId()));
         }
-        double total = 0;
-        for (ChiTietDanhGia score : scores) {
-            total += score.getWeightedScore();
-        }
-        return Math.round(total * 100.0) / 100.0;
     }
 
-    /**
-     * Get rating from score
-     */
-    public DanhGiaHieuSuat.XepLoai getRatingFromScore(double score) {
-        return DanhGiaHieuSuat.XepLoai.tuDiem(score);
+    public List<ChiTietDanhGia> loadScores(int maDanhGia) {
+        return repository.findScoresByDanhGia(maDanhGia);
     }
 
-    /**
-     * Generic service result wrapper
-     */
+    // ============================
+    // Generic result wrapper
+    // ============================
+
     public static class KetQua<T> {
         private boolean success;
         private String message;

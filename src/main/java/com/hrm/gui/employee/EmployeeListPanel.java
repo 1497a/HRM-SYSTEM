@@ -136,9 +136,19 @@ public class EmployeeListPanel extends JPanel {
 
         sorter = new TableRowSorter<>(tableModel);
         table.setRowSorter(sorter);
-        // Sort by first name (Tên) by default using Vietnamese locale
+
+        // Chỉ cho phép sort cột 1 (Mã NV) và cột 2 (Họ tên)
+        for (int i = 0; i < COL_NAMES.length; i++) {
+            sorter.setSortable(i, false); // tắt hết trước
+        }
+        sorter.setSortable(1, true); // Mã NV
+        sorter.setSortable(2, true); // Họ tên
+
+        // Comparator tiếng Việt cho cột Họ tên
         sorter.setComparator(2, UIHelper.vietnameseNameComparator());
-        sorter.setSortKeys(List.of(new RowSorter.SortKey(2, SortOrder.ASCENDING)));
+
+        // Mặc định sort theo Mã NV tăng dần
+        sorter.setSortKeys(List.of(new RowSorter.SortKey(1, SortOrder.ASCENDING)));
 
         JScrollPane scroll = new JScrollPane(table);
         scroll.setBorder(BorderFactory.createLineBorder(UIColors.BORDER_GRAY));
@@ -199,7 +209,7 @@ public class EmployeeListPanel extends JPanel {
 
     public void refreshTable() {
         com.hrm.model.TaiKhoan currentUser = SessionContext.getInstance().getCurrentUser();
-        int userId = (currentUser != null && currentUser.getMaNV() != null) ? currentUser.getMaNV() : -1;
+        String userId = currentUser != null ? currentUser.getNhanVienId() : null;
         danhSachHienThi = nvService.getAllByScope(userId);
         tableModel.setRowCount(0);
         int stt = 1;
@@ -300,7 +310,7 @@ public class EmployeeListPanel extends JPanel {
             return;
         }
         EmployeeDetailPanel dialog = new EmployeeDetailPanel(
-                (Frame) SwingUtilities.getWindowAncestor(this), selected.getId());
+                (Frame) SwingUtilities.getWindowAncestor(this), selected.getMaNhanVien());
         dialog.setVisible(true);
         if (dialog.isDataChanged()) {
             refreshTable();

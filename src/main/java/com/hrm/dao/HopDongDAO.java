@@ -34,7 +34,7 @@ public class HopDongDAO {
         HopDongLaoDong hd = new HopDongLaoDong();
         hd.setMaHopDong(rs.getInt("maHopDong"));
         hd.setSoHopDong(rs.getString("soHopDong"));
-        hd.setMaNV(rs.getInt("maNV"));
+        hd.setMaNV(rs.getString("maNV"));
         hd.setLoaiHopDong(rs.getString("loaiHopDong"));
         hd.setLuongCoSo(rs.getLong("luongCoSo"));
 
@@ -116,12 +116,12 @@ public class HopDongDAO {
     // findByMaNV - with tenNV transient
     // ============================
 
-    public List<HopDongLaoDong> findByMaNV(int maNV) {
+    public List<HopDongLaoDong> findByMaNV(String maNV) {
         String sql = buildJoinQuery("WHERE h.maNV = ?", "ORDER BY h.ngayHieuLuc DESC");
         List<HopDongLaoDong> result = new ArrayList<>();
         try (Connection conn = DatabaseConnection.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
-            ps.setInt(1, maNV);
+            ps.setString(1, maNV);
             try (ResultSet rs = ps.executeQuery()) {
                 while (rs.next()) {
                     HopDongLaoDong hd = mapRow(rs);
@@ -139,11 +139,11 @@ public class HopDongDAO {
     // findHieuLuc - returns current active contract
     // ============================
 
-    public HopDongLaoDong findHieuLuc(int maNV) {
+    public HopDongLaoDong findHieuLuc(String maNV) {
         String sql = buildJoinQuery("WHERE h.maNV = ? AND h.trangThai = 'hieu_luc'", "LIMIT 1");
         try (Connection conn = DatabaseConnection.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
-            ps.setInt(1, maNV);
+            ps.setString(1, maNV);
             try (ResultSet rs = ps.executeQuery()) {
                 if (rs.next()) {
                     HopDongLaoDong hd = mapRow(rs);
@@ -258,7 +258,7 @@ public class HopDongDAO {
 
     private void setParams(PreparedStatement ps, HopDongLaoDong hd) throws SQLException {
         ps.setString(1, hd.getSoHopDong());
-        ps.setInt(2, hd.getMaNV());
+        ps.setString(2, hd.getMaNV());
         ps.setString(3, hd.getLoaiHopDong());
         ps.setLong(4, hd.getLuongCoSo());
         ps.setDate(5, hd.getNgayKy() != null ? Date.valueOf(hd.getNgayKy()) : null);

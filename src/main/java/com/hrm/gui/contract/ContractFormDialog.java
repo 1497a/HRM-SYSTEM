@@ -300,7 +300,7 @@ public class ContractFormDialog extends JDialog {
 
         // Pre-select nhân viên
         for (int i = 0; i < cboNhanVien.getItemCount(); i++) {
-            if (cboNhanVien.getItemAt(i).getId() == hd.getMaNV()) {
+            if (cboNhanVien.getItemAt(i).getMaNhanVien().equals(hd.getMaNV())) {
                 cboNhanVien.setSelectedIndex(i);
                 break;
             }
@@ -361,7 +361,7 @@ public class ContractFormDialog extends JDialog {
                     "Lỗi nhập liệu", JOptionPane.ERROR_MESSAGE);
             return;
         }
-        int maNV = selectedNV.getId();
+        String maNV = selectedNV.getMaNhanVien();
 
         // Lương cơ sở
         long luongCoSo = 0;

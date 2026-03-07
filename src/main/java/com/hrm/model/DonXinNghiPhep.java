@@ -28,7 +28,7 @@ public class DonXinNghiPhep {
     }
 
     private int id;
-    private int nhanVienId;
+    private String nhanVienId;
     private String tenNhanVien;
     private String loaiPhepId;
     private String tenLoaiPhep;
@@ -37,7 +37,7 @@ public class DonXinNghiPhep {
     private double soNgayNghi;
     private String lyDo;
     private TrangThai trangThai;
-    private Integer nguoiDuyetId;
+    private String nguoiDuyetId;
     private String tenNguoiDuyet;
     private String lyDoTuChoi;
     private LocalDateTime ngayTao;
@@ -51,8 +51,8 @@ public class DonXinNghiPhep {
 
     public int getId() { return id; }
     public void setId(int id) { this.id = id; }
-    public int getNhanVienId() { return nhanVienId; }
-    public void setNhanVienId(int nhanVienId) { this.nhanVienId = nhanVienId; }
+    public String getNhanVienId() { return nhanVienId; }
+    public void setNhanVienId(String nhanVienId) { this.nhanVienId = nhanVienId; }
     public String getTenNhanVien() { return tenNhanVien; }
     public void setTenNhanVien(String tenNhanVien) { this.tenNhanVien = tenNhanVien; }
     public String getLoaiPhepId() { return loaiPhepId; }
@@ -72,8 +72,8 @@ public class DonXinNghiPhep {
         this.trangThai = trangThai;
         this.ngayCapNhat = LocalDateTime.now();
     }
-    public Integer getNguoiDuyetId() { return nguoiDuyetId; }
-    public void setNguoiDuyetId(Integer nguoiDuyetId) { this.nguoiDuyetId = nguoiDuyetId; }
+    public String getNguoiDuyetId() { return nguoiDuyetId; }
+    public void setNguoiDuyetId(String nguoiDuyetId) { this.nguoiDuyetId = nguoiDuyetId; }
     public String getTenNguoiDuyet() { return tenNguoiDuyet; }
     public void setTenNguoiDuyet(String tenNguoiDuyet) { this.tenNguoiDuyet = tenNguoiDuyet; }
     public String getLyDoTuChoi() { return lyDoTuChoi; }
@@ -84,7 +84,7 @@ public class DonXinNghiPhep {
     public void setNgayCapNhat(LocalDateTime ngayCapNhat) { this.ngayCapNhat = ngayCapNhat; }
 
     // Legacy compat
-    public int getEmployeeId() { return nhanVienId; }
+    public String getEmployeeId() { return nhanVienId; }
     public String getEmployeeName() { return tenNhanVien; }
     public String getLeaveTypeCode() { return loaiPhepId; }
     public String getLeaveTypeName() { return tenLoaiPhep; }
@@ -92,7 +92,7 @@ public class DonXinNghiPhep {
     public LocalDate getEndDate() { return denNgay; }
     public double getTotalDays() { return soNgayNghi; }
     public String getReason() { return lyDo; }
-    public Integer getApproverId() { return nguoiDuyetId; }
+    public String getApproverId() { return nguoiDuyetId; }
     public String getApproverName() { return tenNguoiDuyet; }
     public String getApproverNote() { return lyDoTuChoi; }
     public LocalDateTime getCreatedAt() { return ngayTao; }

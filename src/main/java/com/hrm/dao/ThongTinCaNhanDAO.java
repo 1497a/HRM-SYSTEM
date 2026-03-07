@@ -30,7 +30,7 @@ public class ThongTinCaNhanDAO {
 
     private ThongTinCaNhan mapRow(ResultSet rs) throws SQLException {
         ThongTinCaNhan ttcn = new ThongTinCaNhan();
-        ttcn.setMaNV(rs.getInt("maNV"));
+        ttcn.setMaNV(rs.getString("maNV"));
         ttcn.setHoTen(rs.getString("hoTen"));
         Date ngaySinh = rs.getDate("ngaySinh");
         if (ngaySinh != null) {
@@ -54,11 +54,11 @@ public class ThongTinCaNhanDAO {
     // findByMaNV
     // ============================
 
-    public ThongTinCaNhan findByMaNV(int maNV) {
+    public ThongTinCaNhan findByMaNV(String maNV) {
         String sql = "SELECT * FROM THONGTINCANHAN WHERE maNV = ?";
         try (Connection conn = DatabaseConnection.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
-            ps.setInt(1, maNV);
+            ps.setString(1, maNV);
             try (ResultSet rs = ps.executeQuery()) {
                 if (rs.next()) {
                     return mapRow(rs);
@@ -137,7 +137,7 @@ public class ThongTinCaNhanDAO {
             ps.setString(11, ttcn.getFileCV());
             ps.setString(12, ttcn.getTrinhDoHocVan());
             ps.setString(13, ttcn.getKinhNghiem());
-            ps.setInt(14, ttcn.getMaNV());
+            ps.setString(14, ttcn.getMaNV());
             ps.executeUpdate();
         } catch (SQLException e) {
             throw new RuntimeException("Lỗi cập nhật thông tin cá nhân: " + e.getMessage(), e);
@@ -148,12 +148,12 @@ public class ThongTinCaNhanDAO {
     // existsByCCCD - check uniqueness excluding current NV
     // ============================
 
-    public boolean existsByCCCD(String cccd, int excludeMaNV) {
+    public boolean existsByCCCD(String cccd, String excludeMaNV) {
         String sql = "SELECT COUNT(*) FROM THONGTINCANHAN WHERE CCCD = ? AND maNV <> ?";
         try (Connection conn = DatabaseConnection.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setString(1, cccd);
-            ps.setInt(2, excludeMaNV);
+            ps.setString(2, excludeMaNV);
             try (ResultSet rs = ps.executeQuery()) {
                 if (rs.next()) {
                     return rs.getInt(1) > 0;
@@ -170,7 +170,7 @@ public class ThongTinCaNhanDAO {
     // ============================
 
     private void setParams(PreparedStatement ps, ThongTinCaNhan ttcn) throws SQLException {
-        ps.setInt(1, ttcn.getMaNV());
+        ps.setString(1, ttcn.getMaNV());
         ps.setString(2, ttcn.getHoTen());
         ps.setDate(3, ttcn.getNgaySinh() != null ? Date.valueOf(ttcn.getNgaySinh()) : null);
         ps.setString(4, ttcn.getGioiTinh());

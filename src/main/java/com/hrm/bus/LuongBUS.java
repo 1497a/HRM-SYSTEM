@@ -1,19 +1,18 @@
 package com.hrm.bus;
 
-import com.hrm.model.BangLuong;
-import com.hrm.model.ChiTietLuong;
-import com.hrm.model.NhanVien;
-import com.hrm.model.ThanhPhanLuong;
+import com.hrm.model.*;
 import com.hrm.dao.BangLuongDAO;
 import com.hrm.dao.NhanVienDAO;
 import com.hrm.util.SessionContext;
 
 import java.time.LocalDate;
+import java.util.ArrayList;
 import java.util.List;
 
 /**
  * Service quản lý lương nhân viên.
  * Singleton pattern.
+ * Đã cập nhật để maNV là String (ví dụ: "NV001", "NV002", ...).
  */
 public class LuongBUS {
 
@@ -49,11 +48,10 @@ public class LuongBUS {
      * nếu chưa thì tạo mới. Tính chi tiết lương cho từng nhân viên đang làm việc.
      */
     public KetQua<BangLuong> tinhLuong(int thang, int nam) {
-        // Validate tháng
+        // Validate tháng/năm
         if (thang < 1 || thang > 12) {
             return KetQua.error("Tháng không hợp lệ. Phải từ 1 đến 12.");
         }
-        // Validate năm
         if (nam <= 2000) {
             return KetQua.error("Năm không hợp lệ. Phải lớn hơn 2000.");
         }
@@ -67,6 +65,8 @@ public class LuongBUS {
                 LocalDate ngayKT = ngayBD.withDayOfMonth(ngayBD.lengthOfMonth());
                 bangLuong.setThang(thang);
                 bangLuong.setNam(nam);
+                bangLuong.setNgayBatDau(ngayBD);
+                bangLuong.setNgayKetThuc(ngayKT);
                 bangLuong.setTrangThai(BangLuong.TrangThai.DA_TINH);
                 bangLuongRepo.insertBangLuong(bangLuong);
             }
@@ -77,7 +77,7 @@ public class LuongBUS {
             List<NhanVien> danhSachNV = nvRepo.findDangLamViec();
 
             for (NhanVien nv : danhSachNV) {
-                int maNV = nv.getId();
+                String maNV = nv.getMaNhanVien(); // String
 
                 // Kiểm tra đã có chi tiết lương chưa (tránh tính lại)
                 ChiTietLuong existing = bangLuongRepo.findByBangLuongAndNV(maBL, maNV);
@@ -99,15 +99,15 @@ public class LuongBUS {
 
                 // Phụ cấp từ CAUHINHPHUCAP
                 List<Object[]> bonusCfgs = bangLuongRepo.getCauHinhPhuCapRaw();
-                List<ThanhPhanLuong> bonusItems = new java.util.ArrayList<>();
+                List<ThanhPhanLuong> bonusItems = new ArrayList<>();
                 double tongBonus = 0;
                 for (Object[] cfg : bonusCfgs) {
                     String ten  = (String) cfg[0];
                     String kieu = (String) cfg[1];
-                    double gia  = (double) cfg[2];
+                    double gia  = (Double) cfg[2];
                     String ng   = (String) cfg[3];
                     double amt  = "phan_tram".equals(kieu) ? gia / 100.0 * luongCoBan : gia;
-                    tongBonus  += amt;
+                    tongBonus += amt;
                     bonusItems.add(new ThanhPhanLuong(ThanhPhanLuong.Loai.PHU_CAP, ten, amt, ng));
                 }
 
@@ -128,7 +128,7 @@ public class LuongBUS {
                 // Tạo ChiTietLuong
                 ChiTietLuong ctl = new ChiTietLuong();
                 ctl.setMaBL(maBL);
-                ctl.setMaNV(maNV);
+                ctl.setMaNV(maNV); // String
                 ctl.setTenNV(nv.getHoTen() != null ? nv.getHoTen() : "");
                 ctl.setLuongCoBan(luongCoBan);
                 ctl.setTongLuongChucVu(tongLuongChucVu);
@@ -140,20 +140,16 @@ public class LuongBUS {
                 ctl.setTongGioOT(0);
                 ctl.setTrangThai(ChiTietLuong.TrangThai.DA_TINH);
 
-                // Thêm phụ cấp vào danh sách
+                // Thêm phụ cấp
                 for (ThanhPhanLuong bonus : bonusItems) {
                     ctl.themThanhPhan(bonus);
                 }
 
-                // Thêm các thành phần lương chi tiết vào danh sách
-                ctl.themThanhPhan(new ThanhPhanLuong(
-                        ThanhPhanLuong.Loai.KHAU_TRU, "Thuế TNCN", thueTNCN, "LuatThue"));
-                ctl.themThanhPhan(new ThanhPhanLuong(
-                        ThanhPhanLuong.Loai.KHAU_TRU, "BHXH (8%)", bhxh, "LuatDinhBHXH"));
-                ctl.themThanhPhan(new ThanhPhanLuong(
-                        ThanhPhanLuong.Loai.KHAU_TRU, "BHYT (1.5%)", bhyt, "LuatDinhBHYT"));
-                ctl.themThanhPhan(new ThanhPhanLuong(
-                        ThanhPhanLuong.Loai.KHAU_TRU, "BHTN (1%)", bhtn, "LuatDinhBHTN"));
+                // Thêm các khoản khấu trừ
+                ctl.themThanhPhan(new ThanhPhanLuong(ThanhPhanLuong.Loai.KHAU_TRU, "Thuế TNCN", thueTNCN, "LuatThue"));
+                ctl.themThanhPhan(new ThanhPhanLuong(ThanhPhanLuong.Loai.KHAU_TRU, "BHXH (8%)", bhxh, "LuatDinhBHXH"));
+                ctl.themThanhPhan(new ThanhPhanLuong(ThanhPhanLuong.Loai.KHAU_TRU, "BHYT (1.5%)", bhyt, "LuatDinhBHYT"));
+                ctl.themThanhPhan(new ThanhPhanLuong(ThanhPhanLuong.Loai.KHAU_TRU, "BHTN (1%)", bhtn, "LuatDinhBHTN"));
 
                 // Lưu chi tiết lương
                 int maChiTiet = bangLuongRepo.insertChiTiet(ctl);
@@ -175,44 +171,48 @@ public class LuongBUS {
     }
 
     // ============================
-    // khoaBangLuong
+    // duyetBangLuong
     // ============================
 
     public KetQua<Void> duyetBangLuong(int maBangLuong) {
         try {
             BangLuong bl = bangLuongRepo.findById(maBangLuong);
             if (bl == null) {
-                return KetQua.error("Không tìm thấy bảng lương.");
+                return KetQua.error("Không tìm thấy bảng lương #" + maBangLuong);
             }
             if (bl.getTrangThai() != BangLuong.TrangThai.DA_TINH) {
-                return KetQua.error("Chi co the duyet bang luong co trang thai Da tinh.");
+                return KetQua.error("Chỉ có thể duyệt bảng lương ở trạng thái 'Đã tính'.");
             }
-            int userId = 0;
-            if (SessionContext.getInstance().getCurrentUser() != null) {
-                userId = SessionContext.getInstance().getCurrentUser().getId();
-            }
+
+            int userId = SessionContext.getInstance().getCurrentUser() != null
+                    ? SessionContext.getInstance().getCurrentUser().getId() : 0;
+
             bangLuongRepo.approveBangLuong(maBangLuong, userId);
-            return KetQua.success(null, "Duyet bang luong thanh cong.");
+            return KetQua.success(null, "Đã duyệt bảng lương #" + maBangLuong);
         } catch (Exception e) {
             return KetQua.error("Lỗi khi duyệt bảng lương: " + e.getMessage());
         }
     }
 
+    // ============================
+    // khoaBangLuong
+    // ============================
+
     public KetQua<Void> khoaBangLuong(int maBangLuong) {
         try {
             BangLuong bl = bangLuongRepo.findById(maBangLuong);
             if (bl == null) {
-                return KetQua.error("Không tìm thấy bảng lương.");
+                return KetQua.error("Không tìm thấy bảng lương #" + maBangLuong);
             }
             if (bl.getTrangThai() != BangLuong.TrangThai.DA_DUYET) {
-                return KetQua.error("Can duyet bang luong truoc khi khoa.");
+                return KetQua.error("Cần duyệt bảng lương trước khi khóa.");
             }
-            int userId = 0;
-            if (SessionContext.getInstance().getCurrentUser() != null) {
-                userId = SessionContext.getInstance().getCurrentUser().getId();
-            }
+
+            int userId = SessionContext.getInstance().getCurrentUser() != null
+                    ? SessionContext.getInstance().getCurrentUser().getId() : 0;
+
             bangLuongRepo.lockBangLuong(maBangLuong, userId);
-            return KetQua.success(null, "Khóa bảng lương thành công.");
+            return KetQua.success(null, "Đã khóa bảng lương #" + maBangLuong);
         } catch (Exception e) {
             return KetQua.error("Lỗi khi khóa bảng lương: " + e.getMessage());
         }
@@ -230,58 +230,45 @@ public class LuongBUS {
     // Private helper: tính thuế TNCN luỹ tiến
     // ============================
 
-    /**
-     * Tính thuế thu nhập cá nhân theo biểu thuế luỹ tiến.
-     * Giảm trừ bản thân: 11,000,000 đồng/tháng.
-     * Bậc thuế:
-     *   1. 0   - 5,000,000:    5%
-     *   2. 5M  - 10,000,000:  10%
-     *   3. 10M - 18,000,000:  15%
-     *   4. 18M - 32,000,000:  20%
-     *   5. 32M - 52,000,000:  25%
-     *   6. 52M - 80,000,000:  30%
-     *   7. Trên 80,000,000:   35%
-     */
     private double tinhThueTNCN(double tongThuNhap) {
         final double GIAM_TRU_BAN_THAN = 11_000_000.0;
         double thuNhapChiuThue = tongThuNhap - GIAM_TRU_BAN_THAN;
 
-        if (thuNhapChiuThue <= 0) {
-            return 0.0;
-        }
+        if (thuNhapChiuThue <= 0) return 0.0;
 
         double thue = 0.0;
-        // Bậc 1: 0 - 5,000,000 (5%)
+
+        // Bậc 1: 0 - 5 triệu (5%)
         double bac1 = Math.min(thuNhapChiuThue, 5_000_000.0);
         thue += bac1 * 0.05;
         if (thuNhapChiuThue <= 5_000_000) return thue;
 
-        // Bậc 2: 5,000,000 - 10,000,000 (10%)
+        // Bậc 2: 5 - 10 triệu (10%)
         double bac2 = Math.min(thuNhapChiuThue - 5_000_000, 5_000_000.0);
         thue += bac2 * 0.10;
         if (thuNhapChiuThue <= 10_000_000) return thue;
 
-        // Bậc 3: 10,000,000 - 18,000,000 (15%)
+        // Bậc 3: 10 - 18 triệu (15%)
         double bac3 = Math.min(thuNhapChiuThue - 10_000_000, 8_000_000.0);
         thue += bac3 * 0.15;
         if (thuNhapChiuThue <= 18_000_000) return thue;
 
-        // Bậc 4: 18,000,000 - 32,000,000 (20%)
+        // Bậc 4: 18 - 32 triệu (20%)
         double bac4 = Math.min(thuNhapChiuThue - 18_000_000, 14_000_000.0);
         thue += bac4 * 0.20;
         if (thuNhapChiuThue <= 32_000_000) return thue;
 
-        // Bậc 5: 32,000,000 - 52,000,000 (25%)
+        // Bậc 5: 32 - 52 triệu (25%)
         double bac5 = Math.min(thuNhapChiuThue - 32_000_000, 20_000_000.0);
         thue += bac5 * 0.25;
         if (thuNhapChiuThue <= 52_000_000) return thue;
 
-        // Bậc 6: 52,000,000 - 80,000,000 (30%)
+        // Bậc 6: 52 - 80 triệu (30%)
         double bac6 = Math.min(thuNhapChiuThue - 52_000_000, 28_000_000.0);
         thue += bac6 * 0.30;
         if (thuNhapChiuThue <= 80_000_000) return thue;
 
-        // Bậc 7: Trên 80,000,000 (35%)
+        // Bậc 7: Trên 80 triệu (35%)
         double bac7 = thuNhapChiuThue - 80_000_000;
         thue += bac7 * 0.35;
 

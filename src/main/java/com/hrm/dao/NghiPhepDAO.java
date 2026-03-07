@@ -53,7 +53,7 @@ public class NghiPhepDAO {
                 + "lyDo, trangThai) VALUES (?,?,?,?,?,?,?)";
         try (Connection conn = DatabaseConnection.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
-            ps.setInt(1, req.getEmployeeId());
+            ps.setString(1, req.getEmployeeId());
             ps.setString(2, req.getLeaveTypeCode());
             ps.setDate(3, req.getStartDate() != null ? Date.valueOf(req.getStartDate()) : null);
             ps.setDate(4, req.getEndDate() != null ? Date.valueOf(req.getEndDate()) : null);
@@ -74,14 +74,14 @@ public class NghiPhepDAO {
         return 0;
     }
 
-    public void updateTrangThai(int maDon, String trangThai, int nguoiDuyet,
+    public void updateTrangThai(int maDon, String trangThai, String nguoiDuyet,
                                  LocalDateTime ngayDuyet, String lyDoTuChoi) {
         String sql = "UPDATE DONXINNGHIPHEP SET trangThai=?, nguoiDuyet=?, ngayDuyet=?, "
                 + "lyDoTuChoi=? WHERE maDon=?";
         try (Connection conn = DatabaseConnection.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setString(1, trangThai);
-            if (nguoiDuyet > 0) ps.setInt(2, nguoiDuyet); else ps.setNull(2, Types.INTEGER);
+            if (nguoiDuyet != null && !nguoiDuyet.isEmpty()) ps.setString(2, nguoiDuyet); else ps.setNull(2, Types.VARCHAR);
             ps.setTimestamp(3, ngayDuyet != null ? Timestamp.valueOf(ngayDuyet) : null);
             ps.setString(4, lyDoTuChoi);
             ps.setInt(5, maDon);
@@ -93,11 +93,10 @@ public class NghiPhepDAO {
 
     /** Returns all leave requests with tenNV and tenLoaiPhep transients loaded. */
     public List<DonXinNghiPhep> findAll() {
-        String sql = "SELECT d.*, t.hoTen, lp.tenLoaiPhep, COALESCE(t2.hoTen, tkd.tenDangNhap) AS tenNguoiDuyet FROM DONXINNGHIPHEP d "
+        String sql = "SELECT d.*, t.hoTen, lp.tenLoaiPhep, t2.hoTen AS tenNguoiDuyet FROM DONXINNGHIPHEP d "
                 + "LEFT JOIN THONGTINCANHAN t ON d.maNV = t.maNV "
                 + "LEFT JOIN LOAIPHEP lp ON d.maLoaiPhep = lp.maLoaiPhep "
-                + "LEFT JOIN TAIKHOAN tkd ON d.nguoiDuyet = tkd.maTaiKhoan "
-                + "LEFT JOIN THONGTINCANHAN t2 ON tkd.maNV = t2.maNV "
+                + "LEFT JOIN THONGTINCANHAN t2 ON d.nguoiDuyet = t2.maNV "
                 + "ORDER BY d.maDon DESC";
         List<DonXinNghiPhep> result = new ArrayList<>();
         try (Connection conn = DatabaseConnection.getConnection();
@@ -112,17 +111,16 @@ public class NghiPhepDAO {
         return result;
     }
 
-    public List<DonXinNghiPhep> findByMaNV(int maNV) {
-        String sql = "SELECT d.*, t.hoTen, lp.tenLoaiPhep, COALESCE(t2.hoTen, tkd.tenDangNhap) AS tenNguoiDuyet FROM DONXINNGHIPHEP d "
+    public List<DonXinNghiPhep> findByMaNV(String maNV) {
+        String sql = "SELECT d.*, t.hoTen, lp.tenLoaiPhep, t2.hoTen AS tenNguoiDuyet FROM DONXINNGHIPHEP d "
                 + "LEFT JOIN THONGTINCANHAN t ON d.maNV = t.maNV "
                 + "LEFT JOIN LOAIPHEP lp ON d.maLoaiPhep = lp.maLoaiPhep "
-                + "LEFT JOIN TAIKHOAN tkd ON d.nguoiDuyet = tkd.maTaiKhoan "
-                + "LEFT JOIN THONGTINCANHAN t2 ON tkd.maNV = t2.maNV "
+                + "LEFT JOIN THONGTINCANHAN t2 ON d.nguoiDuyet = t2.maNV "
                 + "WHERE d.maNV=? ORDER BY d.maDon DESC";
         List<DonXinNghiPhep> result = new ArrayList<>();
         try (Connection conn = DatabaseConnection.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
-            ps.setInt(1, maNV);
+            ps.setString(1, maNV);
             try (ResultSet rs = ps.executeQuery()) {
                 while (rs.next()) {
                     result.add(mapLeaveRequest(rs));
@@ -135,11 +133,10 @@ public class NghiPhepDAO {
     }
 
     public List<DonXinNghiPhep> findChoDuyet() {
-        String sql = "SELECT d.*, t.hoTen, lp.tenLoaiPhep, COALESCE(t2.hoTen, tkd.tenDangNhap) AS tenNguoiDuyet FROM DONXINNGHIPHEP d "
+        String sql = "SELECT d.*, t.hoTen, lp.tenLoaiPhep, t2.hoTen AS tenNguoiDuyet FROM DONXINNGHIPHEP d "
                 + "LEFT JOIN THONGTINCANHAN t ON d.maNV = t.maNV "
                 + "LEFT JOIN LOAIPHEP lp ON d.maLoaiPhep = lp.maLoaiPhep "
-                + "LEFT JOIN TAIKHOAN tkd ON d.nguoiDuyet = tkd.maTaiKhoan "
-                + "LEFT JOIN THONGTINCANHAN t2 ON tkd.maNV = t2.maNV "
+                + "LEFT JOIN THONGTINCANHAN t2 ON d.nguoiDuyet = t2.maNV "
                 + "WHERE d.trangThai='cho_duyet' ORDER BY d.maDon DESC";
         List<DonXinNghiPhep> result = new ArrayList<>();
         try (Connection conn = DatabaseConnection.getConnection();
@@ -154,24 +151,23 @@ public class NghiPhepDAO {
         return result;
     }
 
-    public List<DonXinNghiPhep> findAllByScope(com.hrm.model.DataScope scope, int currentUserId) {
-        return getByScopeAndStatus(scope, currentUserId, null);
+    public List<DonXinNghiPhep> findAllByScope(com.hrm.model.DataScope scope, String currentMaNV) {
+        return getByScopeAndStatus(scope, currentMaNV, null);
     }
 
-    public List<DonXinNghiPhep> findChoDuyetByScope(com.hrm.model.DataScope scope, int currentUserId) {
-        return getByScopeAndStatus(scope, currentUserId, "cho_duyet");
+    public List<DonXinNghiPhep> findChoDuyetByScope(com.hrm.model.DataScope scope, String currentMaNV) {
+        return getByScopeAndStatus(scope, currentMaNV, "cho_duyet");
     }
 
-    private List<DonXinNghiPhep> getByScopeAndStatus(com.hrm.model.DataScope scope, int currentUserId, String statusValue) {
+    private List<DonXinNghiPhep> getByScopeAndStatus(com.hrm.model.DataScope scope, String currentMaNV, String statusValue) {
         List<DonXinNghiPhep> result = new ArrayList<>();
         if (scope == com.hrm.model.DataScope.NONE) return result;
 
-        String sqlBase = "SELECT d.*, t.hoTen, lp.tenLoaiPhep, COALESCE(t2.hoTen, tkd.tenDangNhap) AS tenNguoiDuyet FROM DONXINNGHIPHEP d "
+        String sqlBase = "SELECT d.*, t.hoTen, lp.tenLoaiPhep, t2.hoTen AS tenNguoiDuyet FROM DONXINNGHIPHEP d "
                 + "LEFT JOIN THONGTINCANHAN t ON d.maNV = t.maNV "
                 + "LEFT JOIN LOAIPHEP lp ON d.maLoaiPhep = lp.maLoaiPhep "
                 + "LEFT JOIN BONHIEM b ON d.maNV = b.maNV AND b.trangThai = 'hieu_luc' AND b.loaiBoNhiem = 'chinh' "
-                + "LEFT JOIN TAIKHOAN tkd ON d.nguoiDuyet = tkd.maTaiKhoan "
-                + "LEFT JOIN THONGTINCANHAN t2 ON tkd.maNV = t2.maNV ";
+                + "LEFT JOIN THONGTINCANHAN t2 ON d.nguoiDuyet = t2.maNV ";
 
         String sqlCondition = "";
         switch (scope) {
@@ -200,7 +196,7 @@ public class NghiPhepDAO {
              PreparedStatement ps = conn.prepareStatement(sql)) {
             
             if (scope != com.hrm.model.DataScope.ALL) {
-                ps.setInt(1, currentUserId);
+                ps.setString(1, currentMaNV);
             }
             try (ResultSet rs = ps.executeQuery()) {
                 while (rs.next()) {
@@ -214,11 +210,10 @@ public class NghiPhepDAO {
     }
 
     public DonXinNghiPhep findById(int maDon) {
-        String sql = "SELECT d.*, t.hoTen, lp.tenLoaiPhep, COALESCE(t2.hoTen, tkd.tenDangNhap) AS tenNguoiDuyet FROM DONXINNGHIPHEP d "
+        String sql = "SELECT d.*, t.hoTen, lp.tenLoaiPhep, t2.hoTen AS tenNguoiDuyet FROM DONXINNGHIPHEP d "
                 + "LEFT JOIN THONGTINCANHAN t ON d.maNV = t.maNV "
                 + "LEFT JOIN LOAIPHEP lp ON d.maLoaiPhep = lp.maLoaiPhep "
-                + "LEFT JOIN TAIKHOAN tkd ON d.nguoiDuyet = tkd.maTaiKhoan "
-                + "LEFT JOIN THONGTINCANHAN t2 ON tkd.maNV = t2.maNV "
+                + "LEFT JOIN THONGTINCANHAN t2 ON d.nguoiDuyet = t2.maNV "
                 + "WHERE d.maDon=?";
         try (Connection conn = DatabaseConnection.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
@@ -235,7 +230,7 @@ public class NghiPhepDAO {
     private DonXinNghiPhep mapLeaveRequest(ResultSet rs) throws SQLException {
         DonXinNghiPhep req = new DonXinNghiPhep();
         req.setId(rs.getInt("maDon"));
-        req.setNhanVienId(rs.getInt("maNV"));
+        req.setNhanVienId(rs.getString("maNV"));
         req.setLoaiPhepId(rs.getString("maLoaiPhep"));
         Date tuNgay = rs.getDate("tuNgay");
         if (tuNgay != null) req.setTuNgay(tuNgay.toLocalDate());
@@ -244,8 +239,8 @@ public class NghiPhepDAO {
         req.setSoNgayNghi((int) rs.getDouble("soNgayNghi"));
         req.setLyDo(rs.getString("lyDo"));
         req.setLyDoTuChoi(rs.getString("lyDoTuChoi"));
-        int nd = rs.getInt("nguoiDuyet");
-        if (!rs.wasNull()) req.setNguoiDuyetId(nd);
+        String nd = rs.getString("nguoiDuyet");
+        if (nd != null) req.setNguoiDuyetId(nd);
         String tt = rs.getString("trangThai");
         req.setTrangThai(dbToStatus(tt));
         // transient
@@ -279,13 +274,13 @@ public class NghiPhepDAO {
     // SODUNGPHEP (SoDungPhep)
     // =====================================================================
 
-    public SoDungPhep findByMaNVAndNamAndLoai(int maNV, int nam, String maLoaiPhep) {
+    public SoDungPhep findByMaNVAndNamAndLoai(String maNV, int nam, String maLoaiPhep) {
         String sql = "SELECT s.*, lp.tenLoaiPhep FROM SODUNGPHEP s "
                 + "LEFT JOIN LOAIPHEP lp ON s.maLoaiPhep = lp.maLoaiPhep "
                 + "WHERE s.maNV=? AND s.nam=? AND s.maLoaiPhep=?";
         try (Connection conn = DatabaseConnection.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
-            ps.setInt(1, maNV);
+            ps.setString(1, maNV);
             ps.setInt(2, nam);
             ps.setString(3, maLoaiPhep);
             try (ResultSet rs = ps.executeQuery()) {
@@ -297,14 +292,14 @@ public class NghiPhepDAO {
         return null;
     }
 
-    public List<SoDungPhep> findByMaNVAndNam(int maNV, int nam) {
+    public List<SoDungPhep> findByMaNVAndNam(String maNV, int nam) {
         String sql = "SELECT s.*, lp.tenLoaiPhep FROM SODUNGPHEP s "
                 + "LEFT JOIN LOAIPHEP lp ON s.maLoaiPhep = lp.maLoaiPhep "
                 + "WHERE s.maNV=? AND s.nam=?";
         List<SoDungPhep> result = new ArrayList<>();
         try (Connection conn = DatabaseConnection.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
-            ps.setInt(1, maNV);
+            ps.setString(1, maNV);
             ps.setInt(2, nam);
             try (ResultSet rs = ps.executeQuery()) {
                 while (rs.next()) {
@@ -317,12 +312,12 @@ public class NghiPhepDAO {
         return result;
     }
 
-    public void insertSoDungPhep(int maNV, int nam, String maLoaiPhep, double soNgayDuocCap) {
+    public void insertSoDungPhep(String maNV, int nam, String maLoaiPhep, double soNgayDuocCap) {
         String sql = "INSERT INTO SODUNGPHEP (maNV, nam, maLoaiPhep, soNgayDuocCap, soNgayDaDung) "
                 + "VALUES (?,?,?,?,0)";
         try (Connection conn = DatabaseConnection.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
-            ps.setInt(1, maNV);
+            ps.setString(1, maNV);
             ps.setInt(2, nam);
             ps.setString(3, maLoaiPhep);
             ps.setDouble(4, soNgayDuocCap);
@@ -332,13 +327,13 @@ public class NghiPhepDAO {
         }
     }
 
-    public void capNhatSoDaDung(int maNV, int nam, String maLoaiPhep, double soNgayThem) {
+    public void capNhatSoDaDung(String maNV, int nam, String maLoaiPhep, double soNgayThem) {
         String sql = "UPDATE SODUNGPHEP SET soNgayDaDung = soNgayDaDung + ? "
                 + "WHERE maNV=? AND nam=? AND maLoaiPhep=?";
         try (Connection conn = DatabaseConnection.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setDouble(1, soNgayThem);
-            ps.setInt(2, maNV);
+            ps.setString(2, maNV);
             ps.setInt(3, nam);
             ps.setString(4, maLoaiPhep);
             ps.executeUpdate();
@@ -348,7 +343,7 @@ public class NghiPhepDAO {
     }
 
     private SoDungPhep mapLeaveBalance(ResultSet rs) throws SQLException {
-        int maNV = rs.getInt("maNV");
+        String maNV = rs.getString("maNV");
         String maLoaiPhep = rs.getString("maLoaiPhep");
         int nam = rs.getInt("nam");
         int soNgayDuocCap = (int) rs.getDouble("soNgayDuocCap");

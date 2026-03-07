@@ -2,6 +2,7 @@ package com.hrm.gui.evaluation;
 
 import com.hrm.model.TieuChiDanhGia;
 import com.hrm.model.ChiTietDanhGia;
+import com.hrm.model.DanhGiaHieuSuat;
 import com.hrm.model.TaiKhoan;
 import com.hrm.model.BoNhiem;
 import com.hrm.bus.DanhGiaBUS;
@@ -119,14 +120,14 @@ public class EvalDoDialog extends JDialog {
         List<TaiKhoan> users = XacThucBUS.getInstance().getAllUsers();
 
         // Get list of employees already evaluated in this cycle to prevent duplicates
-        List<Integer> alreadyEvaluated = evalService.getEvaluatedMaNVInCycle(cycleId);
+        List<String> alreadyEvaluated = evalService.getEvaluatedMaNVInCycle(cycleId);
 
         for (TaiKhoan user : users) {
-            if (user.getMaNV() == null || user.getMaNV() == 0) continue;
+            if (user.getNhanVienId() == null || user.getNhanVienId().isEmpty()) continue;
             if (user.getId() == currentUser.getId()) continue;  // can't self-evaluate
             if (!user.isHoatDong()) continue;
 
-            int maNV = user.getMaNV();
+            String maNV = user.getNhanVienId();
 
             // Skip employees already evaluated in this cycle
             if (alreadyEvaluated.contains(maNV)) continue;
@@ -280,7 +281,7 @@ public class EvalDoDialog extends JDialog {
         List<ChiTietDanhGia> scores = buildScores();
         double total = scores.stream().mapToDouble(ChiTietDanhGia::getDiemCoTrong).sum();
         total = Math.round(total * 100.0) / 100.0;
-        String xepLoai = evalService.getRatingFromScore(total).getTenHienThi();
+        String xepLoai = DanhGiaHieuSuat.XepLoai.tuDiem(total).getTenHienThi();
         lblDiemDuKien.setText(String.format("Điểm dự kiến: %.2f - Xếp loại: %s", total, xepLoai));
 
         // Color hint
@@ -328,7 +329,7 @@ public class EvalDoDialog extends JDialog {
                 cycleId,
                 selected.maNV,        // employee maNV (not taiKhoan.id!)
                 selected.hoTen,
-                currentUser.getMaNV() != null ? currentUser.getMaNV() : currentUser.getId(),
+                currentUser.getNhanVienId() != null ? currentUser.getNhanVienId() : String.valueOf(currentUser.getId()),
                 currentUser.getHoTen(),
                 scores,
                 txtNhanXetChung.getText().trim()
@@ -350,12 +351,12 @@ public class EvalDoDialog extends JDialog {
     // â”€â”€ inner class â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
     private static class NhanVienItem {
-        final int maNV;
+        final String maNV;
         final String hoTen;
         final String tenChucVu;
         final String tenPhongBan;
 
-        NhanVienItem(int maNV, String hoTen, String tenChucVu, String tenPhongBan) {
+        NhanVienItem(String maNV, String hoTen, String tenChucVu, String tenPhongBan) {
             this.maNV = maNV;
             this.hoTen = hoTen;
             this.tenChucVu = tenChucVu != null ? tenChucVu : "";
@@ -364,7 +365,7 @@ public class EvalDoDialog extends JDialog {
 
         @Override
         public String toString() {
-            StringBuilder sb = new StringBuilder("[NV").append(maNV).append("] ").append(hoTen);
+            StringBuilder sb = new StringBuilder("[").append(maNV).append("] ").append(hoTen);
             if (!tenChucVu.isEmpty()) sb.append(" - ").append(tenChucVu);
             if (!tenPhongBan.isEmpty()) sb.append(" | ").append(tenPhongBan);
             return sb.toString();

@@ -214,7 +214,7 @@ public class BangLuongDAO {
         try (Connection conn = DatabaseConnection.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
             ps.setInt(1, ctl.getMaBL());
-            ps.setInt(2, ctl.getMaNV());
+            ps.setString(2, ctl.getMaNV());
             ps.setDouble(3, ctl.getLuongCoBan());
             ps.setDouble(4, ctl.getTongLuongChucVu());
             ps.setDouble(5, ctl.getTienOT());
@@ -261,14 +261,14 @@ public class BangLuongDAO {
         return result;
     }
 
-    public ChiTietLuong findByBangLuongAndNV(int bangLuongId, int nhanVienId) {
+    public ChiTietLuong findByBangLuongAndNV(int bangLuongId, String nhanVienId) {
         String sql = "SELECT cl.maChiTiet, cl.maBangLuong, cl.maNV, cl.luongCoSo, cl.tongLuongChucVu, cl.luongLamThem, cl.tongThuNhap, cl.tongKhauTru, cl.luongThucLanh, cl.soNgayCong, cl.soGioLamThem, cl.ghiChu, t.hoTen FROM CHITIETLUONG cl "
                 + "LEFT JOIN THONGTINCANHAN t ON cl.maNV = t.maNV "
                 + "WHERE cl.maBangLuong=? AND cl.maNV=?";
         try (Connection conn = DatabaseConnection.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setInt(1, bangLuongId);
-            ps.setInt(2, nhanVienId);
+            ps.setString(2, nhanVienId);
             try (ResultSet rs = ps.executeQuery()) {
                 if (rs.next()) {
                     ChiTietLuong ctl = mapChiTietLuong(rs);
@@ -286,7 +286,7 @@ public class BangLuongDAO {
         ChiTietLuong ctl = new ChiTietLuong();
         ctl.setMaChiTietLuong(rs.getInt("maChiTiet"));
         ctl.setMaBL(rs.getInt("maBangLuong"));
-        ctl.setMaNV(rs.getInt("maNV"));
+        ctl.setMaNV(rs.getString("maNV"));
         ctl.setLuongCoBan(rs.getDouble("luongCoSo"));
         ctl.setTongLuongChucVu(rs.getDouble("tongLuongChucVu"));
         ctl.setTienOT(rs.getDouble("luongLamThem"));
@@ -369,12 +369,12 @@ public class BangLuongDAO {
     // =====================================================================
 
     /** Returns luongCoSo from the currently active labour contract for this employee. */
-    public double getLuongCoSoFromHopDong(int nhanVienId) {
+    public double getLuongCoSoFromHopDong(String nhanVienId) {
         String sql = "SELECT luongCoSo FROM HOPDONGLAODONG WHERE maNV=? AND trangThai='hieu_luc' "
                 + "ORDER BY ngayHieuLuc DESC LIMIT 1";
         try (Connection conn = DatabaseConnection.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
-            ps.setInt(1, nhanVienId);
+            ps.setString(1, nhanVienId);
             try (ResultSet rs = ps.executeQuery()) {
                 if (rs.next()) return rs.getDouble("luongCoSo");
             }
@@ -388,7 +388,7 @@ public class BangLuongDAO {
      * Returns total bonus salary from active BONHIEM records for this employee.
      * luongChucVu = SUM( tyLeHuongLuong/100 * heSoLuong * luongCoSo + phuCapChucVu )
      */
-    public double getTongLuongChucVu(int nhanVienId, double luongCoSo) {
+    public double getTongLuongChucVu(String nhanVienId, double luongCoSo) {
         String sql = "SELECT b.tyLeHuongLuong, cv.heSoLuong, cv.phuCapChucVu "
                 + "FROM BONHIEM b "
                 + "JOIN CHUCVU cv ON b.maChucVu = cv.maChucVu "
@@ -396,7 +396,7 @@ public class BangLuongDAO {
         double total = 0;
         try (Connection conn = DatabaseConnection.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
-            ps.setInt(1, nhanVienId);
+            ps.setString(1, nhanVienId);
             try (ResultSet rs = ps.executeQuery()) {
                 while (rs.next()) {
                     double tyLe = rs.getDouble("tyLeHuongLuong");

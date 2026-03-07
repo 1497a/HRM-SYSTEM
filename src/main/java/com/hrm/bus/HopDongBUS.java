@@ -36,7 +36,7 @@ public class HopDongBUS {
 
     public KetQua<HopDongLaoDong> taoHopDong(HopDongLaoDong hd) {
         // Validate nhân viên
-        NhanVien nv = nvRepo.findById(hd.getMaNV());
+        NhanVien nv = nvRepo.findByMaNhanVien(hd.getMaNV());
         if (nv == null) {
             return KetQua.error("Không tìm thấy nhân viên.");
         }
@@ -148,7 +148,7 @@ public class HopDongBUS {
         return hopDongRepo.findSapHetHan(soNgay);
     }
 
-    public List<HopDongLaoDong> getByMaNV(int maNV) {
+    public List<HopDongLaoDong> getByMaNV(String maNV) {
         return hopDongRepo.findByMaNV(maNV);
     }
 
@@ -156,7 +156,7 @@ public class HopDongBUS {
         return hopDongRepo.findAll();
     }
 
-    public HopDongLaoDong getHieuLuc(int maNV) {
+    public HopDongLaoDong getHieuLuc(String maNV) {
         return hopDongRepo.findHieuLuc(maNV);
     }
 

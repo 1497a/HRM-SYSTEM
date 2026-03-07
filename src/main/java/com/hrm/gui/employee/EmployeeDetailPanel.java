@@ -49,7 +49,7 @@ public class EmployeeDetailPanel extends JDialog {
     // =====================================================================
     // Data
     // =====================================================================
-    private final int maNV;
+    private final String maNV;
     private NhanVien        nhanVien;
     private ThongTinCaNhan  thongTinCaNhan;
     private BoNhiem         boNhiemHienTai;
@@ -117,7 +117,7 @@ public class EmployeeDetailPanel extends JDialog {
      * @param parent  owner frame (used for positioning)
      * @param maNV    primary-key id of the employee to display
      */
-    public EmployeeDetailPanel(Frame parent, int maNV) {
+    public EmployeeDetailPanel(Frame parent, String maNV) {
         super(parent, "Ho so nhan vien", true);
         this.maNV = maNV;
 
@@ -667,7 +667,7 @@ public class EmployeeDetailPanel extends JDialog {
             btnDoiTrangThai.setText("Đổi trạng thái");
             return;
         }
-        KetQua<NhanVien> result = nvService.capNhatTrangThai(nhanVien.getId(), trangThaiMoi, "");
+        KetQua<NhanVien> result = nvService.capNhatTrangThai(nhanVien.getMaNhanVien(), trangThaiMoi, "");
         if (!result.isSuccess()) {
             JOptionPane.showMessageDialog(this, result.getMessage(),
                     "Lỗi", JOptionPane.ERROR_MESSAGE);

@@ -10,13 +10,13 @@ import java.time.LocalDateTime;
 public class BoNhiem {
 
     private int id;
-    private int nhanVienId;
+    private String nhanVienId;
     private String phongBanId;
     private String chucVuId;
     private String loaiBoNhiem;       // "chinh", "kiem_nhiem"
     private double tyLeHuongLuong;    // 0 - 100
-    private int quanLyId;             // 0 = khong co quan ly
-    private int nguoiDuyet;           // 0 = chua duoc duyet
+    private String quanLyId;          // null = khong co quan ly
+    private String nguoiDuyet;        // null = chua duoc duyet
     private LocalDate tuNgay;
     private LocalDate denNgay;        // null = vo thoi han
     private LocalDateTime ngayPheDuyet;
@@ -34,8 +34,8 @@ public class BoNhiem {
     public BoNhiem() {
     }
 
-    public BoNhiem(int id, int nhanVienId, String phongBanId, String chucVuId,
-                   String loaiBoNhiem, double tyLeHuongLuong, int quanLyId, int nguoiDuyet,
+    public BoNhiem(int id, String nhanVienId, String phongBanId, String chucVuId,
+                   String loaiBoNhiem, double tyLeHuongLuong, String quanLyId, String nguoiDuyet,
                    LocalDate tuNgay, LocalDate denNgay, LocalDateTime ngayPheDuyet,
                    String lyDo, String trangThai) {
         this.id = id;
@@ -64,12 +64,12 @@ public class BoNhiem {
     public int getMaBoNhiem() { return id; }
     public void setMaBoNhiem(int maBoNhiem) { this.id = maBoNhiem; }
 
-    public int getNhanVienId() { return nhanVienId; }
-    public void setNhanVienId(int nhanVienId) { this.nhanVienId = nhanVienId; }
+    public String getNhanVienId() { return nhanVienId; }
+    public void setNhanVienId(String nhanVienId) { this.nhanVienId = nhanVienId; }
 
     // Legacy compatibility
-    public int getMaNV() { return nhanVienId; }
-    public void setMaNV(int maNV) { this.nhanVienId = maNV; }
+    public String getMaNV() { return nhanVienId; }
+    public void setMaNV(String maNV) { this.nhanVienId = maNV; }
 
     public String getPhongBanId() { return phongBanId; }
     public void setPhongBanId(String phongBanId) { this.phongBanId = phongBanId; }
@@ -89,15 +89,15 @@ public class BoNhiem {
     public double getTyLeHuongLuong() { return tyLeHuongLuong; }
     public void setTyLeHuongLuong(double tyLeHuongLuong) { this.tyLeHuongLuong = tyLeHuongLuong; }
 
-    public int getQuanLyId() { return quanLyId; }
-    public void setQuanLyId(int quanLyId) { this.quanLyId = quanLyId; }
+    public String getQuanLyId() { return quanLyId; }
+    public void setQuanLyId(String quanLyId) { this.quanLyId = quanLyId; }
 
     // Legacy compatibility
-    public int getMaQuanLy() { return quanLyId; }
-    public void setMaQuanLy(int maQuanLy) { this.quanLyId = maQuanLy; }
+    public String getMaQuanLy() { return quanLyId; }
+    public void setMaQuanLy(String maQuanLy) { this.quanLyId = maQuanLy; }
 
-    public int getNguoiDuyet() { return nguoiDuyet; }
-    public void setNguoiDuyet(int nguoiDuyet) { this.nguoiDuyet = nguoiDuyet; }
+    public String getNguoiDuyet() { return nguoiDuyet; }
+    public void setNguoiDuyet(String nguoiDuyet) { this.nguoiDuyet = nguoiDuyet; }
 
     public LocalDate getTuNgay() { return tuNgay; }
     public void setTuNgay(LocalDate tuNgay) { this.tuNgay = tuNgay; }
