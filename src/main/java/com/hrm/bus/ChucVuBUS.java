@@ -1,9 +1,9 @@
 package com.hrm.bus;
 
-import com.hrm.model.ChucVu;
-import com.hrm.model.LichSuHeSoLuong;
 import com.hrm.dao.ChucVuDAO;
 import com.hrm.dao.LichSuLuongDAO;
+import com.hrm.model.ChucVu;
+import com.hrm.model.LichSuHeSoLuong;
 import com.hrm.util.SessionContext;
 
 import java.time.LocalDate;
@@ -11,9 +11,9 @@ import java.time.format.DateTimeFormatter;
 import java.util.List;
 
 /**
- * Service quÃ¡ÂºÂ£n lÃƒÂ½ chÃ¡Â»Â©c vÃ¡Â»Â¥.
- * ÃƒÂp dÃ¡Â»Â¥ng business logic, delegate persistence xuÃ¡Â»â€˜ng ChucVuDAO (JDBC).
- * Ghi lÃ¡Â»â€¹ch sÃ¡Â»Â­ khi hÃ¡Â»â€¡ sÃ¡Â»â€˜ lÃ†Â°Ã†Â¡ng hoÃ¡ÂºÂ·c phÃ¡Â»Â¥ cÃ¡ÂºÂ¥p thay Ã„â€˜Ã¡Â»â€¢i.
+ * Service quản lý chức vụ.
+ * Áp dụng business logic và delegate persistence xuống ChucVuDAO (JDBC).
+ * Tự động ghi lịch sử khi hệ số lương hoặc phụ cấp thay đổi.
  */
 public class ChucVuBUS {
 
@@ -21,60 +21,64 @@ public class ChucVuBUS {
     private final LichSuLuongDAO historyRepo = LichSuLuongDAO.getInstance();
 
     /**
-     * LÃ¡ÂºÂ¥y tÃ¡ÂºÂ¥t cÃ¡ÂºÂ£ chÃ¡Â»Â©c vÃ¡Â»Â¥.
+     * Lấy tất cả chức vụ.
      */
     public List<ChucVu> getAllPositions() {
         return positionRepo.findAll();
     }
 
     /**
-     * LÃ¡ÂºÂ¥y danh sÃƒÂ¡ch chÃ¡Â»Â©c vÃ¡Â»Â¥ Ã„â€˜ang hoÃ¡ÂºÂ¡t Ã„â€˜Ã¡Â»â„¢ng.
+     * Lấy danh sách chức vụ đang hoạt động.
      */
     public List<ChucVu> getActivePositions() {
         return positionRepo.findActive();
     }
 
     /**
-     * TÃƒÂ¬m chÃ¡Â»Â©c vÃ¡Â»Â¥ theo mÃƒÂ£.
+     * Tìm chức vụ theo mã.
      */
     public ChucVu getById(String maChucVu) {
         return positionRepo.findById(maChucVu);
     }
 
     /**
-     * LÃ¡ÂºÂ¥y lÃ¡Â»â€¹ch sÃ¡Â»Â­ thay Ã„â€˜Ã¡Â»â€¢i hÃ¡Â»â€¡ sÃ¡Â»â€˜ lÃ†Â°Ã†Â¡ng cÃ¡Â»Â§a mÃ¡Â»â„¢t chÃ¡Â»Â©c vÃ¡Â»Â¥.
+     * Lấy lịch sử thay đổi hệ số lương của một chức vụ.
      */
     public List<LichSuHeSoLuong> getHistoryByMaChucVu(String maChucVu) {
         return historyRepo.findByMaChucVu(maChucVu);
     }
 
     /**
-     * ThÃƒÂªm chÃ¡Â»Â©c vÃ¡Â»Â¥ mÃ¡Â»â€ºi.
+     * Thêm chức vụ mới.
      *
-     * @param maChucVu     mÃƒÂ£ chÃ¡Â»Â©c vÃ¡Â»Â¥ (duy nhÃ¡ÂºÂ¥t)
-     * @param tenChucVu    tÃƒÂªn chÃ¡Â»Â©c vÃ¡Â»Â¥
-     * @param capBac       cÃ¡ÂºÂ¥p bÃ¡ÂºÂ­c (1 lÃƒÂ  cao nhÃ¡ÂºÂ¥t)
-     * @param heSoLuong    hÃ¡Â»â€¡ sÃ¡Â»â€˜ lÃ†Â°Ã†Â¡ng (phÃ¡ÂºÂ£i > 0)
-     * @param phuCapChucVu phÃ¡Â»Â¥ cÃ¡ÂºÂ¥p chÃ¡Â»Â©c vÃ¡Â»Â¥ (>= 0)
-     * @param moTa         mÃƒÂ´ tÃ¡ÂºÂ£
-     * @throws IllegalArgumentException nÃ¡ÂºÂ¿u dÃ¡Â»Â¯ liÃ¡Â»â€¡u khÃƒÂ´ng hÃ¡Â»Â£p lÃ¡Â»â€¡
+     * @param maChucVu     mã chức vụ (duy nhất)
+     * @param tenChucVu    tên chức vụ
+     * @param capBac       cấp bậc (1 là cao nhất)
+     * @param heSoLuong    hệ số lương (>0)
+     * @param phuCapChucVu phụ cấp chức vụ (>=0)
+     * @param moTa         mô tả
      */
     public void addPosition(String maChucVu, String tenChucVu, int capBac,
                             double heSoLuong, double phuCapChucVu, String moTa) {
+
         if (maChucVu == null || maChucVu.trim().isEmpty()) {
-            throw new IllegalArgumentException("MÃƒÂ£ chÃ¡Â»Â©c vÃ¡Â»Â¥ khÃƒÂ´ng Ã„â€˜Ã†Â°Ã¡Â»Â£c Ã„â€˜Ã¡Â»Æ’ trÃ¡Â»â€˜ng.");
+            throw new IllegalArgumentException("Mã chức vụ không được để trống.");
         }
+
         if (tenChucVu == null || tenChucVu.trim().isEmpty()) {
-            throw new IllegalArgumentException("TÃƒÂªn chÃ¡Â»Â©c vÃ¡Â»Â¥ khÃƒÂ´ng Ã„â€˜Ã†Â°Ã¡Â»Â£c Ã„â€˜Ã¡Â»Æ’ trÃ¡Â»â€˜ng.");
+            throw new IllegalArgumentException("Tên chức vụ không được để trống.");
         }
+
         if (positionRepo.existsById(maChucVu.trim())) {
-            throw new IllegalArgumentException("MÃƒÂ£ chÃ¡Â»Â©c vÃ¡Â»Â¥ '" + maChucVu.trim() + "' Ã„â€˜ÃƒÂ£ tÃ¡Â»â€œn tÃ¡ÂºÂ¡i.");
+            throw new IllegalArgumentException("Mã chức vụ '" + maChucVu + "' đã tồn tại.");
         }
+
         if (heSoLuong <= 0) {
-            throw new IllegalArgumentException("HÃ¡Â»â€¡ sÃ¡Â»â€˜ lÃ†Â°Ã†Â¡ng phÃ¡ÂºÂ£i lÃ¡Â»â€ºn hÃ†Â¡n 0.");
+            throw new IllegalArgumentException("Hệ số lương phải lớn hơn 0.");
         }
+
         if (phuCapChucVu < 0) {
-            throw new IllegalArgumentException("PhÃ¡Â»Â¥ cÃ¡ÂºÂ¥p khÃƒÂ´ng Ã„â€˜Ã†Â°Ã¡Â»Â£c ÃƒÂ¢m.");
+            throw new IllegalArgumentException("Phụ cấp không được âm.");
         }
 
         ChucVu pos = new ChucVu(
@@ -84,56 +88,46 @@ public class ChucVuBUS {
                 heSoLuong,
                 phuCapChucVu,
                 moTa,
-                "hoat_dong"
+                "hoatdong"
         );
+
         positionRepo.save(pos);
     }
 
     /**
-     * CÃ¡ÂºÂ­p nhÃ¡ÂºÂ­t thÃƒÂ´ng tin chÃ¡Â»Â©c vÃ¡Â»Â¥.
-     * TÃ¡Â»Â± Ã„â€˜Ã¡Â»â„¢ng ghi lÃ¡Â»â€¹ch sÃ¡Â»Â­ nÃ¡ÂºÂ¿u hÃ¡Â»â€¡ sÃ¡Â»â€˜ lÃ†Â°Ã†Â¡ng hoÃ¡ÂºÂ·c phÃ¡Â»Â¥ cÃ¡ÂºÂ¥p thay Ã„â€˜Ã¡Â»â€¢i.
-     *
-     * @param maChucVu  mÃƒÂ£ chÃ¡Â»Â©c vÃ¡Â»Â¥ cÃ¡ÂºÂ§n cÃ¡ÂºÂ­p nhÃ¡ÂºÂ­t
-     * @param tenMoi    tÃƒÂªn chÃ¡Â»Â©c vÃ¡Â»Â¥ mÃ¡Â»â€ºi
-     * @param capBacMoi cÃ¡ÂºÂ¥p bÃ¡ÂºÂ­c mÃ¡Â»â€ºi
-     * @param heSoMoi   hÃ¡Â»â€¡ sÃ¡Â»â€˜ lÃ†Â°Ã†Â¡ng mÃ¡Â»â€ºi
-     * @param phuCapMoi phÃ¡Â»Â¥ cÃ¡ÂºÂ¥p mÃ¡Â»â€ºi
-     * @param moTaMoi   mÃƒÂ´ tÃ¡ÂºÂ£ mÃ¡Â»â€ºi
-     * @throws IllegalArgumentException nÃ¡ÂºÂ¿u dÃ¡Â»Â¯ liÃ¡Â»â€¡u khÃƒÂ´ng hÃ¡Â»Â£p lÃ¡Â»â€¡
+     * Cập nhật thông tin chức vụ.
+     * Tự động ghi lịch sử nếu hệ số lương hoặc phụ cấp thay đổi.
      */
     public void updatePosition(String maChucVu, String tenMoi, int capBacMoi,
                                double heSoMoi, double phuCapMoi, String moTaMoi) {
+
         ChucVu pos = positionRepo.findById(maChucVu);
+
         if (pos == null) {
-            throw new IllegalArgumentException("KhÃƒÂ´ng tÃƒÂ¬m thÃ¡ÂºÂ¥y chÃ¡Â»Â©c vÃ¡Â»Â¥.");
+            throw new IllegalArgumentException("Không tìm thấy chức vụ.");
         }
+
         if (tenMoi == null || tenMoi.trim().isEmpty()) {
-            throw new IllegalArgumentException("TÃƒÂªn chÃ¡Â»Â©c vÃ¡Â»Â¥ khÃƒÂ´ng Ã„â€˜Ã†Â°Ã¡Â»Â£c Ã„â€˜Ã¡Â»Æ’ trÃ¡Â»â€˜ng.");
+            throw new IllegalArgumentException("Tên chức vụ không được để trống.");
         }
+
         if (heSoMoi <= 0) {
-            throw new IllegalArgumentException("HÃ¡Â»â€¡ sÃ¡Â»â€˜ lÃ†Â°Ã†Â¡ng phÃ¡ÂºÂ£i lÃ¡Â»â€ºn hÃ†Â¡n 0.");
+            throw new IllegalArgumentException("Hệ số lương phải lớn hơn 0.");
         }
+
         if (phuCapMoi < 0) {
-            throw new IllegalArgumentException("PhÃ¡Â»Â¥ cÃ¡ÂºÂ¥p khÃƒÂ´ng Ã„â€˜Ã†Â°Ã¡Â»Â£c ÃƒÂ¢m.");
+            throw new IllegalArgumentException("Phụ cấp không được âm.");
         }
 
         boolean heSoThayDoi = Double.compare(pos.getHeSoLuong(), heSoMoi) != 0;
         boolean phuCapThayDoi = Double.compare(pos.getPhuCapChucVu(), phuCapMoi) != 0;
 
         if (heSoThayDoi || phuCapThayDoi) {
-            String ngayHom = LocalDate.now().format(DateTimeFormatter.ofPattern("dd/MM/yyyy"));
 
-            // LÃ¡ÂºÂ¥y tÃƒÂªn ngÃ†Â°Ã¡Â»Âi thÃ¡Â»Â±c hiÃ¡Â»â€¡n tÃ¡Â»Â« session nÃ¡ÂºÂ¿u cÃƒÂ³
-            String nguoiThayDoi = "Admin";
-            if (SessionContext.getInstance().isLoggedIn()
-                    && SessionContext.getInstance().getCurrentUser() != null) {
-                String fullName = SessionContext.getInstance().getCurrentUser().getHoTen();
-                if (fullName != null && !fullName.isEmpty()) {
-                    nguoiThayDoi = fullName;
-                } else {
-                    nguoiThayDoi = SessionContext.getInstance().getCurrentUser().getTenDangNhap();
-                }
-            }
+            String ngayHom = LocalDate.now()
+                    .format(DateTimeFormatter.ofPattern("dd/MM/yyyy"));
+
+            String nguoiThayDoi = getCurrentUserName();
 
             LichSuHeSoLuong history = new LichSuHeSoLuong(
                     historyRepo.generateId(),
@@ -145,6 +139,7 @@ public class ChucVuBUS {
                     ngayHom,
                     nguoiThayDoi
             );
+
             historyRepo.save(history);
         }
 
@@ -153,33 +148,58 @@ public class ChucVuBUS {
         pos.setHeSoLuong(heSoMoi);
         pos.setPhuCapChucVu(phuCapMoi);
         pos.setMoTa(moTaMoi);
+
         positionRepo.update(pos);
     }
 
     /**
-     * NgÃ†Â°ng hoÃ¡ÂºÂ¡t Ã„â€˜Ã¡Â»â„¢ng chÃ¡Â»Â©c vÃ¡Â»Â¥.
-     *
-     * @param maChucVu mÃƒÂ£ chÃ¡Â»Â©c vÃ¡Â»Â¥ cÃ¡ÂºÂ§n ngÃ†Â°ng
-     * @throws IllegalArgumentException nÃ¡ÂºÂ¿u khÃƒÂ´ng tÃƒÂ¬m thÃ¡ÂºÂ¥y chÃ¡Â»Â©c vÃ¡Â»Â¥
+     * Ngừng hoạt động chức vụ.
      */
     public void deactivatePosition(String maChucVu) {
+
         ChucVu pos = positionRepo.findById(maChucVu);
+
         if (pos == null) {
-            throw new IllegalArgumentException("Khong tim thay chuc vu.");
+            throw new IllegalArgumentException("Không tìm thấy chức vụ.");
         }
-        pos.setTrangThai("ngung");
+
+        pos.setTrangThai("ngung_hoat_dong");
         positionRepo.update(pos);
     }
 
     /**
-     * Kich hoat lai chuc vu da ngung.
+     * Kích hoạt lại chức vụ đã ngừng.
      */
     public void activatePosition(String maChucVu) {
+
         ChucVu pos = positionRepo.findById(maChucVu);
+
         if (pos == null) {
-            throw new IllegalArgumentException("Khong tim thay chuc vu.");
+            throw new IllegalArgumentException("Không tìm thấy chức vụ.");
         }
-        pos.setTrangThai("hoat_dong");
+
+        pos.setTrangThai("hoatdong");
         positionRepo.update(pos);
+    }
+
+    /**
+     * Lấy tên người đang đăng nhập để ghi lịch sử.
+     */
+    private String getCurrentUserName() {
+
+        SessionContext session = SessionContext.getInstance();
+
+        if (session.isLoggedIn() && session.getCurrentUser() != null) {
+
+            String fullName = session.getCurrentUser().getHoTen();
+
+            if (fullName != null && !fullName.isEmpty()) {
+                return fullName;
+            }
+
+            return session.getCurrentUser().getTenDangNhap();
+        }
+
+        return "Admin";
     }
 }
