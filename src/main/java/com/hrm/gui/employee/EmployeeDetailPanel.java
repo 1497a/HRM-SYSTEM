@@ -44,7 +44,6 @@ public class EmployeeDetailPanel extends JDialog {
     private final NhanVienBUS nvService       = NhanVienBUS.getInstance();
     private final BoNhiemBUS  boNhiemService  = BoNhiemBUS.getInstance();
     private final HopDongBUS  hopDongService  = HopDongBUS.getInstance();
-    private final ChamCongBUS attendanceSvc = ChamCongBUS.getInstance();
 
     // =====================================================================
     // Data
@@ -66,7 +65,7 @@ public class EmployeeDetailPanel extends JDialog {
     // Tab 2 â€“ appointment history table
     // =====================================================================
     private static final String[] COL_BO_NHIEM = {
-        "Phong ban", "Chuc vu", "Loai", "Tu ngay", "Den ngay", "Trang thai"
+        "Phòng ban", "Chức vụ", "Loại", "Từ ngày", "Đến ngày", "Trạng thái"
     };
     private DefaultTableModel boNhiemTableModel;
 
@@ -96,16 +95,6 @@ public class EmployeeDetailPanel extends JDialog {
     private JTextArea txtKinhNghiem;
 
     public boolean isDataChanged() { return dataChanged; }
-
-    // =====================================================================
-    // Tab 3 â€“ attendance table + filter controls
-    // =====================================================================
-    private static final String[] COL_CHAM_CONG = {
-        "Ngay", "Ca lam", "Gio vao", "Gio ra", "So gio", "Trang thai"
-    };
-    private DefaultTableModel chamCongTableModel;
-    private JComboBox<String>  cboThang;
-    private JComboBox<Integer> cboNam;
 
     // =====================================================================
     // Constructor
@@ -166,7 +155,6 @@ public class EmployeeDetailPanel extends JDialog {
         tabs.setBackground(UIColors.LIGHT_GRAY_BG);
         tabs.addTab("Thông tin cá nhân",  buildPersonalTab());
         tabs.addTab("Bổ nhiệm hiện tại",  buildAppointmentTab());
-        tabs.addTab("Lịch sử chấm công",  buildAttendanceTab());
         root.add(tabs, BorderLayout.CENTER);
 
         // Close button at the bottom
@@ -227,7 +215,7 @@ public class EmployeeDetailPanel extends JDialog {
     }
 
     // =====================================================================
-    // Tab 1 â€“ Personal information
+    // Tab 1  Personal information
     // =====================================================================
 
     private JScrollPane buildPersonalTab() {
@@ -350,7 +338,7 @@ public class EmployeeDetailPanel extends JDialog {
     }
 
     // =====================================================================
-    // Tab 2 â€“ Appointment
+    // Tab 2  Appointment
     // =====================================================================
 
     private JPanel buildAppointmentTab() {
@@ -425,84 +413,6 @@ public class EmployeeDetailPanel extends JDialog {
         return panel;
     }
 
-    // =====================================================================
-    // Tab 3 â€“ Attendance history
-    // =====================================================================
-
-    private JPanel buildAttendanceTab() {
-        JPanel panel = new JPanel(new BorderLayout(0, 10));
-        panel.setBackground(UIColors.WHITE);
-        panel.setBorder(BorderFactory.createEmptyBorder(16, 20, 16, 20));
-
-        // ---- Filter bar ---------------------------------------------------
-        JPanel filterPanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 10, 4));
-        filterPanel.setOpaque(false);
-
-        JLabel lblFilter = new JLabel("Chọn tháng / năm:");
-        lblFilter.setFont(new Font("Segoe UI", Font.PLAIN, 13));
-        lblFilter.setForeground(UIColors.TEXT_DARK);
-
-        String[] thangItems = {
-            "Tháng 1", "Tháng 2", "Tháng 3", "Tháng 4",
-            "Tháng 5", "Tháng 6", "Tháng 7", "Tháng 8",
-            "Tháng 9", "Tháng 10", "Tháng 11", "Tháng 12"
-        };
-        cboThang = new JComboBox<>(thangItems);
-        cboThang.setFont(new Font("Segoe UI", Font.PLAIN, 13));
-        cboThang.setPreferredSize(new Dimension(110, 30));
-
-        int currentYear = LocalDate.now().getYear();
-        Integer[] years = new Integer[5];
-        for (int i = 0; i < 5; i++) {
-            years[i] = currentYear - i;
-        }
-        cboNam = new JComboBox<>(years);
-        cboNam.setFont(new Font("Segoe UI", Font.PLAIN, 13));
-        cboNam.setPreferredSize(new Dimension(80, 30));
-
-        // Pre-select current month
-        cboThang.setSelectedIndex(LocalDate.now().getMonthValue() - 1);
-        cboNam.setSelectedItem(currentYear);
-
-        JButton btnLoad = new JButton("Xem");
-        btnLoad.setFont(new Font("Segoe UI", Font.BOLD, 13));
-        btnLoad.setBackground(UIColors.PRIMARY_PURPLE);
-        btnLoad.setForeground(UIColors.WHITE);
-        btnLoad.setFocusPainted(false);
-        btnLoad.setBorderPainted(false);
-        btnLoad.setOpaque(true);
-        btnLoad.setPreferredSize(new Dimension(70, 30));
-        btnLoad.setCursor(new Cursor(Cursor.HAND_CURSOR));
-        btnLoad.addActionListener(e -> loadChamCongData());
-
-        filterPanel.add(lblFilter);
-        filterPanel.add(cboThang);
-        filterPanel.add(cboNam);
-        filterPanel.add(btnLoad);
-
-        panel.add(filterPanel, BorderLayout.NORTH);
-
-        // ---- Attendance table --------------------------------------------
-        chamCongTableModel = PurpleTable.createNonEditableModel(COL_CHAM_CONG);
-
-        PurpleTable chamCongTable = new PurpleTable(chamCongTableModel);
-        chamCongTable.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
-        chamCongTable.setDefaultRenderer(Object.class, new AttendanceStatusRenderer());
-
-        int[] colWidths = {90, 110, 110, 110, 70, 100};
-        for (int i = 0; i < colWidths.length; i++) {
-            chamCongTable.getColumnModel().getColumn(i).setPreferredWidth(colWidths[i]);
-        }
-
-        JScrollPane tableScroll = new JScrollPane(chamCongTable);
-        tableScroll.setBorder(BorderFactory.createLineBorder(UIColors.BORDER_GRAY));
-        panel.add(tableScroll, BorderLayout.CENTER);
-
-        // Load data for current month immediately
-        loadChamCongData();
-
-        return panel;
-    }
 
     // =====================================================================
     // Data population helpers
@@ -532,35 +442,6 @@ public class EmployeeDetailPanel extends JDialog {
         }
     }
 
-    private void loadChamCongData() {
-        chamCongTableModel.setRowCount(0);
-        try {
-            int thang = cboThang.getSelectedIndex() + 1;
-            int nam   = (Integer) cboNam.getSelectedItem();
-            List<ChamCong> list = attendanceSvc.getChamCongTheoThang(maNV, thang, nam);
-            if (list == null || list.isEmpty()) return;
-            for (ChamCong cc : list) {
-                String gioVao = cc.getGioVao() != null
-                        ? cc.getGioVao().format(TIME_FMT) : "";
-                String gioRa  = cc.getGioRa() != null
-                        ? cc.getGioRa().format(TIME_FMT) : "";
-                String soGio  = cc.getSoGioLam() > 0
-                        ? String.format("%.2f", cc.getSoGioLam()) : "";
-                String trangThai = cc.getTrangThai() != null
-                        ? cc.getTrangThai().toString() : "";
-                chamCongTableModel.addRow(new Object[]{
-                    cc.getNgay() != null ? cc.getNgay().format(DATE_FMT) : "",
-                    safe(cc.getTenCaLam()),
-                    gioVao,
-                    gioRa,
-                    soGio,
-                    trangThai
-                });
-            }
-        } catch (Exception ex) {
-            // Silently ignore; table stays empty
-        }
-    }
 
     // =====================================================================
     // Footer
@@ -784,9 +665,9 @@ public class EmployeeDetailPanel extends JDialog {
     }
 
     private String statusDisplayOf(String key) {
-        if ("dang_lam_viec".equals(key)) return "Dang lam viec";
-        if ("tam_nghi".equals(key)) return "Tam nghi";
-        if ("nghi_viec".equals(key)) return "Nghi viec";
+        if ("dang_lam_viec".equals(key)) return "Đang làm việc";
+        if ("tam_nghi".equals(key)) return "Tạm nghỉ";
+        if ("nghi_viec".equals(key)) return "Nghỉ việc";
         return key;
     }
 
@@ -1139,40 +1020,7 @@ public class EmployeeDetailPanel extends JDialog {
             return c;
         }
     }
-
-    /**
-     * Highlights the Trang thai column (index 5) in the attendance table.
-     */
-    private class AttendanceStatusRenderer extends DefaultTableCellRenderer {
-        @Override
-        public Component getTableCellRendererComponent(JTable table, Object value,
-                boolean isSelected, boolean hasFocus, int row, int col) {
-            Component c = super.getTableCellRendererComponent(
-                    table, value, isSelected, hasFocus, row, col);
-            setHorizontalAlignment(SwingConstants.CENTER);
-            setBorder(BorderFactory.createEmptyBorder(0, 8, 0, 8));
-
-            if (!isSelected) {
-                c.setBackground(row % 2 == 0 ? Color.WHITE : UIColors.TABLE_ALT_ROW);
-                c.setForeground(UIColors.TEXT_DARK);
-
-                if (col == 5 && value != null) {
-                    String v = value.toString();
-                    if (v.contains("ung gio") || v.equals("Dung gio")) {
-                        c.setForeground(UIColors.SUCCESS_GREEN);
-                    } else if (v.contains("muon") || v.contains("som")) {
-                        c.setForeground(new Color(230, 120, 0));
-                    } else if (v.contains("Vang") || v.contains("vang")) {
-                        c.setForeground(UIColors.DANGER_RED);
-                    } else if (v.contains("phep") || v.contains("Phep")) {
-                        c.setForeground(new Color(0, 123, 200));
-                    }
-                    ((JLabel) c).setFont(new Font("Segoe UI", Font.BOLD, 12));
-                }
-            }
-            return c;
-        }
-    }
+   
 
     // =====================================================================
     // Value formatting helpers
@@ -1181,26 +1029,6 @@ public class EmployeeDetailPanel extends JDialog {
     /** Returns the string if non-null and non-empty, otherwise empty string. */
     private static String safe(String s) {
         return (s != null && !s.isEmpty()) ? s : "";
-    }
-
-    private static String formatGioiTinh(String value) {
-        if (value == null) return "";
-        switch (value) {
-            case "nam":  return "Nam";
-            case "nu":   return "Nu";
-            case "khac": return "Khac";
-            default:     return value;
-        }
-    }
-
-    private static String formatHonNhan(String value) {
-        if (value == null) return "";
-        switch (value) {
-            case "doc_than":    return "Doc than";
-            case "da_ket_hon":  return "Da ket hon";
-            case "ly_hon":      return "Ly hon / Goa";
-            default:            return value;
-        }
     }
 }
 

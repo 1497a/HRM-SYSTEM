@@ -16,6 +16,7 @@ import javax.swing.table.DefaultTableModel;
 import javax.swing.table.TableRowSorter;
 import java.awt.*;
 import java.time.format.DateTimeFormatter;
+import java.util.Comparator;
 import java.util.List;
 
 /**
@@ -142,7 +143,8 @@ public class LeaveListPanel extends JPanel {
         for (int i = 0; i < 9; i++) {
             sorter.setSortable(i, false);
         }
-        sorter.setSortable(0, true); // ID
+        sorter.setComparator(0,Comparator.comparingInt(a -> (Integer) a));
+         // ID
         sorter.setSortable(1, true); // Nhân viên
 
         // Comparator tiếng Việt cho cột Nhân viên
