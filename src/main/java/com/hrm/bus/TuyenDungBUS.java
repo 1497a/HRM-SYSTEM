@@ -284,6 +284,18 @@ public class TuyenDungBUS {
             uv.setTrangThai("da_chuyen_nhan_vien");
             recruitmentRepo.updateUngVien(uv);
 
+            // Kiểm tra đủ số lượng → tự cập nhật trạng thái YeuCau
+            if (tin != null) {
+                YeuCauTuyenDung ycCheck = recruitmentRepo.findYeuCauById(tin.getMaYeuCau());
+                if (ycCheck != null && !"da_tuyen_du".equals(ycCheck.getTrangThai())) {
+                    int daChuyen = recruitmentRepo.countConvertedByYeuCau(tin.getMaYeuCau());
+                    if (daChuyen >= ycCheck.getSoLuong()) {
+                        recruitmentRepo.updateYeuCauTrangThai(
+                                tin.getMaYeuCau(), "da_tuyen_du", 0, null);
+                    }
+                }
+            }
+
             // Kiểm tra tài khoản
             com.hrm.model.TaiKhoan tk = XacThucBUS.getInstance().findByMaNV(newMaNV);
             String thongTinTK = tk != null

@@ -440,6 +440,25 @@ public class TuyenDungDAO {
     }
 
     /**
+     * Đếm số ứng viên đã được chuyển thành nhân viên từ một yêu cầu tuyển dụng.
+     */
+    public int countConvertedByYeuCau(int maYeuCau) {
+        String sql = "SELECT COUNT(*) FROM UNGVIEN uv "
+                + "JOIN TINTUYENDUNG t ON uv.maTin = t.maTin "
+                + "WHERE t.maYeuCau = ? AND uv.trangThai = 'da_chuyen_nhan_vien'";
+        try (Connection conn = DatabaseConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setInt(1, maYeuCau);
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) return rs.getInt(1);
+            }
+        } catch (SQLException e) {
+            System.err.println("Loi countConvertedByYeuCau: " + e.getMessage());
+        }
+        return 0;
+    }
+
+    /**
      * Liên kết ứng viên trúng tuyển với nhân viên mới.
      */
     public void linkToNhanVien(int maUngVien, String maNV) {

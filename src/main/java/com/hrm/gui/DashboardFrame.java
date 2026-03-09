@@ -378,18 +378,18 @@ public class DashboardFrame extends JFrame {
         XacThucBUS auth = XacThucBUS.getInstance();
 
         // Employee Menu
-        mnuEmployeeList.setEnabled(auth.coQuyen("EMPLOYEE_VIEW_ALL") || auth.coQuyen("EMPLOYEE_VIEW_TEAM") || auth.coQuyen("EMPLOYEE_VIEW_SELF"));
+        mnuEmployeeList.setEnabled(auth.getScopeForAction("EMPLOYEE_VIEW") != com.hrm.model.DataScope.NONE);
         mnuEmployeeCreate.setEnabled(auth.coQuyen("EMPLOYEE_CREATE"));
 
         // Leave Menu - all users can view their own
         mnuLeaveList.setEnabled(true);
         mnuLeaveRequest.setEnabled(auth.coQuyen("LEAVE_CREATE"));
-        mnuLeaveApprove.setEnabled(auth.coQuyen("LEAVE_APPROVE_ALL") || auth.coQuyen("LEAVE_APPROVE_TEAM"));
+        mnuLeaveApprove.setEnabled(auth.getScopeForAction("LEAVE_APPROVE") != com.hrm.model.DataScope.NONE);
 
         // Evaluation Menu
         mnuEvalList.setEnabled(true);
-        mnuEvalSelf.setEnabled(auth.coQuyen("EVAL_VIEW_SELF"));
-        mnuEvalReview.setEnabled(auth.coQuyen("EVAL_REVIEW_ALL") || auth.coQuyen("EVAL_REVIEW_TEAM"));
+        mnuEvalSelf.setEnabled(auth.getScopeForAction("EVAL_VIEW") != com.hrm.model.DataScope.NONE);
+        mnuEvalReview.setEnabled(auth.getScopeForAction("EVAL_REVIEW") != com.hrm.model.DataScope.NONE);
         mnuEvalManage.setEnabled(auth.coQuyen("EVAL_MANAGE"));
 
         // Admin Menu

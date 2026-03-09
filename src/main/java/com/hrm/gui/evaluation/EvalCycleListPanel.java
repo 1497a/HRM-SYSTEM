@@ -42,10 +42,8 @@ public class EvalCycleListPanel extends JPanel {
     public EvalCycleListPanel() {
         this.evalService = DanhGiaBUS.getInstance();
         this.currentUser = SessionContext.getInstance().getCurrentUser();
-        this.isAdmin = currentUser.coQuyen("EVAL_MANAGE");
-        this.isManager = currentUser.coQuyen("EVAL_REVIEW_ALL")
-                || currentUser.coQuyen("EVAL_REVIEW_TEAM")
-                || isAdmin;
+        this.isAdmin   = currentUser.coQuyen("EVAL_MANAGE");
+        this.isManager = isAdmin || currentUser.coQuyen("EVAL_REVIEW");
 
         initComponents();
         setupLayout();
@@ -271,6 +269,7 @@ public class EvalCycleListPanel extends JPanel {
                 if (cb.isSelected()) {
                     TieuChiDanhGia c =
                             (TieuChiDanhGia) cb.getClientProperty("criteria");
+                    c.setTrongSo(c.getDiemToiDa()); // diemToiDa dùng làm trọng số
                     selectedCriteria.add(c);
                     totalWeight += c.getDiemToiDa();
                 }
@@ -327,6 +326,13 @@ public class EvalCycleListPanel extends JPanel {
     }
 
     private void evaluateEmployee() {
+        if (currentUser.getNhanVienId() == null || currentUser.getNhanVienId().isEmpty()) {
+            JOptionPane.showMessageDialog(this,
+                    "Tài khoản quản trị viên không đánh giá nhân viên\n",
+                    "Không thể thực hiện",
+                    JOptionPane.WARNING_MESSAGE);
+            return;
+        }
         int row = cycleTable.getSelectedRow();
         if (row < 0) {
             JOptionPane.showMessageDialog(this,

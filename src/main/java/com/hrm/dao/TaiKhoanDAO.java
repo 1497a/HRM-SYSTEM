@@ -1,5 +1,6 @@
 package com.hrm.dao;
 
+import com.hrm.model.DataScope;
 import com.hrm.model.Quyen;
 import com.hrm.model.VaiTro;
 import com.hrm.model.TaiKhoan;
@@ -443,7 +444,7 @@ public class TaiKhoanDAO {
         if (maVaiTro == null || maVaiTro.trim().isEmpty()) return new ArrayList<>();
 
         List<Quyen> list = new ArrayList<>();
-        String sql = "SELECT q.maQuyen, q.tenQuyen, q.nhomQuyen "
+        String sql = "SELECT q.maQuyen, q.tenQuyen, q.nhomQuyen, vq.phamVi "
                    + "FROM QUYEN q JOIN VAITRO_QUYEN vq ON q.maQuyen = vq.maQuyen "
                    + "WHERE vq.maVaiTro = ? ORDER BY q.nhomQuyen, q.maQuyen";
         try (Connection conn = DatabaseConnection.getConnection();
@@ -451,11 +452,16 @@ public class TaiKhoanDAO {
             ps.setString(1, maVaiTro.trim());
             try (ResultSet rs = ps.executeQuery()) {
                 while (rs.next()) {
-                    list.add(new Quyen(
+                    Quyen q = new Quyen(
                             rs.getString("maQuyen"),
                             rs.getString("tenQuyen"),
                             rs.getString("nhomQuyen")
-                    ));
+                    );
+                    String pv = rs.getString("phamVi");
+                    if (pv != null) {
+                        try { q.setPhamVi(DataScope.valueOf(pv)); } catch (IllegalArgumentException ignored) {}
+                    }
+                    list.add(q);
                 }
             }
         } catch (SQLException e) {
@@ -469,7 +475,7 @@ public class TaiKhoanDAO {
         if (maVaiTro == null || maVaiTro.trim().isEmpty()) return;
 
         String deleteSql = "DELETE FROM VAITRO_QUYEN WHERE maVaiTro = ?";
-        String insertSql = "INSERT INTO VAITRO_QUYEN (maVaiTro, maQuyen) VALUES (?, ?)";
+        String insertSql = "INSERT INTO VAITRO_QUYEN (maVaiTro, maQuyen, phamVi) VALUES (?, ?, 'SELF')";
 
         try (Connection conn = DatabaseConnection.getConnection()) {
             conn.setAutoCommit(false);

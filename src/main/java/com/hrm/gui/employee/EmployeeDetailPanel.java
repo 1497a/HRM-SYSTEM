@@ -474,8 +474,12 @@ public class EmployeeDetailPanel extends JDialog {
 
         SessionContext sc = SessionContext.getInstance();
         boolean canUpdate = sc.coVaiTro("ADMIN") || sc.coQuyen("EMPLOYEE_UPDATE");
-        btnSuaThongTin.setVisible(canUpdate);
-        btnDoiTrangThai.setVisible(canUpdate);
+        String myMaNV = sc.getCurrentUser() != null ? sc.getCurrentUser().getNhanVienId() : null;
+        boolean isSelfView = maNV != null && maNV.equals(myMaNV);
+
+        // Nhan vien co the tu sua thong tin ca nhan cua minh, nhung khong doi trang thai
+        btnSuaThongTin .setVisible(canUpdate || isSelfView);
+        btnDoiTrangThai.setVisible(canUpdate && !isSelfView);
 
         right.add(btnSuaThongTin);
         right.add(btnDoiTrangThai);
@@ -771,8 +775,10 @@ public class EmployeeDetailPanel extends JDialog {
         boolean isPersonalTab = tabs.getSelectedIndex() == 0;
         SessionContext sc = SessionContext.getInstance();
         boolean canUpdate = sc.coVaiTro("ADMIN") || sc.coQuyen("EMPLOYEE_UPDATE");
-        btnSuaThongTin.setVisible(isPersonalTab && canUpdate);
-        btnDoiTrangThai.setVisible(isPersonalTab && canUpdate);
+        String myMaNV = sc.getCurrentUser() != null ? sc.getCurrentUser().getNhanVienId() : null;
+        boolean isSelfView = maNV != null && maNV.equals(myMaNV);
+        btnSuaThongTin .setVisible(isPersonalTab && (canUpdate || isSelfView));
+        btnDoiTrangThai.setVisible(isPersonalTab && canUpdate && !isSelfView);
     }
 
     private boolean isValidEmail(String email) {

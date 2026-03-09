@@ -9,6 +9,7 @@ import com.hrm.bus.TuyenDungBUS;
 import com.hrm.bus.PhongBanBUS;
 import com.hrm.bus.ChucVuBUS;
 import com.hrm.bus.KetQua;
+import com.hrm.util.SessionContext;
 import com.hrm.util.UIColors;
 import com.hrm.util.UIHelper;
 
@@ -82,7 +83,28 @@ public class RecruitmentPanel extends JPanel {
 
         add(tabbedPane, BorderLayout.CENTER);
 
+        setupPermissions();
         loadAll();
+    }
+
+    private void setupPermissions() {
+        SessionContext sc = SessionContext.getInstance();
+        boolean canRequest = sc.coQuyen("RECRUITMENT_REQUEST") || sc.coQuyen("RECRUITMENT_MANAGE");
+        boolean canManage  = sc.coQuyen("RECRUITMENT_MANAGE");
+
+        // Tab 1 - Yêu cầu
+        btnTaoYeuCau.setVisible(canRequest);
+        btnPheDuyet .setVisible(canManage);
+        btnTuChoi   .setVisible(canManage);
+
+        // Tab 2 - Tin tuyển dụng
+        btnDangTin  .setVisible(canManage);
+        btnDongTin  .setVisible(canManage);
+
+        // Tab 3 - Ứng viên
+        btnTaoUngVien      .setVisible(canManage);
+        btnChuyenTrangThai .setVisible(canManage);
+        btnChuyenNV        .setVisible(canManage);
     }
 
     // ────────────────────────────────────────────────
@@ -165,7 +187,7 @@ public class RecruitmentPanel extends JPanel {
         toolbar.add(new JLabel("Trạng thái:"));
         toolbar.add(cboTrangThaiTin);
 
-        String[] cols = {"Mã tin", "Tiêu đề", "Ngày đăng", "Hạn nộp", "Số đơn", "Trạng thái"};
+        String[] cols = {"Mã tin", "Tiêu đề", "Phòng ban", "Chức vụ", "Hạn nộp", "Số đơn", "Trạng thái"};
         modelTin = new DefaultTableModel(cols, 0) {
             @Override public boolean isCellEditable(int row, int col) { return false; }
             @Override public Class<?> getColumnClass(int columnIndex) {
@@ -174,12 +196,12 @@ public class RecruitmentPanel extends JPanel {
         };
 
         tblTin = buildTable(modelTin);
-        applyColWidths(tblTin, new int[]{70, 280, 120, 130, 80, 130});
-        tblTin.getColumnModel().getColumn(5).setCellRenderer(new StatusCellRenderer());
+        applyColWidths(tblTin, new int[]{60, 180, 140, 130, 110, 60, 110});
+        tblTin.getColumnModel().getColumn(6).setCellRenderer(new StatusCellRenderer());
 
         sorterTin = new TableRowSorter<>(modelTin);
         tblTin.setRowSorter(sorterTin);
-        UIHelper.attachStatusFilter(sorterTin, cboTrangThaiTin, 5);
+        UIHelper.attachStatusFilter(sorterTin, cboTrangThaiTin, 6);
 
         JScrollPane scroll = new JScrollPane(tblTin);
         scroll.setBorder(new TitledBorder("Danh sách tin tuyển dụng"));
@@ -294,12 +316,12 @@ public class RecruitmentPanel extends JPanel {
         try {
             danhSachTin = recruitmentService.getAllTinTuyenDung();
             for (TinTuyenDung tin : danhSachTin) {
-                String dang = tin.getNgayTao() != null ? tin.getNgayTao().format(DATE_FORMAT) : "";
-                String het  = tin.getHanNopHoSo() != null ? tin.getHanNopHoSo().format(DATE_FORMAT) : "";
+                String het = tin.getHanNopHoSo() != null ? tin.getHanNopHoSo().format(DATE_FORMAT) : "";
                 modelTin.addRow(new Object[]{
                         tin.getMaTin(),
                         tin.getTieuDe(),
-                        dang,
+                        tin.getTenPhongBan() != null ? tin.getTenPhongBan() : "",
+                        tin.getTenChucVu()   != null ? tin.getTenChucVu()   : "",
                         het,
                         tin.getSoUngVien(),
                         tin.getTrangThaiDisplay()
@@ -340,7 +362,7 @@ public class RecruitmentPanel extends JPanel {
         PhongBanBUS pbBUS = new PhongBanBUS();
         ChucVuBUS cvBUS = new ChucVuBUS();
         java.util.List<PhongBan> dsPhongBan = pbBUS.getActiveDepartments();
-        java.util.List<ChucVu> dsChucVu = cvBUS.getActivePositions();
+        java.util.List<ChucVu> dsChucVu = cvBUS.getRecruitablePositions();
 
         JComboBox<PhongBan> cboPhongBan = new JComboBox<>();
         for (PhongBan pb : dsPhongBan) cboPhongBan.addItem(pb);
@@ -672,9 +694,28 @@ private void dangTin() {
             return;
         }
 
+        // Tra cứu phòng ban / chức vụ từ tin tuyển dụng đã load
+        TinTuyenDung tinUV = null;
+        if (danhSachTin != null) {
+            for (TinTuyenDung t : danhSachTin) {
+                if (t.getMaTin() == uv.getMaTin()) { tinUV = t; break; }
+            }
+        }
+        String pbInfo = (tinUV != null && tinUV.getTenPhongBan() != null && !tinUV.getTenPhongBan().isEmpty())
+                ? tinUV.getTenPhongBan() : "(chua xac dinh)";
+        String cvInfo = (tinUV != null && tinUV.getTenChucVu() != null && !tinUV.getTenChucVu().isEmpty())
+                ? tinUV.getTenChucVu() : "(chua xac dinh)";
+        boolean thieu = "(chua xac dinh)".equals(pbInfo) || "(chua xac dinh)".equals(cvInfo);
+
+        String confirmMsg = "Chuyen \"" + hoTen + "\" thanh nhan vien chinh thuc?\n\n"
+                + "Se tu dong bo nhiem:\n"
+                + "  Phong ban : " + pbInfo + "\n"
+                + "  Chuc vu   : " + cvInfo
+                + (thieu ? "\n\nCHU Y: Thieu thong tin - bo nhiem can tao thu cong sau." : "");
+
         int opt = JOptionPane.showConfirmDialog(this,
-                "Chuyển \"" + hoTen + "\" thành nhân viên chính thức?",
-                "Xác nhận", JOptionPane.YES_NO_OPTION, JOptionPane.QUESTION_MESSAGE);
+                confirmMsg,
+                "Xac nhan chuyen thanh nhan vien", JOptionPane.YES_NO_OPTION, JOptionPane.QUESTION_MESSAGE);
 
         if (opt != JOptionPane.YES_OPTION) return;
 

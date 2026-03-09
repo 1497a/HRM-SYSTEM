@@ -42,7 +42,10 @@ public class LeaveListPanel extends JPanel {
     public LeaveListPanel() {
         this.leaveService = NghiPhepBUS.getInstance();
         this.currentUser = SessionContext.getInstance().getCurrentUser();
-        this.isManager = currentUser.coQuyen("LEAVE_VIEW_ALL") || currentUser.coQuyen("LEAVE_VIEW_TEAM");
+        com.hrm.model.DataScope leaveScope = com.hrm.bus.XacThucBUS.getInstance().getScopeForAction("LEAVE_VIEW");
+        this.isManager = leaveScope == com.hrm.model.DataScope.ALL
+                      || leaveScope == com.hrm.model.DataScope.DEPT
+                      || leaveScope == com.hrm.model.DataScope.TEAM;
 
         initComponents();
         setupLayout();

@@ -46,7 +46,7 @@ public class EvalResultPanel extends JPanel {
     public EvalResultPanel(int presetCycleId) {
         this.evalService = DanhGiaBUS.getInstance();
         this.currentUser = SessionContext.getInstance().getCurrentUser();
-        this.isManager = currentUser.coQuyen("EVAL_VIEW_ALL") || currentUser.coQuyen("EVAL_VIEW_TEAM");
+        this.isManager = currentUser.coQuyen("EVAL_MANAGE") || currentUser.coQuyen("EVAL_REVIEW");
         this.presetCycleId = presetCycleId;
 
         this.myMaNV = currentUser.getNhanVienId();

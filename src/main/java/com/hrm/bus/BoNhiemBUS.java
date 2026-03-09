@@ -84,15 +84,9 @@ public class BoNhiemBUS {
                         "Nhân viên đã có bổ nhiệm chính hiệu lực trong khoảng thời gian này. "
                         + "Hãy kết thúc bổ nhiệm cũ trước.");
             }
-
-            // Kiểm tra chức vụ độc nhất trong phòng ban
-            boolean chucVuDaDuocGiu = boNhiemRepo.hasActiveChinhForChucVuInDept(
-                    bn.getPhongBanId(), bn.getChucVuId(), 0);
-            if (chucVuDaDuocGiu) {
-                return KetQua.error(
-                        "Chức vụ này đã có người đảm nhiệm chính thức tại phòng ban. "
-                        + "Hãy kết thúc bổ nhiệm hiện tại trước khi bổ nhiệm người mới.");
-            }
+            // Không chặn tạo bổ nhiệm khi chức vụ đã có người giữ —
+            // phê duyệt sẽ tự động kết thúc bổ nhiệm cũ (nếu là chức vụ độc nhất như TPhòng).
+            // Đây cho phép tuyển nhiều nhân viên cùng chức vụ trong một phòng ban bình thường.
         }
 
         // Thiết lập trạng thái chờ duyệt

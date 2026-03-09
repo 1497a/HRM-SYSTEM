@@ -2,9 +2,12 @@ package com.hrm.gui.contract;
 
 import com.hrm.gui.components.PurpleButton;
 import com.hrm.gui.components.PurpleTable;
+import com.hrm.model.DataScope;
 import com.hrm.model.HopDongLaoDong;
+import com.hrm.model.TaiKhoan;
 import com.hrm.bus.HopDongBUS;
 import com.hrm.bus.KetQua;
+import com.hrm.bus.XacThucBUS;
 import com.hrm.util.SessionContext;
 import com.hrm.util.UIColors;
 
@@ -213,7 +216,16 @@ public class ContractListPanel extends JPanel {
     // ============================
 
     public void loadData() {
-        danhSachHienThi = hopDongService.getAll();
+        DataScope scope = XacThucBUS.getInstance().getScopeForAction("CONTRACT_VIEW");
+        if (scope == DataScope.SELF) {
+            TaiKhoan user = SessionContext.getInstance().getCurrentUser();
+            String myMaNV = user != null ? user.getNhanVienId() : null;
+            danhSachHienThi = (myMaNV != null && !myMaNV.isEmpty())
+                    ? hopDongService.getByMaNV(myMaNV)
+                    : new java.util.ArrayList<>();
+        } else {
+            danhSachHienThi = hopDongService.getAll();
+        }
         tableModel.setRowCount(0);
 
         for (HopDongLaoDong hd : danhSachHienThi) {

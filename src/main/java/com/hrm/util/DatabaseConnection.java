@@ -11,12 +11,6 @@ import java.util.Properties;
  * Quản lý kết nối đến MySQL database.
  *
  * ĐÂY LÀ PATTERN: Singleton + Utility class
- *
- * TẠI SAO CẦN CLASS NÀY?
- * - Tập trung quản lý thông tin kết nối DB ở MỘT NƠI duy nhất
- * - Nếu đổi host/port/password, chỉ cần sửa file database.properties
- * - Các Repository gọi getConnection() mà không cần biết chi tiết kết nối
- *
  * CÁCH HOẠT ĐỘNG:
  * 1. Đọc file database.properties (url, username, password)
  * 2. Dùng DriverManager.getConnection() để tạo kết nối đến MySQL

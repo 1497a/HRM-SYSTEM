@@ -4,6 +4,8 @@ public class Quyen {
     private String id;
     private String tenQuyen;
     private String nhomQuyen;
+    /** Phạm vi dữ liệu — chỉ có giá trị khi được nạp từ VAITRO_QUYEN (kèm role). */
+    private DataScope phamVi;
 
     public Quyen() {}
 
@@ -19,6 +21,8 @@ public class Quyen {
     public void setTenQuyen(String tenQuyen) { this.tenQuyen = tenQuyen; }
     public String getNhomQuyen() { return nhomQuyen; }
     public void setNhomQuyen(String nhomQuyen) { this.nhomQuyen = nhomQuyen; }
+    public DataScope getPhamVi() { return phamVi; }
+    public void setPhamVi(DataScope phamVi) { this.phamVi = phamVi; }
     /** Alias for getId() */
     public String getCode() { return id; }
     /** Alias for getTenQuyen() */

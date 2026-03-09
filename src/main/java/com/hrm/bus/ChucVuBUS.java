@@ -9,6 +9,7 @@ import com.hrm.util.SessionContext;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * Service quản lý chức vụ.
@@ -32,6 +33,16 @@ public class ChucVuBUS {
      */
     public List<ChucVu> getActivePositions() {
         return positionRepo.findActive();
+    }
+
+    /**
+     * Lấy danh sách chức vụ được phép tuyển dụng thông thường (capBac >= 3).
+     * Các vị trí cấp cao (Giám đốc, Trưởng phòng) chỉ bổ nhiệm trực tiếp.
+     */
+    public List<ChucVu> getRecruitablePositions() {
+        return getActivePositions().stream()
+                .filter(cv -> cv.getCapBac() >= 3)
+                .collect(Collectors.toList());
     }
 
     /**

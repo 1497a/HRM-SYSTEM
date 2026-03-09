@@ -3,11 +3,10 @@ package com.hrm.gui.evaluation;
 import com.hrm.model.TieuChiDanhGia;
 import com.hrm.model.ChiTietDanhGia;
 import com.hrm.model.DanhGiaHieuSuat;
+import com.hrm.model.NhanVien;
 import com.hrm.model.TaiKhoan;
-import com.hrm.model.BoNhiem;
 import com.hrm.bus.DanhGiaBUS;
-import com.hrm.bus.XacThucBUS;
-import com.hrm.dao.BoNhiemDAO;
+import com.hrm.bus.NhanVienBUS;
 import com.hrm.util.SessionContext;
 import com.hrm.util.UIColors;
 import com.hrm.util.UIHelper;
@@ -116,39 +115,28 @@ public class EvalDoDialog extends JDialog {
     }
 
     private void loadEmployees() {
-        BoNhiemDAO boNhiemDAO = BoNhiemDAO.getInstance();
-        List<TaiKhoan> users = XacThucBUS.getInstance().getAllUsers();
+        String currentMaNV = currentUser.getNhanVienId();
+        List<NhanVien> employees = NhanVienBUS.getInstance()
+                .getAllByActionScope("EVAL_REVIEW", currentMaNV);
 
-        // Get list of employees already evaluated in this cycle to prevent duplicates
         List<String> alreadyEvaluated = evalService.getEvaluatedMaNVInCycle(cycleId);
 
-        for (TaiKhoan user : users) {
-            if (user.getNhanVienId() == null || user.getNhanVienId().isEmpty()) continue;
-            if (user.getId() == currentUser.getId()) continue;  // can't self-evaluate
-            if (!user.isHoatDong()) continue;
+        for (NhanVien nv : employees) {
+            if ("nghi_viec".equals(nv.getTrangThai())) continue;
+            if (nv.getMaNhanVien().equals(currentMaNV)) continue; // không tự đánh giá bản thân
+            if (alreadyEvaluated.contains(nv.getMaNhanVien())) continue;
 
-            String maNV = user.getNhanVienId();
-
-            // Skip employees already evaluated in this cycle
-            if (alreadyEvaluated.contains(maNV)) continue;
-
-            String hoTen = user.getHoTen() != null ? user.getHoTen() : user.getTenDangNhap();
-            String tenChucVu = "";
-            String tenPhongBan = "";
-            try {
-                BoNhiem bn = boNhiemDAO.findBoNhiemChinhHieuLuc(maNV);
-                if (bn != null) {
-                    if (bn.getTenChucVu() != null) tenChucVu = bn.getTenChucVu();
-                    if (bn.getTenPhongBan() != null) tenPhongBan = bn.getTenPhongBan();
-                }
-            } catch (Exception ignored) {}
-
-            cboEmployee.addItem(new NhanVienItem(maNV, hoTen, tenChucVu, tenPhongBan));
+            cboEmployee.addItem(new NhanVienItem(
+                    nv.getMaNhanVien(),
+                    nv.getHoTen() != null ? nv.getHoTen() : nv.getMaNhanVien(),
+                    nv.getTenChucVuHienTai() != null ? nv.getTenChucVuHienTai() : "",
+                    nv.getTenPhongBanHienTai() != null ? nv.getTenPhongBanHienTai() : ""
+            ));
         }
 
         if (cboEmployee.getItemCount() == 0) {
             JOptionPane.showMessageDialog(null,
-                    "Tất cả nhân viên trong đợt này đã được đánh giá.",
+                    "Tất cả nhân viên trong phạm vi của bạn đã được đánh giá.",
                     "Thông báo", JOptionPane.INFORMATION_MESSAGE);
         }
     }

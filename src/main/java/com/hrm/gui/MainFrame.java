@@ -402,41 +402,27 @@ public class MainFrame extends JFrame {
     private void setupPermissions() {
         SessionContext sc = SessionContext.getInstance();
 
-        Object[][] menuPermissions = {
-            // Nhan su
-            { btnEmployees,    new String[]{"EMPLOYEE_VIEW_ALL", "EMPLOYEE_VIEW_TEAM", "EMPLOYEE_VIEW_SELF"} },
-            { btnOrganization, new String[]{"DEPARTMENT_VIEW", "POSITION_VIEW"} },
-            { btnAppointments, new String[]{"APPOINTMENT_VIEW_ALL", "APPOINTMENT_VIEW_TEAM", "APPOINTMENT_VIEW_SELF"} },
-            { btnRecruitment,  new String[]{"RECRUITMENT_VIEW_ALL", "RECRUITMENT_VIEW_TEAM", "RECRUITMENT_VIEW_SELF"} },
-            // Cham cong & Luong
-            { btnAttendance,   new String[]{"ATTENDANCE_VIEW_ALL", "ATTENDANCE_VIEW_TEAM", "ATTENDANCE_VIEW_SELF"} },
-            { btnContracts,    new String[]{"CONTRACT_VIEW_ALL", "CONTRACT_VIEW_TEAM", "CONTRACT_VIEW_SELF"} },
-            { btnPayroll,      new String[]{"PAYROLL_VIEW_ALL", "PAYROLL_VIEW_TEAM", "PAYROLL_VIEW_SELF"} },
-            // Chinh sach
-            { btnLeave,        new String[]{"LEAVE_VIEW_ALL", "LEAVE_VIEW_TEAM", "LEAVE_VIEW_SELF"} },
-            { btnPerformance,  new String[]{"EVAL_VIEW_ALL", "EVAL_VIEW_TEAM", "EVAL_VIEW_SELF"} },
-            // He thong
-            { btnUsers,        new String[]{"USER_VIEW"} },
-            { btnRoles,        new String[]{"ROLE_VIEW"} },
-            { btnReports,      new String[]{"REPORT_VIEW"} },
-            { btnSettings,     new String[]{"SETTINGS_VIEW"} },
-        };
+        com.hrm.bus.XacThucBUS auth = com.hrm.bus.XacThucBUS.getInstance();
+        com.hrm.model.DataScope none = com.hrm.model.DataScope.NONE;
 
-        for (Object[] config : menuPermissions) {
-            JButton btn = (JButton) config[0];
-            String[] perms = (String[]) config[1];
-            boolean hasAccess = false;
-            for (String perm : perms) {
-                if (sc.coQuyen(perm)) {
-                    hasAccess = true;
-                    break;
-                }
-            }
-            btn.setVisible(hasAccess);
-        }
+        // Hien/an button theo quyen — dung getScopeForAction() cho cac action co scope
+        btnEmployees   .setVisible(auth.getScopeForAction("EMPLOYEE_VIEW")    != none);
+        btnOrganization.setVisible(sc.coQuyen("DEPARTMENT_VIEW") || sc.coQuyen("POSITION_VIEW"));
+        btnAppointments.setVisible(auth.getScopeForAction("APPOINTMENT_VIEW") != none);
+        btnRecruitment .setVisible(auth.getScopeForAction("RECRUITMENT_VIEW") != none);
+        btnAttendance  .setVisible(auth.getScopeForAction("ATTENDANCE_VIEW")  != none);
+        btnContracts   .setVisible(auth.getScopeForAction("CONTRACT_VIEW")    != none);
+        btnPayroll     .setVisible(auth.getScopeForAction("PAYROLL_VIEW")     != none);
+        btnLeave       .setVisible(auth.getScopeForAction("LEAVE_VIEW")       != none);
+        btnPerformance .setVisible(auth.getScopeForAction("EVAL_VIEW")        != none);
+        btnUsers       .setVisible(sc.coQuyen("USER_VIEW"));
+        btnRoles       .setVisible(sc.coQuyen("ROLE_VIEW"));
+        btnReports     .setVisible(sc.coQuyen("REPORT_VIEW"));
+        btnSettings    .setVisible(sc.coQuyen("SETTINGS_VIEW"));
 
         // Everyone can see notifications
         btnNotifications.setVisible(true);
+
     }
 
 

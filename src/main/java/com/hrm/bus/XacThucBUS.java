@@ -116,17 +116,25 @@ public class XacThucBUS {
     }
 
     /**
-     * Lấy phạm vi dữ liệu cho phép dựa trên tiền tố quyền (actionPrefix).
-     * Ví dụ: actionPrefix = "LEAVE_VIEW" → kiểm tra LEAVE_VIEW_ALL, LEAVE_VIEW_DEPT, ...
+     * Lấy phạm vi dữ liệu (phamVi) của hành động từ quyền đã nạp vào session.
+     * Scope được lưu trực tiếp trong VAITRO_QUYEN.phamVi — không còn hậu tố _ALL/_DEPT/_TEAM/_SELF.
      *
-     * @param actionPrefix Tiền tố quyền
+     * @param action Mã quyền (e.g. "LEAVE_VIEW", "EMPLOYEE_VIEW")
      * @return Phạm vi dữ liệu (DataScope)
      */
-    public com.hrm.model.DataScope getScopeForAction(String actionPrefix) {
-        if (hasPermission(actionPrefix + "_ALL"))  return com.hrm.model.DataScope.ALL;
-        if (hasPermission(actionPrefix + "_DEPT")) return com.hrm.model.DataScope.DEPT;
-        if (hasPermission(actionPrefix + "_TEAM")) return com.hrm.model.DataScope.TEAM;
-        if (hasPermission(actionPrefix + "_SELF")) return com.hrm.model.DataScope.SELF;
+    public com.hrm.model.DataScope getScopeForAction(String action) {
+        TaiKhoan user = getCurrentUser();
+        if (user == null) return com.hrm.model.DataScope.NONE;
+        if ("admin".equalsIgnoreCase(user.getTenDangNhap()) || user.coVaiTro("ADMIN")) {
+            return com.hrm.model.DataScope.ALL;
+        }
+        for (com.hrm.model.VaiTro role : user.getVaiTros()) {
+            for (com.hrm.model.Quyen q : role.getQuyens()) {
+                if (action.equals(q.getId()) && q.getPhamVi() != null) {
+                    return q.getPhamVi();
+                }
+            }
+        }
         return com.hrm.model.DataScope.NONE;
     }
 
