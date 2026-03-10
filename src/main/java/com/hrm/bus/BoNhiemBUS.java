@@ -8,6 +8,8 @@ import com.hrm.model.VaiTro;
 import com.hrm.dao.BoNhiemDAO;
 import com.hrm.dao.NhanVienDAO;
 import com.hrm.dao.ThongTinCaNhanDAO;
+import com.hrm.dao.ChucVuDAO;
+import com.hrm.model.ChucVu;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -25,6 +27,7 @@ public class BoNhiemBUS {
     private final BoNhiemDAO boNhiemRepo = BoNhiemDAO.getInstance();
     private final NhanVienDAO nvRepo = NhanVienDAO.getInstance();
     private final ThongTinCaNhanDAO ttcnRepo = ThongTinCaNhanDAO.getInstance();
+    private final ChucVuDAO chucVuRepo = new ChucVuDAO();
 
     private BoNhiemBUS() {
     }
@@ -104,7 +107,7 @@ public class BoNhiemBUS {
     // Phê duyệt bổ nhiệm
     // ============================
 
-    public KetQua<BoNhiem> pheDuyetBoNhiem(int maBoNhiem, int nguoiDuyetId) {
+    public KetQua<BoNhiem> pheDuyetBoNhiem(int maBoNhiem, String nguoiDuyetId) {
         BoNhiem bn = boNhiemRepo.findById(maBoNhiem);
         if (bn == null) {
             return KetQua.error("Không tìm thấy bổ nhiệm #" + maBoNhiem);
@@ -125,20 +128,25 @@ public class BoNhiemBUS {
             }
 
             // Kết thúc bổ nhiệm chính của người đang giữ cùng chức vụ trong phòng ban
-            BoNhiem cuHieuLucChucVu = boNhiemRepo.findBoNhiemChinhHieuLucByChucVuInDept(
-                    bn.getPhongBanId(), bn.getChucVuId(), maBoNhiem);
-            if (cuHieuLucChucVu != null) {
-                boNhiemRepo.endBoNhiem(cuHieuLucChucVu.getMaBoNhiem(), bn.getTuNgay().minusDays(1));
+            // CHỈ áp dụng với các chức vụ quản lý / độc quyền (ví dụ: Giám đốc, Trưởng phòng, Trưởng nhóm)
+            // Trong dữ liệu mẫu v3: GD (cấp 1), TP (cấp 2), TT (cấp 3). Các cấp lớn hơn (CV=4, NV=5...) không độc quyền.
+            ChucVu chucVu = chucVuRepo.findById(bn.getChucVuId());
+            if (chucVu != null && chucVu.getCapBac() <= 3) {
+                BoNhiem cuHieuLucChucVu = boNhiemRepo.findBoNhiemChinhHieuLucByChucVuInDept(
+                        bn.getPhongBanId(), bn.getChucVuId(), maBoNhiem);
+                if (cuHieuLucChucVu != null) {
+                    boNhiemRepo.endBoNhiem(cuHieuLucChucVu.getMaBoNhiem(), bn.getTuNgay().minusDays(1));
+                }
             }
         }
 
         // Cập nhật trạng thái và người duyệt
         boNhiemRepo.updateTrangThai(maBoNhiem, "hieu_luc", now);
-        boNhiemRepo.updateNguoiDuyet(maBoNhiem, String.valueOf(nguoiDuyetId));
+        boNhiemRepo.updateNguoiDuyet(maBoNhiem, nguoiDuyetId);
 
         bn.setTrangThai("hieu_luc");
         bn.setNgayPheDuyet(now);
-        bn.setNguoiDuyet(String.valueOf(nguoiDuyetId)); // giả định nguoiDuyet là String trong model
+        bn.setNguoiDuyet(nguoiDuyetId); // giả định nguoiDuyet là String trong model
 
         // Tự động tạo tài khoản + vai trò nếu là bổ nhiệm chính
         if ("chinh".equals(bn.getLoaiBoNhiem())) {

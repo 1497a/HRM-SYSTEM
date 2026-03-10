@@ -62,6 +62,7 @@ public class BoNhiemDAO {
         try { bn.setTenPhongBan(rs.getString("tenPhongBan")); } catch (SQLException ignored) {}
         try { bn.setTenChucVu(rs.getString("tenChucVu")); } catch (SQLException ignored) {}
         try { bn.setTenQuanLy(rs.getString("tenQuanLy")); } catch (SQLException ignored) {}
+        try { bn.setTenNguoiDuyet(rs.getString("tenNguoiDuyet")); } catch (SQLException ignored) {}
     }
 
     // ============================
@@ -427,12 +428,13 @@ public class BoNhiemDAO {
     // ============================
 
     private String buildJoinQuery(String whereClause, String orderAndLimit) {
-        return "SELECT b.*, t.hoTen, b.maNV AS maNhanVien, pb.tenPhongBan, cv.tenChucVu, t_ql.hoTen AS tenQuanLy "
+        return "SELECT b.*, t.hoTen, b.maNV AS maNhanVien, pb.tenPhongBan, cv.tenChucVu, t_ql.hoTen AS tenQuanLy, t_nd.hoTen AS tenNguoiDuyet "
                 + "FROM BONHIEM b "
                 + "LEFT JOIN THONGTINCANHAN t ON b.maNV = t.maNV "
                 + "LEFT JOIN PHONGBAN pb ON b.maPhongBan = pb.maPhongBan "
                 + "LEFT JOIN CHUCVU cv ON b.maChucVu = cv.maChucVu "
                 + "LEFT JOIN THONGTINCANHAN t_ql ON b.maQuanLy = t_ql.maNV "
+                + "LEFT JOIN THONGTINCANHAN t_nd ON b.nguoiDuyet = t_nd.maNV "
                 + (whereClause.isEmpty() ? "" : whereClause + " ")
                 + orderAndLimit;
     }

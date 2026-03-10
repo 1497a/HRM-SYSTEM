@@ -45,6 +45,8 @@ public class AppointmentFormDialog extends JDialog {
     private JSpinner spnTyLe;
     private JSpinner spnTuNgay;
     private JTextArea txtGhiChu;
+    private JTextField txtNguoiDuyet;
+    private JTextField txtNgayDuyet;
 
     // Buttons
     private PurpleButton btnLuu;
@@ -136,6 +138,17 @@ public class AppointmentFormDialog extends JDialog {
         txtGhiChu.setFont(new Font("Segoe UI", Font.PLAIN, 14));
         txtGhiChu.setLineWrap(true);
         txtGhiChu.setWrapStyleWord(true);
+
+        // Người duyệt, Ngày duyệt
+        txtNguoiDuyet = new JTextField();
+        txtNguoiDuyet.setFont(new Font("Segoe UI", Font.BOLD, 14));
+        txtNguoiDuyet.setEditable(false);
+        txtNguoiDuyet.setBackground(new Color(245, 245, 245));
+
+        txtNgayDuyet = new JTextField();
+        txtNgayDuyet.setFont(new Font("Segoe UI", Font.BOLD, 14));
+        txtNgayDuyet.setEditable(false);
+        txtNgayDuyet.setBackground(new Color(245, 245, 245));
 
         // Buttons
         btnLuu = new PurpleButton("Lưu");
@@ -286,6 +299,12 @@ public class AppointmentFormDialog extends JDialog {
         gbc.fill = GridBagConstraints.NONE;
         gbc.weightx = 0;
 
+        // Chỉ hiển thị người duyệt / ngày duyệt nếu có boNhiemHienThi
+        if (boNhiemHienThi != null) {
+            addFormRow(formPanel, gbc, 9, "Người duyệt", txtNguoiDuyet);
+            addFormRow(formPanel, gbc, 10, "Ngày duyệt", txtNgayDuyet);
+        }
+
         mainPanel.add(formPanel, BorderLayout.CENTER);
 
         // Button panel
@@ -399,6 +418,24 @@ public class AppointmentFormDialog extends JDialog {
 
         // Ghi chú
         txtGhiChu.setText(bn.getLyDo() != null ? bn.getLyDo() : "");
+
+        // Hiển thị người duyệt, ngày duyệt
+        String nguoiDuyet = bn.getTenNguoiDuyet();
+        if (nguoiDuyet == null || nguoiDuyet.isEmpty()) {
+            // Hiển thị mã nếu tên bị rỗng
+            nguoiDuyet = bn.getNguoiDuyet();
+        }
+        if ("admin".equals(nguoiDuyet)) {
+            nguoiDuyet = "Quản trị viên";
+        }
+        txtNguoiDuyet.setText(nguoiDuyet != null ? nguoiDuyet : "Chưa duyệt");
+
+        if (bn.getNgayPheDuyet() != null) {
+            java.time.format.DateTimeFormatter formatter = java.time.format.DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm");
+            txtNgayDuyet.setText(bn.getNgayPheDuyet().format(formatter));
+        } else {
+            txtNgayDuyet.setText("Chưa phê duyệt");
+        }
     }
 
     private void setReadOnly() {
@@ -517,9 +554,12 @@ public class AppointmentFormDialog extends JDialog {
                 "Xác nhận phê duyệt", JOptionPane.YES_NO_OPTION);
         if (confirm != JOptionPane.YES_OPTION) return;
 
-        int userId = 0;
+        String userId = "admin";
         if (SessionContext.getInstance().getCurrentUser() != null) {
-            userId = SessionContext.getInstance().getCurrentUser().getId();
+            String nvId = SessionContext.getInstance().getCurrentUser().getNhanVienId();
+            if (nvId != null && !nvId.trim().isEmpty()) {
+                userId = nvId;
+            }
         }
         KetQua<BoNhiem> result = BoNhiemBUS.getInstance().pheDuyetBoNhiem(
                 boNhiemHienThi.getMaBoNhiem(), userId);

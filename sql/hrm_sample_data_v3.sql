@@ -51,6 +51,7 @@ INSERT INTO CHUCVU (maChucVu, tenChucVu, capBac, heSoLuong, phuCapChucVu, moTa, 
 -- 3. NHAN VIEN - 13 nhân viên
 -- =====================================================
 INSERT INTO NHANVIEN (maNV, loaiHopDong, ngayVaoLam, trangThai, ghiChu) VALUES
+('admin', 'khong_xac_dinh',    '2015-01-01', 'dang_lam_viec', 'Tài khoản hệ thống'),
 ('NV001', 'khong_xac_dinh',    '2015-01-05', 'dang_lam_viec', 'Giám đốc công ty'),
 -- Phòng Nhân sự
 ('NV002', 'khong_xac_dinh',    '2017-02-01', 'dang_lam_viec', 'Trưởng phòng Nhân sự'),
@@ -74,6 +75,7 @@ INSERT INTO NHANVIEN (maNV, loaiHopDong, ngayVaoLam, trangThai, ghiChu) VALUES
 -- 4. THÔNG TIN CÁ NHÂN
 -- =====================================================
 INSERT INTO THONGTINCANHAN (maNV, hoTen, ngaySinh, gioiTinh, cccd, dienThoai, email, diaChi, diaChiThuongTru, queQuan, danToc, tonGiao, tinhTrangHonNhan) VALUES
+('admin', 'Quản trị viên',        NULL,         'khac',NULL,            NULL,         'admin@abctech.vn',         NULL,                               NULL,                               NULL,         NULL,   NULL,        'doc_than'),
 ('NV001', 'Nguyen Duc Hung',      '1978-05-12', 'nam', '001078005121', '0901000001', 'hung.nguyen@abctech.vn',    '10 Le Duan, Q1, TP.HCM',           '10 Le Duan, Q1, TP.HCM',           'Ha Noi',     'Kinh', 'Khong',     'da_ket_hon'),
 ('NV002', 'Nguyen Thi Thu Huong', '1985-07-25', 'nu',  '079085007251', '0901000002', 'huong.nguyen@abctech.vn',   '22 Ly Tu Trong, Q1, TP.HCM',       '22 Ly Tu Trong, Q1, TP.HCM',       'Nghe An',    'Kinh', 'Phat giao', 'da_ket_hon'),
 ('NV003', 'Dang Thi Lan Anh',     '1992-02-18', 'nu',  '079092002181', '0901000003', 'lananh.dang@abctech.vn',    '67 Nguyen Thi Minh Khai, Q3',      '67 Nguyen Thi Minh Khai, Q3',      'Binh Dinh',  'Kinh', 'Khong',     'doc_than'),
@@ -318,7 +320,7 @@ INSERT INTO VAITRO_QUYEN (maVaiTro, maQuyen, phamVi) VALUES
 --   KE_TOAN       : NV005 (KTV)
 --   NHAN_VIEN     : NV007, NV010, NV011, NV013
 INSERT INTO TAIKHOAN (tenDangNhap, matKhau, maNV, maVaiTro, email, hoatDong) VALUES
-('admin',           '123', NULL,    'ADMIN',         'admin@abctech.vn',             TRUE),
+('admin',           '123', 'admin', 'ADMIN',         'admin@abctech.vn',             TRUE),
 ('hung.nguyen',     '123', 'NV001', 'TONG_GIAM_DOC', 'hung.nguyen@abctech.vn',       TRUE),
 ('huong.nguyen',    '123', 'NV002', 'TRUONG_PHONG',  'huong.nguyen@abctech.vn',      TRUE),
 ('lananh.dang',     '123', 'NV003', 'NHAN_SU',       'lananh.dang@abctech.vn',       TRUE),

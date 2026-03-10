@@ -94,6 +94,7 @@ public class NhanVienDAO {
                 + "  AND b.trangThai = 'hieu_luc' AND b.loaiBoNhiem = 'chinh' "
                 + "LEFT JOIN PHONGBAN pb ON b.maPhongBan = pb.maPhongBan "
                 + "LEFT JOIN CHUCVU cv ON b.maChucVu = cv.maChucVu "
+                + "WHERE n.maNV != 'admin' "
                 + "ORDER BY n.maNV";
 
         List<NhanVien> result = new ArrayList<>();
@@ -133,16 +134,16 @@ public class NhanVienDAO {
         String sqlCondition = "";
         switch (scope) {
             case ALL:
-                sqlCondition = " ORDER BY n.maNV";
+                sqlCondition = " WHERE n.maNV != 'admin' ORDER BY n.maNV";
                 break;
             case DEPT:
-                sqlCondition = " WHERE b.maPhongBan = (SELECT b2.maPhongBan FROM BONHIEM b2 WHERE b2.maNV = ? AND b2.trangThai = 'hieu_luc' AND b2.loaiBoNhiem = 'chinh') ORDER BY n.maNV";
+                sqlCondition = " WHERE b.maPhongBan = (SELECT b2.maPhongBan FROM BONHIEM b2 WHERE b2.maNV = ? AND b2.trangThai = 'hieu_luc' AND b2.loaiBoNhiem = 'chinh') AND n.maNV != 'admin' ORDER BY n.maNV";
                 break;
             case TEAM:
-                sqlCondition = " WHERE b.maQuanLy = ? OR n.maNV = ? ORDER BY n.maNV";
+                sqlCondition = " WHERE (b.maQuanLy = ? OR n.maNV = ?) AND n.maNV != 'admin' ORDER BY n.maNV";
                 break;
             case SELF:
-                sqlCondition = " WHERE n.maNV = ? ORDER BY n.maNV";
+                sqlCondition = " WHERE n.maNV = ? AND n.maNV != 'admin' ORDER BY n.maNV";
                 break;
             default:
                 return result;
@@ -189,7 +190,7 @@ public class NhanVienDAO {
                 + "  AND b.trangThai = 'hieu_luc' AND b.loaiBoNhiem = 'chinh' "
                 + "LEFT JOIN PHONGBAN pb ON b.maPhongBan = pb.maPhongBan "
                 + "LEFT JOIN CHUCVU cv ON b.maChucVu = cv.maChucVu "
-                + "WHERE n.trangThai = ? "
+                + "WHERE n.trangThai = ? AND n.maNV != 'admin' "
                 + "ORDER BY n.maNV";
 
         List<NhanVien> result = new ArrayList<>();
@@ -305,7 +306,7 @@ public class NhanVienDAO {
                 + "JOIN BONHIEM b ON n.maNV = b.maNV "
                 + "LEFT JOIN PHONGBAN pb ON b.maPhongBan = pb.maPhongBan "
                 + "LEFT JOIN CHUCVU cv ON b.maChucVu = cv.maChucVu "
-                + "WHERE b.trangThai = 'hieu_luc' AND b.maQuanLy = ? "
+                + "WHERE b.trangThai = 'hieu_luc' AND b.maQuanLy = ? AND n.maNV != 'admin' "
                 + "ORDER BY n.maNV";
 
         List<NhanVien> result = new ArrayList<>();

@@ -76,7 +76,7 @@ public class TaiKhoanDAO {
     public List<TaiKhoan> findAll() {
         List<TaiKhoan> list = new ArrayList<>();
         String sql = "SELECT maTaiKhoan, tenDangNhap, matKhau, email, hoatDong, biKhoa, maNV "
-                   + "FROM TAIKHOAN ORDER BY maTaiKhoan";
+                   + "FROM TAIKHOAN WHERE tenDangNhap != 'admin' ORDER BY maTaiKhoan";
         try (Connection conn = DatabaseConnection.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql);
              ResultSet rs = ps.executeQuery()) {

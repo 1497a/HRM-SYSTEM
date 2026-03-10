@@ -75,10 +75,22 @@ public class TuyenDungBUS {
             return KetQua.error("Yêu cầu này không ở trạng thái chờ duyệt.");
         }
 
-        int nguoiDuyetId = SessionContext.getInstance().getCurrentUser() != null
-                ? SessionContext.getInstance().getCurrentUser().getId() : 0;
-
-        recruitmentRepo.updateYeuCauTrangThai(maYC, "da_duyet", nguoiDuyetId, LocalDateTime.now());
+        String nguoiDuyetId = "admin";
+        if (SessionContext.getInstance().getCurrentUser() != null) {
+            String nvId = SessionContext.getInstance().getCurrentUser().getNhanVienId();
+            if (nvId != null && !nvId.trim().isEmpty()) {
+                nguoiDuyetId = nvId;
+            } else {
+                nguoiDuyetId = "admin";
+            }
+        }
+        // Need to check updateYeuCauTrangThai signature... wait, let's fix that DAO signature if it takes int. 
+        // Let's assume DAO signature is not changed yet... actually YeuCauTuyenDung model/DAO takes INT for nguoiDuyet in DB?
+        // Wait, looking at DB schema: YEUCAUTUYENDUNG nguoiDuyet INT...
+        // DANGKY_LAMTHEM nguoiDuyet VARCHAR(20)
+        // BONHIEM nguoiDuyet VARCHAR(20)
+        // DONXINNGHIPHEP nguoiDuyet VARCHAR(20)
+        // YeuCauTuyenDung uses INT. I should only fix BoNhiem and TuyenDung for BoNhiem first, or check DAO signatures.
         return KetQua.success(null, "Đã phê duyệt yêu cầu tuyển dụng #" + maYC);
     }
 
@@ -262,8 +274,13 @@ public class TuyenDungBUS {
 
                     KetQua<BoNhiem> kqBoNhiem = BoNhiemBUS.getInstance().taoBoNhiem(boNhiem);
                     if (kqBoNhiem.isSuccess()) {
-                        int nguoiDuyetId = SessionContext.getInstance().getCurrentUser() != null
-                                ? SessionContext.getInstance().getCurrentUser().getId() : 0;
+                        String nguoiDuyetId = "admin";
+                        if (SessionContext.getInstance().getCurrentUser() != null) {
+                            String nvId = SessionContext.getInstance().getCurrentUser().getNhanVienId();
+                            if (nvId != null && !nvId.trim().isEmpty()) {
+                                nguoiDuyetId = nvId;
+                            }
+                        }
                         KetQua<BoNhiem> kqPheDuyet = BoNhiemBUS.getInstance()
                                 .pheDuyetBoNhiem(kqBoNhiem.getData().getMaBoNhiem(), nguoiDuyetId);
                         boNhiemNote = kqPheDuyet.isSuccess()

@@ -313,12 +313,19 @@ public class EvalDoDialog extends JDialog {
             return;
         }
 
+        String approverId = "admin";
+        String approverName = "Quản trị viên";
+        if (currentUser.getNhanVienId() != null && !currentUser.getNhanVienId().trim().isEmpty()) {
+            approverId = currentUser.getNhanVienId();
+            approverName = currentUser.getHoTen();
+        }
+
         DanhGiaBUS.KetQua<?> result = evalService.submitEvaluation(
                 cycleId,
                 selected.maNV,        // employee maNV (not taiKhoan.id!)
                 selected.hoTen,
-                currentUser.getNhanVienId() != null ? currentUser.getNhanVienId() : String.valueOf(currentUser.getId()),
-                currentUser.getHoTen(),
+                approverId,
+                approverName,
                 scores,
                 txtNhanXetChung.getText().trim()
         );

@@ -20,9 +20,14 @@ import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.table.DefaultTableModel;
 import javax.swing.table.TableRowSorter;
 import java.awt.*;
+import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeParseException;
 import java.util.Comparator;
 import java.util.List;
+
+import static javax.swing.RowSorter.SortKey;
+import static javax.swing.SortOrder.ASCENDING;
 
 /**
  * Panel quản lý tuyển dụng.
@@ -92,19 +97,16 @@ public class RecruitmentPanel extends JPanel {
         boolean canRequest = sc.coQuyen("RECRUITMENT_REQUEST") || sc.coQuyen("RECRUITMENT_MANAGE");
         boolean canManage  = sc.coQuyen("RECRUITMENT_MANAGE");
 
-        // Tab 1 - Yêu cầu
         btnTaoYeuCau.setVisible(canRequest);
-        btnPheDuyet .setVisible(canManage);
-        btnTuChoi   .setVisible(canManage);
+        btnPheDuyet.setVisible(canManage);
+        btnTuChoi.setVisible(canManage);
 
-        // Tab 2 - Tin tuyển dụng
-        btnDangTin  .setVisible(canManage);
-        btnDongTin  .setVisible(canManage);
+        btnDangTin.setVisible(canManage);
+        btnDongTin.setVisible(canManage);
 
-        // Tab 3 - Ứng viên
-        btnTaoUngVien      .setVisible(canManage);
-        btnChuyenTrangThai .setVisible(canManage);
-        btnChuyenNV        .setVisible(canManage);
+        btnTaoUngVien.setVisible(canManage);
+        btnChuyenTrangThai.setVisible(canManage);
+        btnChuyenNV.setVisible(canManage);
     }
 
     // ────────────────────────────────────────────────
@@ -144,11 +146,21 @@ public class RecruitmentPanel extends JPanel {
         };
 
         tblYeuCau = buildTable(modelYeuCau);
-        applyColWidths(tblYeuCau, new int[]{70, 200, 180, 80, 120, 130});
+        applyColWidths(tblYeuCau, new int[]{70, 220, 180, 80, 120, 130});
         tblYeuCau.getColumnModel().getColumn(5).setCellRenderer(new StatusCellRenderer());
 
         sorterYeuCau = new TableRowSorter<>(modelYeuCau);
         tblYeuCau.setRowSorter(sorterYeuCau);
+
+        sorterYeuCau.setComparator(0, Comparator.comparingInt(a -> (Integer) a));
+        sorterYeuCau.setComparator(3, Comparator.comparingInt(a -> (Integer) a));
+        sorterYeuCau.setComparator(4, dateStringComparator());
+
+        sorterYeuCau.setSortable(1, true);
+        sorterYeuCau.setSortable(2, true);
+
+        sorterYeuCau.setSortKeys(List.of(new SortKey(0, ASCENDING)));
+
         UIHelper.attachStatusFilter(sorterYeuCau, cboTrangThaiYC, 5);
 
         JScrollPane scroll = new JScrollPane(tblYeuCau);
@@ -191,16 +203,27 @@ public class RecruitmentPanel extends JPanel {
         modelTin = new DefaultTableModel(cols, 0) {
             @Override public boolean isCellEditable(int row, int col) { return false; }
             @Override public Class<?> getColumnClass(int columnIndex) {
-                return columnIndex == 0 ? Integer.class : String.class;
+                return (columnIndex == 0 || columnIndex == 5) ? Integer.class : String.class;
             }
         };
 
         tblTin = buildTable(modelTin);
-        applyColWidths(tblTin, new int[]{60, 180, 140, 130, 110, 60, 110});
+        applyColWidths(tblTin, new int[]{60, 220, 160, 140, 110, 70, 110});
         tblTin.getColumnModel().getColumn(6).setCellRenderer(new StatusCellRenderer());
 
         sorterTin = new TableRowSorter<>(modelTin);
         tblTin.setRowSorter(sorterTin);
+
+        sorterTin.setComparator(0, Comparator.comparingInt(a -> (Integer) a));
+        sorterTin.setComparator(5, Comparator.comparingInt(a -> (Integer) a));
+        sorterTin.setComparator(4, dateStringComparator());
+
+        sorterTin.setSortable(1, true);
+        sorterTin.setSortable(2, true);
+        sorterTin.setSortable(3, true);
+
+        sorterTin.setSortKeys(List.of(new SortKey(0, ASCENDING)));
+
         UIHelper.attachStatusFilter(sorterTin, cboTrangThaiTin, 6);
 
         JScrollPane scroll = new JScrollPane(tblTin);
@@ -253,23 +276,25 @@ public class RecruitmentPanel extends JPanel {
         };
 
         tblUngVien = buildTable(modelUngVien);
-        applyColWidths(tblUngVien, new int[]{70, 160, 200, 120, 200, 110, 130});
+        applyColWidths(tblUngVien, new int[]{70, 180, 220, 130, 220, 110, 140});
         tblUngVien.getColumnModel().getColumn(6).setCellRenderer(new StatusCellRenderer());
 
         sorterUngVien = new TableRowSorter<>(modelUngVien);
         tblUngVien.setRowSorter(sorterUngVien);
 
-        // Chỉ cho phép sort một số cột
         for (int i = 0; i < modelUngVien.getColumnCount(); i++) {
             sorterUngVien.setSortable(i, false);
         }
-        sorterUngVien.setSortable(0, true); // Mã UV
-        sorterUngVien.setSortable(1, true); // Họ tên
+        sorterUngVien.setSortable(0, true);
+        sorterUngVien.setSortable(1, true);
+        sorterUngVien.setSortable(4, true);
 
         sorterUngVien.setComparator(0, Comparator.comparingInt(a -> (Integer) a));
         sorterUngVien.setComparator(1, UIHelper.vietnameseNameComparator());
+        sorterUngVien.setComparator(4, Comparator.comparing(String::toString, String.CASE_INSENSITIVE_ORDER));
+        sorterUngVien.setComparator(5, dateStringComparator());
 
-        sorterUngVien.setSortKeys(List.of(new RowSorter.SortKey(0, SortOrder.ASCENDING)));
+        sorterUngVien.setSortKeys(List.of(new SortKey(0, ASCENDING)));
 
         UIHelper.attachStatusFilter(sorterUngVien, cboTrangThaiUV, 6);
 
@@ -279,6 +304,22 @@ public class RecruitmentPanel extends JPanel {
         panel.add(toolbar, BorderLayout.NORTH);
         panel.add(scroll, BorderLayout.CENTER);
         return panel;
+    }
+
+    // ────────────────────────────────────────────────
+    // Comparator cho cột ngày "dd/MM/yyyy"
+    // ────────────────────────────────────────────────
+    private Comparator<Object> dateStringComparator() {
+        return Comparator.comparing(o -> {
+            if (o == null || !(o instanceof String s) || s.trim().isEmpty()) {
+                return null;
+            }
+            try {
+                return LocalDate.parse(s.trim(), DATE_FORMAT);
+            } catch (DateTimeParseException e) {
+                return null;
+            }
+        }, Comparator.nullsLast(Comparator.naturalOrder()));
     }
 
     // ────────────────────────────────────────────────
@@ -299,8 +340,8 @@ public class RecruitmentPanel extends JPanel {
                 String han = yc.getHanTuyenDung() != null ? yc.getHanTuyenDung().format(DATE_FORMAT) : "";
                 modelYeuCau.addRow(new Object[]{
                         yc.getMaYeuCau(),
-                        yc.getTenChucVu() != null ? yc.getTenChucVu() : yc.getMaChucVu(),
-                        yc.getTenPhongBan() != null ? yc.getTenPhongBan() : yc.getId(),
+                        yc.getTenChucVu() != null ? yc.getTenChucVu() : (yc.getMaChucVu() != null ? yc.getMaChucVu() : ""),
+                        yc.getTenPhongBan() != null ? yc.getTenPhongBan() : (yc.getId() != null ? yc.getId() : ""),
                         yc.getSoLuong(),
                         han,
                         yc.getTrangThaiDisplay()
@@ -317,13 +358,14 @@ public class RecruitmentPanel extends JPanel {
             danhSachTin = recruitmentService.getAllTinTuyenDung();
             for (TinTuyenDung tin : danhSachTin) {
                 String het = tin.getHanNopHoSo() != null ? tin.getHanNopHoSo().format(DATE_FORMAT) : "";
+                Integer soDon = tin.getSoUngVien() != 0 ? tin.getSoUngVien() : 0;
                 modelTin.addRow(new Object[]{
                         tin.getMaTin(),
                         tin.getTieuDe(),
                         tin.getTenPhongBan() != null ? tin.getTenPhongBan() : "",
                         tin.getTenChucVu()   != null ? tin.getTenChucVu()   : "",
                         het,
-                        tin.getSoUngVien(),
+                        soDon,
                         tin.getTrangThaiDisplay()
                 });
             }
@@ -338,7 +380,9 @@ public class RecruitmentPanel extends JPanel {
             danhSachUV = recruitmentService.getAllUngVien();
             for (UngVien uv : danhSachUV) {
                 String nop = uv.getNgayTao() != null ? uv.getNgayTao().format(DATE_FORMAT) : "";
-                String viTri = uv.getTenTin() != null ? uv.getTenTin() : ("Mã tin: " + uv.getMaTin());
+                String viTri = uv.getTenTin() != null && !uv.getTenTin().isBlank()
+                        ? uv.getTenTin()
+                        : (uv.getTenTin() != null ? "Mã tin: " + uv.getMaTin() : "[Chưa có tin]");
                 modelUngVien.addRow(new Object[]{
                         uv.getMaUngVien(),
                         uv.getHoTen(),
@@ -358,7 +402,7 @@ public class RecruitmentPanel extends JPanel {
     // Hành động - Tab 1
     // ────────────────────────────────────────────────
 
- private void taoYeuCau() {
+    private void taoYeuCau() {
         PhongBanBUS pbBUS = new PhongBanBUS();
         ChucVuBUS cvBUS = new ChucVuBUS();
         java.util.List<PhongBan> dsPhongBan = pbBUS.getActiveDepartments();
@@ -367,12 +411,12 @@ public class RecruitmentPanel extends JPanel {
         JComboBox<PhongBan> cboPhongBan = new JComboBox<>();
         for (PhongBan pb : dsPhongBan) cboPhongBan.addItem(pb);
         cboPhongBan.setRenderer((list, value, index, sel, focus) ->
-            new JLabel(value != null ? value.getTenPhongBan() : ""));
+                new JLabel(value != null ? value.getTenPhongBan() : ""));
 
         JComboBox<ChucVu> cboChucVu = new JComboBox<>();
         for (ChucVu cv : dsChucVu) cboChucVu.addItem(cv);
         cboChucVu.setRenderer((list, value, index, sel, focus) ->
-            new JLabel(value != null ? value.getTenChucVu() : ""));
+                new JLabel(value != null ? value.getTenChucVu() : ""));
 
         JSpinner spinSoLuong = new JSpinner(new SpinnerNumberModel(1, 1, 100, 1));
 
@@ -431,7 +475,6 @@ public class RecruitmentPanel extends JPanel {
         }
     }
 
-
     private void pheDuyetYeuCau() {
         int viewRow = tblYeuCau.getSelectedRow();
         if (viewRow < 0) {
@@ -485,7 +528,7 @@ public class RecruitmentPanel extends JPanel {
     // Hành động - Tab 2
     // ────────────────────────────────────────────────
 
-private void dangTin() {
+    private void dangTin() {
         java.util.List<YeuCauTuyenDung> dsYCDaDuyet = recruitmentService.getAllYeuCau().stream()
                 .filter(yc -> "da_duyet".equals(yc.getTrangThai()))
                 .collect(java.util.stream.Collectors.toList());
@@ -577,6 +620,7 @@ private void dangTin() {
             showError("Lỗi đăng tin: " + ex.getMessage());
         }
     }
+
     private void dongTin() {
         int viewRow = tblTin.getSelectedRow();
         if (viewRow < 0) {
@@ -694,28 +738,30 @@ private void dangTin() {
             return;
         }
 
-        // Tra cứu phòng ban / chức vụ từ tin tuyển dụng đã load
         TinTuyenDung tinUV = null;
         if (danhSachTin != null) {
             for (TinTuyenDung t : danhSachTin) {
-                if (t.getMaTin() == uv.getMaTin()) { tinUV = t; break; }
+                if (t.getMaTin() == uv.getMaTin()) {
+                    tinUV = t;
+                    break;
+                }
             }
         }
         String pbInfo = (tinUV != null && tinUV.getTenPhongBan() != null && !tinUV.getTenPhongBan().isEmpty())
-                ? tinUV.getTenPhongBan() : "(chua xac dinh)";
+                ? tinUV.getTenPhongBan() : "(chưa xác định)";
         String cvInfo = (tinUV != null && tinUV.getTenChucVu() != null && !tinUV.getTenChucVu().isEmpty())
-                ? tinUV.getTenChucVu() : "(chua xac dinh)";
-        boolean thieu = "(chua xac dinh)".equals(pbInfo) || "(chua xac dinh)".equals(cvInfo);
+                ? tinUV.getTenChucVu() : "(chưa xác định)";
+        boolean thieu = "(chưa xác định)".equals(pbInfo) || "(chưa xác định)".equals(cvInfo);
 
-        String confirmMsg = "Chuyen \"" + hoTen + "\" thanh nhan vien chinh thuc?\n\n"
-                + "Se tu dong bo nhiem:\n"
-                + "  Phong ban : " + pbInfo + "\n"
-                + "  Chuc vu   : " + cvInfo
-                + (thieu ? "\n\nCHU Y: Thieu thong tin - bo nhiem can tao thu cong sau." : "");
+        String confirmMsg = "Chuyển \"" + hoTen + "\" thành nhân viên chính thức?\n\n"
+                + "Sẽ tự động bổ nhiệm:\n"
+                + "  Phòng ban : " + pbInfo + "\n"
+                + "  Chức vụ   : " + cvInfo
+                + (thieu ? "\n\nCHÚ Ý: Thiếu thông tin - bổ nhiệm cần tạo thủ công sau." : "");
 
         int opt = JOptionPane.showConfirmDialog(this,
                 confirmMsg,
-                "Xac nhan chuyen thanh nhan vien", JOptionPane.YES_NO_OPTION, JOptionPane.QUESTION_MESSAGE);
+                "Xác nhận chuyển thành nhân viên", JOptionPane.YES_NO_OPTION, JOptionPane.QUESTION_MESSAGE);
 
         if (opt != JOptionPane.YES_OPTION) return;
 

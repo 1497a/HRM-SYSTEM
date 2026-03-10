@@ -171,11 +171,18 @@ public class LeaveApproveDialog extends JDialog {
             return;
         }
 
+        String approverId = "admin";
+        String approverName = "Quản trị viên";
+        if (currentUser.getNhanVienId() != null && !currentUser.getNhanVienId().trim().isEmpty()) {
+            approverId = currentUser.getNhanVienId();
+            approverName = currentUser.getHoTen();
+        }
+
         NghiPhepBUS.KetQua<?> result = leaveService.processRequest(
                 requestId,
                 approve,
-                currentUser.getNhanVienId(),
-                currentUser.getHoTen(),
+                approverId,
+                approverName,
                 note);
 
         if (result.isSuccess()) {
