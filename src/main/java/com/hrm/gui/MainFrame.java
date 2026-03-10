@@ -18,7 +18,7 @@ import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 
 import com.hrm.gui.attendance.AttendancePanel;
-
+import com.hrm.gui.payroll.ContractAndSalaryPanel;
 /**
  * MainFrame - Main application frame with purple theme
  * Features header, sidebar navigation, and dynamic content area
@@ -372,9 +372,8 @@ public class MainFrame extends JFrame {
         
         // Cham cong & Luong
         btnAttendance.addActionListener(e -> showAttendance());
-        btnContracts.addActionListener(e -> showPlaceholder("Hop dong lao dong"));
-        btnPayroll.addActionListener(e -> showPlaceholder("Tinh luong"));
-        
+        btnContracts.addActionListener(e -> showContractAndSalary(btnContracts, 0));
+        btnPayroll.addActionListener(e -> showContractAndSalary(btnPayroll, 1));
         // Chinh sach
         btnLeave.addActionListener(e -> showLeaveManagement());
         btnPerformance.addActionListener(e -> showPerformanceEvaluation());
@@ -712,7 +711,22 @@ public class MainFrame extends JFrame {
         contentPanel.revalidate();
         contentPanel.repaint();
     }
+    private void showContractAndSalary(JButton sourceButton, int tabIndex) {
+        setActiveButton(sourceButton);
+        contentPanel.removeAll();
 
+        JPanel wrapperPanel = new JPanel(new BorderLayout());
+        wrapperPanel.setBackground(UIColors.LIGHT_GRAY_BG);
+        wrapperPanel.setBorder(new EmptyBorder(15, 15, 15, 15));
+
+        ContractAndSalaryPanel payrollPanel = new ContractAndSalaryPanel();
+        payrollPanel.selectTab(tabIndex); 
+        wrapperPanel.add(payrollPanel, BorderLayout.CENTER);
+
+        contentPanel.add(wrapperPanel);
+        contentPanel.revalidate();
+        contentPanel.repaint();
+    }
     private void logout() {
         int confirm = JOptionPane.showConfirmDialog(this,
             "Ban co chac muon dang xuat?",
