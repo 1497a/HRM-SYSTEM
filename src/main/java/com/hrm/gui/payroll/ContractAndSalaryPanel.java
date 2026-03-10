@@ -16,7 +16,6 @@ public class ContractAndSalaryPanel extends JPanel {
     private JTable tableContract, tableSalary;
     private JTabbedPane tabbedPane;
     
-    // Khai báo 2 Service để kéo dữ liệu từ Database lên
     private HopDongService hopDongService = new HopDongService();
     private ChiTietLuongService chiTietLuongService = new ChiTietLuongService();
 
@@ -24,13 +23,11 @@ public class ContractAndSalaryPanel extends JPanel {
         setLayout(new BorderLayout());
         setBackground(Color.WHITE);
 
-        // Tiêu đề
         JLabel lblTitle = new JLabel("QUẢN LÝ HỢP ĐỒNG & LƯƠNG");
         lblTitle.setFont(new Font("Segoe UI", Font.BOLD, 20));
         lblTitle.setBorder(new EmptyBorder(15, 20, 15, 20));
         add(lblTitle, BorderLayout.NORTH);
 
-        // TabbedPane
         tabbedPane = new JTabbedPane();
         tabbedPane.setFont(new Font("Segoe UI", Font.PLAIN, 14));
         tabbedPane.addTab("Hợp đồng lao động", createContractTab());
@@ -47,11 +44,9 @@ public class ContractAndSalaryPanel extends JPanel {
         JButton btnAdd = new JButton("Thêm Hợp đồng");
         toolbar.add(btnAdd);
 
-        // Các cột của bảng Hợp đồng
         String[] cols = {"Mã HĐ", "Mã NV", "Loại HĐ", "Lương cơ sở", "Ngày hiệu lực", "Trạng thái"};
         DefaultTableModel model = new DefaultTableModel(cols, 0); 
         
-        // --- GỌI DỮ LIỆU THẬT TỪ DATABASE ---
         try {
             List<HopDong> dsHopDong = hopDongService.getAllHopDong();
             for (HopDong hd : dsHopDong) {
@@ -59,7 +54,7 @@ public class ContractAndSalaryPanel extends JPanel {
                     hd.getMaHopDong(),
                     hd.getMaNV(),
                     hd.getLoaiHopDong(),
-                    String.format("%,.0f VNĐ", hd.getLuongCoSo()), // Định dạng có dấu phẩy
+                    String.format("%,.0f VNĐ", hd.getLuongCoSo()),
                     hd.getNgayHieuLuc(),
                     hd.getTrangThai()
                 });
@@ -74,8 +69,13 @@ public class ContractAndSalaryPanel extends JPanel {
         panel.add(toolbar, BorderLayout.NORTH);
         panel.add(new JScrollPane(tableContract), BorderLayout.CENTER);
 
+        // Nút thêm gọi ContractDialog và truyền hàm reload lại tab
         btnAdd.addActionListener(e -> {
-            ContractDialog dialog = new ContractDialog((JFrame) SwingUtilities.getWindowAncestor(this));
+            ContractDialog dialog = new ContractDialog(SwingUtilities.getWindowAncestor(this), () -> {
+                int selectedIndex = tabbedPane.getSelectedIndex();
+                tabbedPane.setComponentAt(0, createContractTab());
+                tabbedPane.setSelectedIndex(selectedIndex);
+            });
             dialog.setVisible(true);
         });
 
@@ -90,21 +90,19 @@ public class ContractAndSalaryPanel extends JPanel {
         JButton btnViewDetail = new JButton("Xem phiếu lương chi tiết");
         toolbar.add(btnViewDetail);
 
-        // Các cột của bảng Lương
         String[] cols = {"Mã NV", "Lương cơ sở", "Tổng thu nhập", "Tổng khấu trừ", "Thực lãnh", "Trạng thái"};
         DefaultTableModel model = new DefaultTableModel(cols, 0);
 
-        // --- LẤY DỮ LIỆU THẬT TỪ DATABASE ---
         try {
             List<ChiTietLuong> dsLuong = chiTietLuongService.getAllSalaryDetails();
             for (ChiTietLuong c : dsLuong) {
                 model.addRow(new Object[]{
-                    c.getTenNV(), // Lấy mã nhân viên (như NV001)
+                    c.getTenNV(),
                     String.format("%,.0f VNĐ", c.getLuongCoBan()),
                     String.format("%,.0f VNĐ", c.getTongLuong()),
                     String.format("%,.0f VNĐ", c.getTongKhauTru()),
                     String.format("%,.0f VNĐ", c.getLuongThucNhan()),
-                    c.getTrangThai() != null ? c.getTrangThai().getDisplayName() : "Chưa rõ" // Lấy tên trạng thái từ Enum
+                    c.getTrangThai() != null ? c.getTrangThai().getDisplayName() : "Chưa rõ"
                 });
             }
         } catch (Exception e) {
@@ -130,7 +128,6 @@ public class ContractAndSalaryPanel extends JPanel {
         return panel;
     }
 
-    // Hàm hỗ trợ chọn tab từ các nút bấm ở MainFrame
     public void selectTab(int index) {
         if (tabbedPane != null && index >= 0 && index < tabbedPane.getTabCount()) {
             tabbedPane.setSelectedIndex(index);

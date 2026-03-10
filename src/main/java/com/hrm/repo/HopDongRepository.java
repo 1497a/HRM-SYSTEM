@@ -8,10 +8,8 @@ import java.util.List;
 
 public class HopDongRepository {
     
-    // Hàm lấy danh sách tất cả hợp đồng
     public List<HopDong> getAllHopDong() {
         List<HopDong> list = new ArrayList<>();
-        // Tên cột SQL phải khớp với bảng HOPDONGLAODONG của bạn
         String sql = "SELECT maHopDong, maNV, loaiHopDong, luongCoSo, ngayHieuLuc, trangThai FROM HOPDONGLAODONG";
         
         try (Connection conn = DatabaseConnection.getConnection();
@@ -33,5 +31,27 @@ public class HopDongRepository {
             e.printStackTrace();
         }
         return list;
+    }
+
+    public boolean insertHopDong(String soHopDong, String maNhanVien, String loaiHopDong, double luongCoSo, java.sql.Date ngayHieuLuc) {
+        String sql = "INSERT INTO HOPDONGLAODONG (soHopDong, maNV, loaiHopDong, luongCoSo, ngayKy, ngayHieuLuc, trangThai) " +
+                     "VALUES (?, (SELECT maNV FROM NHANVIEN WHERE maNhanVien = ?), ?, ?, ?, ?, 'hieu_luc')";
+        
+        try (Connection conn = DatabaseConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+             
+            ps.setString(1, soHopDong);
+            ps.setString(2, maNhanVien);
+            ps.setString(3, loaiHopDong);
+            ps.setDouble(4, luongCoSo);
+            ps.setDate(5, new java.sql.Date(System.currentTimeMillis())); // Lấy ngày hôm nay làm ngày ký
+            ps.setDate(6, ngayHieuLuc);
+            
+            int rowsAffected = ps.executeUpdate();
+            return rowsAffected > 0;
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return false;
+        }
     }
 }
