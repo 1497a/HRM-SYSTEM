@@ -1,43 +1,44 @@
 package com.hrm.gui.payroll;
 
+import com.hrm.repo.ChiTietLuongRepository;
 import javax.swing.*;
 import javax.swing.table.DefaultTableModel;
 import java.awt.*;
+import java.util.List;
 
 public class PayslipDialog extends JDialog {
+    private ChiTietLuongRepository repo = new ChiTietLuongRepository();
 
-    public PayslipDialog(JFrame parent) {
+    public PayslipDialog(Frame parent, String maNV, int maBangLuong, String tenKy, String thucLanh) {
         super(parent, "Chi tiết Phiếu Lương", true);
-        setSize(500, 400);
+        setSize(500, 450);
         setLocationRelativeTo(parent);
         setLayout(new BorderLayout());
 
-        // Thông tin chung
-        JPanel infoPanel = new JPanel(new GridLayout(2, 1));
-        infoPanel.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
-        infoPanel.add(new JLabel("Mã NV: NV001 | Họ tên: Nguyễn Văn A (Mock)"));
-        infoPanel.add(new JLabel("Kỳ lương: Tháng 3 / 2026 | Lương thực lãnh: 15,500,000 VNĐ"));
-        add(infoPanel, BorderLayout.NORTH);
+        JPanel header = new JPanel(new GridLayout(2, 1));
+        header.setBorder(BorderFactory.createEmptyBorder(15, 15, 15, 15));
+        header.add(new JLabel("Mã Nhân Viên: " + maNV));
+        header.add(new JLabel("Kỳ lương: " + tenKy + " | Thực lãnh: " + thucLanh));
+        add(header, BorderLayout.NORTH);
 
-        // Bảng chi tiết các khoản
         String[] cols = {"Loại", "Tên khoản", "Số tiền (VNĐ)"};
-        Object[][] data = {
-            {"Thu nhập", "Lương cơ bản", "15,000,000"},
-            {"Thu nhập", "Phụ cấp trách nhiệm", "1,500,000"},
-            {"Thu nhập", "Tiền OT", "500,000"},
-            {"Khấu trừ", "Bảo hiểm XH (8%)", "- 1,200,000"},
-            {"Khấu trừ", "Thuế TNCN", "- 300,000"}
-        };
-        JTable tableDetail = new JTable(new DefaultTableModel(data, cols));
-        tableDetail.setRowHeight(25);
+        DefaultTableModel model = new DefaultTableModel(cols, 0);
         
-        add(new JScrollPane(tableDetail), BorderLayout.CENTER);
+        // Kéo dữ liệu thật từ bảng THANHPHANLUONG [cite: 171]
+        List<String[]> list = repo.getThanhPhanLuong(maNV, maBangLuong);
+        for (String[] row : list) {
+            String loai = row[0].equals("thu_nhap") ? "Thu nhập" : "Khấu trừ";
+            double tien = Double.parseDouble(row[2]);
+            model.addRow(new Object[]{ loai, row[1], String.format("%,.0f", tien) });
+        }
 
-        // Nút đóng
-        JPanel bottomPanel = new JPanel();
+        JTable table = new JTable(model);
+        add(new JScrollPane(table), BorderLayout.CENTER);
+
         JButton btnClose = new JButton("Đóng");
         btnClose.addActionListener(e -> dispose());
-        bottomPanel.add(btnClose);
-        add(bottomPanel, BorderLayout.SOUTH);
+        JPanel footer = new JPanel();
+        footer.add(btnClose);
+        add(footer, BorderLayout.SOUTH);
     }
 }

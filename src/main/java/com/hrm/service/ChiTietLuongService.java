@@ -11,7 +11,19 @@ public class ChiTietLuongService {
         this.repo = new ChiTietLuongRepository();
     }
 
-    public List<ChiTietLuong> getAllSalaryDetails() {
-        return repo.getAllSalaryDetails();
+    public List<String[]> getDanhSachKyLuong() {
+        return repo.getDanhSachKyLuong();
+    }
+
+    public List<ChiTietLuong> getSalaryDetailsByBangLuong(int maBangLuong) {
+        return repo.getSalaryDetailsByBangLuong(maBangLuong);
+    }
+
+    public boolean tinhLuong(int maBangLuong) {
+        return repo.tinhLuong(maBangLuong);
+    }
+
+    public boolean khoaBangLuong(int maBangLuong) {
+        return repo.khoaBangLuong(maBangLuong);
     }
 }
