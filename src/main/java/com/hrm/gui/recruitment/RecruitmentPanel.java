@@ -79,7 +79,7 @@ public class RecruitmentPanel extends JPanel {
         setBackground(UIColors.LIGHT_GRAY_BG);
 
         JTabbedPane tabbedPane = new JTabbedPane();
-        tabbedPane.setFont(new Font("Segoe UI", Font.PLAIN, 14));
+        tabbedPane.setFont(com.hrm.util.UIFonts.TEXT_MEDIUM);
         tabbedPane.setBackground(UIColors.WHITE);
 
         tabbedPane.addTab("Yêu cầu tuyển dụng", buildYeuCauTab());
@@ -428,7 +428,7 @@ public class RecruitmentPanel extends JPanel {
         spinHan.setEditor(new JSpinner.DateEditor(spinHan, "dd/MM/yyyy"));
 
         JTextField txtLyDo = new JTextField(20);
-        txtLyDo.setFont(new Font("Segoe UI", Font.PLAIN, 13));
+        txtLyDo.setFont(com.hrm.util.UIFonts.TEXT_NORMAL);
 
         JPanel form = new JPanel(new GridLayout(5, 2, 8, 8));
         form.add(new JLabel("Phòng ban (*):")); form.add(cboPhongBan);
@@ -541,7 +541,7 @@ public class RecruitmentPanel extends JPanel {
         }
 
         JTextField txtTieuDe = new JTextField(25);
-        txtTieuDe.setFont(new Font("Segoe UI", Font.PLAIN, 14));
+        txtTieuDe.setFont(com.hrm.util.UIFonts.TEXT_MEDIUM);
 
         JComboBox<YeuCauTuyenDung> cboYeuCau = new JComboBox<>();
         for (YeuCauTuyenDung yc : dsYCDaDuyet) cboYeuCau.addItem(yc);
@@ -553,10 +553,10 @@ public class RecruitmentPanel extends JPanel {
         });
 
         JTextField txtMucLuong = new JTextField(20);
-        txtMucLuong.setFont(new Font("Segoe UI", Font.PLAIN, 14));
+        txtMucLuong.setFont(com.hrm.util.UIFonts.TEXT_MEDIUM);
 
         JTextField txtDiaDiem = new JTextField(20);
-        txtDiaDiem.setFont(new Font("Segoe UI", Font.PLAIN, 14));
+        txtDiaDiem.setFont(com.hrm.util.UIFonts.TEXT_MEDIUM);
 
         SpinnerDateModel dateModel = new SpinnerDateModel(
                 java.util.Date.from(java.time.LocalDate.now().plusMonths(1)
@@ -687,7 +687,7 @@ public class RecruitmentPanel extends JPanel {
         String[] labels = {"Mới", "Đang phỏng vấn", "Trúng tuyển", "Từ chối"};
 
         JComboBox<String> cbo = new JComboBox<>(labels);
-        cbo.setFont(new Font("Segoe UI", Font.PLAIN, 14));
+        cbo.setFont(com.hrm.util.UIFonts.TEXT_MEDIUM);
 
         int opt = JOptionPane.showConfirmDialog(this,
                 new Object[]{"Trạng thái mới:", cbo},
@@ -795,8 +795,8 @@ public class RecruitmentPanel extends JPanel {
     private JTable buildTable(DefaultTableModel model) {
         JTable t = new JTable(model);
         t.setRowHeight(28);
-        t.setFont(new Font("Segoe UI", Font.PLAIN, 13));
-        t.getTableHeader().setFont(new Font("Segoe UI", Font.BOLD, 13));
+        t.setFont(com.hrm.util.UIFonts.TEXT_NORMAL);
+        t.getTableHeader().setFont(com.hrm.util.UIFonts.BOLD_NORMAL);
         t.getTableHeader().setBackground(UIColors.PRIMARY_PURPLE);
         t.getTableHeader().setForeground(UIColors.TEXT_DARK);
         t.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
@@ -835,7 +835,7 @@ public class RecruitmentPanel extends JPanel {
                 } else {
                     c.setForeground(UIColors.INFO_BLUE);
                 }
-                ((JLabel) c).setFont(new Font("Segoe UI", Font.BOLD, 12));
+                ((JLabel) c).setFont(com.hrm.util.UIFonts.BOLD_SMALL);
             }
             return c;
         }

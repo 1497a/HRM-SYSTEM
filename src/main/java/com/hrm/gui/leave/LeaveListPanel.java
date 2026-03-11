@@ -26,6 +26,7 @@ public class LeaveListPanel extends JPanel {
     private final NghiPhepBUS leaveService;
     private final TaiKhoan currentUser;
     private final boolean isManager;
+    private final boolean canApprove;
 
     private JTable table;
     private DefaultTableModel tableModel;
@@ -42,10 +43,12 @@ public class LeaveListPanel extends JPanel {
     public LeaveListPanel() {
         this.leaveService = NghiPhepBUS.getInstance();
         this.currentUser = SessionContext.getInstance().getCurrentUser();
-        com.hrm.model.DataScope leaveScope = com.hrm.bus.XacThucBUS.getInstance().getScopeForAction("LEAVE_VIEW");
-        this.isManager = leaveScope == com.hrm.model.DataScope.ALL
-                      || leaveScope == com.hrm.model.DataScope.DEPT
-                      || leaveScope == com.hrm.model.DataScope.TEAM;
+        com.hrm.bus.XacThucBUS authBus = com.hrm.bus.XacThucBUS.getInstance();
+        com.hrm.model.DataScope leaveViewScope = authBus.getScopeForAction("LEAVE_VIEW");
+        com.hrm.model.DataScope leaveApproveScope = authBus.getScopeForAction("LEAVE_APPROVE");
+        this.isManager = leaveViewScope != com.hrm.model.DataScope.NONE
+                      && leaveViewScope != com.hrm.model.DataScope.SELF;
+        this.canApprove = leaveApproveScope != com.hrm.model.DataScope.NONE;
 
         initComponents();
         setupLayout();
@@ -91,7 +94,7 @@ public class LeaveListPanel extends JPanel {
         btnCreate.addActionListener(e -> createRequest());
 
         btnApprove = UIHelper.createPrimaryButton("Xu ly don");
-        btnApprove.setEnabled(isManager);
+        btnApprove.setEnabled(canApprove);
         btnApprove.addActionListener(e -> approveRequest());
 
         // Table
@@ -176,7 +179,7 @@ public class LeaveListPanel extends JPanel {
 
         JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT, 10, 0));
         buttonPanel.add(btnCreate);
-        if (isManager) {
+        if (canApprove) {
             buttonPanel.add(btnApprove);
         }
 
@@ -235,7 +238,7 @@ public class LeaveListPanel extends JPanel {
         for (SoDungPhep balance : balances) {
             JLabel lbl = new JLabel(getLeaveTypeName(balance.getLeaveTypeCode()) +
                     ": " + balance.getRemainingDays() + "/" + balance.getTotalDays() + " ngay");
-            lbl.setFont(new Font("Segoe UI", Font.BOLD, 12));
+            lbl.setFont(com.hrm.util.UIFonts.BOLD_SMALL);
             if (balance.getRemainingDays() <= 3) {
                 lbl.setForeground(Color.RED);
             }

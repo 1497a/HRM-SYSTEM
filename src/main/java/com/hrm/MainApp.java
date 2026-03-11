@@ -10,6 +10,8 @@ public class MainApp {
         // Set Look and Feel
         try {
             UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
+            UIManager.put("TitledBorder.titleColor", com.hrm.util.UIColors.TEXT_DARK);
+            UIManager.put("TabbedPane.foreground", com.hrm.util.UIColors.TEXT_DARK);
         } catch (Exception e) {
             e.printStackTrace();
         }

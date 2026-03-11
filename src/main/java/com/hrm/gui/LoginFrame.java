@@ -42,7 +42,7 @@ public class LoginFrame extends JFrame {
 
         // Username field
         txtUsername = new JTextField(20);
-        txtUsername.setFont(new Font("Segoe UI", Font.PLAIN, 14));
+        txtUsername.setFont(com.hrm.util.UIFonts.TEXT_MEDIUM);
         txtUsername.setBorder(BorderFactory.createCompoundBorder(
                 BorderFactory.createMatteBorder(0, 0, 2, 0, UIColors.BORDER_GRAY),
                 BorderFactory.createEmptyBorder(8, 5, 8, 5)));
@@ -50,7 +50,7 @@ public class LoginFrame extends JFrame {
 
         // Password field
         txtPassword = new JPasswordField(20);
-        txtPassword.setFont(new Font("Segoe UI", Font.PLAIN, 14));
+        txtPassword.setFont(com.hrm.util.UIFonts.TEXT_MEDIUM);
         txtPassword.setBorder(BorderFactory.createCompoundBorder(
                 BorderFactory.createMatteBorder(0, 0, 2, 0, UIColors.BORDER_GRAY),
                 BorderFactory.createEmptyBorder(8, 5, 8, 5)));
@@ -62,7 +62,7 @@ public class LoginFrame extends JFrame {
 
         // Show password checkbox
         chkShowPassword = new JCheckBox("Hien thi mat khau");
-        chkShowPassword.setFont(new Font("Segoe UI", Font.PLAIN, 12));
+        chkShowPassword.setFont(com.hrm.util.UIFonts.TEXT_SMALL);
         chkShowPassword.setForeground(UIColors.TEXT_GRAY);
         chkShowPassword.setOpaque(false);
         chkShowPassword.setFocusPainted(false);
@@ -70,7 +70,7 @@ public class LoginFrame extends JFrame {
         // Error label
         lblError = new JLabel(" ");
         lblError.setForeground(UIColors.DANGER_RED);
-        lblError.setFont(new Font("Segoe UI", Font.PLAIN, 12));
+        lblError.setFont(com.hrm.util.UIFonts.TEXT_SMALL);
         lblError.setHorizontalAlignment(SwingConstants.CENTER);
     }
 
@@ -91,7 +91,7 @@ public class LoginFrame extends JFrame {
         welcomeContent.setBorder(new EmptyBorder(0, 50, 0, 50));
 
         JLabel lblWelcome = new JLabel("WELCOME");
-        lblWelcome.setFont(new Font("Segoe UI", Font.BOLD, 42));
+        lblWelcome.setFont(com.hrm.util.UIFonts.DISPLAY_LARGE);
         lblWelcome.setForeground(Color.WHITE);
         lblWelcome.setAlignmentX(Component.LEFT_ALIGNMENT);
 
@@ -128,13 +128,13 @@ public class LoginFrame extends JFrame {
 
         // Login title
         JLabel lblTitle = new JLabel("LOGIN");
-        lblTitle.setFont(new Font("Segoe UI", Font.BOLD, 32));
+        lblTitle.setFont(com.hrm.util.UIFonts.DISPLAY_TITLE);
         lblTitle.setForeground(UIColors.TEXT_DARK);
         lblTitle.setAlignmentX(Component.LEFT_ALIGNMENT);
 
         // Username section
         JLabel lblUsername = new JLabel("Ten dang nhap");
-        lblUsername.setFont(new Font("Segoe UI", Font.PLAIN, 13));
+        lblUsername.setFont(com.hrm.util.UIFonts.TEXT_NORMAL);
         lblUsername.setForeground(UIColors.TEXT_LIGHT_GRAY);
         lblUsername.setAlignmentX(Component.LEFT_ALIGNMENT);
 
@@ -143,7 +143,7 @@ public class LoginFrame extends JFrame {
 
         // Password section
         JLabel lblPassword = new JLabel("Mat khau");
-        lblPassword.setFont(new Font("Segoe UI", Font.PLAIN, 13));
+        lblPassword.setFont(com.hrm.util.UIFonts.TEXT_NORMAL);
         lblPassword.setForeground(UIColors.TEXT_LIGHT_GRAY);
         lblPassword.setAlignmentX(Component.LEFT_ALIGNMENT);
 
@@ -303,6 +303,8 @@ public class LoginFrame extends JFrame {
     public static void main(String[] args) {
         try {
             UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
+            UIManager.put("TitledBorder.titleColor", UIColors.TEXT_DARK);
+            UIManager.put("TabbedPane.foreground", UIColors.TEXT_DARK);
         } catch (Exception ex) {
             ex.printStackTrace();
         }

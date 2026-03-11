@@ -14,13 +14,6 @@ import java.util.regex.Pattern;
  */
 public class UIHelper {
 
-    // Color constants
-    public static final Color PRIMARY_COLOR = new Color(0, 102, 153);
-    public static final Color SUCCESS_COLOR = new Color(46, 164, 79);
-    public static final Color DANGER_COLOR = new Color(192, 57, 43);
-    public static final Color WARNING_COLOR = new Color(230, 126, 34);
-    public static final Color INFO_COLOR = new Color(52, 152, 219);
-
     /**
      * Create a styled button with proper colors that work with all Look and Feels
      */
@@ -42,21 +35,21 @@ public class UIHelper {
      * Create a success button (green)
      */
     public static JButton createSuccessButton(String text) {
-        return createStyledButton(text, SUCCESS_COLOR, Color.WHITE);
+        return createStyledButton(text, UIColors.SUCCESS_GREEN, Color.WHITE);
     }
 
     /**
      * Create a danger button (red)
      */
     public static JButton createDangerButton(String text) {
-        return createStyledButton(text, DANGER_COLOR, Color.WHITE);
+        return createStyledButton(text, UIColors.DANGER_RED, Color.WHITE);
     }
 
     /**
      * Create a warning button (orange)
      */
     public static JButton createWarningButton(String text) {
-        return createStyledButton(text, WARNING_COLOR, Color.WHITE);
+        return createStyledButton(text, UIColors.WARNING_YELLOW, Color.WHITE);
     }
 
     /**

@@ -4,7 +4,7 @@ import com.hrm.model.*;
 import com.hrm.bus.ChamCongBUS;
 import com.hrm.bus.KetQua;
 import com.hrm.bus.LuongBUS;
-import com.hrm.bus.NhanVienBUS;
+import com.hrm.bus.XacThucBUS;
 import com.hrm.dao.ChamCongDAO;
 import com.hrm.util.SessionContext;
 import com.hrm.util.UIColors;
@@ -22,8 +22,6 @@ import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.Locale;
-import java.util.Set;
-import java.util.stream.Collectors;
 
 public class AttendancePanel extends JPanel {
 
@@ -31,7 +29,10 @@ public class AttendancePanel extends JPanel {
     private final LuongBUS luongSvc;
     private final TaiKhoan currentUser;
     private final boolean canManage;   // ATTENDANCE_MANAGE
-    private final boolean canViewTeam; // ATTENDANCE_VIEW_ALL | DEPT | TEAM
+    private final boolean canManageAll;  // ATTENDANCE_MANAGE scope=ALL
+    private final boolean canViewTeam; // ATTENDANCE_VIEW with TEAM/DEPT/ALL scope
+    private final DataScope attendanceScope;
+    private final DataScope attendanceManageScope;
     private String maNVCaNhan = null;
     private final NumberFormat moneyFmt;
 
@@ -86,10 +87,15 @@ public class AttendancePanel extends JPanel {
         luongSvc = LuongBUS.getInstance();
         currentUser = SessionContext.getInstance().getCurrentUser();
         SessionContext sc = SessionContext.getInstance();
+        attendanceScope = XacThucBUS.getInstance().getScopeForAction("ATTENDANCE_VIEW");
         canManage   = sc.hasPermission("ATTENDANCE_MANAGE");
-        canViewTeam = sc.hasPermission("ATTENDANCE_VIEW_ALL")
-                   || sc.hasPermission("ATTENDANCE_VIEW_DEPT")
-                   || sc.hasPermission("ATTENDANCE_VIEW_TEAM");
+        attendanceManageScope = canManage
+            ? XacThucBUS.getInstance().getScopeForAction("ATTENDANCE_MANAGE")
+            : DataScope.NONE;
+        canManageAll = canManage && (attendanceManageScope == DataScope.ALL);
+        canViewTeam = attendanceScope == DataScope.ALL
+                   || attendanceScope == DataScope.DEPT
+                   || attendanceScope == DataScope.TEAM;
         if (currentUser != null) {
             maNVCaNhan = ChamCongDAO.getInstance()
                 .getMaNVByTaiKhoan(currentUser.getId());
@@ -101,13 +107,13 @@ public class AttendancePanel extends JPanel {
 
     private void initTabs() {
         tabbedPane = new JTabbedPane();
-        tabbedPane.setFont(new Font("Segoe UI", Font.PLAIN, 14));
+        tabbedPane.setFont(com.hrm.util.UIFonts.TEXT_MEDIUM);
         tabbedPane.setBackground(UIColors.WHITE);
         if (canManage) {
             tabbedPane.addTab("Tong hop cham cong", tabTongHop());
-            tabbedPane.addTab("Quan ly ca lam", tabCaLam());
+            if (canManageAll) tabbedPane.addTab("Quan ly ca lam", tabCaLam());
             tabbedPane.addTab("Duyet don OT", tabDuyetOT());
-            tabbedPane.addTab("Phu cap & Khau tru", tabPhuCap());
+            if (canManageAll) tabbedPane.addTab("Phu cap & Khau tru", tabPhuCap());
             tabbedPane.addTab("Bang luong", tabBangLuong());
             if (maNVCaNhan != null) {
                 tabbedPane.addTab("Cham cong ca nhan", tabCaNhan());
@@ -126,7 +132,7 @@ public class AttendancePanel extends JPanel {
             } else {
                 JPanel p = new JPanel(new GridBagLayout()); p.setBackground(UIColors.WHITE);
                 JLabel l = new JLabel("Tai khoan chua lien ket voi nhan vien. Vui long lien he quan tri vien.");
-                l.setFont(new Font("Segoe UI", Font.PLAIN, 14)); l.setForeground(UIColors.TEXT_GRAY);
+                l.setFont(com.hrm.util.UIFonts.TEXT_MEDIUM); l.setForeground(UIColors.TEXT_GRAY);
                 p.add(l);
                 tabbedPane.addTab("Thong bao", p);
             }
@@ -156,24 +162,16 @@ public class AttendancePanel extends JPanel {
         p.add(statsPanel,BorderLayout.SOUTH); loadCC(); return p;
     }
 
-    /** Tra ve tap hop maNV duoc phep xem, null = tat ca (canManage). */
-    private Set<String> visibleMaNVSet() {
-        if (canManage) return null;
-        List<NhanVien> ds = NhanVienBUS.getInstance()
-            .getAllByActionScope("ATTENDANCE_VIEW", maNVCaNhan);
-        return ds.stream().map(NhanVien::getMaNhanVien).collect(Collectors.toSet());
-    }
-
     private void loadCC() {
         modelCC.setRowCount(0);
         int th = Integer.parseInt((String) cboThang.getSelectedItem());
         int nm = Integer.parseInt((String) cboNam.getSelectedItem());
-        List<ChamCong> ds = svc.getChamCongTheoThang(th, nm);
-        Set<String> allowed = visibleMaNVSet();
+        List<ChamCong> ds = canManageAll
+            ? svc.getChamCongTatCaTheoThang(th, nm)
+            : svc.getChamCongTatCaTheoThangByScope(th, nm, maNVCaNhan);
         DateTimeFormatter fN = DateTimeFormatter.ofPattern("dd/MM");
         DateTimeFormatter fG = DateTimeFormatter.ofPattern("HH:mm");
         for (ChamCong cc : ds) {
-            if (allowed != null && !allowed.contains(cc.getMaNV())) continue;
             String maNhanVien = ChamCongDAO.getInstance().getMaNhanVienById(cc.getMaNV());
             modelCC.addRow(new Object[]{
                 maNhanVien,
@@ -210,7 +208,7 @@ public class AttendancePanel extends JPanel {
         g.gridx = 0; g.gridy = 0; g.weightx = 0; g.gridwidth = 1;
         f.add(new JLabel("Ma nhan vien:"), g);
         JTextField txtMaNV = new JTextField(12);
-        txtMaNV.setFont(new Font("Segoe UI", Font.PLAIN, 13));
+        txtMaNV.setFont(com.hrm.util.UIFonts.TEXT_NORMAL);
         g.gridx = 1; g.weightx = 1; f.add(txtMaNV, g);
         JButton btnTim = btn("Tim", UIColors.PRIMARY_PURPLE);
         btnTim.setPreferredSize(new Dimension(70, 30));
@@ -223,11 +221,11 @@ public class AttendancePanel extends JPanel {
             BorderFactory.createLineBorder(UIColors.PRIMARY_PURPLE, 1),
             new EmptyBorder(10, 12, 10, 12)));
         infoPanel.setVisible(false);
-        JLabel lblHoTenVal  = new JLabel(""); lblHoTenVal.setFont(new Font("Segoe UI", Font.BOLD, 13));
-        JLabel lblEmailVal  = new JLabel(""); lblEmailVal.setFont(new Font("Segoe UI", Font.PLAIN, 13));
-        JLabel lblChucVuVal = new JLabel(""); lblChucVuVal.setFont(new Font("Segoe UI", Font.PLAIN, 13));
-        JLabel lblPBVal     = new JLabel(""); lblPBVal.setFont(new Font("Segoe UI", Font.PLAIN, 13));
-        JLabel lblTTVal     = new JLabel(""); lblTTVal.setFont(new Font("Segoe UI", Font.PLAIN, 13));
+        JLabel lblHoTenVal  = new JLabel(""); lblHoTenVal.setFont(com.hrm.util.UIFonts.BOLD_NORMAL);
+        JLabel lblEmailVal  = new JLabel(""); lblEmailVal.setFont(com.hrm.util.UIFonts.TEXT_NORMAL);
+        JLabel lblChucVuVal = new JLabel(""); lblChucVuVal.setFont(com.hrm.util.UIFonts.TEXT_NORMAL);
+        JLabel lblPBVal     = new JLabel(""); lblPBVal.setFont(com.hrm.util.UIFonts.TEXT_NORMAL);
+        JLabel lblTTVal     = new JLabel(""); lblTTVal.setFont(com.hrm.util.UIFonts.TEXT_NORMAL);
         infoPanel.add(boldLabel("Ho ten:"));    infoPanel.add(lblHoTenVal);
         infoPanel.add(boldLabel("Email:"));     infoPanel.add(lblEmailVal);
         infoPanel.add(boldLabel("Chuc vu:"));   infoPanel.add(lblChucVuVal);
@@ -291,7 +289,7 @@ public class AttendancePanel extends JPanel {
 
         // Row 7: Nut Luu
         JButton bLuu = btn("Luu", UIColors.SUCCESS_GREEN);
-        bLuu.setFont(new Font("Segoe UI", Font.BOLD, 14));
+        bLuu.setFont(com.hrm.util.UIFonts.BOLD_MEDIUM);
         bLuu.setPreferredSize(new Dimension(120, 38));
         g.gridx = 0; g.gridy = 7; g.gridwidth = 3; g.insets = new Insets(20, 8, 8, 8);
         f.add(bLuu, g);
@@ -353,7 +351,7 @@ public class AttendancePanel extends JPanel {
     }
 
     private JLabel boldLabel(String text) {
-        JLabel l = new JLabel(text); l.setFont(new Font("Segoe UI", Font.BOLD, 13)); return l;
+        JLabel l = new JLabel(text); l.setFont(com.hrm.util.UIFonts.BOLD_NORMAL); return l;
     }
 
     // ===============================================
@@ -461,7 +459,10 @@ public class AttendancePanel extends JPanel {
     private void loadOT() {
         modelOT.setRowCount(0);
         DateTimeFormatter f = DateTimeFormatter.ofPattern("dd/MM/yyyy");
-        for (DangKyLamThem don : ChamCongDAO.getInstance().findAllDonOT()) {
+        List<DangKyLamThem> dsOT = canManageAll
+            ? ChamCongDAO.getInstance().findAllDonOT()
+            : ChamCongDAO.getInstance().findAllDangKyLamThemByScope(attendanceManageScope, maNVCaNhan);
+        for (DangKyLamThem don : dsOT) {
             String maNhanVien = ChamCongDAO.getInstance().getMaNhanVienById(don.getMaNV());
             String tenNV = don.getEmployeeName() != null ? don.getEmployeeName() : maNhanVien;
             modelOT.addRow(new Object[]{
@@ -541,7 +542,7 @@ public class AttendancePanel extends JPanel {
         tb.add(spinNamL);
 
         JLabel lblThangNam = new JLabel();
-        lblThangNam.setFont(new Font("Segoe UI", Font.BOLD, 13));
+        lblThangNam.setFont(com.hrm.util.UIFonts.BOLD_NORMAL);
         lblThangNam.setForeground(UIColors.PRIMARY_PURPLE);
         Runnable refreshLabel = () -> lblThangNam.setText(String.format("  [ Thang %02d / %d ]  ",
             (int) spinThangL.getValue(), (int) spinNamL.getValue()));
@@ -571,7 +572,7 @@ public class AttendancePanel extends JPanel {
         tableLuong.getColumnModel().getColumn(10).setCellRenderer(new DefaultTableCellRenderer() {
             @Override public Component getTableCellRendererComponent(JTable t, Object v, boolean s, boolean f, int r, int c) {
                 super.getTableCellRendererComponent(t, v, s, f, r, c);
-                setHorizontalAlignment(RIGHT); setFont(new Font("Segoe UI", Font.BOLD, 13));
+                setHorizontalAlignment(RIGHT); setFont(com.hrm.util.UIFonts.BOLD_NORMAL);
                 setForeground(UIColors.PRIMARY_PURPLE); return this;
             }
         });
@@ -595,8 +596,8 @@ public class AttendancePanel extends JPanel {
         int nm = (int) spinNamL.getValue();
         modelLuong.setRowCount(0); dsCachedLuong.clear();
 
-        KetQua<BangLuong> ketQua = luongSvc.tinhLuong(th, nm);
-        if (!ketQua.isSuccess() || ketQua.getData() == null) {
+        bangLuongHienTai = luongSvc.getBangLuongTheoKy(th, nm);
+        if (bangLuongHienTai == null) {
             if (luongStats != null) {
                 luongStats.removeAll();
                 luongStats.add(lbl("Thang " + th + "/" + nm + ":", "Khong co du lieu", Color.GRAY));
@@ -604,10 +605,9 @@ public class AttendancePanel extends JPanel {
             }
             return;
         }
-        bangLuongHienTai = ketQua.getData();
         List<ChiTietLuong> ds = luongSvc.getChiTiet(bangLuongHienTai.getMaBL());
         ds = ds.stream()
-            .filter(ct -> ct.getSoNgayCong() > 0 && ct.getTongGioLam() > 0)
+            .filter(ct -> ct.getSoNgayCong() > 0 || ct.getTongGioOT() > 0)
             .collect(java.util.stream.Collectors.toList());
         dsCachedLuong.addAll(ds);
 
@@ -655,13 +655,13 @@ public class AttendancePanel extends JPanel {
         JPanel main = new JPanel(new BorderLayout(10, 10));
         main.setBorder(new EmptyBorder(15, 20, 15, 20));
         JLabel hint = new JLabel("<html><i>Tick = hien thi | Bo tick = an cot</i></html>");
-        hint.setForeground(Color.GRAY); hint.setFont(new Font("Segoe UI", Font.PLAIN, 12));
+        hint.setForeground(Color.GRAY); hint.setFont(com.hrm.util.UIFonts.TEXT_SMALL);
         main.add(hint, BorderLayout.NORTH);
         JPanel listP = new JPanel(new GridLayout(0, 1, 0, 6)); listP.setOpaque(false);
         JCheckBox[] checks = new JCheckBox[colNames.length];
         for (int i = 0; i < colNames.length; i++) {
             checks[i] = new JCheckBox(colNames[i], !colHidden[i]);
-            checks[i].setOpaque(false); checks[i].setFont(new Font("Segoe UI", Font.PLAIN, 13));
+            checks[i].setOpaque(false); checks[i].setFont(com.hrm.util.UIFonts.TEXT_NORMAL);
             for (int lk : lockedCols) {
                 if (i == lk) { checks[i].setEnabled(false); checks[i].setSelected(true);
                                checks[i].setToolTipText("Cot nay khong the an"); }
@@ -737,8 +737,8 @@ public class AttendancePanel extends JPanel {
             new EmptyBorder(8, 10, 8, 10)));
 
         java.util.function.BiConsumer<String, String> addRow = (k, v) -> {
-            JLabel lk = new JLabel(k); lk.setFont(new Font("Segoe UI", Font.BOLD, 13));
-            JLabel lv = new JLabel(v); lv.setFont(new Font("Segoe UI", Font.PLAIN, 13));
+            JLabel lk = new JLabel(k); lk.setFont(com.hrm.util.UIFonts.BOLD_NORMAL);
+            JLabel lv = new JLabel(v); lv.setFont(com.hrm.util.UIFonts.TEXT_NORMAL);
             info.add(lk); info.add(lv);
         };
         addRow.accept("Nhan vien:",    tenNV + "  (" + maNhanVienHienThi + ")");
@@ -750,7 +750,7 @@ public class AttendancePanel extends JPanel {
         addRow.accept("Phu cap:",      fmtTien(ct.getTongLuongChucVu()));
         addRow.accept("Khau tru:",     fmtTien(ct.getTongKhauTru()));
         addRow.accept("Tong thu nhap:", fmtTien(ct.getTongLuong()));
-        JLabel lkTN = new JLabel("THUC NHAN:"); lkTN.setFont(new Font("Segoe UI", Font.BOLD, 14));
+        JLabel lkTN = new JLabel("THUC NHAN:"); lkTN.setFont(com.hrm.util.UIFonts.BOLD_MEDIUM);
         JLabel lvTN = new JLabel(fmtTien(ct.getLuongThucNhan()));
         lvTN.setFont(new Font("Segoe UI", Font.BOLD, 15)); lvTN.setForeground(UIColors.PRIMARY_PURPLE);
         info.add(lkTN); info.add(lvTN);
@@ -766,7 +766,7 @@ public class AttendancePanel extends JPanel {
                 super.getTableCellRendererComponent(t, v, s, f, r, c);
                 String str = v != null ? v.toString() : "";
                 setForeground(str.contains("cap") ? UIColors.SUCCESS_GREEN : UIColors.DANGER_RED);
-                setFont(new Font("Segoe UI", Font.BOLD, 13)); setHorizontalAlignment(CENTER); return this;
+                setFont(com.hrm.util.UIFonts.BOLD_NORMAL); setHorizontalAlignment(CENTER); return this;
             }
         });
         tblTP.getColumnModel().getColumn(2).setCellRenderer(new DefaultTableCellRenderer() {
@@ -798,7 +798,7 @@ public class AttendancePanel extends JPanel {
         JPanel p = panel();
         JPanel hdr = new JPanel(new BorderLayout()); hdr.setOpaque(false);
         JLabel l = new JLabel("Cau hinh phu cap & khau tru");
-        l.setFont(new Font("Segoe UI", Font.BOLD, 16)); l.setForeground(UIColors.TEXT_DARK);
+        l.setFont(com.hrm.util.UIFonts.HEADER_SUB); l.setForeground(UIColors.TEXT_DARK);
         hdr.add(l, BorderLayout.WEST);
         JPanel bp = new JPanel(new FlowLayout(FlowLayout.RIGHT, 10, 0)); bp.setOpaque(false);
         JButton bThem = btn("+ Them khoan moi", UIColors.SUCCESS_GREEN); bThem.addActionListener(e -> dlgPhuCap(null));
@@ -821,14 +821,14 @@ public class AttendancePanel extends JPanel {
                 super.getTableCellRendererComponent(t, v, s, f, r, c);
                 String str = v != null ? v.toString() : "";
                 setForeground(str.contains("cap") ? UIColors.SUCCESS_GREEN : UIColors.DANGER_RED);
-                setFont(new Font("Segoe UI", Font.BOLD, 13)); setHorizontalAlignment(CENTER); return this;
+                setFont(com.hrm.util.UIFonts.BOLD_NORMAL); setHorizontalAlignment(CENTER); return this;
             }
         });
         tablePC.getColumnModel().getColumn(4).setCellRenderer(new DefaultTableCellRenderer() {
             @Override public Component getTableCellRendererComponent(JTable t, Object v, boolean s, boolean f, int r, int c) {
                 super.getTableCellRendererComponent(t, v, s, f, r, c);
                 setHorizontalAlignment(RIGHT); setForeground(Color.BLACK);
-                setFont(new Font("Segoe UI", Font.BOLD, 13)); return this;
+                setFont(com.hrm.util.UIFonts.BOLD_NORMAL); return this;
             }
         });
         tablePC.getColumnModel().getColumn(6).setCellRenderer(new StatusR());
@@ -890,7 +890,7 @@ public class AttendancePanel extends JPanel {
         g.gridx=1; f.add(cboNguon,g);
 
         JButton bLuu = btn(edit ? "Cap nhat" : "Them moi", UIColors.PRIMARY_PURPLE);
-        bLuu.setFont(new Font("Segoe UI", Font.BOLD, 14));
+        bLuu.setFont(com.hrm.util.UIFonts.BOLD_MEDIUM);
         bLuu.addActionListener(e -> {
             try {
                 String ten = tTen.getText().trim();
@@ -938,7 +938,7 @@ public class AttendancePanel extends JPanel {
 
         // Dong ho thoi gian thuc
         JLabel lblTime = new JLabel();
-        lblTime.setFont(new Font("Segoe UI", Font.BOLD, 20));
+        lblTime.setFont(com.hrm.util.UIFonts.HEADER_H2);
         lblTime.setForeground(UIColors.PRIMARY_PURPLE);
         DateTimeFormatter fDT = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm:ss");
         lblTime.setText(LocalDateTime.now().format(fDT));
@@ -955,7 +955,7 @@ public class AttendancePanel extends JPanel {
 
         // Tim kiem nhan vien
         txtMaNVCN = new JTextField(12);
-        txtMaNVCN.setFont(new Font("Segoe UI", Font.PLAIN, 13));
+        txtMaNVCN.setFont(com.hrm.util.UIFonts.TEXT_NORMAL);
         txtMaNVCN.setToolTipText("Nhap ma nhan vien (VD: NV001)");
         JButton btnTim = btn("Tim", UIColors.PRIMARY_PURPLE);
         btnTim.setPreferredSize(new Dimension(70, 30));
@@ -970,11 +970,11 @@ public class AttendancePanel extends JPanel {
             BorderFactory.createLineBorder(UIColors.PRIMARY_PURPLE, 1),
             new EmptyBorder(10, 12, 10, 12)));
         infoPanelCN.setVisible(false);
-        lblHoTenCNCN     = new JLabel(""); lblHoTenCNCN.setFont(new Font("Segoe UI", Font.BOLD, 13));
-        lblEmailCNCN     = new JLabel(""); lblEmailCNCN.setFont(new Font("Segoe UI", Font.PLAIN, 13));
-        lblChucVuCNCN    = new JLabel(""); lblChucVuCNCN.setFont(new Font("Segoe UI", Font.PLAIN, 13));
-        lblPhongBanCNCN  = new JLabel(""); lblPhongBanCNCN.setFont(new Font("Segoe UI", Font.PLAIN, 13));
-        lblTrangThaiCNCN = new JLabel(""); lblTrangThaiCNCN.setFont(new Font("Segoe UI", Font.PLAIN, 13));
+        lblHoTenCNCN     = new JLabel(""); lblHoTenCNCN.setFont(com.hrm.util.UIFonts.BOLD_NORMAL);
+        lblEmailCNCN     = new JLabel(""); lblEmailCNCN.setFont(com.hrm.util.UIFonts.TEXT_NORMAL);
+        lblChucVuCNCN    = new JLabel(""); lblChucVuCNCN.setFont(com.hrm.util.UIFonts.TEXT_NORMAL);
+        lblPhongBanCNCN  = new JLabel(""); lblPhongBanCNCN.setFont(com.hrm.util.UIFonts.TEXT_NORMAL);
+        lblTrangThaiCNCN = new JLabel(""); lblTrangThaiCNCN.setFont(com.hrm.util.UIFonts.TEXT_NORMAL);
         infoPanelCN.add(boldLabel("Ho ten:"));     infoPanelCN.add(lblHoTenCNCN);
         infoPanelCN.add(boldLabel("Email:"));      infoPanelCN.add(lblEmailCNCN);
         infoPanelCN.add(boldLabel("Chuc vu:"));    infoPanelCN.add(lblChucVuCNCN);
@@ -984,14 +984,14 @@ public class AttendancePanel extends JPanel {
 
         // Trang thai cham cong + nut hanh dong
         lblCaNhanStatus = new JLabel("Chua check-in hom nay");
-        lblCaNhanStatus.setFont(new Font("Segoe UI", Font.BOLD, 14));
+        lblCaNhanStatus.setFont(com.hrm.util.UIFonts.BOLD_MEDIUM);
         cboCaLamCaNhan = null; // khong dung nua — tu dong nhan dien ca
 
         btnCheckInCN  = btn("Check-in",  UIColors.SUCCESS_GREEN);
         btnCheckOutCN = btn("Check-out", UIColors.DANGER_RED);
 
         JCheckBox chkOT = new JCheckBox("Ca nay la OT");
-        chkOT.setOpaque(false); chkOT.setFont(new Font("Segoe UI", Font.BOLD, 13));
+        chkOT.setOpaque(false); chkOT.setFont(com.hrm.util.UIFonts.BOLD_NORMAL);
         chkOT.setForeground(UIColors.PRIMARY_PURPLE); chkOT.setEnabled(false);
         chkOT.setToolTipText("Chi co the chon khi ban co don OT da duoc duyet cho hom nay");
 
@@ -1193,7 +1193,7 @@ public class AttendancePanel extends JPanel {
         JPanel p = panel();
 
         JLabel title = new JLabel("Dang ky lam them gio (OT)");
-        title.setFont(new Font("Segoe UI", Font.BOLD, 16)); title.setForeground(UIColors.TEXT_DARK);
+        title.setFont(com.hrm.util.UIFonts.HEADER_SUB); title.setForeground(UIColors.TEXT_DARK);
 
         JPanel formPanel = new JPanel(new GridBagLayout());
         formPanel.setBackground(new Color(245, 247, 255));
@@ -1221,7 +1221,7 @@ public class AttendancePanel extends JPanel {
         // Row 3: So gio tu tinh
         g.gridx=0; g.gridy=3; g.weightx=0; formPanel.add(new JLabel("So gio OT (tu tinh):"),g);
         JLabel lblSoGioTinhToan = new JLabel("3.0 gio");
-        lblSoGioTinhToan.setFont(new Font("Segoe UI", Font.BOLD, 13));
+        lblSoGioTinhToan.setFont(com.hrm.util.UIFonts.BOLD_NORMAL);
         lblSoGioTinhToan.setForeground(UIColors.PRIMARY_PURPLE);
         g.gridx=1; g.weightx=1; formPanel.add(lblSoGioTinhToan,g);
 
@@ -1262,7 +1262,7 @@ public class AttendancePanel extends JPanel {
         JButton btnHuyDon = btn("Huy don", UIColors.DANGER_RED);
         JButton btnLamMoi = new JButton("Lam moi"); btnLamMoi.setFocusPainted(false);
         JPanel tblHeader = new JPanel(new BorderLayout()); tblHeader.setOpaque(false);
-        JLabel tblTitle = new JLabel("Don OT cua ban"); tblTitle.setFont(new Font("Segoe UI", Font.BOLD, 14));
+        JLabel tblTitle = new JLabel("Don OT cua ban"); tblTitle.setFont(com.hrm.util.UIFonts.BOLD_MEDIUM);
         tblHeader.add(tblTitle, BorderLayout.WEST);
         JPanel btnPnl = new JPanel(new FlowLayout(FlowLayout.RIGHT, 10, 0)); btnPnl.setOpaque(false);
         btnPnl.add(btnHuyDon); btnPnl.add(btnLamMoi); tblHeader.add(btnPnl, BorderLayout.EAST);
@@ -1334,16 +1334,16 @@ public class AttendancePanel extends JPanel {
     }
 
     private JButton btn(String text, Color bg) {
-        JButton b = new JButton(text); b.setFont(new Font("Segoe UI", Font.PLAIN, 13));
+        JButton b = new JButton(text); b.setFont(com.hrm.util.UIFonts.TEXT_NORMAL);
         b.setBackground(bg); b.setForeground(Color.WHITE);
         b.setFocusPainted(false); b.setBorderPainted(false);
         b.setCursor(new Cursor(Cursor.HAND_CURSOR)); return b;
     }
 
     private JTable tbl(DefaultTableModel m) {
-        JTable t = new JTable(m); t.setFont(new Font("Segoe UI", Font.PLAIN, 13));
+        JTable t = new JTable(m); t.setFont(com.hrm.util.UIFonts.TEXT_NORMAL);
         t.setForeground(Color.BLACK); t.setRowHeight(32);
-        t.getTableHeader().setFont(new Font("Segoe UI", Font.BOLD, 13));
+        t.getTableHeader().setFont(com.hrm.util.UIFonts.BOLD_NORMAL);
         t.getTableHeader().setBackground(UIColors.PRIMARY_PURPLE);
         t.getTableHeader().setForeground(Color.BLACK);
         t.setSelectionBackground(UIColors.LIGHT_PURPLE);
@@ -1371,7 +1371,7 @@ public class AttendancePanel extends JPanel {
     }
 
     private JLabel lbl(String label, String val, Color color) {
-        JLabel l = new JLabel(label + " " + val); l.setFont(new Font("Segoe UI", Font.BOLD, 13));
+        JLabel l = new JLabel(label + " " + val); l.setFont(com.hrm.util.UIFonts.BOLD_NORMAL);
         l.setForeground(color); return l;
     }
 

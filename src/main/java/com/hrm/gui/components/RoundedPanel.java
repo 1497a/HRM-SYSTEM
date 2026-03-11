@@ -164,11 +164,11 @@ public class RoundedPanel extends JPanel {
         content.setOpaque(false);
 
         JLabel lblValue = new JLabel(value);
-        lblValue.setFont(new Font("Segoe UI", Font.BOLD, 32));
+        lblValue.setFont(com.hrm.util.UIFonts.DISPLAY_TITLE);
         lblValue.setForeground(accentColor);
 
         JLabel lblTitle = new JLabel(title);
-        lblTitle.setFont(new Font("Segoe UI", Font.PLAIN, 14));
+        lblTitle.setFont(com.hrm.util.UIFonts.TEXT_MEDIUM);
         lblTitle.setForeground(UIColors.TEXT_GRAY);
 
         content.add(lblValue, BorderLayout.CENTER);

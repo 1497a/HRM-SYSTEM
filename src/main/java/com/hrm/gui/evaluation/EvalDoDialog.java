@@ -65,7 +65,7 @@ public class EvalDoDialog extends JDialog {
     private void initComponents() {
         // Employee combo â€” show hoTen + tenChucVu, store maNV
         cboEmployee = new JComboBox<>();
-        cboEmployee.setFont(new Font("Segoe UI", Font.PLAIN, 13));
+        cboEmployee.setFont(com.hrm.util.UIFonts.TEXT_NORMAL);
         loadEmployees();
 
         lblChucVu = new JLabel(" ");
@@ -85,7 +85,7 @@ public class EvalDoDialog extends JDialog {
 
         // General comment
         txtNhanXetChung = new JTextArea(3, 40);
-        txtNhanXetChung.setFont(new Font("Segoe UI", Font.PLAIN, 13));
+        txtNhanXetChung.setFont(com.hrm.util.UIFonts.TEXT_NORMAL);
         txtNhanXetChung.setLineWrap(true);
         txtNhanXetChung.setWrapStyleWord(true);
 
@@ -154,7 +154,7 @@ public class EvalDoDialog extends JDialog {
         headerRow.setOpaque(false);
 
         JLabel lblTen = new JLabel(c.getTenTieuChi() + "  [Trọng số: " + (int) c.getDiemToiDa() + "%]");
-        lblTen.setFont(new Font("Segoe UI", Font.BOLD, 13));
+        lblTen.setFont(com.hrm.util.UIFonts.BOLD_NORMAL);
         headerRow.add(lblTen, BorderLayout.WEST);
 
         JSpinner spn = new JSpinner(new SpinnerNumberModel(5.0, 1.0, 10.0, 0.5));
@@ -178,7 +178,7 @@ public class EvalDoDialog extends JDialog {
 
         // Comment field
         JTextArea txtCmt = new JTextArea(2, 30);
-        txtCmt.setFont(new Font("Segoe UI", Font.PLAIN, 12));
+        txtCmt.setFont(com.hrm.util.UIFonts.TEXT_SMALL);
         txtCmt.setLineWrap(true);
         txtCmt.setWrapStyleWord(true);
         commentFields.put(c.getId(), txtCmt);
@@ -212,7 +212,7 @@ public class EvalDoDialog extends JDialog {
         topPanel.add(new JLabel("Đợt đánh giá:"), gc);
         gc.gridx = 1; gc.weightx = 1; gc.fill = GridBagConstraints.HORIZONTAL;
         JLabel lblCycleName = new JLabel(cycleName);
-        lblCycleName.setFont(new Font("Segoe UI", Font.BOLD, 13));
+        lblCycleName.setFont(com.hrm.util.UIFonts.BOLD_NORMAL);
         topPanel.add(lblCycleName, gc);
 
         gc.gridx = 0; gc.gridy = 1; gc.weightx = 0; gc.fill = GridBagConstraints.NONE;

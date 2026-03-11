@@ -62,7 +62,7 @@ public class SalaryDetailDialog extends JDialog {
 
         // Title
         JLabel lblTitle = new JLabel("Thông tin lương nhân viên");
-        lblTitle.setFont(new Font("Segoe UI", Font.BOLD, 16));
+        lblTitle.setFont(com.hrm.util.UIFonts.HEADER_SUB);
         lblTitle.setForeground(UIColors.PRIMARY_PURPLE);
         gbc.gridx = 0; gbc.gridy = 0; gbc.gridwidth = 4;
         panel.add(lblTitle, gbc);
@@ -97,7 +97,7 @@ public class SalaryDetailDialog extends JDialog {
         panel.add(makeLabel("Tổng thu nhập:"), gbc);
         gbc.gridx = 3;
         JLabel lblTongThu = makeValueMoney(chiTiet.getTongLuong());
-        lblTongThu.setFont(new Font("Segoe UI", Font.BOLD, 14));
+        lblTongThu.setFont(com.hrm.util.UIFonts.BOLD_MEDIUM);
         lblTongThu.setForeground(UIColors.INFO_BLUE);
         panel.add(lblTongThu, gbc);
 
@@ -112,7 +112,7 @@ public class SalaryDetailDialog extends JDialog {
         panel.add(makeLabel("Lương thực lãnh:"), gbc);
         gbc.gridx = 3;
         JLabel lblThucLanh = makeValueMoney(chiTiet.getLuongThucNhan());
-        lblThucLanh.setFont(new Font("Segoe UI", Font.BOLD, 16));
+        lblThucLanh.setFont(com.hrm.util.UIFonts.HEADER_SUB);
         lblThucLanh.setForeground(UIColors.SUCCESS_GREEN);
         panel.add(lblThucLanh, gbc);
 
@@ -121,6 +121,16 @@ public class SalaryDetailDialog extends JDialog {
         panel.add(makeLabel("Số ngày công:"), gbc);
         gbc.gridx = 1;
         panel.add(makeValue(String.valueOf(chiTiet.getSoNgayCong())), gbc);
+        gbc.gridx = 2;
+        panel.add(makeLabel("Số giờ OT:"), gbc);
+        gbc.gridx = 3;
+        panel.add(makeValue(formatHours(chiTiet.getTongGioOT())), gbc);
+
+        gbc.gridy = 6; gbc.gridx = 0;
+        panel.add(makeLabel("Ghi chú:"), gbc);
+        gbc.gridx = 1; gbc.gridwidth = 3;
+        panel.add(makeValue(chiTiet.getGhiChu() != null ? chiTiet.getGhiChu() : ""), gbc);
+        gbc.gridwidth = 1;
 
         return panel;
     }
@@ -138,6 +148,7 @@ public class SalaryDetailDialog extends JDialog {
             @Override
             public boolean isCellEditable(int row, int col) { return false; }
         };
+        model.setColumnIdentifiers(new Object[]{"Khoản", "Loại", "Số tiền", "Ghi chú"});
 
         List<ThanhPhanLuong> danhSach = chiTiet.getDanhSachThanhPhan();
         if (danhSach != null) {
@@ -146,15 +157,16 @@ public class SalaryDetailDialog extends JDialog {
                 model.addRow(new Object[]{
                         tp.getTenKhoan(),
                         loaiDisplay,
-                        formatMoney(tp.getSoTien())
+                        formatMoney(tp.getSoTien()),
+                        tp.getNguon() != null ? tp.getNguon() : ""
                 });
             }
         }
 
         JTable table = new JTable(model);
         table.setRowHeight(26);
-        table.setFont(new Font("Segoe UI", Font.PLAIN, 13));
-        table.getTableHeader().setFont(new Font("Segoe UI", Font.BOLD, 13));
+        table.setFont(com.hrm.util.UIFonts.TEXT_NORMAL);
+        table.getTableHeader().setFont(com.hrm.util.UIFonts.BOLD_NORMAL);
         table.getTableHeader().setBackground(UIColors.PRIMARY_PURPLE);
         table.getTableHeader().setForeground(UIColors.WHITE);
         table.setSelectionBackground(UIColors.LIGHT_PURPLE);
@@ -163,6 +175,7 @@ public class SalaryDetailDialog extends JDialog {
         table.getColumnModel().getColumn(0).setPreferredWidth(250);
         table.getColumnModel().getColumn(1).setPreferredWidth(120);
         table.getColumnModel().getColumn(2).setPreferredWidth(150);
+        table.getColumnModel().getColumn(3).setPreferredWidth(240);
 
         // Right-align money
         DefaultTableCellRenderer rightRenderer = new DefaultTableCellRenderer();
@@ -182,7 +195,7 @@ public class SalaryDetailDialog extends JDialog {
                     } else {
                         c.setForeground(UIColors.SUCCESS_GREEN);
                     }
-                    ((JLabel) c).setFont(new Font("Segoe UI", Font.BOLD, 12));
+                    ((JLabel) c).setFont(com.hrm.util.UIFonts.BOLD_SMALL);
                 }
                 return c;
             }
@@ -215,14 +228,14 @@ public class SalaryDetailDialog extends JDialog {
 
     private JLabel makeLabel(String text) {
         JLabel lbl = new JLabel(text);
-        lbl.setFont(new Font("Segoe UI", Font.PLAIN, 13));
+        lbl.setFont(com.hrm.util.UIFonts.TEXT_NORMAL);
         lbl.setForeground(UIColors.TEXT_GRAY);
         return lbl;
     }
 
     private JLabel makeValue(String text) {
         JLabel lbl = new JLabel(text);
-        lbl.setFont(new Font("Segoe UI", Font.BOLD, 13));
+        lbl.setFont(com.hrm.util.UIFonts.BOLD_NORMAL);
         lbl.setForeground(UIColors.TEXT_DARK);
         return lbl;
     }
@@ -233,5 +246,11 @@ public class SalaryDetailDialog extends JDialog {
 
     private String formatMoney(double amount) {
         return MONEY_FORMAT.format((long) amount) + " đ";
+    }
+    private String formatHours(double hours) {
+        if (hours == Math.rint(hours)) {
+            return String.valueOf((long) hours);
+        }
+        return String.format(Locale.US, "%.2f", hours);
     }
 }

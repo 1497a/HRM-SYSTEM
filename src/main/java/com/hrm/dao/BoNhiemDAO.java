@@ -253,16 +253,14 @@ public class BoNhiemDAO {
         List<BoNhiem> result = new ArrayList<>();
         if (scope == com.hrm.model.DataScope.NONE) return result;
 
+        if (scope == com.hrm.model.DataScope.DEPT) {
+            return findAllByDeptSubtree(currentMaNV);
+        }
+
         String whereClause;
         switch (scope) {
             case ALL:
                 whereClause = "";
-                break;
-            case DEPT:
-                whereClause = "WHERE b.maPhongBan = ("
-                        + "SELECT b2.maPhongBan FROM BONHIEM b2 "
-                        + "WHERE b2.maNV = ? AND b2.trangThai = 'hieu_luc' AND b2.loaiBoNhiem = 'chinh'"
-                        + ")";
                 break;
             case TEAM:
                 whereClause = "WHERE b.maQuanLy = ? OR b.maNV = ?";
@@ -293,6 +291,49 @@ public class BoNhiemDAO {
             }
         } catch (SQLException e) {
             throw new RuntimeException("Loi tai danh sach bo nhiem theo scope: " + e.getMessage(), e);
+        }
+        return result;
+    }
+
+    private java.util.Set<String> getDeptSubtree(String currentMaNV, java.sql.Connection conn) throws SQLException {
+        String rootSql = "SELECT b.maPhongBan FROM BONHIEM b WHERE b.maNV=? AND b.trangThai='hieu_luc' AND b.loaiBoNhiem='chinh' LIMIT 1";
+        String rootDept = null;
+        try (PreparedStatement ps = conn.prepareStatement(rootSql)) {
+            ps.setString(1, currentMaNV);
+            try (ResultSet rs = ps.executeQuery()) { if (rs.next()) rootDept = rs.getString(1); }
+        }
+        java.util.Set<String> depts = new java.util.LinkedHashSet<>();
+        if (rootDept == null) return depts;
+        java.util.Queue<String> queue = new java.util.LinkedList<>();
+        queue.add(rootDept);
+        String childSql = "SELECT maPhongBan FROM PHONGBAN WHERE phongBanCha=?";
+        while (!queue.isEmpty()) {
+            String cur = queue.poll();
+            if (depts.add(cur)) {
+                try (PreparedStatement ps = conn.prepareStatement(childSql)) {
+                    ps.setString(1, cur);
+                    try (ResultSet rs = ps.executeQuery()) { while (rs.next()) queue.add(rs.getString(1)); }
+                }
+            }
+        }
+        return depts;
+    }
+
+    private List<BoNhiem> findAllByDeptSubtree(String currentMaNV) {
+        List<BoNhiem> result = new ArrayList<>();
+        try (Connection conn = DatabaseConnection.getConnection()) {
+            java.util.Set<String> depts = getDeptSubtree(currentMaNV, conn);
+            if (depts.isEmpty()) return result;
+            String ph = String.join(",", java.util.Collections.nCopies(depts.size(), "?"));
+            String sql = buildJoinQuery("WHERE b.maPhongBan IN (" + ph + ")", "ORDER BY b.maBoNhiem DESC");
+            try (PreparedStatement ps = conn.prepareStatement(sql)) {
+                int i = 1; for (String d : depts) ps.setString(i++, d);
+                try (ResultSet rs = ps.executeQuery()) {
+                    while (rs.next()) { BoNhiem bn = mapRow(rs); trySetTransient(rs, bn); result.add(bn); }
+                }
+            }
+        } catch (SQLException e) {
+            throw new RuntimeException("Lỗi tải bổ nhiệm theo phòng ban: " + e.getMessage(), e);
         }
         return result;
     }

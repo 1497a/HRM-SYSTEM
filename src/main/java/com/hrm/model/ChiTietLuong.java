@@ -51,6 +51,7 @@ public class ChiTietLuong {
     private int soNgayCong;
     private double tongGioLam;
     private double tongGioOT;
+    private String ghiChu;
 
     private TrangThai trangThai;
     private List<ThanhPhanLuong> danhSachThanhPhan;
@@ -117,6 +118,9 @@ public class ChiTietLuong {
 
     public double getTongGioOT() { return tongGioOT; }
     public void setTongGioOT(double tongGioOT) { this.tongGioOT = tongGioOT; }
+
+    public String getGhiChu() { return ghiChu; }
+    public void setGhiChu(String ghiChu) { this.ghiChu = ghiChu; }
 
     public TrangThai getTrangThai() { return trangThai; }
     public void setTrangThai(TrangThai trangThai) { this.trangThai = trangThai; }

@@ -59,7 +59,7 @@ public class DashboardFrame extends JFrame {
         setMinimumSize(new Dimension(900, 650));
 
         lblStatus = new JLabel("Sẵn sàng");
-        lblStatus.setFont(new Font("Segoe UI", Font.PLAIN, 12));
+        lblStatus.setFont(com.hrm.util.UIFonts.TEXT_SMALL);
     }
 
     private void setupMenuBar() {
@@ -221,7 +221,7 @@ public class DashboardFrame extends JFrame {
 
         JLabel lblTime = new JLabel(java.time.LocalDateTime.now().format(
             java.time.format.DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm")));
-        lblTime.setFont(new Font("Segoe UI", Font.PLAIN, 12));
+        lblTime.setFont(com.hrm.util.UIFonts.TEXT_SMALL);
         statusPanel.add(lblTime, BorderLayout.EAST);
 
         mainPanel.add(headerPanel, BorderLayout.NORTH);
@@ -241,19 +241,7 @@ public class DashboardFrame extends JFrame {
         contentPanel.setOpaque(false);
         contentPanel.setBorder(new EmptyBorder(20, 10, 20, 10));
 
-        // Quick Access Cards
-        contentPanel.add(createQuickCard("Thông Tin Cá Nhân", "Xem và cập nhật thông tin",
-            new Color(52, 152, 219), this::showProfile));
-        contentPanel.add(createQuickCard("Nghỉ Phép", "Quản lý đơn nghỉ phép",
-            new Color(46, 204, 113), this::showLeavePanel));
-        contentPanel.add(createQuickCard("Đánh Giá", "Xem và quản lý đánh giá",
-            new Color(155, 89, 182), this::showEvaluationPanel));
-        contentPanel.add(createQuickCard("Tạo Đơn Phép", "Tạo đơn xin nghỉ phép mới",
-            new Color(241, 196, 15), this::createLeaveRequest));
-        contentPanel.add(createQuickCard("Kết Quả Đánh Giá", "Xem kết quả đánh giá của tôi",
-            new Color(230, 126, 34), this::showEvalResults));
-        contentPanel.add(createQuickCard("Trở Về Trang Chủ", "Quay lại màn hình chính",
-            new Color(149, 165, 166), this::showDashboard));
+        // Quick Access Cards removed based on user request
 
         // Wrap content in scroll pane
         JScrollPane scrollPane = new JScrollPane(contentPanel);
@@ -274,11 +262,11 @@ public class DashboardFrame extends JFrame {
         welcomePanel.setOpaque(false);
 
         JLabel lblWelcome = new JLabel("Xin chào, " + currentUser.getHoTen());
-        lblWelcome.setFont(new Font("Segoe UI", Font.BOLD, 20));
+        lblWelcome.setFont(com.hrm.util.UIFonts.HEADER_H2);
         lblWelcome.setForeground(Color.WHITE);
 
         JLabel lblRole = new JLabel("Vai trò: " + currentUser.getVaiTros().toString());
-        lblRole.setFont(new Font("Segoe UI", Font.PLAIN, 14));
+        lblRole.setFont(com.hrm.util.UIFonts.TEXT_MEDIUM);
         lblRole.setForeground(new Color(200, 220, 240));
 
         welcomePanel.add(lblWelcome);
@@ -291,7 +279,7 @@ public class DashboardFrame extends JFrame {
         lblAvatar.setBackground(new Color(0, 80, 120));
         lblAvatar.setHorizontalAlignment(SwingConstants.CENTER);
         lblAvatar.setText(getInitials(currentUser.getHoTen()));
-        lblAvatar.setFont(new Font("Segoe UI", Font.BOLD, 24));
+        lblAvatar.setFont(com.hrm.util.UIFonts.HEADER_H1);
         lblAvatar.setForeground(Color.WHITE);
 
         // Navigation buttons
@@ -307,7 +295,7 @@ public class DashboardFrame extends JFrame {
         JButton btnEval = UIHelper.createNavButton("Đánh giá");
         btnEval.addActionListener(e -> showEvaluationPanel());
 
-        JButton btnLogout = UIHelper.createStyledButton("Đăng Xuất", UIHelper.DANGER_COLOR, Color.WHITE);
+        JButton btnLogout = UIHelper.createStyledButton("Đăng Xuất", com.hrm.util.UIColors.DANGER_RED, Color.WHITE);
         btnLogout.addActionListener(e -> performLogout());
 
         navPanel.add(btnHome);
@@ -338,11 +326,11 @@ public class DashboardFrame extends JFrame {
         stripe.setPreferredSize(new Dimension(0, 5));
 
         JLabel lblTitle = new JLabel(title);
-        lblTitle.setFont(new Font("Segoe UI", Font.BOLD, 16));
+        lblTitle.setFont(com.hrm.util.UIFonts.HEADER_SUB);
         lblTitle.setForeground(new Color(50, 50, 50));
 
         JLabel lblDesc = new JLabel("<html>" + description + "</html>");
-        lblDesc.setFont(new Font("Segoe UI", Font.PLAIN, 12));
+        lblDesc.setFont(com.hrm.util.UIFonts.TEXT_SMALL);
         lblDesc.setForeground(Color.GRAY);
 
         JPanel textPanel = new JPanel(new BorderLayout(5, 5));

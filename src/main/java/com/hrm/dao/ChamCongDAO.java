@@ -281,6 +281,10 @@ public class ChamCongDAO {
         List<ChamCong> result = new ArrayList<>();
         if (scope == com.hrm.model.DataScope.NONE) return result;
 
+        if (scope == com.hrm.model.DataScope.DEPT) {
+            return findChamCongByDeptSubtree(thang, nam, currentMaNV);
+        }
+
         String sqlBase = "SELECT c.maChamCong, c.maNV, c.ngay, c.maCaLam, c.gioVao, c.gioRa, c.soGioLam, c.gioLamThem, c.trangThai, c.phuongThucChamCong, c.ghiChu, t.hoTen, ca.tenCaLam FROM CHAMCONG c "
                 + "LEFT JOIN THONGTINCANHAN t ON c.maNV = t.maNV "
                 + "LEFT JOIN CALAM ca ON c.maCaLam = ca.maCaLam "
@@ -290,9 +294,6 @@ public class ChamCongDAO {
         String sqlCondition = "";
         switch (scope) {
             case ALL:
-                break;
-            case DEPT:
-                sqlCondition = " AND b.maPhongBan = (SELECT b2.maPhongBan FROM BONHIEM b2 WHERE b2.maNV = ? AND b2.trangThai = 'hieu_luc' AND b2.loaiBoNhiem = 'chinh') ";
                 break;
             case TEAM:
                 sqlCondition = " AND b.maQuanLy = ? ";
@@ -320,6 +321,52 @@ public class ChamCongDAO {
             }
         } catch (SQLException e) {
             throw new RuntimeException("Lỗi tải chấm công theo scope: " + e.getMessage(), e);
+        }
+        return result;
+    }
+
+    private java.util.Set<String> getDeptSubtree(String currentMaNV, java.sql.Connection conn) throws SQLException {
+        String rootSql = "SELECT b.maPhongBan FROM BONHIEM b WHERE b.maNV=? AND b.trangThai='hieu_luc' AND b.loaiBoNhiem='chinh' LIMIT 1";
+        String rootDept = null;
+        try (PreparedStatement ps = conn.prepareStatement(rootSql)) {
+            ps.setString(1, currentMaNV);
+            try (ResultSet rs = ps.executeQuery()) { if (rs.next()) rootDept = rs.getString(1); }
+        }
+        java.util.Set<String> depts = new java.util.LinkedHashSet<>();
+        if (rootDept == null) return depts;
+        java.util.Queue<String> queue = new java.util.LinkedList<>();
+        queue.add(rootDept);
+        String childSql = "SELECT maPhongBan FROM PHONGBAN WHERE phongBanCha=?";
+        while (!queue.isEmpty()) {
+            String cur = queue.poll();
+            if (depts.add(cur)) {
+                try (PreparedStatement ps = conn.prepareStatement(childSql)) {
+                    ps.setString(1, cur);
+                    try (ResultSet rs = ps.executeQuery()) { while (rs.next()) queue.add(rs.getString(1)); }
+                }
+            }
+        }
+        return depts;
+    }
+
+    private List<ChamCong> findChamCongByDeptSubtree(int thang, int nam, String currentMaNV) {
+        List<ChamCong> result = new ArrayList<>();
+        try (Connection conn = DatabaseConnection.getConnection()) {
+            java.util.Set<String> depts = getDeptSubtree(currentMaNV, conn);
+            if (depts.isEmpty()) return result;
+            String ph = String.join(",", java.util.Collections.nCopies(depts.size(), "?"));
+            String sql = "SELECT c.maChamCong, c.maNV, c.ngay, c.maCaLam, c.gioVao, c.gioRa, c.soGioLam, c.gioLamThem, c.trangThai, c.phuongThucChamCong, c.ghiChu, t.hoTen, ca.tenCaLam FROM CHAMCONG c "
+                    + "LEFT JOIN THONGTINCANHAN t ON c.maNV = t.maNV "
+                    + "LEFT JOIN CALAM ca ON c.maCaLam = ca.maCaLam "
+                    + "LEFT JOIN BONHIEM b ON c.maNV = b.maNV AND b.trangThai = 'hieu_luc' AND b.loaiBoNhiem = 'chinh' "
+                    + "WHERE MONTH(c.ngay)=? AND YEAR(c.ngay)=? AND b.maPhongBan IN (" + ph + ") ORDER BY c.ngay, c.maNV";
+            try (PreparedStatement ps = conn.prepareStatement(sql)) {
+                ps.setInt(1, thang); ps.setInt(2, nam);
+                int i = 3; for (String d : depts) ps.setString(i++, d);
+                try (ResultSet rs = ps.executeQuery()) { while (rs.next()) result.add(mapChamCong(rs)); }
+            }
+        } catch (SQLException e) {
+            throw new RuntimeException("Lỗi tải chấm công theo phòng ban: " + e.getMessage(), e);
         }
         return result;
     }
@@ -584,6 +631,10 @@ public class ChamCongDAO {
         List<DangKyLamThem> result = new ArrayList<>();
         if (scope == com.hrm.model.DataScope.NONE) return result;
 
+        if (scope == com.hrm.model.DataScope.DEPT) {
+            return getOTByDeptSubtree(currentMaNV, statusValue);
+        }
+
         String sqlBase = "SELECT d.maDK, d.maNV, d.ngay, d.soGio, d.heSoOT, d.lyDo, d.trangThai, d.nguoiDuyet, d.ngayDuyet, t.hoTen FROM DANGKY_LAMTHEM d "
                 + "LEFT JOIN THONGTINCANHAN t ON d.maNV = t.maNV "
                 + "LEFT JOIN BONHIEM b ON d.maNV = b.maNV AND b.trangThai = 'hieu_luc' AND b.loaiBoNhiem = 'chinh' ";
@@ -592,9 +643,6 @@ public class ChamCongDAO {
         switch (scope) {
             case ALL:
                 sqlCondition = " WHERE 1=1 ";
-                break;
-            case DEPT:
-                sqlCondition = " WHERE b.maPhongBan = (SELECT b2.maPhongBan FROM BONHIEM b2 WHERE b2.maNV = ? AND b2.trangThai = 'hieu_luc' AND b2.loaiBoNhiem = 'chinh') ";
                 break;
             case TEAM:
                 sqlCondition = " WHERE b.maQuanLy = ? ";
@@ -613,7 +661,6 @@ public class ChamCongDAO {
         String sql = sqlBase + sqlCondition + " ORDER BY d.ngay DESC";
         try (Connection conn = DatabaseConnection.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
-            
             if (scope != com.hrm.model.DataScope.ALL) {
                 ps.setString(1, currentMaNV);
             }
@@ -624,6 +671,27 @@ public class ChamCongDAO {
             }
         } catch (SQLException e) {
             throw new RuntimeException("Lỗi tải đơn OT theo scope: " + e.getMessage(), e);
+        }
+        return result;
+    }
+
+    private List<DangKyLamThem> getOTByDeptSubtree(String currentMaNV, String statusValue) {
+        List<DangKyLamThem> result = new ArrayList<>();
+        try (Connection conn = DatabaseConnection.getConnection()) {
+            java.util.Set<String> depts = getDeptSubtree(currentMaNV, conn);
+            if (depts.isEmpty()) return result;
+            String ph = String.join(",", java.util.Collections.nCopies(depts.size(), "?"));
+            String statusClause = statusValue != null ? " AND d.trangThai = '" + statusValue + "'" : "";
+            String sql = "SELECT d.maDK, d.maNV, d.ngay, d.soGio, d.heSoOT, d.lyDo, d.trangThai, d.nguoiDuyet, d.ngayDuyet, t.hoTen FROM DANGKY_LAMTHEM d "
+                    + "LEFT JOIN THONGTINCANHAN t ON d.maNV = t.maNV "
+                    + "LEFT JOIN BONHIEM b ON d.maNV = b.maNV AND b.trangThai = 'hieu_luc' AND b.loaiBoNhiem = 'chinh' "
+                    + "WHERE b.maPhongBan IN (" + ph + ")" + statusClause + " ORDER BY d.ngay DESC";
+            try (PreparedStatement ps = conn.prepareStatement(sql)) {
+                int i = 1; for (String d : depts) ps.setString(i++, d);
+                try (ResultSet rs = ps.executeQuery()) { while (rs.next()) result.add(mapDangKyLamThem(rs)); }
+            }
+        } catch (SQLException e) {
+            throw new RuntimeException("Lỗi tải đơn OT theo phòng ban: " + e.getMessage(), e);
         }
         return result;
     }

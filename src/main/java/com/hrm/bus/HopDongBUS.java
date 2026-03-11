@@ -35,6 +35,11 @@ public class HopDongBUS {
     // ============================
 
     public KetQua<HopDongLaoDong> taoHopDong(HopDongLaoDong hd) {
+        if (SelfApprovalGuard.isSelfAction(getCurrentUserNhanVienId(), hd.getMaNV())
+                && !SelfApprovalGuard.currentUserCanBypassSelfRestriction()) {
+            return KetQua.error("Bạn không thể tự ký hợp đồng cho chính mình.");
+        }
+
         // Validate nhân viên
         NhanVien nv = nvRepo.findByMaNhanVien(hd.getMaNV());
         if (nv == null) {
@@ -89,7 +94,7 @@ public class HopDongBUS {
         HopDongLaoDong existing = hopDongRepo.findHieuLuc(hd.getMaNV());
         if (existing != null) {
             return KetQua.error("Nhân viên đã có hợp đồng đang hiệu lực (số HĐ: "
-                    + existing.getSoHopDong() + "). Hãy thanh lý hoặc hủy hợp đồng cũ trước.");
+                    + existing.getSoHopDong() + "). Hãy thanh lý hợp đồng cũ trước.");
         }
 
         // Thiết lập trạng thái
@@ -117,28 +122,14 @@ public class HopDongBUS {
         if (hd == null) {
             return KetQua.error("Không tìm thấy hợp đồng.");
         }
-        if ("thanh_ly".equals(hd.getTrangThai()) || "huy".equals(hd.getTrangThai())) {
-            return KetQua.error("Hợp đồng đã được thanh lý hoặc hủy.");
+        if ("thanh_ly".equals(hd.getTrangThai())) {
+            return KetQua.error("Hợp đồng đã được thanh lý.");
         }
         hopDongRepo.updateTrangThai(maHopDong, "thanh_ly");
         return KetQua.success(null, "Thanh lý hợp đồng thành công.");
     }
 
-    // ============================
-    // huyHopDong
-    // ============================
 
-    public KetQua<Void> huyHopDong(int maHopDong) {
-        HopDongLaoDong hd = findById(maHopDong);
-        if (hd == null) {
-            return KetQua.error("Không tìm thấy hợp đồng.");
-        }
-        if ("huy".equals(hd.getTrangThai())) {
-            return KetQua.error("Hợp đồng đã được hủy.");
-        }
-        hopDongRepo.updateTrangThai(maHopDong, "huy");
-        return KetQua.success(null, "Hủy hợp đồng thành công.");
-    }
 
     // ============================
     // Getters
@@ -171,5 +162,9 @@ public class HopDongBUS {
             }
         }
         return null;
+    }
+    private String getCurrentUserNhanVienId() {
+        com.hrm.model.TaiKhoan currentUser = com.hrm.util.SessionContext.getInstance().getCurrentUser();
+        return currentUser != null ? currentUser.getNhanVienId() : null;
     }
 }

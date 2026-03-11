@@ -1,6 +1,7 @@
 package com.hrm.bus;
 
 import com.hrm.model.*;
+import com.hrm.dao.ChamCongDAO;
 import com.hrm.dao.NghiPhepDAO;
 
 import java.time.DayOfWeek;
@@ -16,9 +17,11 @@ public class NghiPhepBUS {
 
     private static NghiPhepBUS instance;
     private final NghiPhepDAO repository;
+    private final ChamCongDAO chamCongRepo;
 
     private NghiPhepBUS() {
         this.repository = NghiPhepDAO.getInstance();
+        this.chamCongRepo = ChamCongDAO.getInstance();
     }
 
     public static synchronized NghiPhepBUS getInstance() {
@@ -122,6 +125,10 @@ public class NghiPhepBUS {
             return KetQua.error("Đơn xin nghỉ phép đã được xử lý trước đó.");
         }
 
+        if (SelfApprovalGuard.isSelfAction(maNguoiDuyet, don.getNhanVienId())) {
+            return KetQua.error("Bạn không thể tự duyệt đơn xin nghỉ phép của chính mình.");
+        }
+
         LocalDateTime now = LocalDateTime.now();
 
         if (duyet) {
@@ -135,6 +142,7 @@ public class NghiPhepBUS {
                 repository.capNhatSoDaDung(don.getNhanVienId(), namHienTai, "AL", don.getSoNgayNghi());
             }
 
+            createAttendanceForApprovedLeave(don);
             don.setTrangThai(DonXinNghiPhep.TrangThai.DA_DUYET);
             repository.updateTrangThai(maDon, "da_duyet", maNguoiDuyet, now, null);
             return KetQua.success(don, "Đã duyệt đơn xin nghỉ phép #" + maDon);
@@ -156,14 +164,6 @@ public class NghiPhepBUS {
 
         if (!maNVHuy.equals(don.getNhanVienId())) {
             return KetQua.error("Bạn không có quyền hủy đơn này.");
-        }
-
-        if (don.getTrangThai() == DonXinNghiPhep.TrangThai.DA_DUYET) {
-            // Hoàn lại số ngày phép nếu là phép năm
-            if ("AL".equals(don.getLoaiPhepId())) {
-                int namHienTai = LocalDate.now().getYear();
-                repository.capNhatSoDaDung(don.getNhanVienId(), namHienTai, "AL", -don.getSoNgayNghi());
-            }
         }
 
         don.setTrangThai(DonXinNghiPhep.TrangThai.HUY);
@@ -209,6 +209,31 @@ public class NghiPhepBUS {
 
     public DonXinNghiPhep getRequest(int maDon) {
         return repository.findById(maDon);
+    }
+
+    private void createAttendanceForApprovedLeave(DonXinNghiPhep don) {
+        LoaiPhep loaiPhep = repository.findLoaiPhepById(don.getLoaiPhepId());
+        boolean coLuong = loaiPhep != null && loaiPhep.isCoLuong();
+        ChamCong.TrangThai trangThaiChamCong = coLuong
+                ? ChamCong.TrangThai.NGHI_PHEP
+                : ChamCong.TrangThai.VANG_MAT;
+        String ghiChu = "Nghi phep: " + don.getTenLoaiPhep() + " - " + don.getLyDo();
+
+        LocalDate date = don.getTuNgay();
+        while (!date.isAfter(don.getDenNgay())) {
+            DayOfWeek dow = date.getDayOfWeek();
+            if (dow != DayOfWeek.SATURDAY && dow != DayOfWeek.SUNDAY
+                    && chamCongRepo.findChamCongByNVAndNgay(don.getNhanVienId(), date) == null) {
+                ChamCong chamCong = new ChamCong();
+                chamCong.setMaNV(don.getNhanVienId());
+                chamCong.setNgay(date);
+                chamCong.setTrangThai(trangThaiChamCong);
+                chamCong.setPhuongThucChamCong(ChamCong.PhuongThuc.THU_CONG);
+                chamCong.setGhiChu(ghiChu);
+                chamCongRepo.saveChamCong(chamCong);
+            }
+            date = date.plusDays(1);
+        }
     }
 
     // ============================

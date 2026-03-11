@@ -151,7 +151,7 @@ public class EmployeeDetailPanel extends JDialog {
 
         // Tabbed pane
         JTabbedPane tabs = new JTabbedPane(JTabbedPane.TOP);
-        tabs.setFont(new Font("Segoe UI", Font.BOLD, 13));
+        tabs.setFont(com.hrm.util.UIFonts.BOLD_NORMAL);
         tabs.setBackground(UIColors.LIGHT_GRAY_BG);
         tabs.addTab("Thông tin cá nhân",  buildPersonalTab());
         tabs.addTab("Bổ nhiệm hiện tại",  buildAppointmentTab());
@@ -186,11 +186,11 @@ public class EmployeeDetailPanel extends JDialog {
         }
 
         JLabel lblName = new JLabel(name);
-        lblName.setFont(new Font("Segoe UI", Font.BOLD, 18));
+        lblName.setFont(com.hrm.util.UIFonts.HEADER_H3);
         lblName.setForeground(UIColors.WHITE);
 
         JLabel lblCode = new JLabel(code);
-        lblCode.setFont(new Font("Segoe UI", Font.PLAIN, 13));
+        lblCode.setFont(com.hrm.util.UIFonts.TEXT_NORMAL);
         lblCode.setForeground(new Color(220, 210, 255));
 
         JPanel textPanel = new JPanel();
@@ -237,7 +237,7 @@ public class EmployeeDetailPanel extends JDialog {
                 nhanVien != null && nhanVien.getNgayVaoLam() != null
                         ? nhanVien.getNgayVaoLam().format(DATE_FMT) : "");
         cboTrangThaiNhanVien = new JComboBox<>(new String[]{"dang_lam_viec", "tam_nghi", "nghi_viec"});
-        cboTrangThaiNhanVien.setFont(new Font("Segoe UI", Font.PLAIN, 13));
+        cboTrangThaiNhanVien.setFont(com.hrm.util.UIFonts.TEXT_NORMAL);
         cboTrangThaiNhanVien.setRenderer(new DefaultListCellRenderer() {
             @Override
             public Component getListCellRendererComponent(JList<?> list, Object value,
@@ -466,7 +466,7 @@ public class EmployeeDetailPanel extends JDialog {
         btnDoiTrangThai.addActionListener(e -> onDoiTrangThaiClick());
 
         JButton btnClose = new JButton("Đóng");
-        btnClose.setFont(new Font("Segoe UI", Font.BOLD, 13));
+        btnClose.setFont(com.hrm.util.UIFonts.BOLD_NORMAL);
         btnClose.setFocusPainted(false);
         btnClose.setPreferredSize(new Dimension(90, 34));
         btnClose.setCursor(new Cursor(Cursor.HAND_CURSOR));
@@ -677,7 +677,7 @@ public class EmployeeDetailPanel extends JDialog {
 
     private JTextField createReadOnlyTextField() {
         JTextField f = new JTextField();
-        f.setFont(new Font("Segoe UI", Font.PLAIN, 13));
+        f.setFont(com.hrm.util.UIFonts.TEXT_NORMAL);
         f.setEditable(false);
         f.setBorder(BorderFactory.createEmptyBorder(2, 0, 2, 0));
         f.setBackground(UIColors.WHITE);
@@ -686,7 +686,7 @@ public class EmployeeDetailPanel extends JDialog {
 
     private JTextArea createReadOnlyTextArea() {
         JTextArea a = new JTextArea(3, 24);
-        a.setFont(new Font("Segoe UI", Font.PLAIN, 13));
+        a.setFont(com.hrm.util.UIFonts.TEXT_NORMAL);
         a.setLineWrap(true);
         a.setWrapStyleWord(true);
         a.setEditable(false);
@@ -751,7 +751,7 @@ public class EmployeeDetailPanel extends JDialog {
     }
 
     private void stylePrimaryButton(JButton button) {
-        button.setFont(new Font("Segoe UI", Font.BOLD, 13));
+        button.setFont(com.hrm.util.UIFonts.BOLD_NORMAL);
         button.setBackground(UIColors.PRIMARY_PURPLE);
         button.setForeground(UIColors.WHITE);
         button.setFocusPainted(false);
@@ -761,7 +761,7 @@ public class EmployeeDetailPanel extends JDialog {
     }
 
     private void styleWarningButton(JButton button) {
-        button.setFont(new Font("Segoe UI", Font.BOLD, 13));
+        button.setFont(com.hrm.util.UIFonts.BOLD_NORMAL);
         button.setBackground(new Color(230, 120, 0));
         button.setForeground(UIColors.WHITE);
         button.setFocusPainted(false);
@@ -812,7 +812,7 @@ public class EmployeeDetailPanel extends JDialog {
                 g2.drawLine(0, getHeight() - 2, getWidth(), getHeight() - 2);
             }
         };
-        lbl.setFont(new Font("Segoe UI", Font.BOLD, 13));
+        lbl.setFont(com.hrm.util.UIFonts.BOLD_NORMAL);
         lbl.setForeground(UIColors.PRIMARY_PURPLE);
         lbl.setBorder(BorderFactory.createEmptyBorder(0, 0, 6, 0));
         lbl.setAlignmentX(Component.LEFT_ALIGNMENT);
@@ -835,12 +835,12 @@ public class EmployeeDetailPanel extends JDialog {
      */
     private void addInfoRow(JPanel grid, int row, String labelText, String valueText) {
         JLabel lbl = new JLabel(labelText);
-        lbl.setFont(new Font("Segoe UI", Font.BOLD, 13));
+        lbl.setFont(com.hrm.util.UIFonts.BOLD_NORMAL);
         lbl.setForeground(UIColors.TEXT_GRAY);
         lbl.setPreferredSize(new Dimension(170, 24));
 
         JLabel val = new JLabel(valueText);
-        val.setFont(new Font("Segoe UI", Font.PLAIN, 13));
+        val.setFont(com.hrm.util.UIFonts.TEXT_NORMAL);
         val.setForeground(UIColors.TEXT_DARK);
 
         GridBagConstraints gbcLbl = new GridBagConstraints();
@@ -868,7 +868,7 @@ public class EmployeeDetailPanel extends JDialog {
      */
     private void addInfoRow(JPanel grid, int row, String labelText, Component valueComponent) {
         JLabel lbl = new JLabel(labelText);
-        lbl.setFont(new Font("Segoe UI", Font.BOLD, 13));
+        lbl.setFont(com.hrm.util.UIFonts.BOLD_NORMAL);
         lbl.setForeground(UIColors.TEXT_GRAY);
         lbl.setPreferredSize(new Dimension(170, 24));
 
@@ -925,7 +925,7 @@ public class EmployeeDetailPanel extends JDialog {
             }
         };
         badge.setOpaque(false);
-        badge.setFont(new Font("Segoe UI", Font.BOLD, 12));
+        badge.setFont(com.hrm.util.UIFonts.BOLD_SMALL);
         badge.setForeground(UIColors.WHITE);
         badge.setBackground(resolveStatusColor(statusKey));
         badge.setBorder(BorderFactory.createEmptyBorder(4, 10, 4, 10));
@@ -950,7 +950,7 @@ public class EmployeeDetailPanel extends JDialog {
             }
         };
         lbl.setOpaque(false);
-        lbl.setFont(new Font("Segoe UI", Font.BOLD, 12));
+        lbl.setFont(com.hrm.util.UIFonts.BOLD_SMALL);
         lbl.setForeground(UIColors.WHITE);
         lbl.setBackground(bg);
         lbl.setBorder(BorderFactory.createEmptyBorder(3, 8, 3, 8));
@@ -1020,7 +1020,7 @@ public class EmployeeDetailPanel extends JDialog {
                     } else if (v.contains("Hết") || v.contains("Tu choi")) {
                         c.setForeground(UIColors.DANGER_RED);
                     }
-                    ((JLabel) c).setFont(new Font("Segoe UI", Font.BOLD, 12));
+                    ((JLabel) c).setFont(com.hrm.util.UIFonts.BOLD_SMALL);
                 }
             }
             return c;

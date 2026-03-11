@@ -81,29 +81,29 @@ public class EmployeeListPanel extends JPanel {
         searchPanel.setOpaque(false);
 
         JLabel lblSearch = new JLabel("Tìm kiếm:");
-        lblSearch.setFont(new Font("Segoe UI", Font.PLAIN, 14));
+        lblSearch.setFont(com.hrm.util.UIFonts.TEXT_MEDIUM);
         lblSearch.setForeground(UIColors.TEXT_DARK);
 
         txtSearch = new JTextField(20);
-        txtSearch.setFont(new Font("Segoe UI", Font.PLAIN, 14));
+        txtSearch.setFont(com.hrm.util.UIFonts.TEXT_MEDIUM);
         txtSearch.setPreferredSize(new Dimension(220, 32));
 
         JLabel lblPhongBan = new JLabel("Phòng ban:");
-        lblPhongBan.setFont(new Font("Segoe UI", Font.PLAIN, 14));
+        lblPhongBan.setFont(com.hrm.util.UIFonts.TEXT_MEDIUM);
         lblPhongBan.setForeground(UIColors.TEXT_DARK);
 
         cboPhongBan = new JComboBox<>(new String[]{"Tất cả phòng ban"});
-        cboPhongBan.setFont(new Font("Segoe UI", Font.PLAIN, 14));
+        cboPhongBan.setFont(com.hrm.util.UIFonts.TEXT_MEDIUM);
         cboPhongBan.setPreferredSize(new Dimension(180, 32));
 
         JLabel lblTrangThai = new JLabel("Trạng thái:");
-        lblTrangThai.setFont(new Font("Segoe UI", Font.PLAIN, 14));
+        lblTrangThai.setFont(com.hrm.util.UIFonts.TEXT_MEDIUM);
         lblTrangThai.setForeground(UIColors.TEXT_DARK);
 
         cboTrangThai = new JComboBox<>(new String[]{
             "Tất cả", "Đang làm việc", "Tạm nghỉ", "Nghỉ việc"
         });
-        cboTrangThai.setFont(new Font("Segoe UI", Font.PLAIN, 14));
+        cboTrangThai.setFont(com.hrm.util.UIFonts.TEXT_MEDIUM);
         cboTrangThai.setPreferredSize(new Dimension(160, 32));
 
 
@@ -360,7 +360,7 @@ public class EmployeeListPanel extends JPanel {
                     } else if (val.contains("Nghi viec")) {
                         c.setForeground(UIColors.DANGER_RED);
                     }
-                    ((JLabel) c).setFont(new Font("Segoe UI", Font.BOLD, 12));
+                    ((JLabel) c).setFont(com.hrm.util.UIFonts.BOLD_SMALL);
                 }
             }
             return c;

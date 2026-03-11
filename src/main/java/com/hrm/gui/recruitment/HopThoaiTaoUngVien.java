@@ -80,14 +80,14 @@ public class HopThoaiTaoUngVien extends JDialog {
         txtNgaySinh.setToolTipText("Dinh dang: dd/MM/yyyy");
 
         cboGioiTinh = new JComboBox<>(new String[]{"nam", "nu", "khac"});
-        cboGioiTinh.setFont(new Font("Segoe UI", Font.PLAIN, 13));
+        cboGioiTinh.setFont(com.hrm.util.UIFonts.TEXT_NORMAL);
 
         txtDiaChi = field(30);
 
         cboTrinhDo = new JComboBox<>(new String[]{
             "Trung hoc pho thong", "Trung cap", "Cao dang", "Dai hoc", "Thac si", "Tien si", "Khac"
         });
-        cboTrinhDo.setFont(new Font("Segoe UI", Font.PLAIN, 13));
+        cboTrinhDo.setFont(com.hrm.util.UIFonts.TEXT_NORMAL);
 
         txtKinhNghiem   = area(4);
         txtNguonUngTuyen = field(20);
@@ -203,13 +203,13 @@ public class HopThoaiTaoUngVien extends JDialog {
 
     private JTextField field(int cols) {
         JTextField f = new JTextField(cols);
-        f.setFont(new Font("Segoe UI", Font.PLAIN, 13));
+        f.setFont(com.hrm.util.UIFonts.TEXT_NORMAL);
         return f;
     }
 
     private JTextArea area(int rows) {
         JTextArea a = new JTextArea(rows, 25);
-        a.setFont(new Font("Segoe UI", Font.PLAIN, 13));
+        a.setFont(com.hrm.util.UIFonts.TEXT_NORMAL);
         a.setLineWrap(true);
         a.setWrapStyleWord(true);
         return a;
@@ -233,7 +233,7 @@ public class HopThoaiTaoUngVien extends JDialog {
                         GridBagConstraints lblGbc, GridBagConstraints fldGbc) {
         lblGbc.gridy = row; fldGbc.gridy = row;
         JLabel lbl = new JLabel(label);
-        lbl.setFont(new Font("Segoe UI", Font.PLAIN, 13));
+        lbl.setFont(com.hrm.util.UIFonts.TEXT_NORMAL);
         p.add(lbl, lblGbc);
         p.add(comp, fldGbc);
     }

@@ -70,7 +70,7 @@ public class NotificationPanel extends JPanel {
         setBackground(UIColors.LIGHT_GRAY_BG);
 
         JTabbedPane tabbedPane = new JTabbedPane();
-        tabbedPane.setFont(new Font("Segoe UI", Font.PLAIN, 14));
+        tabbedPane.setFont(com.hrm.util.UIFonts.TEXT_MEDIUM);
         tabbedPane.setBackground(UIColors.WHITE);
 
         tabbedPane.addTab("Thông báo của tôi", buildMyNotificationsTab());
@@ -117,8 +117,8 @@ public class NotificationPanel extends JPanel {
         };
         tblThongBao = new JTable(modelThongBao);
         tblThongBao.setRowHeight(28);
-        tblThongBao.setFont(new Font("Segoe UI", Font.PLAIN, 13));
-        tblThongBao.getTableHeader().setFont(new Font("Segoe UI", Font.BOLD, 13));
+        tblThongBao.setFont(com.hrm.util.UIFonts.TEXT_NORMAL);
+        tblThongBao.getTableHeader().setFont(com.hrm.util.UIFonts.BOLD_NORMAL);
         tblThongBao.getTableHeader().setBackground(UIColors.PRIMARY_PURPLE);
         tblThongBao.getTableHeader().setForeground(UIColors.TEXT_DARK);
         tblThongBao.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
@@ -151,7 +151,7 @@ public class NotificationPanel extends JPanel {
                     } else {
                         c.setForeground(UIColors.DANGER_RED);
                         setText("Chưa đọc");
-                        c.setFont(new Font("Segoe UI", Font.BOLD, 12));
+                        c.setFont(com.hrm.util.UIFonts.BOLD_SMALL);
                     }
                 }
                 return c;
@@ -203,7 +203,7 @@ public class NotificationPanel extends JPanel {
 
         // Title
         JLabel lblTitle = new JLabel("Gui thong bao he thong");
-        lblTitle.setFont(new Font("Segoe UI", Font.BOLD, 16));
+        lblTitle.setFont(com.hrm.util.UIFonts.HEADER_SUB);
         lblTitle.setForeground(UIColors.PRIMARY_PURPLE);
         gbc.gridx = 0; gbc.gridy = 0; gbc.gridwidth = 2;
         form.add(lblTitle, gbc);
@@ -213,7 +213,7 @@ public class NotificationPanel extends JPanel {
         gbc.gridy = 1; gbc.gridx = 0;
         form.add(new JLabel("Tieu de:"), gbc);
         txtTieuDe = new JTextField(35);
-        txtTieuDe.setFont(new Font("Segoe UI", Font.PLAIN, 14));
+        txtTieuDe.setFont(com.hrm.util.UIFonts.TEXT_MEDIUM);
         gbc.gridx = 1; gbc.fill = GridBagConstraints.HORIZONTAL;
         form.add(txtTieuDe, gbc);
         gbc.fill = GridBagConstraints.NONE;
@@ -222,7 +222,7 @@ public class NotificationPanel extends JPanel {
         gbc.gridy = 2; gbc.gridx = 0;
         form.add(new JLabel("Noi dung:"), gbc);
         txtNoiDung = new JTextArea(5, 35);
-        txtNoiDung.setFont(new Font("Segoe UI", Font.PLAIN, 14));
+        txtNoiDung.setFont(com.hrm.util.UIFonts.TEXT_MEDIUM);
         txtNoiDung.setLineWrap(true);
         txtNoiDung.setWrapStyleWord(true);
         JScrollPane scrollNoiDung = new JScrollPane(txtNoiDung);
@@ -234,7 +234,7 @@ public class NotificationPanel extends JPanel {
         gbc.gridy = 3; gbc.gridx = 0;
         form.add(new JLabel("Loai thong bao:"), gbc);
         cboLoai = new JComboBox<>(new String[]{"he_thong", "don_tu", "thong_bao_chung"});
-        cboLoai.setFont(new Font("Segoe UI", Font.PLAIN, 14));
+        cboLoai.setFont(com.hrm.util.UIFonts.TEXT_MEDIUM);
         cboLoai.setPreferredSize(new Dimension(250, 32));
         gbc.gridx = 1;
         form.add(cboLoai, gbc);
@@ -245,7 +245,7 @@ public class NotificationPanel extends JPanel {
         cboRecipientType = new JComboBox<>(new String[]{
             "Tat ca nhan vien", "Nhan vien cu the", "Phong ban", "Chuc vu"
         });
-        cboRecipientType.setFont(new Font("Segoe UI", Font.PLAIN, 14));
+        cboRecipientType.setFont(com.hrm.util.UIFonts.TEXT_MEDIUM);
         cboRecipientType.setPreferredSize(new Dimension(220, 32));
         gbc.gridx = 1;
         form.add(cboRecipientType, gbc);
@@ -260,7 +260,7 @@ public class NotificationPanel extends JPanel {
 
         // Card nhân viên cụ thể
         cboNhanVien = new JComboBox<>();
-        cboNhanVien.setFont(new Font("Segoe UI", Font.PLAIN, 13));
+        cboNhanVien.setFont(com.hrm.util.UIFonts.TEXT_NORMAL);
         cboNhanVien.setPreferredSize(new Dimension(300, 32));
         for (NhanVien nv : NhanVienBUS.getInstance().getDangLamViec()) {
             cboNhanVien.addItem(nv);
@@ -284,7 +284,7 @@ public class NotificationPanel extends JPanel {
 
         // Card phòng ban
         cboPhongBan = new JComboBox<>();
-        cboPhongBan.setFont(new Font("Segoe UI", Font.PLAIN, 13));
+        cboPhongBan.setFont(com.hrm.util.UIFonts.TEXT_NORMAL);
         cboPhongBan.setPreferredSize(new Dimension(300, 32));
         for (PhongBan d : new PhongBanBUS().getActiveDepartments()) {
             cboPhongBan.addItem(d);
@@ -305,7 +305,7 @@ public class NotificationPanel extends JPanel {
 
         // Card chức vụ
         cboChucVu = new JComboBox<>();
-        cboChucVu.setFont(new Font("Segoe UI", Font.PLAIN, 13));
+        cboChucVu.setFont(com.hrm.util.UIFonts.TEXT_NORMAL);
         cboChucVu.setPreferredSize(new Dimension(300, 32));
         for (ChucVu p : new ChucVuBUS().getAllPositions()) {
             cboChucVu.addItem(p);
@@ -431,7 +431,7 @@ public class NotificationPanel extends JPanel {
     private void showNoiDung(ThongBao tb) {
         JTextArea area = new JTextArea(tb.getNoiDung() != null ? tb.getNoiDung() : "");
         area.setEditable(false);
-        area.setFont(new Font("Segoe UI", Font.PLAIN, 14));
+        area.setFont(com.hrm.util.UIFonts.TEXT_MEDIUM);
         area.setLineWrap(true);
         area.setWrapStyleWord(true);
         area.setBackground(UIColors.LIGHT_GRAY_BG);

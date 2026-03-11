@@ -78,10 +78,10 @@ public class EvalConfigDialog extends JDialog {
         btnDelete.setEnabled(false);
 
         lblTotalWeight = new JLabel("Tổng trọng số: 0%");
-        lblTotalWeight.setFont(new Font("Segoe UI", Font.BOLD, 14));
+        lblTotalWeight.setFont(com.hrm.util.UIFonts.BOLD_MEDIUM);
 
         lblMode = new JLabel();
-        lblMode.setFont(new Font("Segoe UI", Font.BOLD, 13));
+        lblMode.setFont(com.hrm.util.UIFonts.BOLD_NORMAL);
         updateModeLabel();
     }
 

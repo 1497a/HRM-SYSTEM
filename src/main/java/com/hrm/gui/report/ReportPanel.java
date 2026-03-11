@@ -43,7 +43,7 @@ public class ReportPanel extends JPanel {
         setBackground(UIColors.LIGHT_GRAY_BG);
 
         JTabbedPane tabbedPane = new JTabbedPane();
-        tabbedPane.setFont(new Font("Segoe UI", Font.PLAIN, 14));
+        tabbedPane.setFont(com.hrm.util.UIFonts.TEXT_MEDIUM);
         tabbedPane.setBackground(UIColors.WHITE);
 
         tabbedPane.addTab("Tổng quan nhân sự", buildTongQuanTab());
@@ -108,12 +108,11 @@ public class ReportPanel extends JPanel {
         JScrollPane scroll = new JScrollPane(table);
         scroll.setBorder(new TitledBorder("Số nhân viên theo phòng ban"));
 
-        // Refresh button
-        JPanel toolbar = new JPanel(new FlowLayout(FlowLayout.LEFT, 8, 4));
+        // Refresh button — top-right
+        JPanel toolbar = new JPanel(new FlowLayout(FlowLayout.RIGHT, 8, 4));
         toolbar.setOpaque(false);
-        JButton btnRefresh = UIHelper.createDefaultButton("Làm mới");
+        JButton btnRefresh = UIHelper.createDefaultButton("🔄 Làm mới");
         btnRefresh.addActionListener(e -> {
-            // Rebuild tab by switching away and back
             JTabbedPane tp = (JTabbedPane) SwingUtilities.getAncestorOfClass(JTabbedPane.class, panel);
             if (tp != null) {
                 int idx = tp.indexOfComponent(panel);
@@ -124,9 +123,13 @@ public class ReportPanel extends JPanel {
         });
         toolbar.add(btnRefresh);
 
-        panel.add(cardsPanel, BorderLayout.NORTH);
+        JPanel north = new JPanel(new BorderLayout());
+        north.setOpaque(false);
+        north.add(cardsPanel, BorderLayout.CENTER);
+        north.add(toolbar, BorderLayout.EAST);
+
+        panel.add(north, BorderLayout.NORTH);
         panel.add(scroll, BorderLayout.CENTER);
-        panel.add(toolbar, BorderLayout.SOUTH);
         return panel;
     }
 
@@ -139,7 +142,8 @@ public class ReportPanel extends JPanel {
         panel.setBackground(UIColors.LIGHT_GRAY_BG);
         panel.setBorder(new EmptyBorder(16, 16, 16, 16));
 
-        String[] cols = {"Nhân viên", "Phép năm được cấp", "Đã dùng", "Còn lại"};
+        // Tách riêng cột "Nhân viên" và "Loại phép"
+        String[] cols = {"Nhân viên", "Loại phép", "Được cấp", "Đã dùng", "Còn lại"};
         DefaultTableModel model = new DefaultTableModel(cols, 0) {
             @Override public boolean isCellEditable(int r, int c) { return false; }
         };
@@ -150,48 +154,45 @@ public class ReportPanel extends JPanel {
             int currentYear = java.time.LocalDate.now().getYear();
 
             for (NhanVien nv : allNV) {
-                // Lấy số dư phép nghỉ năm hiện tại
                 try {
                     List<com.hrm.model.SoDungPhep> balances =
                             leaveRepo.findByMaNVAndNam(nv.getMaNhanVien(), currentYear);
                     if (balances.isEmpty()) {
-                        // Show row with zeros if no balance records
                         model.addRow(new Object[]{
                                 nv.getHoTen() != null ? nv.getHoTen() : nv.getMaNhanVien(),
-                                0, 0, 0
+                                "—", 0, 0, 0
                         });
                     } else {
                         for (com.hrm.model.SoDungPhep bal : balances) {
                             model.addRow(new Object[]{
-                                    (nv.getHoTen() != null ? nv.getHoTen() : nv.getMaNhanVien())
-                                            + " (" + bal.getLeaveTypeCode() + ")",
+                                    nv.getHoTen() != null ? nv.getHoTen() : nv.getMaNhanVien(),
+                                    mapLeaveTypeCode(bal.getLeaveTypeCode()),
                                     bal.getTotalDays(),
                                     bal.getUsedDays(),
                                     bal.getRemainingDays()
                             });
                         }
                     }
-                } catch (Exception ignored) {
-                    // Skip if no balance data for this employee
-                }
+                } catch (Exception ignored) {}
             }
         } catch (Exception ex) {
-            model.addRow(new Object[]{"Lỗi tải dữ liệu: " + ex.getMessage(), "", "", ""});
+            model.addRow(new Object[]{"Lỗi tải dữ liệu: " + ex.getMessage(), "", "", "", ""});
         }
 
         JTable table = buildStyledTable(model);
-        table.getColumnModel().getColumn(0).setPreferredWidth(220);
-        table.getColumnModel().getColumn(1).setPreferredWidth(160);
-        table.getColumnModel().getColumn(2).setPreferredWidth(100);
-        table.getColumnModel().getColumn(3).setPreferredWidth(100);
+        table.getColumnModel().getColumn(0).setPreferredWidth(200);
+        table.getColumnModel().getColumn(1).setPreferredWidth(130);
+        table.getColumnModel().getColumn(2).setPreferredWidth(90);
+        table.getColumnModel().getColumn(3).setPreferredWidth(90);
+        table.getColumnModel().getColumn(4).setPreferredWidth(90);
 
         JScrollPane scroll = new JScrollPane(table);
         scroll.setBorder(new TitledBorder("Báo cáo sử dụng phép nghỉ"));
 
-        JPanel toolbar = buildRefreshToolbar(panel, "Báo cáo nghỉ phép");
+        JPanel toolbar = buildRefreshToolbar(panel, "Báo cáo nghỉ phép", 1);
 
+        panel.add(toolbar, BorderLayout.NORTH);
         panel.add(scroll, BorderLayout.CENTER);
-        panel.add(toolbar, BorderLayout.SOUTH);
         return panel;
     }
 
@@ -204,7 +205,8 @@ public class ReportPanel extends JPanel {
         panel.setBackground(UIColors.LIGHT_GRAY_BG);
         panel.setBorder(new EmptyBorder(16, 16, 16, 16));
 
-        String[] cols = {"Tháng/Năm", "Tên bảng lương", "Trạng thái", "Tổng lương"};
+        // Bỏ cột "Tên bảng lương" vì trùng nội dung "Tháng/Năm"
+        String[] cols = {"Tháng/Năm", "Trạng thái", "Tổng lương (thực nhận)"};
         DefaultTableModel model = new DefaultTableModel(cols, 0) {
             @Override public boolean isCellEditable(int r, int c) { return false; }
         };
@@ -212,13 +214,9 @@ public class ReportPanel extends JPanel {
         try {
             List<BangLuong> bangLuongList = blRepo.findAll();
             for (BangLuong bl : bangLuongList) {
-                int thang = bl.getThang();
-                int nam = bl.getNam();
-                String thangNam = thang + "/" + nam;
-                String tenBL = "Bảng lương tháng " + thangNam;
-                String trangThai = bl.getTrangThai() != null ? bl.getTrangThai().toString() : "";
+                String thangNam = bl.getThang() + "/" + bl.getNam();
+                String trangThai = bl.getTrangThai() != null ? bl.getTrangThai().getDisplayName() : "";
 
-                // Tính tổng lương thực lãnh từ ChiTietLuong
                 double tongLuong = 0;
                 try {
                     var chiTietList = blRepo.findByBangLuong(bl.getMaBL());
@@ -229,33 +227,31 @@ public class ReportPanel extends JPanel {
 
                 model.addRow(new Object[]{
                         thangNam,
-                        tenBL,
                         trangThai,
                         formatMoney(tongLuong)
                 });
             }
         } catch (Exception ex) {
-            model.addRow(new Object[]{"Lỗi tải dữ liệu: " + ex.getMessage(), "", "", ""});
+            model.addRow(new Object[]{"Lỗi tải dữ liệu: " + ex.getMessage(), "", ""});
         }
 
         JTable table = buildStyledTable(model);
-        table.getColumnModel().getColumn(0).setPreferredWidth(100);
-        table.getColumnModel().getColumn(1).setPreferredWidth(280);
-        table.getColumnModel().getColumn(2).setPreferredWidth(130);
-        table.getColumnModel().getColumn(3).setPreferredWidth(160);
+        table.getColumnModel().getColumn(0).setPreferredWidth(120);
+        table.getColumnModel().getColumn(1).setPreferredWidth(150);
+        table.getColumnModel().getColumn(2).setPreferredWidth(200);
 
         // Right-align tổng lương
         javax.swing.table.DefaultTableCellRenderer right = new javax.swing.table.DefaultTableCellRenderer();
         right.setHorizontalAlignment(SwingConstants.RIGHT);
-        table.getColumnModel().getColumn(3).setCellRenderer(right);
+        table.getColumnModel().getColumn(2).setCellRenderer(right);
 
         JScrollPane scroll = new JScrollPane(table);
         scroll.setBorder(new TitledBorder("Báo cáo tổng hợp bảng lương"));
 
-        JPanel toolbar = buildRefreshToolbar(panel, "Báo cáo lương");
+        JPanel toolbar = buildRefreshToolbar(panel, "Báo cáo lương", 2);
 
+        panel.add(toolbar, BorderLayout.NORTH);
         panel.add(scroll, BorderLayout.CENTER);
-        panel.add(toolbar, BorderLayout.SOUTH);
         return panel;
     }
 
@@ -266,36 +262,53 @@ public class ReportPanel extends JPanel {
     private JTable buildStyledTable(DefaultTableModel model) {
         JTable table = new JTable(model);
         table.setRowHeight(28);
-        table.setFont(new Font("Segoe UI", Font.PLAIN, 13));
-        table.getTableHeader().setFont(new Font("Segoe UI", Font.BOLD, 13));
+        table.setFont(com.hrm.util.UIFonts.TEXT_NORMAL);
+        table.getTableHeader().setFont(com.hrm.util.UIFonts.BOLD_NORMAL);
         table.getTableHeader().setBackground(UIColors.PRIMARY_PURPLE);
-        table.getTableHeader().setForeground(UIColors.TEXT_DARK);
+        table.getTableHeader().setForeground(java.awt.Color.WHITE); // Fix: trắng trên tím
+        table.getTableHeader().setOpaque(true);
         table.setSelectionBackground(UIColors.LIGHT_PURPLE);
         table.setSelectionForeground(UIColors.TEXT_DARK);
         table.setGridColor(UIColors.BORDER_GRAY);
         return table;
     }
 
-    private JPanel buildRefreshToolbar(JPanel targetPanel, String tabName) {
-        JPanel toolbar = new JPanel(new FlowLayout(FlowLayout.LEFT, 8, 4));
+    /** Ánh xạ mã loại phép → tên hiển thị tiếng Việt */
+    private String mapLeaveTypeCode(String code) {
+        if (code == null) return "";
+        switch (code) {
+            case "PHEP_NAM":         return "Phép năm";
+            case "PHEP_OM":          return "Nghỉ ốm";
+            case "PHEP_CUOI":        return "Nghỉ cưới";
+            case "PHEP_TANG":        return "Nghỉ tang";
+            case "PHEP_THAI_SAN":    return "Thai sản";
+            case "PHEP_KHONG_LUONG": return "Không lương";
+            // Fallback cho code kiểu cũ
+            case "AL": return "Phép năm";
+            case "SL": return "Nghỉ ốm";
+            case "ML": return "Thai sản";
+            case "UL": return "Không lương";
+            default: return code;
+        }
+    }
+
+    private JPanel buildRefreshToolbar(JPanel targetPanel, String tabName, int tabIndex) {
+        JPanel toolbar = new JPanel(new FlowLayout(FlowLayout.RIGHT, 8, 4));
         toolbar.setOpaque(false);
-        JButton btn = UIHelper.createDefaultButton("Làm mới");
+        JButton btn = UIHelper.createDefaultButton("🔄 Làm mới");
         btn.addActionListener(e -> {
             JTabbedPane tp = (JTabbedPane) SwingUtilities.getAncestorOfClass(JTabbedPane.class, targetPanel);
             if (tp != null) {
-                int idx = tp.indexOfComponent(targetPanel);
-                if (idx >= 0) {
-                    JPanel newTab;
-                    switch (idx) {
-                        case 0: newTab = buildTongQuanTab(); break;
-                        case 1: newTab = buildLeaveReportTab(); break;
-                        case 2: newTab = buildSalaryReportTab(); break;
-                        default: return;
-                    }
-                    tp.removeTabAt(idx);
-                    tp.insertTab(tabName, null, newTab, null, idx);
-                    tp.setSelectedIndex(idx);
+                JPanel newTab;
+                switch (tabIndex) {
+                    case 0: newTab = buildTongQuanTab(); break;
+                    case 1: newTab = buildLeaveReportTab(); break;
+                    case 2: newTab = buildSalaryReportTab(); break;
+                    default: return;
                 }
+                tp.removeTabAt(tabIndex);
+                tp.insertTab(tabName, null, newTab, null, tabIndex);
+                tp.setSelectedIndex(tabIndex);
             }
         });
         toolbar.add(btn);

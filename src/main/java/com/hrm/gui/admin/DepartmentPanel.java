@@ -262,7 +262,7 @@ public class DepartmentPanel extends JPanel {
                     i == 0 ? "Mã phòng ban:" :
                     i == 1 ? "Tên phòng ban (*):" :
                     i == 2 ? "Phòng ban cha:" : "Trạng thái:");
-            lbl.setFont(new Font("Segoe UI", Font.PLAIN, 14));
+            lbl.setFont(com.hrm.util.UIFonts.TEXT_MEDIUM);
             form.add(lbl, gbc);
             gbc.gridx = 1; gbc.fill = GridBagConstraints.HORIZONTAL; gbc.weightx = 1.0;
             fields[i].setPreferredSize(new Dimension(220, 28));

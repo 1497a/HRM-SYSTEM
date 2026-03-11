@@ -45,6 +45,7 @@ public class AppointmentFormDialog extends JDialog {
     private JSpinner spnTyLe;
     private JSpinner spnTuNgay;
     private JTextArea txtGhiChu;
+    private JTextField txtDenNgay;
     private JTextField txtNguoiDuyet;
     private JTextField txtNgayDuyet;
 
@@ -83,28 +84,28 @@ public class AppointmentFormDialog extends JDialog {
     private void initComponents() {
         // Nhân viên
         cboNhanVien = new JComboBox<>();
-        cboNhanVien.setFont(new Font("Segoe UI", Font.PLAIN, 14));
+        cboNhanVien.setFont(com.hrm.util.UIFonts.TEXT_MEDIUM);
         loadNhanVien();
 
         // Phòng ban
         cboPhongBan = new JComboBox<>();
-        cboPhongBan.setFont(new Font("Segoe UI", Font.PLAIN, 14));
+        cboPhongBan.setFont(com.hrm.util.UIFonts.TEXT_MEDIUM);
         loadDepartments();
 
         // Chức vụ
         cboChucVu = new JComboBox<>();
-        cboChucVu.setFont(new Font("Segoe UI", Font.PLAIN, 14));
+        cboChucVu.setFont(com.hrm.util.UIFonts.TEXT_MEDIUM);
         loadPositions();
 
         // Cấp trên trực tiếp
         cboQuanLy = new JComboBox<>();
-        cboQuanLy.setFont(new Font("Segoe UI", Font.PLAIN, 14));
+        cboQuanLy.setFont(com.hrm.util.UIFonts.TEXT_MEDIUM);
         loadQuanLy();
 
         // Loại bổ nhiệm
         // DB ENUM: 'chinh', 'kiem_nhiem'
         cboLoaiBoNhiem = new JComboBox<>(new String[]{"chinh", "kiem_nhiem"});
-        cboLoaiBoNhiem.setFont(new Font("Segoe UI", Font.PLAIN, 14));
+        cboLoaiBoNhiem.setFont(com.hrm.util.UIFonts.TEXT_MEDIUM);
         cboLoaiBoNhiem.setRenderer(new DefaultListCellRenderer() {
             @Override
             public Component getListCellRendererComponent(JList<?> list, Object value,
@@ -124,36 +125,41 @@ public class AppointmentFormDialog extends JDialog {
         // Tỷ lệ hưởng lương (0-100%)
         SpinnerNumberModel tyLeModel = new SpinnerNumberModel(100, 0, 100, 1);
         spnTyLe = new JSpinner(tyLeModel);
-        spnTyLe.setFont(new Font("Segoe UI", Font.PLAIN, 14));
+        spnTyLe.setFont(com.hrm.util.UIFonts.TEXT_MEDIUM);
         spnTyLe.setPreferredSize(new Dimension(80, 32));
 
         // Từ ngày
         SpinnerDateModel tuNgayModel = new SpinnerDateModel(new Date(), null, null, java.util.Calendar.DAY_OF_MONTH);
         spnTuNgay = new JSpinner(tuNgayModel);
         spnTuNgay.setEditor(new JSpinner.DateEditor(spnTuNgay, "dd/MM/yyyy"));
-        spnTuNgay.setFont(new Font("Segoe UI", Font.PLAIN, 14));
+        spnTuNgay.setFont(com.hrm.util.UIFonts.TEXT_MEDIUM);
 
         // Ghi chú
         txtGhiChu = new JTextArea(3, 20);
-        txtGhiChu.setFont(new Font("Segoe UI", Font.PLAIN, 14));
+        txtGhiChu.setFont(com.hrm.util.UIFonts.TEXT_MEDIUM);
         txtGhiChu.setLineWrap(true);
         txtGhiChu.setWrapStyleWord(true);
 
+        txtDenNgay = new JTextField();
+        txtDenNgay.setFont(com.hrm.util.UIFonts.BOLD_MEDIUM);
+        txtDenNgay.setEditable(false);
+        txtDenNgay.setBackground(new Color(245, 245, 245));
+
         // Người duyệt, Ngày duyệt
         txtNguoiDuyet = new JTextField();
-        txtNguoiDuyet.setFont(new Font("Segoe UI", Font.BOLD, 14));
+        txtNguoiDuyet.setFont(com.hrm.util.UIFonts.BOLD_MEDIUM);
         txtNguoiDuyet.setEditable(false);
         txtNguoiDuyet.setBackground(new Color(245, 245, 245));
 
         txtNgayDuyet = new JTextField();
-        txtNgayDuyet.setFont(new Font("Segoe UI", Font.BOLD, 14));
+        txtNgayDuyet.setFont(com.hrm.util.UIFonts.BOLD_MEDIUM);
         txtNgayDuyet.setEditable(false);
         txtNgayDuyet.setBackground(new Color(245, 245, 245));
 
         // Buttons
         btnLuu = new PurpleButton("Lưu");
         btnHuy = new JButton("Hủy");
-        btnHuy.setFont(new Font("Segoe UI", Font.PLAIN, 14));
+        btnHuy.setFont(com.hrm.util.UIFonts.TEXT_MEDIUM);
         btnHuy.setCursor(new Cursor(Cursor.HAND_CURSOR));
 
         btnLuu.addActionListener(e -> luuBoNhiem());
@@ -260,7 +266,7 @@ public class AppointmentFormDialog extends JDialog {
 
         // Tiêu đề form
         JLabel lblTitle = new JLabel("THÔNG TIN BỔ NHIỆM");
-        lblTitle.setFont(new Font("Segoe UI", Font.BOLD, 16));
+        lblTitle.setFont(com.hrm.util.UIFonts.HEADER_SUB);
         lblTitle.setForeground(UIColors.PRIMARY_PURPLE);
         gbc.gridx = 0; gbc.gridy = 0; gbc.gridwidth = 2;
         gbc.insets = new Insets(0, 8, 12, 8);
@@ -286,7 +292,7 @@ public class AppointmentFormDialog extends JDialog {
         // Ghi chú
         gbc.gridx = 0; gbc.gridy = 8;
         JLabel lblGhiChu = new JLabel("Ghi chú:");
-        lblGhiChu.setFont(new Font("Segoe UI", Font.PLAIN, 14));
+        lblGhiChu.setFont(com.hrm.util.UIFonts.TEXT_MEDIUM);
         lblGhiChu.setForeground(UIColors.TEXT_DARK);
         formPanel.add(lblGhiChu, gbc);
 
@@ -301,6 +307,7 @@ public class AppointmentFormDialog extends JDialog {
 
         // Chỉ hiển thị người duyệt / ngày duyệt nếu có boNhiemHienThi
         if (boNhiemHienThi != null) {
+            addFormRow(formPanel, gbc, 11, "Ngay ket thuc", txtDenNgay);
             addFormRow(formPanel, gbc, 9, "Người duyệt", txtNguoiDuyet);
             addFormRow(formPanel, gbc, 10, "Ngày duyệt", txtNgayDuyet);
         }
@@ -344,7 +351,7 @@ public class AppointmentFormDialog extends JDialog {
     private void addFormRow(JPanel panel, GridBagConstraints gbc, int row, String label, JComponent field) {
         gbc.gridx = 0; gbc.gridy = row;
         JLabel lbl = new JLabel(label + ":");
-        lbl.setFont(new Font("Segoe UI", Font.PLAIN, 14));
+        lbl.setFont(com.hrm.util.UIFonts.TEXT_MEDIUM);
         lbl.setForeground(UIColors.TEXT_DARK);
         panel.add(lbl, gbc);
 
@@ -403,6 +410,13 @@ public class AppointmentFormDialog extends JDialog {
         if (bn.getTuNgay() != null) {
             Date date = Date.from(bn.getTuNgay().atStartOfDay(ZoneId.systemDefault()).toInstant());
             spnTuNgay.setValue(date);
+        }
+
+        if (bn.getDenNgay() != null) {
+            java.time.format.DateTimeFormatter ngayFormatter = java.time.format.DateTimeFormatter.ofPattern("dd/MM/yyyy");
+            txtDenNgay.setText(bn.getDenNgay().format(ngayFormatter));
+        } else {
+            txtDenNgay.setText("Khong thoi han");
         }
 
         // Cấp trên trực tiếp
@@ -527,7 +541,7 @@ public class AppointmentFormDialog extends JDialog {
     }
 
     private static void styleActionButton(JButton btn, Color bg) {
-        btn.setFont(new Font("Segoe UI", Font.BOLD, 13));
+        btn.setFont(com.hrm.util.UIFonts.BOLD_NORMAL);
         btn.setBackground(bg);
         btn.setForeground(Color.WHITE);
         btn.setFocusPainted(false);
@@ -574,7 +588,7 @@ public class AppointmentFormDialog extends JDialog {
 
     private void tuChoiBoNhiem() {
         JTextField txtLyDo = new JTextField(30);
-        txtLyDo.setFont(new Font("Segoe UI", Font.PLAIN, 14));
+        txtLyDo.setFont(com.hrm.util.UIFonts.TEXT_MEDIUM);
         int confirm = JOptionPane.showConfirmDialog(this, new Object[]{"Lý do từ chối:", txtLyDo},
                 "Từ chối bổ nhiệm #" + boNhiemHienThi.getMaBoNhiem(),
                 JOptionPane.OK_CANCEL_OPTION, JOptionPane.PLAIN_MESSAGE);
@@ -595,7 +609,7 @@ public class AppointmentFormDialog extends JDialog {
         SpinnerDateModel dateModel = new SpinnerDateModel(new Date(), null, null, java.util.Calendar.DAY_OF_MONTH);
         JSpinner spnDenNgay = new JSpinner(dateModel);
         spnDenNgay.setEditor(new JSpinner.DateEditor(spnDenNgay, "dd/MM/yyyy"));
-        spnDenNgay.setFont(new Font("Segoe UI", Font.PLAIN, 14));
+        spnDenNgay.setFont(com.hrm.util.UIFonts.TEXT_MEDIUM);
 
         int confirm = JOptionPane.showConfirmDialog(this,
                 new Object[]{"Ngày kết thúc:", spnDenNgay},

@@ -62,8 +62,8 @@ public class EvalCycleListPanel extends JPanel {
 
         cycleTable = new JTable(cycleTableModel);
         cycleTable.setRowHeight(28);
-        cycleTable.setFont(new Font("Segoe UI", Font.PLAIN, 13));
-        cycleTable.getTableHeader().setFont(new Font("Segoe UI", Font.BOLD, 13));
+        cycleTable.setFont(com.hrm.util.UIFonts.TEXT_NORMAL);
+        cycleTable.getTableHeader().setFont(com.hrm.util.UIFonts.BOLD_NORMAL);
         cycleTable.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
         cycleTable.getSelectionModel().addListSelectionListener(e -> onCycleSelected());
 
@@ -172,15 +172,15 @@ public class EvalCycleListPanel extends JPanel {
 
     private void taoDot() {
         JTextField txtTen = new JTextField(25);
-        txtTen.setFont(new Font("Segoe UI", Font.PLAIN, 13));
+        txtTen.setFont(com.hrm.util.UIFonts.TEXT_NORMAL);
 
         String[] kyOptions = {"Quý 1", "Quý 2", "Quý 3", "Quý 4", "Cả năm"};
         String[] kyValues = {"quy_1", "quy_2", "quy_3", "quy_4", "ca_nam"};
         JComboBox<String> cboKy = new JComboBox<>(kyOptions);
-        cboKy.setFont(new Font("Segoe UI", Font.PLAIN, 13));
+        cboKy.setFont(com.hrm.util.UIFonts.TEXT_NORMAL);
 
         JSpinner spinNam = new JSpinner(new SpinnerNumberModel(LocalDate.now().getYear(), 2020, 2099, 1));
-        spinNam.setFont(new Font("Segoe UI", Font.PLAIN, 13));
+        spinNam.setFont(com.hrm.util.UIFonts.TEXT_NORMAL);
 
         SpinnerDateModel mdBD = new SpinnerDateModel(java.util.Date.from(
                 LocalDate.now().atStartOfDay(java.time.ZoneId.systemDefault()).toInstant()),
@@ -207,7 +207,7 @@ public class EvalCycleListPanel extends JPanel {
         List<JCheckBox> checkBoxes = new java.util.ArrayList<>();
 
         JLabel lblTotal = new JLabel("Tổng trọng số: 0%");
-        lblTotal.setFont(new Font("Segoe UI", Font.BOLD, 13));
+        lblTotal.setFont(com.hrm.util.UIFonts.BOLD_NORMAL);
         lblTotal.setForeground(UIColors.DANGER_RED);
 
         java.awt.event.ActionListener calcTotalAction = e -> {

@@ -299,6 +299,10 @@ public class ChamCongBUS {
         if (!dk.dangChoDuyet()) {
             return KetQua.error("Đơn đã được xử lý rồi.");
         }
+        if (SelfApprovalGuard.isSelfAction(nguoiDuyetId, dk.getMaNV())
+                && !SelfApprovalGuard.currentUserCanBypassSelfRestriction()) {
+            return KetQua.error("Bạn không thể tự duyệt đơn làm thêm của chính mình.");
+        }
         LocalDateTime now = LocalDateTime.now();
         repository.updateTrangThai(maDK, "da_duyet", nguoiDuyetId, now);
         dk.setTrangThai(DangKyLamThem.TrangThai.DA_DUYET);
@@ -317,6 +321,10 @@ public class ChamCongBUS {
         }
         if (!dk.dangChoDuyet()) {
             return KetQua.error("Đơn đã được xử lý rồi.");
+        }
+        if (SelfApprovalGuard.isSelfAction(nguoiDuyetId, dk.getMaNV())
+                && !SelfApprovalGuard.currentUserCanBypassSelfRestriction()) {
+            return KetQua.error("Bạn không thể tự từ chối đơn làm thêm của chính mình.");
         }
         LocalDateTime now = LocalDateTime.now();
         repository.updateTrangThai(maDK, "tu_choi", nguoiDuyetId, now);

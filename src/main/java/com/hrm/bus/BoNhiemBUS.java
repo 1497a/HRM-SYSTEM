@@ -44,6 +44,11 @@ public class BoNhiemBUS {
     // ============================
 
     public KetQua<BoNhiem> taoBoNhiem(BoNhiem bn) {
+        if (SelfApprovalGuard.isSelfAction(getCurrentUserNhanVienId(), bn.getNhanVienId())
+                && !SelfApprovalGuard.currentUserCanBypassSelfRestriction()) {
+            return KetQua.error("Bạn không thể tự tạo bổ nhiệm cho chính mình.");
+        }
+
         // Validate nhân viên tồn tại và đang làm việc
         NhanVien nv = nvRepo.findByMaNhanVien(bn.getNhanVienId());
         if (nv == null) {
@@ -115,6 +120,11 @@ public class BoNhiemBUS {
 
         if (!"cho_duyet".equals(bn.getTrangThai())) {
             return KetQua.error("Bổ nhiệm này không ở trạng thái chờ duyệt.");
+        }
+
+        if (SelfApprovalGuard.isSelfAction(nguoiDuyetId, bn.getNhanVienId())
+                && !SelfApprovalGuard.currentUserCanBypassSelfRestriction()) {
+            return KetQua.error("Bạn không thể tự duyệt bổ nhiệm cho chính mình.");
         }
 
         LocalDateTime now = LocalDateTime.now();
@@ -299,5 +309,9 @@ public class BoNhiemBUS {
 
         // Cuối cùng lấy vai trò đầu tiên
         return roles.get(0).getId();
+    }
+    private String getCurrentUserNhanVienId() {
+        TaiKhoan currentUser = com.hrm.util.SessionContext.getInstance().getCurrentUser();
+        return currentUser != null ? currentUser.getNhanVienId() : null;
     }
 }

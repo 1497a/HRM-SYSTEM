@@ -36,7 +36,6 @@ public class ContractListPanel extends JPanel {
     private JComboBox<Object> cboNhanVien;
     private PurpleButton btnTao;
     private PurpleButton btnThanhLy;
-    private PurpleButton btnHuy;
 
 
     private List<HopDongLaoDong> danhSachHienThi = new ArrayList<>();
@@ -70,7 +69,7 @@ public class ContractListPanel extends JPanel {
 
         // Tiêu đề
         JLabel lblTitle = new JLabel("QUẢN LÝ HỢP ĐỒNG LAO ĐỘNG");
-        lblTitle.setFont(new Font("Segoe UI", Font.BOLD, 20));
+        lblTitle.setFont(com.hrm.util.UIFonts.HEADER_H2);
         lblTitle.setForeground(UIColors.PRIMARY_PURPLE);
         lblTitle.setBorder(BorderFactory.createEmptyBorder(0, 0, 8, 0));
         panel.add(lblTitle, BorderLayout.NORTH);
@@ -80,21 +79,21 @@ public class ContractListPanel extends JPanel {
         filterPanel.setOpaque(false);
 
         JLabel lblTrangThai = new JLabel("Trạng thái:");
-        lblTrangThai.setFont(new Font("Segoe UI", Font.PLAIN, 14));
+        lblTrangThai.setFont(com.hrm.util.UIFonts.TEXT_MEDIUM);
         lblTrangThai.setForeground(UIColors.TEXT_DARK);
 
         cboTrangThai = new JComboBox<>(new String[]{
             "Tất cả", "Hiệu lực", "Hết hiệu lực", "Thanh lý"
         });
-        cboTrangThai.setFont(new Font("Segoe UI", Font.PLAIN, 14));
+        cboTrangThai.setFont(com.hrm.util.UIFonts.TEXT_MEDIUM);
         cboTrangThai.setPreferredSize(new Dimension(160, 32));
 
         JLabel lblNhanVien = new JLabel("Nhân viên:");
-        lblNhanVien.setFont(new Font("Segoe UI", Font.PLAIN, 14));
+        lblNhanVien.setFont(com.hrm.util.UIFonts.TEXT_MEDIUM);
         lblNhanVien.setForeground(UIColors.TEXT_DARK);
 
         cboNhanVien = new JComboBox<>();
-        cboNhanVien.setFont(new Font("Segoe UI", Font.PLAIN, 14));
+        cboNhanVien.setFont(com.hrm.util.UIFonts.TEXT_MEDIUM);
         cboNhanVien.addItem("Tất cả");
 
         com.hrm.model.TaiKhoan currentUser = SessionContext.getInstance().getCurrentUser();
@@ -160,16 +159,14 @@ public class ContractListPanel extends JPanel {
         btnTao = new PurpleButton("+ Tạo hợp đồng");
         btnThanhLy = PurpleButton.warning("Thanh lý");
         btnThanhLy.setToolTipText("Thanh lý: Hai bên thỏa thuận chấm dứt hợp đồng trước thời hạn. Hợp đồng vẫn được lưu với trạng thái 'Thanh lý'.");
-        btnHuy = PurpleButton.danger("Hủy hợp đồng");
         panel.add(btnTao);
         panel.add(btnThanhLy);
-        panel.add(btnHuy);
 
         // Ghi chú giải thích các trạng thái
         JLabel lblNote = new JLabel(
                 "<html><i>💡 <b>Thanh lý hợp đồng:</b> Hai bên thỏa thuận chấm dứt hợp đồng lao động trước thời hạn theo quy định pháp luật.</i></html>");
         lblNote.setForeground(new Color(100, 100, 100));
-        lblNote.setFont(new Font("Segoe UI", Font.PLAIN, 12));
+        lblNote.setFont(com.hrm.util.UIFonts.TEXT_SMALL);
         panel.add(lblNote);
 
         return panel;
@@ -182,7 +179,6 @@ public class ContractListPanel extends JPanel {
     private void setupEvents() {
         btnTao.addActionListener(e -> showCreateDialog());
         btnThanhLy.addActionListener(e -> thanhLyHopDong());
-        btnHuy.addActionListener(e -> huyHopDong());
 
         cboTrangThai.addActionListener(e -> applyFilter());
         cboNhanVien.addActionListener(e -> applyFilter());
@@ -208,7 +204,6 @@ public class ContractListPanel extends JPanel {
 
         btnTao.setVisible(canCreate);
         btnThanhLy.setVisible(canUpdate);
-        btnHuy.setVisible(canUpdate);
     }
 
     // ============================
@@ -217,14 +212,23 @@ public class ContractListPanel extends JPanel {
 
     public void loadData() {
         DataScope scope = XacThucBUS.getInstance().getScopeForAction("CONTRACT_VIEW");
+        TaiKhoan user = SessionContext.getInstance().getCurrentUser();
+        String myMaNV = user != null ? user.getNhanVienId() : null;
         if (scope == DataScope.SELF) {
-            TaiKhoan user = SessionContext.getInstance().getCurrentUser();
-            String myMaNV = user != null ? user.getNhanVienId() : null;
             danhSachHienThi = (myMaNV != null && !myMaNV.isEmpty())
                     ? hopDongService.getByMaNV(myMaNV)
                     : new java.util.ArrayList<>();
-        } else {
+        } else if (scope == DataScope.ALL) {
             danhSachHienThi = hopDongService.getAll();
+        } else {
+            // DEPT hoac TEAM: chi load hop dong cua NV trong pham vi
+            java.util.Set<String> maNVSet = com.hrm.bus.NhanVienBUS.getInstance()
+                    .getAllByActionScope("CONTRACT_VIEW", myMaNV).stream()
+                    .map(com.hrm.model.NhanVien::getMaNhanVien)
+                    .collect(java.util.stream.Collectors.toSet());
+            danhSachHienThi = hopDongService.getAll().stream()
+                    .filter(hd -> maNVSet.contains(hd.getMaNV()))
+                    .collect(java.util.stream.Collectors.toList());
         }
         tableModel.setRowCount(0);
 
@@ -328,31 +332,6 @@ public class ContractListPanel extends JPanel {
         }
     }
 
-    private void huyHopDong() {
-        HopDongLaoDong selected = getSelectedHopDong();
-        if (selected == null) {
-            JOptionPane.showMessageDialog(this,
-                    "Vui lòng chọn một hợp đồng để hủy.",
-                    "Thông báo", JOptionPane.INFORMATION_MESSAGE);
-            return;
-        }
-
-        int confirm = JOptionPane.showConfirmDialog(this,
-                "Xác nhận hủy hợp đồng số '" + selected.getSoHopDong() + "'?\nHành động này không thể hoàn tác.",
-                "Xác nhận hủy hợp đồng", JOptionPane.YES_NO_OPTION, JOptionPane.WARNING_MESSAGE);
-        if (confirm != JOptionPane.YES_OPTION) return;
-
-        KetQua<Void> result = hopDongService.huyHopDong(selected.getMaHopDong());
-
-        if (result.isSuccess()) {
-            JOptionPane.showMessageDialog(this, result.getMessage(),
-                    "Thành công", JOptionPane.INFORMATION_MESSAGE);
-            loadData();
-        } else {
-            JOptionPane.showMessageDialog(this, result.getMessage(),
-                    "Lỗi", JOptionPane.ERROR_MESSAGE);
-        }
-    }
 
     // ============================
     // Helper: get selected HopDong
@@ -392,20 +371,16 @@ public class ContractListPanel extends JPanel {
                     String val = value.toString();
                     if ("Hiệu lực".equals(val)) {
                         c.setForeground(UIColors.SUCCESS_GREEN);
-                        ((JLabel) c).setFont(new Font("Segoe UI", Font.BOLD, 12));
+                        ((JLabel) c).setFont(com.hrm.util.UIFonts.BOLD_SMALL);
                         setToolTipText("Hop dong dang co hieu luc");
                     } else if ("Hết hạn".equals(val)) {
                         c.setForeground(new Color(230, 120, 0));
-                        ((JLabel) c).setFont(new Font("Segoe UI", Font.BOLD, 12));
+                        ((JLabel) c).setFont(com.hrm.util.UIFonts.BOLD_SMALL);
                         setToolTipText("Hop dong da het thoi han");
                     } else if ("Thanh lý".equals(val)) {
                         c.setForeground(UIColors.DANGER_RED);
-                        ((JLabel) c).setFont(new Font("Segoe UI", Font.BOLD, 12));
+                        ((JLabel) c).setFont(com.hrm.util.UIFonts.BOLD_SMALL);
                         setToolTipText("Hop dong da duoc thanh ly");
-                    } else if ("Hủy".equals(val)) {
-                        c.setForeground(UIColors.DANGER_RED);
-                        ((JLabel) c).setFont(new Font("Segoe UI", Font.BOLD, 12));
-                        setToolTipText("Hop dong da bi huy");
                     }
                 }
             }

@@ -1,4 +1,4 @@
--- =====================================================
+﻿-- =====================================================
 -- HRM SAMPLE DATA V3 - Dữ liệu mẫu tinh gọn & đại diện
 -- Chạy sau hrm_database.sql
 -- =====================================================
@@ -122,14 +122,20 @@ INSERT INTO BONHIEM (maNV, maPhongBan, maChucVu, loaiBoNhiem, tyLeHuongLuong, ma
 -- =====================================================
 -- 5.5. VAI TRÒ & QUYỀN
 -- =====================================================
+-- [CHANGE] Tách TRUONG_PHONG thành 3 role chuyên biệt:
+--   TRUONG_PHONG_NS  : TP Nhân sự — HR đầy đủ + bổ nhiệm + báo cáo
+--   TRUONG_PHONG_KT  : TP Kế toán — lương + tài chính + báo cáo
+--   TRUONG_PHONG     : TP chung (IT, KD, MKT) — base quản lý phòng thuần túy
 INSERT INTO VAITRO (maVaiTro, tenVaiTro, moTa, laVaiTroHeThong, trangThai) VALUES
-('ADMIN',         'Quản trị viên',   'Toàn quyền quản trị hệ thống',            TRUE,  'hoatDong'),
-('TONG_GIAM_DOC', 'Tổng giám đốc',   'Điều hành cấp cao toàn công ty',          FALSE, 'hoatDong'),
-('TRUONG_PHONG',  'Trưởng phòng',    'Quản lý phòng ban và phê duyệt cấp dept', FALSE, 'hoatDong'),
-('QUAN_LY',       'Quản lý',         'Quản lý nhóm và phê duyệt cấp team',      FALSE, 'hoatDong'),
-('NHAN_SU',       'Nhân sự',         'Nhân viên phòng Nhân sự - toàn quyền NS', FALSE, 'hoatDong'),
-('KE_TOAN',       'Kế toán',         'Nhân viên phòng Kế toán - toàn quyền KT', FALSE, 'hoatDong'),
-('NHAN_VIEN',     'Nhân viên',       'Nhân viên thông thường',                   FALSE, 'hoatDong');
+('ADMIN',           'Quản trị viên',          'Toàn quyền quản trị hệ thống',                  TRUE,  'hoatDong'),
+('TONG_GIAM_DOC',   'Tổng giám đốc',          'Điều hành cấp cao toàn công ty',                FALSE, 'hoatDong'),
+('TRUONG_PHONG_NS', 'Trưởng phòng Nhân sự',   'Quản lý phòng NS + toàn quyền HR + bổ nhiệm',  FALSE, 'hoatDong'),
+('TRUONG_PHONG_KT', 'Trưởng phòng Kế toán',   'Quản lý phòng KT + lương + báo cáo tài chính', FALSE, 'hoatDong'),
+('TRUONG_PHONG',    'Trưởng phòng',            'Quản lý phòng thông thường (IT, KD, MKT...)',   FALSE, 'hoatDong'),
+('QUAN_LY',         'Quản lý',                 'Quản lý nhóm và phê duyệt cấp team',            FALSE, 'hoatDong'),
+('NHAN_SU',         'Nhân sự',                 'Nhân viên phòng Nhân sự — nghiệp vụ HR',        FALSE, 'hoatDong'),
+('KE_TOAN',         'Kế toán',                 'Nhân viên phòng Kế toán — nghiệp vụ tài chính', FALSE, 'hoatDong'),
+('NHAN_VIEN',       'Nhân viên',               'Nhân viên thông thường',                         FALSE, 'hoatDong');
 
 -- QUYEN
 INSERT INTO QUYEN (maQuyen, tenQuyen, nhomQuyen) VALUES
@@ -176,12 +182,18 @@ INSERT INTO QUYEN (maQuyen, tenQuyen, nhomQuyen) VALUES
 ('SETTINGS_VIEW',       'Xem cài đặt',                'Cài đặt'),
 ('SETTINGS_UPDATE',     'Cập nhật cài đặt',           'Cài đặt');
 
+-- =============================================
 -- VAITRO_QUYEN
--- ADMIN: toàn quyền
+-- =============================================
+
+-- ADMIN: toàn quyền — không thay đổi
 INSERT IGNORE INTO VAITRO_QUYEN (maVaiTro, maQuyen, phamVi)
 SELECT 'ADMIN', maQuyen, 'ALL' FROM QUYEN;
 
--- NHAN_VIEN: chỉ xem dữ liệu bản thân
+-- -----------------------------------------------
+-- NHAN_VIEN: chỉ xem/thao tác dữ liệu bản thân
+-- SELF hợp lệ vì mọi action đều chỉ liên quan đến chính họ
+-- -----------------------------------------------
 INSERT INTO VAITRO_QUYEN (maVaiTro, maQuyen, phamVi) VALUES
 ('NHAN_VIEN', 'EMPLOYEE_VIEW',    'SELF'),
 ('NHAN_VIEN', 'APPOINTMENT_VIEW', 'SELF'),
@@ -190,154 +202,229 @@ INSERT INTO VAITRO_QUYEN (maVaiTro, maQuyen, phamVi) VALUES
 ('NHAN_VIEN', 'PAYROLL_VIEW',     'SELF'),
 ('NHAN_VIEN', 'LEAVE_VIEW',       'SELF'),
 ('NHAN_VIEN', 'LEAVE_CREATE',     'SELF'),
-('NHAN_VIEN', 'EVAL_VIEW',        'SELF'),
-('NHAN_VIEN', 'REPORT_VIEW',      'SELF');
+('NHAN_VIEN', 'EVAL_VIEW',        'SELF');
 
--- QUAN_LY (Team Lead): xem & duyệt cấp team
+-- -----------------------------------------------
+-- QUAN_LY (Team Lead): quản lý nhóm
+-- [FIX R1] RECRUITMENT_REQUEST: SELF→TEAM (yêu cầu tuyển cho team, không phải cho mình)
+-- [FIX R1] NOTIFICATION_SEND: SELF→TEAM (gửi thông báo cho team)
+-- [NEW R5] ATTENDANCE_MANAGE=TEAM (team lead cần sửa công cho thành viên)
+-- -----------------------------------------------
 INSERT INTO VAITRO_QUYEN (maVaiTro, maQuyen, phamVi) VALUES
-('QUAN_LY', 'EMPLOYEE_VIEW',         'TEAM'),
-('QUAN_LY', 'APPOINTMENT_VIEW',      'TEAM'),
-('QUAN_LY', 'ATTENDANCE_VIEW',       'TEAM'),
-('QUAN_LY', 'CONTRACT_VIEW',         'TEAM'),
-('QUAN_LY', 'PAYROLL_VIEW',          'TEAM'),
-('QUAN_LY', 'LEAVE_VIEW',            'TEAM'),
-('QUAN_LY', 'LEAVE_CREATE',          'SELF'),
-('QUAN_LY', 'LEAVE_APPROVE',         'TEAM'),
-('QUAN_LY', 'EVAL_VIEW',             'TEAM'),
-('QUAN_LY', 'EVAL_REVIEW',           'TEAM'),
-('QUAN_LY', 'RECRUITMENT_VIEW',      'TEAM'),
-('QUAN_LY', 'RECRUITMENT_REQUEST',   'SELF'),
-('QUAN_LY', 'REPORT_VIEW',           'SELF'),
-('QUAN_LY', 'NOTIFICATION_SEND',     'SELF');
+('QUAN_LY', 'EMPLOYEE_VIEW',       'TEAM'),
+('QUAN_LY', 'ATTENDANCE_VIEW',     'TEAM'),
+('QUAN_LY', 'LEAVE_VIEW',          'TEAM'),
+('QUAN_LY', 'LEAVE_CREATE',        'SELF'),
+('QUAN_LY', 'LEAVE_APPROVE',       'TEAM');
 
--- TRUONG_PHONG: xem & duyệt cấp phòng ban
+-- -----------------------------------------------
+-- TRUONG_PHONG (IT, KD, MKT — base thuần): quản lý cấp phòng
+-- [FIX R3] CONTRACT_CREATE: XÓA — TP chỉ đề xuất, không tự tạo hợp đồng
+-- [FIX R1] RECRUITMENT_REQUEST: SELF→DEPT
+-- [FIX R1] NOTIFICATION_SEND: SELF→DEPT
+-- [FIX R1] ATTENDANCE_MANAGE: SELF→DEPT
+-- [FIX R1] CONTRACT_UPDATE: SELF→DEPT
+-- Không có REPORT_VIEW — dữ liệu phòng đã có trong module quản lý
+-- -----------------------------------------------
 INSERT INTO VAITRO_QUYEN (maVaiTro, maQuyen, phamVi) VALUES
 ('TRUONG_PHONG', 'EMPLOYEE_VIEW',         'DEPT'),
 ('TRUONG_PHONG', 'APPOINTMENT_VIEW',      'DEPT'),
 ('TRUONG_PHONG', 'ATTENDANCE_VIEW',       'DEPT'),
+('TRUONG_PHONG', 'ATTENDANCE_MANAGE',     'DEPT'),   -- [FIX R1] SELF→DEPT
 ('TRUONG_PHONG', 'CONTRACT_VIEW',         'DEPT'),
+('TRUONG_PHONG', 'CONTRACT_UPDATE',       'DEPT'),   -- [FIX R1] SELF→DEPT
+-- CONTRACT_CREATE bị XÓA [FIX R3]: TP chỉ đề xuất, không tự ký hợp đồng
 ('TRUONG_PHONG', 'PAYROLL_VIEW',          'DEPT'),
 ('TRUONG_PHONG', 'LEAVE_VIEW',            'DEPT'),
-('TRUONG_PHONG', 'LEAVE_CREATE',          'SELF'),
+('TRUONG_PHONG', 'LEAVE_CREATE',          'SELF'),   -- tạo đơn cho bản thân: SELF hợp lệ
 ('TRUONG_PHONG', 'LEAVE_APPROVE',         'DEPT'),
 ('TRUONG_PHONG', 'EVAL_VIEW',             'DEPT'),
 ('TRUONG_PHONG', 'EVAL_REVIEW',           'DEPT'),
 ('TRUONG_PHONG', 'RECRUITMENT_VIEW',      'DEPT'),
-('TRUONG_PHONG', 'RECRUITMENT_REQUEST',   'SELF'),
-('TRUONG_PHONG', 'REPORT_VIEW',           'SELF'),
-('TRUONG_PHONG', 'NOTIFICATION_SEND',     'SELF'),
-('TRUONG_PHONG', 'ATTENDANCE_MANAGE',     'SELF'),
-('TRUONG_PHONG', 'CONTRACT_CREATE',       'SELF'),
-('TRUONG_PHONG', 'CONTRACT_UPDATE',       'SELF');
+('TRUONG_PHONG', 'RECRUITMENT_REQUEST',   'DEPT'),   -- [FIX R1] SELF→DEPT
+('TRUONG_PHONG', 'NOTIFICATION_SEND',     'DEPT');   -- [FIX R1] SELF→DEPT
 
--- TONG_GIAM_DOC: toàn quyền nghiệp vụ + xem hệ thống, không quản lý tài khoản
+-- -----------------------------------------------
+-- TRUONG_PHONG_NS: base TRUONG_PHONG + toàn quyền HR
+-- Có thêm: EMPLOYEE_CREATE/RESIGN, APPOINTMENT_CREATE/APPROVE,
+--          CONTRACT_CREATE/MANAGE, LEAVE_MANAGE, EVAL_MANAGE,
+--          RECRUITMENT_MANAGE, REPORT_VIEW/EXPORT, NOTIFICATION_SEND=ALL
+-- phamVi cho mọi CREATE/MANAGE=ALL vì NS xử lý dữ liệu toàn công ty
+-- -----------------------------------------------
+INSERT INTO VAITRO_QUYEN (maVaiTro, maQuyen, phamVi) VALUES
+('TRUONG_PHONG_NS', 'EMPLOYEE_VIEW',         'ALL'),
+('TRUONG_PHONG_NS', 'EMPLOYEE_CREATE',       'ALL'),
+('TRUONG_PHONG_NS', 'EMPLOYEE_UPDATE',       'ALL'),
+('TRUONG_PHONG_NS', 'EMPLOYEE_RESIGN',       'ALL'),
+('TRUONG_PHONG_NS', 'APPOINTMENT_VIEW',      'ALL'),
+('TRUONG_PHONG_NS', 'APPOINTMENT_CREATE',    'ALL'),
+('TRUONG_PHONG_NS', 'APPOINTMENT_APPROVE',   'ALL'),
+('TRUONG_PHONG_NS', 'ATTENDANCE_VIEW',       'ALL'),
+('TRUONG_PHONG_NS', 'ATTENDANCE_MANAGE',     'ALL'),
+('TRUONG_PHONG_NS', 'CONTRACT_VIEW',         'ALL'),
+('TRUONG_PHONG_NS', 'CONTRACT_CREATE',       'ALL'),
+('TRUONG_PHONG_NS', 'CONTRACT_UPDATE',       'ALL'),
+('TRUONG_PHONG_NS', 'CONTRACT_MANAGE',       'ALL'),
+('TRUONG_PHONG_NS', 'PAYROLL_VIEW',          'ALL'),
+('TRUONG_PHONG_NS', 'LEAVE_VIEW',            'ALL'),
+('TRUONG_PHONG_NS', 'LEAVE_CREATE',          'SELF'),
+('TRUONG_PHONG_NS', 'LEAVE_APPROVE',         'ALL'),
+('TRUONG_PHONG_NS', 'LEAVE_MANAGE',          'ALL'),
+('TRUONG_PHONG_NS', 'EVAL_VIEW',             'ALL'),
+('TRUONG_PHONG_NS', 'EVAL_MANAGE',           'ALL'),
+('TRUONG_PHONG_NS', 'EVAL_REVIEW',           'ALL'),
+('TRUONG_PHONG_NS', 'RECRUITMENT_VIEW',      'ALL'),
+('TRUONG_PHONG_NS', 'RECRUITMENT_REQUEST',   'DEPT'),
+('TRUONG_PHONG_NS', 'RECRUITMENT_MANAGE',    'ALL'),
+('TRUONG_PHONG_NS', 'REPORT_VIEW',           'ALL'),
+('TRUONG_PHONG_NS', 'REPORT_EXPORT',         'ALL'),
+('TRUONG_PHONG_NS', 'NOTIFICATION_SEND',     'ALL');
+
+-- -----------------------------------------------
+-- TRUONG_PHONG_KT: base TRUONG_PHONG + quyền tài chính
+-- Có thêm: PAYROLL_CALCULATE=ALL, CONTRACT_MANAGE=ALL, REPORT_VIEW/EXPORT=ALL
+-- KT xem toàn bộ để phục vụ hạch toán — không có quyền HR/bổ nhiệm
+-- -----------------------------------------------
+INSERT INTO VAITRO_QUYEN (maVaiTro, maQuyen, phamVi) VALUES
+('TRUONG_PHONG_KT', 'EMPLOYEE_VIEW',         'ALL'),
+('TRUONG_PHONG_KT', 'APPOINTMENT_VIEW',      'DEPT'),
+('TRUONG_PHONG_KT', 'ATTENDANCE_VIEW',       'ALL'),
+('TRUONG_PHONG_KT', 'ATTENDANCE_MANAGE',     'DEPT'),
+('TRUONG_PHONG_KT', 'CONTRACT_VIEW',         'ALL'),
+('TRUONG_PHONG_KT', 'CONTRACT_UPDATE',       'DEPT'),
+('TRUONG_PHONG_KT', 'CONTRACT_MANAGE',       'ALL'),
+('TRUONG_PHONG_KT', 'PAYROLL_VIEW',          'ALL'),
+('TRUONG_PHONG_KT', 'PAYROLL_CALCULATE',     'ALL'),
+('TRUONG_PHONG_KT', 'LEAVE_VIEW',            'ALL'),
+('TRUONG_PHONG_KT', 'LEAVE_CREATE',          'SELF'),
+('TRUONG_PHONG_KT', 'LEAVE_APPROVE',         'DEPT'),
+('TRUONG_PHONG_KT', 'EVAL_VIEW',             'ALL'),
+('TRUONG_PHONG_KT', 'EVAL_REVIEW',           'DEPT'),
+('TRUONG_PHONG_KT', 'RECRUITMENT_VIEW',      'DEPT'),
+('TRUONG_PHONG_KT', 'RECRUITMENT_REQUEST',   'DEPT'),
+('TRUONG_PHONG_KT', 'REPORT_VIEW',           'ALL'),
+('TRUONG_PHONG_KT', 'REPORT_EXPORT',         'ALL'),
+('TRUONG_PHONG_KT', 'NOTIFICATION_SEND',     'DEPT');
+
+-- -----------------------------------------------
+-- TONG_GIAM_DOC: toàn quyền nghiệp vụ
+-- [FIX R1] Tất cả CREATE/MANAGE/CALCULATE fix SELF→ALL
+-- LEAVE_CREATE giữ SELF (tạo đơn cho bản thân)
+-- -----------------------------------------------
 INSERT INTO VAITRO_QUYEN (maVaiTro, maQuyen, phamVi) VALUES
 ('TONG_GIAM_DOC', 'EMPLOYEE_VIEW',         'ALL'),
-('TONG_GIAM_DOC', 'EMPLOYEE_CREATE',       'SELF'),
+('TONG_GIAM_DOC', 'EMPLOYEE_CREATE',       'ALL'),   -- [FIX R1] SELF→ALL
 ('TONG_GIAM_DOC', 'EMPLOYEE_UPDATE',       'ALL'),
-('TONG_GIAM_DOC', 'EMPLOYEE_RESIGN',       'SELF'),
+('TONG_GIAM_DOC', 'EMPLOYEE_RESIGN',       'ALL'),   -- [FIX R1] SELF→ALL
 ('TONG_GIAM_DOC', 'DEPARTMENT_VIEW',       'ALL'),
-('TONG_GIAM_DOC', 'DEPARTMENT_MANAGE',     'SELF'),
+('TONG_GIAM_DOC', 'DEPARTMENT_MANAGE',     'ALL'),   -- [FIX R1] SELF→ALL
 ('TONG_GIAM_DOC', 'POSITION_VIEW',         'ALL'),
-('TONG_GIAM_DOC', 'POSITION_MANAGE',       'SELF'),
+('TONG_GIAM_DOC', 'POSITION_MANAGE',       'ALL'),   -- [FIX R1] SELF→ALL
 ('TONG_GIAM_DOC', 'APPOINTMENT_VIEW',      'ALL'),
-('TONG_GIAM_DOC', 'APPOINTMENT_CREATE',    'SELF'),
+('TONG_GIAM_DOC', 'APPOINTMENT_CREATE',    'ALL'),   -- [FIX R1] SELF→ALL
 ('TONG_GIAM_DOC', 'APPOINTMENT_APPROVE',   'ALL'),
 ('TONG_GIAM_DOC', 'ATTENDANCE_VIEW',       'ALL'),
 ('TONG_GIAM_DOC', 'ATTENDANCE_MANAGE',     'ALL'),
 ('TONG_GIAM_DOC', 'CONTRACT_VIEW',         'ALL'),
-('TONG_GIAM_DOC', 'CONTRACT_CREATE',       'SELF'),
+('TONG_GIAM_DOC', 'CONTRACT_CREATE',       'ALL'),   -- [FIX R1] SELF→ALL
 ('TONG_GIAM_DOC', 'CONTRACT_UPDATE',       'ALL'),
 ('TONG_GIAM_DOC', 'CONTRACT_MANAGE',       'ALL'),
 ('TONG_GIAM_DOC', 'PAYROLL_VIEW',          'ALL'),
-('TONG_GIAM_DOC', 'PAYROLL_CALCULATE',     'SELF'),
+('TONG_GIAM_DOC', 'PAYROLL_CALCULATE',     'ALL'),   -- [FIX R1] SELF→ALL
 ('TONG_GIAM_DOC', 'LEAVE_VIEW',            'ALL'),
-('TONG_GIAM_DOC', 'LEAVE_CREATE',          'SELF'),
+('TONG_GIAM_DOC', 'LEAVE_CREATE',          'SELF'),  -- tạo đơn cho bản thân: SELF hợp lệ
 ('TONG_GIAM_DOC', 'LEAVE_APPROVE',         'ALL'),
-('TONG_GIAM_DOC', 'LEAVE_MANAGE',          'SELF'),
+('TONG_GIAM_DOC', 'LEAVE_MANAGE',          'ALL'),   -- [FIX R1] SELF→ALL
 ('TONG_GIAM_DOC', 'EVAL_VIEW',             'ALL'),
-('TONG_GIAM_DOC', 'EVAL_MANAGE',           'SELF'),
+('TONG_GIAM_DOC', 'EVAL_MANAGE',           'ALL'),   -- [FIX R1] SELF→ALL
 ('TONG_GIAM_DOC', 'EVAL_REVIEW',           'ALL'),
 ('TONG_GIAM_DOC', 'RECRUITMENT_VIEW',      'ALL'),
-('TONG_GIAM_DOC', 'RECRUITMENT_REQUEST',   'SELF'),
-('TONG_GIAM_DOC', 'RECRUITMENT_MANAGE',    'SELF'),
+('TONG_GIAM_DOC', 'RECRUITMENT_REQUEST',   'DEPT'),  -- [FIX R1] SELF→DEPT
+('TONG_GIAM_DOC', 'RECRUITMENT_MANAGE',    'ALL'),   -- [FIX R1] SELF→ALL
 ('TONG_GIAM_DOC', 'REPORT_VIEW',           'ALL'),
-('TONG_GIAM_DOC', 'REPORT_EXPORT',         'SELF'),
-('TONG_GIAM_DOC', 'NOTIFICATION_SEND',     'SELF'),
-('TONG_GIAM_DOC', 'SETTINGS_VIEW',         'SELF'),
-('TONG_GIAM_DOC', 'SETTINGS_UPDATE',       'SELF'),
-('TONG_GIAM_DOC', 'USER_VIEW',             'SELF'),
-('TONG_GIAM_DOC', 'ROLE_VIEW',             'SELF');
+('TONG_GIAM_DOC', 'REPORT_EXPORT',         'ALL'),   -- [FIX R1] SELF→ALL
+('TONG_GIAM_DOC', 'NOTIFICATION_SEND',     'ALL'),   -- [FIX R1] SELF→ALL
+('TONG_GIAM_DOC', 'SETTINGS_VIEW',         'ALL'),   -- [FIX R1] SELF→ALL
+('TONG_GIAM_DOC', 'SETTINGS_UPDATE',       'ALL'),   -- [FIX R1] SELF→ALL
+('TONG_GIAM_DOC', 'USER_VIEW',             'ALL'),   -- [FIX R1] SELF→ALL
+('TONG_GIAM_DOC', 'ROLE_VIEW',             'ALL');   -- [FIX R1] SELF→ALL
 
--- NHAN_SU: quản lý toàn bộ nghiệp vụ nhân sự
+-- -----------------------------------------------
+-- NHAN_SU: nghiệp vụ HR chuyên sâu
+-- [FIX R1] Tất cả CREATE/MANAGE fix SELF→ALL
+-- [NEW R2] APPOINTMENT_APPROVE=ALL (NS xử lý toàn bộ quy trình bổ nhiệm)
+-- -----------------------------------------------
 INSERT INTO VAITRO_QUYEN (maVaiTro, maQuyen, phamVi) VALUES
 ('NHAN_SU', 'EMPLOYEE_VIEW',         'ALL'),
-('NHAN_SU', 'EMPLOYEE_CREATE',       'SELF'),
+('NHAN_SU', 'EMPLOYEE_CREATE',       'ALL'),   -- [FIX R1] SELF→ALL
 ('NHAN_SU', 'EMPLOYEE_UPDATE',       'ALL'),
-('NHAN_SU', 'EMPLOYEE_RESIGN',       'SELF'),
+('NHAN_SU', 'EMPLOYEE_RESIGN',       'ALL'),   -- [FIX R1] SELF→ALL
 ('NHAN_SU', 'APPOINTMENT_VIEW',      'ALL'),
-('NHAN_SU', 'APPOINTMENT_CREATE',    'SELF'),
+('NHAN_SU', 'APPOINTMENT_CREATE',    'ALL'),   -- [FIX R1] SELF→ALL
+('NHAN_SU', 'APPOINTMENT_APPROVE',   'ALL'),   -- [NEW R2]
 ('NHAN_SU', 'ATTENDANCE_VIEW',       'ALL'),
-('NHAN_SU', 'ATTENDANCE_MANAGE',     'SELF'),
+('NHAN_SU', 'ATTENDANCE_MANAGE',     'ALL'),   -- [FIX R1] SELF→ALL
 ('NHAN_SU', 'CONTRACT_VIEW',         'ALL'),
-('NHAN_SU', 'CONTRACT_CREATE',       'SELF'),
+('NHAN_SU', 'CONTRACT_CREATE',       'ALL'),   -- [FIX R1] SELF→ALL
 ('NHAN_SU', 'CONTRACT_UPDATE',       'ALL'),
-('NHAN_SU', 'CONTRACT_MANAGE',       'SELF'),
-('NHAN_SU', 'LEAVE_VIEW',            'ALL'),
-('NHAN_SU', 'LEAVE_CREATE',          'SELF'),
-('NHAN_SU', 'LEAVE_MANAGE',          'SELF'),
-('NHAN_SU', 'EVAL_VIEW',             'ALL'),
-('NHAN_SU', 'EVAL_MANAGE',           'SELF'),
-('NHAN_SU', 'RECRUITMENT_VIEW',      'ALL'),
-('NHAN_SU', 'RECRUITMENT_REQUEST',   'SELF'),
-('NHAN_SU', 'RECRUITMENT_MANAGE',    'SELF'),
-('NHAN_SU', 'REPORT_VIEW',           'ALL'),
-('NHAN_SU', 'REPORT_EXPORT',         'SELF'),
+('NHAN_SU', 'CONTRACT_MANAGE',       'ALL'),   -- [FIX R1] SELF→ALL
 ('NHAN_SU', 'PAYROLL_VIEW',          'ALL'),
-('NHAN_SU', 'NOTIFICATION_SEND',     'SELF');
+('NHAN_SU', 'LEAVE_VIEW',            'ALL'),
+('NHAN_SU', 'LEAVE_CREATE',          'SELF'),  -- tạo đơn cho bản thân: SELF hợp lệ
+('NHAN_SU', 'LEAVE_MANAGE',          'ALL'),   -- [FIX R1] SELF→ALL
+('NHAN_SU', 'EVAL_VIEW',             'ALL'),
+('NHAN_SU', 'EVAL_MANAGE',           'ALL'),   -- [FIX R1] SELF→ALL
+('NHAN_SU', 'RECRUITMENT_VIEW',      'ALL'),
+('NHAN_SU', 'RECRUITMENT_REQUEST',   'DEPT'),  -- [FIX R1] SELF→DEPT
+('NHAN_SU', 'RECRUITMENT_MANAGE',    'ALL'),   -- [FIX R1] SELF→ALL
+('NHAN_SU', 'REPORT_VIEW',           'ALL'),
+('NHAN_SU', 'REPORT_EXPORT',         'ALL'),   -- [FIX R1] SELF→ALL
+('NHAN_SU', 'NOTIFICATION_SEND',     'ALL');   -- [FIX R1] SELF→ALL
 
--- KE_TOAN: xem/tính lương, xem chấm công và hợp đồng toàn công ty
+-- -----------------------------------------------
+-- KE_TOAN: tài chính, lương, hạch toán
+-- [FIX R1] PAYROLL_CALCULATE: SELF→ALL (tính lương cho toàn bộ NV)
+-- [FIX R4] EVAL_VIEW: SELF→ALL (xem KPI toàn công ty để tính lương)
+-- [FIX R1] REPORT_VIEW/EXPORT: SELF→ALL (báo cáo tài chính toàn công ty)
+-- -----------------------------------------------
 INSERT INTO VAITRO_QUYEN (maVaiTro, maQuyen, phamVi) VALUES
-('KE_TOAN', 'EMPLOYEE_VIEW',    'ALL'),
-('KE_TOAN', 'ATTENDANCE_VIEW',  'ALL'),
-('KE_TOAN', 'CONTRACT_VIEW',    'ALL'),
-('KE_TOAN', 'PAYROLL_VIEW',     'ALL'),
-('KE_TOAN', 'PAYROLL_CALCULATE','SELF'),
-('KE_TOAN', 'LEAVE_VIEW',       'ALL'),
-('KE_TOAN', 'LEAVE_CREATE',     'SELF'),
-('KE_TOAN', 'REPORT_VIEW',      'SELF'),
-('KE_TOAN', 'REPORT_EXPORT',    'SELF'),
-('KE_TOAN', 'EVAL_VIEW',        'SELF');
+('KE_TOAN', 'EMPLOYEE_VIEW',     'ALL'),
+('KE_TOAN', 'ATTENDANCE_VIEW',   'ALL'),
+('KE_TOAN', 'CONTRACT_VIEW',     'ALL'),
+('KE_TOAN', 'PAYROLL_VIEW',      'ALL'),
+('KE_TOAN', 'PAYROLL_CALCULATE', 'ALL'),   -- [FIX R1] SELF→ALL
+('KE_TOAN', 'LEAVE_VIEW',        'ALL'),
+('KE_TOAN', 'LEAVE_CREATE',      'SELF'),  -- tạo đơn cho bản thân: SELF hợp lệ
+('KE_TOAN', 'REPORT_VIEW',       'ALL'),   -- [FIX R1] SELF→ALL
+('KE_TOAN', 'REPORT_EXPORT',     'ALL'),   -- [FIX R1] SELF→ALL
+('KE_TOAN', 'EVAL_VIEW',         'ALL');   -- [FIX R4] SELF→ALL
 
 -- =====================================================
 -- 6. TÀI KHOẢN
 -- =====================================================
--- Mapping vai trò:
---   TONG_GIAM_DOC : NV001 (GD)
---   TRUONG_PHONG  : NV002 (TP NS), NV004 (TP KT), NV006 (TP KD), NV008 (TP IT), NV012 (TP MKT)
---   QUAN_LY       : NV009 (TT TEAM_IT)
---   NHAN_SU       : NV003 (NSV)
---   KE_TOAN       : NV005 (KTV)
---   NHAN_VIEN     : NV007, NV010, NV011, NV013
+-- [CHANGE] NV002 → TRUONG_PHONG_NS (Trưởng phòng Nhân sự chuyên biệt)
+-- [CHANGE] NV004 → TRUONG_PHONG_KT (Trưởng phòng Kế toán chuyên biệt)
+-- NV006, NV008, NV012 giữ TRUONG_PHONG (base — IT, KD, MKT)
 INSERT INTO TAIKHOAN (tenDangNhap, matKhau, maNV, maVaiTro, email, hoatDong) VALUES
-('admin',           '123', 'admin', 'ADMIN',         'admin@abctech.vn',             TRUE),
-('hung.nguyen',     '123', 'NV001', 'TONG_GIAM_DOC', 'hung.nguyen@abctech.vn',       TRUE),
-('huong.nguyen',    '123', 'NV002', 'TRUONG_PHONG',  'huong.nguyen@abctech.vn',      TRUE),
-('lananh.dang',     '123', 'NV003', 'NHAN_SU',       'lananh.dang@abctech.vn',       TRUE),
-('ngoc.hoang',      '123', 'NV004', 'TRUONG_PHONG',  'ngoc.hoang@abctech.vn',        TRUE),
-('thanhTam.ly',     '123', 'NV005', 'KE_TOAN',       'thanhTam.ly@abctech.vn',       TRUE),
-('anh.tuan',        '123', 'NV006', 'TRUONG_PHONG',  'anh.tuan@abctech.vn',          TRUE),
-('hoang.le',        '123', 'NV007', 'NHAN_VIEN',     'hoang.le@abctech.vn',          TRUE),
-('son.dinh',        '123', 'NV008', 'TRUONG_PHONG',  'son.dinh@abctech.vn',          TRUE),
-('khoa.nguyen',     '123', 'NV009', 'QUAN_LY',       'khoa.nguyen@abctech.vn',       TRUE),
-('tri.hoang',       '123', 'NV010', 'NHAN_VIEN',     'tri.hoang@abctech.vn',         TRUE),
-('camtu.vo',        '123', 'NV011', 'NHAN_VIEN',     'camtu.vo@abctech.vn',          TRUE),
-('phuonglinh.le',   '123', 'NV012', 'TRUONG_PHONG',  'phuonglinh.le@abctech.vn',     TRUE),
-('khang.pham',      '123', 'NV013', 'NHAN_VIEN',     'khang.pham@abctech.vn',        TRUE);
+('admin',           '$sha256$Yh1rO2h6KYIcrLVwSvp3vw==$eQ4Yv8gD5lH5ZcMK69IR0HnX9vXdo=C2OwElkIuYgoZ=', 'admin', 'ADMIN',           'admin@abctech.vn',          TRUE),
+('hung.nguyen',     '$sha256$Yh1rO2h6KYIcrLVwSvp3vw==$eQ4Yv8gD5lH5ZcMK69IR0HnX9vXdo=C2OwElkIuYgoZ=', 'NV001', 'TONG_GIAM_DOC',   'hung.nguyen@abctech.vn',    TRUE),
+('huong.nguyen',    '$sha256$Yh1rO2h6KYIcrLVwSvp3vw==$eQ4Yv8gD5lH5ZcMK69IR0HnX9vXdo=C2OwElkIuYgoZ=', 'NV002', 'TRUONG_PHONG_NS', 'huong.nguyen@abctech.vn',   TRUE),  -- [CHANGE]
+('lananh.dang',     '$sha256$Yh1rO2h6KYIcrLVwSvp3vw==$eQ4Yv8gD5lH5ZcMK69IR0HnX9vXdo=C2OwElkIuYgoZ=', 'NV003', 'NHAN_SU',         'lananh.dang@abctech.vn',    TRUE),
+('ngoc.hoang',      '$sha256$Yh1rO2h6KYIcrLVwSvp3vw==$eQ4Yv8gD5lH5ZcMK69IR0HnX9vXdo=C2OwElkIuYgoZ=', 'NV004', 'TRUONG_PHONG_KT', 'ngoc.hoang@abctech.vn',     TRUE),  -- [CHANGE]
+('thanhTam.ly',     '$sha256$Yh1rO2h6KYIcrLVwSvp3vw==$eQ4Yv8gD5lH5ZcMK69IR0HnX9vXdo=C2OwElkIuYgoZ=', 'NV005', 'KE_TOAN',         'thanhTam.ly@abctech.vn',    TRUE),
+('anh.tuan',        '$sha256$Yh1rO2h6KYIcrLVwSvp3vw==$eQ4Yv8gD5lH5ZcMK69IR0HnX9vXdo=C2OwElkIuYgoZ=', 'NV006', 'TRUONG_PHONG',    'anh.tuan@abctech.vn',       TRUE),
+('hoang.le',        '$sha256$Yh1rO2h6KYIcrLVwSvp3vw==$eQ4Yv8gD5lH5ZcMK69IR0HnX9vXdo=C2OwElkIuYgoZ=', 'NV007', 'NHAN_VIEN',       'hoang.le@abctech.vn',       TRUE),
+('son.dinh',        '$sha256$Yh1rO2h6KYIcrLVwSvp3vw==$eQ4Yv8gD5lH5ZcMK69IR0HnX9vXdo=C2OwElkIuYgoZ=', 'NV008', 'TRUONG_PHONG',    'son.dinh@abctech.vn',       TRUE),
+('khoa.nguyen',     '$sha256$Yh1rO2h6KYIcrLVwSvp3vw==$eQ4Yv8gD5lH5ZcMK69IR0HnX9vXdo=C2OwElkIuYgoZ=', 'NV009', 'QUAN_LY',         'khoa.nguyen@abctech.vn',    TRUE),
+('tri.hoang',       '$sha256$Yh1rO2h6KYIcrLVwSvp3vw==$eQ4Yv8gD5lH5ZcMK69IR0HnX9vXdo=C2OwElkIuYgoZ=', 'NV010', 'NHAN_VIEN',       'tri.hoang@abctech.vn',      TRUE),
+('camtu.vo',        '$sha256$Yh1rO2h6KYIcrLVwSvp3vw==$eQ4Yv8gD5lH5ZcMK69IR0HnX9vXdo=C2OwElkIuYgoZ=', 'NV011', 'NHAN_VIEN',       'camtu.vo@abctech.vn',       TRUE),
+('phuonglinh.le',   '$sha256$Yh1rO2h6KYIcrLVwSvp3vw==$eQ4Yv8gD5lH5ZcMK69IR0HnX9vXdo=C2OwElkIuYgoZ=', 'NV012', 'TRUONG_PHONG',    'phuonglinh.le@abctech.vn',  TRUE),
+('khang.pham',      '$sha256$Yh1rO2h6KYIcrLVwSvp3vw==$eQ4Yv8gD5lH5ZcMK69IR0HnX9vXdo=C2OwElkIuYgoZ=', 'NV013', 'NHAN_VIEN',       'khang.pham@abctech.vn',     TRUE);
 
 -- =====================================================
 -- 7. HỢP ĐỒNG LAO ĐỘNG
 -- =====================================================
+
 INSERT INTO HOPDONGLAODONG (soHopDong, maNV, loaiHopDong, luongCoSo, ngayKy, ngayHieuLuc, ngayHetHieuLuc, trangThai, noiDung) VALUES
 -- NV001 GD
 ('HD2015-GD-001',  'NV001', 'khong_xac_dinh', 80000000, '2015-01-03', '2015-01-05', NULL,         'hieu_luc', 'Hop dong Giam doc dieu hanh'),
@@ -644,20 +731,18 @@ INSERT INTO DONXINNGHIPHEP (maNV, maLoaiPhep, tuNgay, denNgay, soNgayNghi, lyDo,
 -- trangThai ENUM: 'dang_xu_ly' | 'da_duyet' | 'da_khoa'
 -- nguoiTao/nguoiDuyet là INT (id auto-increment của NHANVIEN), để NULL khi không xác định
 INSERT INTO BANGLUONG (thang, nam, tenBangLuong, nguoiTao, nguoiDuyet, ngayDuyet, trangThai) VALUES
-(11, 2025, 'Bang luong thang 11/2025', NULL, NULL, '2025-12-03', 'da_khoa'),
-(12, 2025, 'Bang luong thang 12/2025', NULL, NULL, '2026-01-03', 'da_khoa'),
 ( 1, 2026, 'Bang luong thang 01/2026', NULL, NULL, '2026-02-03', 'da_duyet'),
 ( 2, 2026, 'Bang luong thang 02/2026', NULL, NULL, NULL,         'dang_xu_ly');
 
--- Chi tiet luong T1/2026 (maBangLuong = 3, mau 6 NV dai dien)
+-- Chi tiet luong T1/2026 (maBangLuong = 1, mau 6 NV dai dien)
 -- Cot: maBangLuong, maNV, luongCoSo, tongLuongChucVu, luongLamThem, tongThuNhap, tongKhauTru, luongThucLanh, soNgayCong, soGioLamThem
 INSERT INTO CHITIETLUONG (maBangLuong, maNV, luongCoSo, tongLuongChucVu, luongLamThem, tongThuNhap, tongKhauTru, luongThucLanh, soNgayCong, soGioLamThem) VALUES
-(3, 'NV001', 80000000, 15000000,  3030000, 98030000, 37060000,  60970000, 20,  2.5),
-(3, 'NV002', 22000000,  5000000,        0, 27000000,  8993000,  18007000, 19,  0.0),
-(3, 'NV008', 35000000,  5000000,  2188000, 42188000, 13895000,  28293000, 21,  4.0),
-(3, 'NV009', 28000000,  2000000,        0, 30000000, 10006000,  19994000, 20,  0.0),
-(3, 'NV010', 18000000,        0,  1463000, 19463000,  4753000,  14710000, 20,  6.5),
-(3, 'NV011',  8500000,        0,        0,  8500000,  1838000,   6662000, 21,  0.0);
+(1, 'NV001', 80000000, 15000000,  3030000, 98030000, 37060000,  60970000, 20,  2.5),
+(1, 'NV002', 22000000,  5000000,        0, 27000000,  8993000,  18007000, 19,  0.0),
+(1, 'NV008', 35000000,  5000000,  2188000, 42188000, 13895000,  28293000, 21,  4.0),
+(1, 'NV009', 28000000,  2000000,        0, 30000000, 10006000,  19994000, 20,  0.0),
+(1, 'NV010', 18000000,        0,  1463000, 19463000,  4753000,  14710000, 20,  6.5),
+(1, 'NV011',  8500000,        0,        0,  8500000,  1838000,   6662000, 21,  0.0);
 
 -- =====================================================
 -- 15. ĐÁNH GIÁ HIỆU SUẤT
@@ -681,13 +766,80 @@ INSERT INTO DANHGIAHIEUSUAT (maDot, maNV, nguoiDanhGia, tongDiem, xepLoai, nhanX
 
 
 INSERT INTO TIEUCHIDANHGIA (tenTieuChi, moTa, nhomTieuChi, diemToiDa, trangThai) VALUES
-('Chat luong cong viec',    'Chat luong dau ra, sản phẩm, dich vu cung cap',       'Ket qua',  10, 'hoatDong'),
-('Tien do hoan thanh',      'Hoan thanh dung han, khong tre deadline',              'Ket qua',  10, 'hoatDong'),
+('Chat luong cong viec',    'Chat luong dau ra, sản phẩm, dich vu cung cap',       'Ket qua',  30, 'hoatDong'),
+('Tien do hoan thanh',      'Hoan thanh dung han, khong tre deadline',              'Ket qua',  20, 'hoatDong'),
 ('Kha nang sáng tao',       'De xuat giai phap, cai tien quy trinh',               'Nang luc', 10, 'hoatDong'),
 ('Kỹ năng chuyen mon',      'Trinh do chuyen mon, kỹ năng ky thuat',               'Nang luc', 10, 'hoatDong'),
 ('Lam viec nhom',           'Phoi hop, ho tro dong nghiep, tinh than team',        'Thai do',  10, 'hoatDong'),
 ('Tuan thu noi quy',        'Chap hanh quy che, di lam dung giờ, tac phong',       'Thai do',  10, 'hoatDong'),
 ('Phát triển ban than',     'Hoc hoi kỹ năng mới, nang cao trinh do',              'Nang luc', 10, 'hoatDong');
+
+-- =====================================================
+-- 15.5. ĐÁNH GIÁ HIỆU SUẤT - CHI TIẾT
+-- =====================================================
+INSERT INTO DOTDANHGIA_TIEUCHI (maDot, maTieuChi, trongSo) VALUES
+(1, 1, 1.00), (1, 2, 1.00), (1, 3, 1.00), (1, 4, 1.00), (1, 5, 1.00), (1, 6, 1.00), (1, 7, 1.00),
+(2, 1, 1.00), (2, 2, 1.00), (2, 3, 1.00), (2, 4, 1.00), (2, 5, 1.00), (2, 6, 1.00), (2, 7, 1.00),
+(3, 1, 1.00), (3, 2, 1.00), (3, 3, 1.00), (3, 4, 1.00), (3, 5, 1.00), (3, 6, 1.00), (3, 7, 1.00);
+
+-- Chi tiết đánh giá
+INSERT INTO CHITIETDANHGIA (maDanhGia, maTieuChi, diem, nhanXet) VALUES
+-- Q3/2025: NV008 (Tổng 8.7/10 ~ 87/100)
+(1, 1, 28.00, 'Chat luong rat tot'), 
+(1, 2, 18.00, 'Dung tien do'),       
+(1, 3,  8.00, 'Kha sang tao'),       
+(1, 4,  8.00, 'Chuyen mon vung'),    
+(1, 5,  8.00, 'Lam viec nhom tot'),  
+(1, 6,  9.00, 'Tuan thu tot'),       
+(1, 7,  8.00, 'Co gang nang cao nang luc'), 
+-- Q3/2025: NV009 (Tổng 8.2 ~ 82/100)
+(2, 1, 25.00, 'Chat luong tot'),
+(2, 2, 17.00, 'Da phan dung han'),
+(2, 3,  8.00, 'De xuat nhieu cai tien'),
+(2, 4,  8.00, 'Chuyen mon tot'),
+(2, 5,  8.00, 'Ho tro team nhiet tinh'),
+(2, 6,  8.00, 'Chap hanh quy che'),
+(2, 7,  8.00, 'Hoc them ky nang moi'),
+-- Q3/2025: NV010 (Tổng 7.3 ~ 73/100)
+(3, 1, 23.00, 'Chat luong kha'),
+(3, 2, 15.00, 'Doi khi tre han'),
+(3, 3,  7.00, 'Chua co nhieu y tuong'),
+(3, 4,  7.00, 'Chuyen mon can cai thien them'),
+(3, 5,  7.00, 'Phoi hop chua tot lam'),
+(3, 6,  7.00, 'Can di lam dung gio hon'),
+(3, 7,  7.00, 'Co tinh than hoc hoi'),
+-- Q3/2025: NV011 (Tổng 7.3 ~ 73/100)
+(4, 1, 22.00, 'Lam viec duoc giao tot'),
+(4, 2, 16.00, 'Theo kip tien do'),
+(4, 3,  7.00, 'Moi lam viec chua the hien nhieu'),
+(4, 4,  7.00, 'Kien thuc co ban vung'),
+(4, 5,  7.00, 'Tich cuc'),
+(4, 6,  7.00, 'Tac phong tot'),
+(4, 7,  7.00, 'Ham hoc hoi'),
+-- Cuoi nam 2025: NV008 (Tổng 8.8 ~ 88/100)
+(5, 1, 29.00, 'Hoan thanh xuat sac'),
+(5, 2, 19.00, 'Luon cham deadline'),
+(5, 3,  8.00, 'Co cac giai phap huu hieu cho he thong'),
+(5, 4,  8.00, 'Am hieu sau ve kien truc'),
+(5, 5,  8.00, 'Teamwork hoan hao'),
+(5, 6,  8.00, 'Chap hanh the le tot'),
+(5, 7,  8.00, 'Hoc the chung chi PMI'),
+-- Cuoi nam 2025: NV009 (Tổng 8.3 ~ 83/100)
+(6, 1, 25.00, 'Tot'),
+(6, 2, 18.00, 'Dung han'),
+(6, 3,  8.00, 'Sang tao trong UX'),
+(6, 4,  8.00, 'Kien thuc tot'),
+(6, 5,  8.00, 'Tot'),
+(6, 6,  8.00, 'Nghiem tuc'),
+(6, 7,  8.00, 'Luon tich cuc nang cao tay nghe'),
+-- Cuoi nam 2025: NV010 (Tổng 7.6 ~ 76/100)
+(7, 1, 24.00, 'Hoan thanh cong viec'),
+(7, 2, 16.00, 'Khac phuc tinh trang tre deadline'),
+(7, 3,  7.00, 'Binh thuong'),
+(7, 4,  7.00, 'Khong thay doi nhieu'),
+(7, 5,  7.00, 'Da cai thien giao tiep voi dong nghiep'),
+(7, 6,  8.00, 'Da han che viec di muon'),
+(7, 7,  7.00, 'Binh thuong');
 
 -- =====================================================
 -- 15. TUYỂN DỤNG
@@ -737,12 +889,6 @@ INSERT INTO THONGBAO (tieuDe, noiDung, loaiThongBao, maTaiKhoanGui, maTaiKhoanNh
 ('Chinh sach WFH Q1/2026',
  'Thu 4 hang tuan la ngay WFH. Vui long dang ky truoc 8h sang.',
  'thong_bao_chung', 1, 9,  TRUE,  '2026-01-05 09:45:00'),
-('Bảng lương T12/2025 đã sẵn sàng',
- 'BL thang 12/2025 da duoc phe duyet. Vui long dang nhap de kiem tra.',
- 'he_thong', 1, 2,  TRUE,  '2026-01-06 09:00:00'),
-('Bảng lương T12/2025 đã sẵn sàng',
- 'BL thang 12/2025 da duoc phe duyet. Vui long dang nhap de kiem tra.',
- 'he_thong', 1, 9,  TRUE,  '2026-01-06 10:00:00'),
 ('Bảng lương T01/2026 đã sẵn sàng',
  'BL thang 01/2026 da duoc phe duyet. Vui long dang nhap de kiem tra.',
  'he_thong', 1, 2,  FALSE, NULL),
@@ -790,8 +936,8 @@ INSERT INTO LOG_AUDIT (maTaiKhoan, hanhDong, bangDuLieu, maBanGhi, diaChiIP, use
 (2,  'APPROVE', 'YEUCAUTUYENDUNG', '2',  '192.168.1.10', 'Mozilla/5.0 Chrome/121'),
 (2,  'APPROVE', 'YEUCAUTUYENDUNG', '3',  '192.168.1.10', 'Mozilla/5.0 Chrome/121'),
 (1,  'LOGIN',   NULL,              NULL, '192.168.1.1',  'Mozilla/5.0 Chrome/121'),
-(1,  'CREATE',  'BANGLUONG',       '3',  '192.168.1.1',  'Mozilla/5.0 Chrome/121'),
-(1,  'UPDATE',  'BANGLUONG',       '3',  '192.168.1.1',  'Mozilla/5.0 Chrome/121'),
+(1,  'CREATE',  'BANGLUONG',       '1',  '192.168.1.1',  'Mozilla/5.0 Chrome/121'),
+(1,  'UPDATE',  'BANGLUONG',       '1',  '192.168.1.1',  'Mozilla/5.0 Chrome/121'),
 (1,  'CREATE',  'CHITIETLUONG',    '1',  '192.168.1.1',  'Mozilla/5.0 Chrome/121'),
 (1,  'UPDATE',  'DONXINNGHIPHEP',  '1',  '192.168.1.1',  'Mozilla/5.0 Chrome/121'),
 (9,  'LOGIN',   NULL,              NULL, '192.168.1.30', 'Mozilla/5.0 Firefox/122'),

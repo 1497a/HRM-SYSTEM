@@ -38,7 +38,7 @@ public class PurpleButton extends JButton {
     }
 
     private void initStyle() {
-        setFont(new Font("Segoe UI", Font.BOLD, 14));
+        setFont(com.hrm.util.UIFonts.BOLD_MEDIUM);
         setForeground(Color.WHITE);
         setBackground(normalBackground);
         setFocusPainted(false);

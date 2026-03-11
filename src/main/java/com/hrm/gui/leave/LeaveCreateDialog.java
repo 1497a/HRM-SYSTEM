@@ -62,7 +62,7 @@ public class LeaveCreateDialog extends JDialog {
 
         // Total days label
         lblTotalDays = new JLabel("0 ngay lam viec");
-        lblTotalDays.setFont(new Font("Segoe UI", Font.BOLD, 14));
+        lblTotalDays.setFont(com.hrm.util.UIFonts.BOLD_MEDIUM);
         lblTotalDays.setForeground(new Color(0, 102, 153));
 
         // Reason text area
@@ -93,7 +93,7 @@ public class LeaveCreateDialog extends JDialog {
         formPanel.add(new JLabel("Nhan vien:"), gbc);
         gbc.gridx = 1;
         JLabel lblEmployee = new JLabel(currentUser.getHoTen());
-        lblEmployee.setFont(new Font("Segoe UI", Font.BOLD, 12));
+        lblEmployee.setFont(com.hrm.util.UIFonts.BOLD_SMALL);
         formPanel.add(lblEmployee, gbc);
 
         // Leave type

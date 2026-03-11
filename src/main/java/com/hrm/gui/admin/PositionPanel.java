@@ -289,7 +289,7 @@ public class PositionPanel extends JPanel {
         for (int i = 0; i < labels.length; i++) {
             gbc.gridx = 0; gbc.gridy = i; gbc.fill = GridBagConstraints.NONE; gbc.weightx = 0;
             JLabel lbl = new JLabel(labels[i]);
-            lbl.setFont(new Font("Segoe UI", Font.PLAIN, 13));
+            lbl.setFont(com.hrm.util.UIFonts.TEXT_NORMAL);
             form.add(lbl, gbc);
             gbc.gridx = 1; gbc.fill = GridBagConstraints.HORIZONTAL; gbc.weightx = 1.0;
             flds[i].setPreferredSize(new Dimension(210, i == 5 ? 60 : 28));

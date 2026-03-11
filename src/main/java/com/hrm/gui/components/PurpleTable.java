@@ -37,7 +37,7 @@ public class PurpleTable extends JTable {
         JTableHeader header = getTableHeader();
         header.setBackground(UIColors.TABLE_HEADER_BG);
         header.setForeground(UIColors.TABLE_HEADER_FG);
-        header.setFont(new Font("Segoe UI", Font.BOLD, 13));
+        header.setFont(com.hrm.util.UIFonts.BOLD_NORMAL);
         header.setPreferredSize(new Dimension(header.getWidth(), 40));
         header.setReorderingAllowed(false);
 
@@ -49,7 +49,7 @@ public class PurpleTable extends JTable {
 
         // Table body style
         setRowHeight(35);
-        setFont(new Font("Segoe UI", Font.PLAIN, 13));
+        setFont(com.hrm.util.UIFonts.TEXT_NORMAL);
         setSelectionBackground(UIColors.TABLE_SELECTION_BG);
         setSelectionForeground(UIColors.TABLE_SELECTION_FG);
         setGridColor(UIColors.BORDER_GRAY);

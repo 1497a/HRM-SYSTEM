@@ -84,14 +84,14 @@ public class EmployeeFormDialog extends JDialog {
 
         // Header
         JLabel lblHeader = new JLabel(isEdit ? "Chỉnh sửa hồ sơ nhân viên" : "Thêm mới hồ sơ nhân viên");
-        lblHeader.setFont(new Font("Segoe UI", Font.BOLD, 18));
+        lblHeader.setFont(com.hrm.util.UIFonts.HEADER_H3);
         lblHeader.setForeground(UIColors.PRIMARY_PURPLE);
         lblHeader.setBorder(BorderFactory.createEmptyBorder(0, 0, 8, 0));
         root.add(lblHeader, BorderLayout.NORTH);
 
         // Tabbed pane
         JTabbedPane tabs = new JTabbedPane();
-        tabs.setFont(new Font("Segoe UI", Font.PLAIN, 14));
+        tabs.setFont(com.hrm.util.UIFonts.TEXT_MEDIUM);
         tabs.addTab("Thông tin lao động", buildTab1());
         tabs.addTab("Thông tin cá nhân", buildTab2());
         root.add(tabs, BorderLayout.CENTER);
@@ -131,7 +131,7 @@ public class EmployeeFormDialog extends JDialog {
         // Ghi chú
         addLabel(panel, "Ghi chú:", gbc, 0, 3);
         txtGhiChu = new JTextArea(4, 20);
-        txtGhiChu.setFont(new Font("Segoe UI", Font.PLAIN, 14));
+        txtGhiChu.setFont(com.hrm.util.UIFonts.TEXT_MEDIUM);
         txtGhiChu.setLineWrap(true);
         txtGhiChu.setWrapStyleWord(true);
         JScrollPane scrollGhiChu = new JScrollPane(txtGhiChu);
@@ -203,7 +203,7 @@ public class EmployeeFormDialog extends JDialog {
 
         addLabel(panel, "Kinh nghiệm:", gbc, 0, 12);
         txtKinhNghiem = new JTextArea(3, 25);
-        txtKinhNghiem.setFont(new Font("Segoe UI", Font.PLAIN, 14));
+        txtKinhNghiem.setFont(com.hrm.util.UIFonts.TEXT_MEDIUM);
         txtKinhNghiem.setLineWrap(true);
         txtKinhNghiem.setWrapStyleWord(true);
         JScrollPane scrollKinhNghiem = new JScrollPane(txtKinhNghiem);
@@ -418,7 +418,7 @@ public class EmployeeFormDialog extends JDialog {
         gbc.gridy = row;
         gbc.weightx = 0;
         JLabel lbl = new JLabel(text);
-        lbl.setFont(new Font("Segoe UI", Font.PLAIN, 14));
+        lbl.setFont(com.hrm.util.UIFonts.TEXT_MEDIUM);
         lbl.setForeground(UIColors.TEXT_DARK);
         panel.add(lbl, gbc);
     }
@@ -428,10 +428,10 @@ public class EmployeeFormDialog extends JDialog {
         gbc.gridy = row;
         gbc.weightx = 1.0;
         if (field instanceof JTextField) {
-            ((JTextField) field).setFont(new Font("Segoe UI", Font.PLAIN, 14));
+            ((JTextField) field).setFont(com.hrm.util.UIFonts.TEXT_MEDIUM);
             ((JTextField) field).setPreferredSize(new Dimension(0, 30));
         } else if (field instanceof JComboBox) {
-            ((JComboBox<?>) field).setFont(new Font("Segoe UI", Font.PLAIN, 14));
+            ((JComboBox<?>) field).setFont(com.hrm.util.UIFonts.TEXT_MEDIUM);
         }
         panel.add(field, gbc);
     }

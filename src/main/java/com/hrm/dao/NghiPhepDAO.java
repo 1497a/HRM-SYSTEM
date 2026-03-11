@@ -163,6 +163,10 @@ public class NghiPhepDAO {
         List<DonXinNghiPhep> result = new ArrayList<>();
         if (scope == com.hrm.model.DataScope.NONE) return result;
 
+        if (scope == com.hrm.model.DataScope.DEPT) {
+            return getByDeptSubtree(currentMaNV, statusValue);
+        }
+
         String sqlBase = "SELECT d.*, t.hoTen, lp.tenLoaiPhep, t2.hoTen AS tenNguoiDuyet FROM DONXINNGHIPHEP d "
                 + "LEFT JOIN THONGTINCANHAN t ON d.maNV = t.maNV "
                 + "LEFT JOIN LOAIPHEP lp ON d.maLoaiPhep = lp.maLoaiPhep "
@@ -173,9 +177,6 @@ public class NghiPhepDAO {
         switch (scope) {
             case ALL:
                 sqlCondition = " WHERE 1=1 ";
-                break;
-            case DEPT:
-                sqlCondition = " WHERE b.maPhongBan = (SELECT b2.maPhongBan FROM BONHIEM b2 WHERE b2.maNV = ? AND b2.trangThai = 'hieu_luc' AND b2.loaiBoNhiem = 'chinh') ";
                 break;
             case TEAM:
                 sqlCondition = " WHERE b.maQuanLy = ? ";
@@ -194,7 +195,6 @@ public class NghiPhepDAO {
         String sql = sqlBase + sqlCondition + " ORDER BY d.maDon DESC";
         try (Connection conn = DatabaseConnection.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
-            
             if (scope != com.hrm.model.DataScope.ALL) {
                 ps.setString(1, currentMaNV);
             }
@@ -205,6 +205,53 @@ public class NghiPhepDAO {
             }
         } catch (SQLException e) {
             throw new RuntimeException("Lỗi tải đơn theo scope: " + e.getMessage(), e);
+        }
+        return result;
+    }
+
+    private java.util.Set<String> getDeptSubtree(String currentMaNV, java.sql.Connection conn) throws SQLException {
+        String rootSql = "SELECT b.maPhongBan FROM BONHIEM b WHERE b.maNV=? AND b.trangThai='hieu_luc' AND b.loaiBoNhiem='chinh' LIMIT 1";
+        String rootDept = null;
+        try (PreparedStatement ps = conn.prepareStatement(rootSql)) {
+            ps.setString(1, currentMaNV);
+            try (ResultSet rs = ps.executeQuery()) { if (rs.next()) rootDept = rs.getString(1); }
+        }
+        java.util.Set<String> depts = new java.util.LinkedHashSet<>();
+        if (rootDept == null) return depts;
+        java.util.Queue<String> queue = new java.util.LinkedList<>();
+        queue.add(rootDept);
+        String childSql = "SELECT maPhongBan FROM PHONGBAN WHERE phongBanCha=?";
+        while (!queue.isEmpty()) {
+            String cur = queue.poll();
+            if (depts.add(cur)) {
+                try (PreparedStatement ps = conn.prepareStatement(childSql)) {
+                    ps.setString(1, cur);
+                    try (ResultSet rs = ps.executeQuery()) { while (rs.next()) queue.add(rs.getString(1)); }
+                }
+            }
+        }
+        return depts;
+    }
+
+    private List<DonXinNghiPhep> getByDeptSubtree(String currentMaNV, String statusValue) {
+        List<DonXinNghiPhep> result = new ArrayList<>();
+        try (Connection conn = DatabaseConnection.getConnection()) {
+            java.util.Set<String> depts = getDeptSubtree(currentMaNV, conn);
+            if (depts.isEmpty()) return result;
+            String ph = String.join(",", java.util.Collections.nCopies(depts.size(), "?"));
+            String statusClause = statusValue != null ? " AND d.trangThai = '" + statusValue + "'" : "";
+            String sql = "SELECT d.*, t.hoTen, lp.tenLoaiPhep, t2.hoTen AS tenNguoiDuyet FROM DONXINNGHIPHEP d "
+                    + "LEFT JOIN THONGTINCANHAN t ON d.maNV = t.maNV "
+                    + "LEFT JOIN LOAIPHEP lp ON d.maLoaiPhep = lp.maLoaiPhep "
+                    + "LEFT JOIN BONHIEM b ON d.maNV = b.maNV AND b.trangThai = 'hieu_luc' AND b.loaiBoNhiem = 'chinh' "
+                    + "LEFT JOIN THONGTINCANHAN t2 ON d.nguoiDuyet = t2.maNV "
+                    + "WHERE b.maPhongBan IN (" + ph + ")" + statusClause + " ORDER BY d.maDon DESC";
+            try (PreparedStatement ps = conn.prepareStatement(sql)) {
+                int i = 1; for (String d : depts) ps.setString(i++, d);
+                try (ResultSet rs = ps.executeQuery()) { while (rs.next()) result.add(mapLeaveRequest(rs)); }
+            }
+        } catch (SQLException e) {
+            throw new RuntimeException("Lỗi tải đơn nghỉ phép theo phòng ban: " + e.getMessage(), e);
         }
         return result;
     }

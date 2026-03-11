@@ -139,7 +139,7 @@ public class LeaveApproveDialog extends JDialog {
 
     private JLabel createValueLabel(String text) {
         JLabel label = new JLabel(text);
-        label.setFont(new Font("Segoe UI", Font.BOLD, 12));
+        label.setFont(com.hrm.util.UIFonts.BOLD_SMALL);
         return label;
     }
 

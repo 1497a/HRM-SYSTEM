@@ -1,26 +1,58 @@
 package com.hrm.gui.appointment;
 
+import com.hrm.bus.BoNhiemBUS;
 import com.hrm.gui.components.PurpleButton;
 import com.hrm.gui.components.PurpleTable;
 import com.hrm.model.BoNhiem;
-import com.hrm.bus.BoNhiemBUS;
 import com.hrm.util.SessionContext;
 import com.hrm.util.UIColors;
 import com.hrm.util.UIHelper;
 
-import javax.swing.*;
+import javax.swing.BorderFactory;
+import javax.swing.Box;
+import javax.swing.JComboBox;
+import javax.swing.JLabel;
+import javax.swing.JPanel;
+import javax.swing.JScrollPane;
+import javax.swing.JTable;
+import javax.swing.JTextField;
+import javax.swing.ListSelectionModel;
+import javax.swing.RowFilter;
+import javax.swing.RowSorter;
+import javax.swing.SortOrder;
+import javax.swing.SwingConstants;
+import javax.swing.SwingUtilities;
+import javax.swing.event.DocumentEvent;
+import javax.swing.event.DocumentListener;
 import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.table.DefaultTableModel;
 import javax.swing.table.TableRowSorter;
-import java.awt.*;
+import java.awt.BorderLayout;
+import java.awt.Color;
+import java.awt.Component;
+import java.awt.Dimension;
+import java.awt.FlowLayout;
+import java.awt.Font;
+import java.awt.Frame;
+import java.text.Normalizer;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
 
-/**
- * Panel danh sách bổ nhiệm nhân viên.
- */
 public class AppointmentListPanel extends JPanel {
+
+    private static final int COL_MA_BN = 0;
+    private static final int COL_MA_NV = 1;
+    private static final int COL_HO_TEN = 2;
+    private static final int COL_PHONG_BAN = 3;
+    private static final int COL_CHUC_VU = 4;
+    private static final int COL_LOAI = 5;
+    private static final int COL_TU_NGAY = 6;
+    private static final int COL_TRANG_THAI = 7;
+
+    private static final String[] COL_NAMES = {
+        "Mã BN", "Mã NV", "Họ tên", "Phòng ban", "Chức vụ", "Loại", "Từ ngày", "Trạng thái"
+    };
 
     private final BoNhiemBUS boNhiemService = BoNhiemBUS.getInstance();
     private final DateTimeFormatter dtf = DateTimeFormatter.ofPattern("dd/MM/yyyy");
@@ -30,16 +62,12 @@ public class AppointmentListPanel extends JPanel {
     private TableRowSorter<DefaultTableModel> sorter;
 
     private JComboBox<String> cboTrangThai;
+    private JComboBox<String> cboLoai;
     private JTextField txtTimKiem;
     private PurpleButton btnTao;
     private PurpleButton btnXemChiTiet;
 
     private List<BoNhiem> danhSachHienThi = new ArrayList<>();
-
-    private static final String[] COL_NAMES = {
-        "Mã BN", "Mã NV", "Họ tên", "Phòng ban", "Chức vụ", "Người quản lý",
-        "Loại", "Tỷ lệ lương", "Từ ngày", "Đến ngày", "Trạng thái"
-    };
 
     public AppointmentListPanel() {
         setLayout(new BorderLayout(0, 8));
@@ -55,45 +83,53 @@ public class AppointmentListPanel extends JPanel {
         loadData();
     }
 
-    // ============================
-    // Build sections
-    // ============================
-
     private JPanel buildNorthPanel() {
         JPanel panel = new JPanel(new BorderLayout(8, 8));
         panel.setOpaque(false);
 
-        // Tiêu đề
         JLabel lblTitle = new JLabel("QUẢN LÝ BỔ NHIỆM");
-        lblTitle.setFont(new Font("Segoe UI", Font.BOLD, 20));
+        lblTitle.setFont(com.hrm.util.UIFonts.HEADER_H2);
         lblTitle.setForeground(UIColors.PRIMARY_PURPLE);
         lblTitle.setBorder(BorderFactory.createEmptyBorder(0, 0, 8, 0));
         panel.add(lblTitle, BorderLayout.NORTH);
 
-        // Filter panel
         JPanel filterPanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 8, 4));
         filterPanel.setOpaque(false);
 
         JLabel lblTrangThai = new JLabel("Trạng thái:");
-        lblTrangThai.setFont(new Font("Segoe UI", Font.PLAIN, 14));
+        lblTrangThai.setFont(com.hrm.util.UIFonts.TEXT_MEDIUM);
         lblTrangThai.setForeground(UIColors.TEXT_DARK);
 
         cboTrangThai = new JComboBox<>(new String[]{
             "Tất cả", "Chờ duyệt", "Hiệu lực", "Kết thúc", "Từ chối"
         });
-        cboTrangThai.setFont(new Font("Segoe UI", Font.PLAIN, 14));
+        cboTrangThai.setFont(com.hrm.util.UIFonts.TEXT_MEDIUM);
         cboTrangThai.setPreferredSize(new Dimension(160, 32));
 
-        JLabel lblTimKiem = new JLabel("Tìm theo tên:");
-        lblTimKiem.setFont(new Font("Segoe UI", Font.PLAIN, 14));
+        JLabel lblLoai = new JLabel("Loại:");
+        lblLoai.setFont(com.hrm.util.UIFonts.TEXT_MEDIUM);
+        lblLoai.setForeground(UIColors.TEXT_DARK);
+
+        cboLoai = new JComboBox<>(new String[]{
+            "Tất cả", "Chính", "Kiêm nhiệm"
+        });
+        cboLoai.setFont(com.hrm.util.UIFonts.TEXT_MEDIUM);
+        cboLoai.setPreferredSize(new Dimension(140, 32));
+
+        JLabel lblTimKiem = new JLabel("Tìm kiếm:");
+        lblTimKiem.setFont(com.hrm.util.UIFonts.TEXT_MEDIUM);
         lblTimKiem.setForeground(UIColors.TEXT_DARK);
 
         txtTimKiem = new JTextField(20);
-        txtTimKiem.setFont(new Font("Segoe UI", Font.PLAIN, 14));
+        txtTimKiem.setFont(com.hrm.util.UIFonts.TEXT_MEDIUM);
         txtTimKiem.setPreferredSize(new Dimension(200, 32));
+        txtTimKiem.setToolTipText("Có thể tìm theo mã NV, tên nhân viên hoặc phòng ban");
 
         filterPanel.add(lblTrangThai);
         filterPanel.add(cboTrangThai);
+        filterPanel.add(Box.createHorizontalStrut(16));
+        filterPanel.add(lblLoai);
+        filterPanel.add(cboLoai);
         filterPanel.add(Box.createHorizontalStrut(16));
         filterPanel.add(lblTimKiem);
         filterPanel.add(txtTimKiem);
@@ -103,13 +139,25 @@ public class AppointmentListPanel extends JPanel {
     }
 
     private JScrollPane buildCenterPanel() {
-        tableModel = PurpleTable.createNonEditableModel(COL_NAMES);
+        tableModel = new DefaultTableModel(COL_NAMES, 0) {
+            @Override
+            public boolean isCellEditable(int row, int column) {
+                return false;
+            }
+
+            @Override
+            public Class<?> getColumnClass(int columnIndex) {
+                if (columnIndex == COL_MA_BN) {
+                    return Integer.class;
+                }
+                return String.class;
+            }
+        };
         table = new PurpleTable(tableModel);
         table.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
         table.setDefaultRenderer(Object.class, new StatusColorRenderer());
 
-        // Chiều rộng cột
-        int[] widths = {60, 70, 160, 140, 140, 140, 90, 80, 90, 90, 90};
+        int[] widths = {70, 80, 180, 160, 160, 110, 100, 110};
         for (int i = 0; i < widths.length; i++) {
             table.getColumnModel().getColumn(i).setPreferredWidth(widths[i]);
         }
@@ -117,18 +165,16 @@ public class AppointmentListPanel extends JPanel {
         sorter = new TableRowSorter<>(tableModel);
         table.setRowSorter(sorter);
 
-        // Chỉ cho phép sort cột 1 (Mã NV) và cột 2 (Họ tên)
         for (int i = 0; i < COL_NAMES.length; i++) {
-            sorter.setSortable(i, false); // tắt hết trước
+            sorter.setSortable(i, false);
         }
-        sorter.setSortable(1, true); // Mã NV
-        sorter.setSortable(2, true); // Họ tên
-
-        // Comparator tiếng Việt cho cột Họ tên
-        sorter.setComparator(2, UIHelper.vietnameseNameComparator());
-
-        // Mặc định sort theo Mã NV tăng dần
-        sorter.setSortKeys(List.of(new RowSorter.SortKey(1, SortOrder.ASCENDING)));
+        sorter.setSortable(COL_MA_BN, true);
+        sorter.setSortable(COL_MA_NV, true);
+        sorter.setSortable(COL_HO_TEN, true);
+        sorter.setSortable(COL_TU_NGAY, true);
+        sorter.setComparator(COL_MA_BN, (a, b) -> Integer.compare((Integer) a, (Integer) b));
+        sorter.setComparator(COL_HO_TEN, UIHelper.vietnameseNameComparator());
+        sorter.setSortKeys(List.of(new RowSorter.SortKey(COL_MA_BN, SortOrder.DESCENDING)));
 
         JScrollPane scroll = new JScrollPane(table);
         scroll.setBorder(BorderFactory.createLineBorder(UIColors.BORDER_GRAY));
@@ -149,19 +195,27 @@ public class AppointmentListPanel extends JPanel {
         return panel;
     }
 
-    // ============================
-    // Events
-    // ============================
-
     private void setupEvents() {
         btnTao.addActionListener(e -> showCreateDialog());
         btnXemChiTiet.addActionListener(e -> showDetailDialog());
 
         cboTrangThai.addActionListener(e -> applyFilter());
-        txtTimKiem.getDocument().addDocumentListener(new javax.swing.event.DocumentListener() {
-            public void insertUpdate(javax.swing.event.DocumentEvent e) { applyFilter(); }
-            public void removeUpdate(javax.swing.event.DocumentEvent e) { applyFilter(); }
-            public void changedUpdate(javax.swing.event.DocumentEvent e) { applyFilter(); }
+        cboLoai.addActionListener(e -> applyFilter());
+        txtTimKiem.getDocument().addDocumentListener(new DocumentListener() {
+            @Override
+            public void insertUpdate(DocumentEvent e) {
+                applyFilter();
+            }
+
+            @Override
+            public void removeUpdate(DocumentEvent e) {
+                applyFilter();
+            }
+
+            @Override
+            public void changedUpdate(DocumentEvent e) {
+                applyFilter();
+            }
         });
 
         table.getSelectionModel().addListSelectionListener(e -> {
@@ -180,21 +234,13 @@ public class AppointmentListPanel extends JPanel {
         });
     }
 
-    // ============================
-    // Permissions
-    // ============================
-
     private void setupPermissions() {
         btnTao.setVisible(SessionContext.getInstance().coQuyen("APPOINTMENT_CREATE"));
     }
 
-    // ============================
-    // Data loading
-    // ============================
-
     public void loadData() {
         com.hrm.model.TaiKhoan currentUser = SessionContext.getInstance().getCurrentUser();
-        String currentMaNV = (currentUser != null) ? currentUser.getNhanVienId() : null;
+        String currentMaNV = currentUser != null ? currentUser.getNhanVienId() : null;
         danhSachHienThi = boNhiemService.getAllByScope(currentMaNV);
         tableModel.setRowCount(0);
 
@@ -203,13 +249,10 @@ public class AppointmentListPanel extends JPanel {
                 bn.getMaBoNhiem(),
                 bn.getMaNhanVien() != null ? bn.getMaNhanVien() : String.valueOf(bn.getMaNV()),
                 bn.getTenNV() != null ? bn.getTenNV() : "",
-                bn.getTenPhongBan() != null ? bn.getTenPhongBan() : bn.getId(),
+                bn.getTenPhongBan() != null ? bn.getTenPhongBan() : bn.getPhongBanId(),
                 bn.getTenChucVu() != null ? bn.getTenChucVu() : bn.getChucVuId(),
-                bn.getTenQuanLy() != null ? bn.getTenQuanLy() : (bn.getQuanLyId() != null ? bn.getQuanLyId() : "-"),
                 bn.getLoaiBoNhiemDisplay(),
-                String.format("%.0f%%", bn.getTyLeHuongLuong()),
                 bn.getTuNgay() != null ? bn.getTuNgay().format(dtf) : "",
-                bn.getDenNgay() != null ? bn.getDenNgay().format(dtf) : "Không thời hạn",
                 bn.getTrangThaiDisplay()
             });
         }
@@ -219,23 +262,55 @@ public class AppointmentListPanel extends JPanel {
 
     private void applyFilter() {
         String trangThaiFilter = (String) cboTrangThai.getSelectedItem();
-        String keyword = txtTimKiem != null ? txtTimKiem.getText().trim().toLowerCase() : "";
+        String loaiFilter = normalize((String) cboLoai.getSelectedItem());
+        String keyword = normalize(txtTimKiem != null ? txtTimKiem.getText() : "");
 
         RowFilter<DefaultTableModel, Object> rf = new RowFilter<DefaultTableModel, Object>() {
             @Override
             public boolean include(Entry<? extends DefaultTableModel, ? extends Object> entry) {
-                // Lọc theo tên nhân viên (cột 2)
-                if (!keyword.isEmpty()) {
-                    String tenNV = entry.getStringValue(2).toLowerCase();
-                    if (!tenNV.contains(keyword)) return false;
+                int modelRow = (Integer) entry.getIdentifier();
+                if (modelRow < 0 || modelRow >= danhSachHienThi.size()) {
+                    return false;
                 }
-                // Lọc theo trạng thái (cột 10)
+                BoNhiem boNhiem = danhSachHienThi.get(modelRow);
+
+                if (!keyword.isEmpty()) {
+                    String tenNV = normalize(boNhiem.getTenNV());
+                    String phongBan = normalize(boNhiem.getTenPhongBan());
+                    String maNV = normalize(boNhiem.getMaNhanVien() != null ? boNhiem.getMaNhanVien() : boNhiem.getMaNV());
+                    boolean matched = tenNV.contains(keyword)
+                        || phongBan.contains(keyword)
+                        || maNV.contains(keyword);
+                    if (!matched) {
+                        return false;
+                    }
+                }
+
+                if (!"tat ca".equals(loaiFilter)) {
+                    String loai = normalize(boNhiem.getLoaiBoNhiemDisplay());
+                    String loaiRaw = normalize(boNhiem.getLoaiBoNhiem());
+                    if ("chinh".equals(loaiFilter) && !("chinh".equals(loai) || "chinh".equals(loaiRaw))) {
+                        return false;
+                    }
+                    if ("kiem nhiem".equals(loaiFilter) && !("kiem nhiem".equals(loai) || "kiem_nhiem".equals(loaiRaw))) {
+                        return false;
+                    }
+                }
+
                 if (!"Tất cả".equals(trangThaiFilter)) {
-                    String trangThai = entry.getStringValue(10);
-                    if ("Chờ duyệt".equals(trangThaiFilter) && !"Cho duyet".equals(trangThai)) return false;
-                    if ("Hiệu lực".equals(trangThaiFilter) && !"Hieu luc".equals(trangThai)) return false;
-                    if ("Kết thúc".equals(trangThaiFilter) && !"Het hieu luc".equals(trangThai)) return false;
-                    if ("Từ chối".equals(trangThaiFilter) && !"Tu choi".equals(trangThai)) return false;
+                    String trangThai = entry.getStringValue(COL_TRANG_THAI);
+                    if ("Chờ duyệt".equals(trangThaiFilter) && !"Cho duyet".equals(trangThai)) {
+                        return false;
+                    }
+                    if ("Hiệu lực".equals(trangThaiFilter) && !"Hieu luc".equals(trangThai)) {
+                        return false;
+                    }
+                    if ("Kết thúc".equals(trangThaiFilter) && !"Het hieu luc".equals(trangThai)) {
+                        return false;
+                    }
+                    if ("Từ chối".equals(trangThaiFilter) && !"Tu choi".equals(trangThai)) {
+                        return false;
+                    }
                 }
                 return true;
             }
@@ -244,13 +319,10 @@ public class AppointmentListPanel extends JPanel {
         sorter.setRowFilter(rf);
     }
 
-    // ============================
-    // Actions
-    // ============================
-
     private void showCreateDialog() {
         AppointmentFormDialog dialog = new AppointmentFormDialog(
-                (Frame) SwingUtilities.getWindowAncestor(this));
+            (Frame) SwingUtilities.getWindowAncestor(this)
+        );
         dialog.setVisible(true);
         if (dialog.isSaved()) {
             loadData();
@@ -259,39 +331,41 @@ public class AppointmentListPanel extends JPanel {
 
     private void showDetailDialog() {
         BoNhiem selected = getSelectedBoNhiem();
-        if (selected == null) return;
+        if (selected == null) {
+            return;
+        }
         AppointmentFormDialog dialog = new AppointmentFormDialog(
-                (Frame) SwingUtilities.getWindowAncestor(this), selected);
+            (Frame) SwingUtilities.getWindowAncestor(this), selected
+        );
         dialog.setVisible(true);
         if (dialog.isSaved() || dialog.isActionTaken()) {
             loadData();
         }
     }
 
-    // ============================
-    // Helper: get selected BoNhiem
-    // ============================
-
     private BoNhiem getSelectedBoNhiem() {
         int viewRow = table.getSelectedRow();
-        if (viewRow == -1) return null;
+        if (viewRow == -1) {
+            return null;
+        }
         int modelRow = table.convertRowIndexToModel(viewRow);
-        if (modelRow < 0 || modelRow >= danhSachHienThi.size()) return null;
-        int maBoNhiem = (int) tableModel.getValueAt(modelRow, 0);
+        if (modelRow < 0 || modelRow >= danhSachHienThi.size()) {
+            return null;
+        }
+        int maBoNhiem = (int) tableModel.getValueAt(modelRow, COL_MA_BN);
         for (BoNhiem bn : danhSachHienThi) {
-            if (bn.getMaBoNhiem() == maBoNhiem) return bn;
+            if (bn.getMaBoNhiem() == maBoNhiem) {
+                return bn;
+            }
         }
         return null;
     }
 
-    // ============================
-    // Custom renderer for status coloring
-    // ============================
-
     private class StatusColorRenderer extends DefaultTableCellRenderer {
         @Override
-        public Component getTableCellRendererComponent(JTable t, Object value,
-                boolean isSelected, boolean hasFocus, int row, int col) {
+        public Component getTableCellRendererComponent(
+            JTable t, Object value, boolean isSelected, boolean hasFocus, int row, int col
+        ) {
             Component c = super.getTableCellRendererComponent(t, value, isSelected, hasFocus, row, col);
             setHorizontalAlignment(SwingConstants.CENTER);
             setBorder(BorderFactory.createEmptyBorder(0, 8, 0, 8));
@@ -300,23 +374,32 @@ public class AppointmentListPanel extends JPanel {
                 c.setBackground(row % 2 == 0 ? Color.WHITE : UIColors.TABLE_ALT_ROW);
                 c.setForeground(UIColors.TEXT_DARK);
 
-                // Tô màu cột trạng thái (cột 10)
-                if (col == 10 && value != null) {
+                if (col == COL_TRANG_THAI && value != null) {
                     String val = value.toString();
-                    if ("Hiệu lực".equals(val)) {
+                    if ("Hieu luc".equals(val)) {
                         c.setForeground(UIColors.SUCCESS_GREEN);
-                        ((JLabel) c).setFont(new Font("Segoe UI", Font.BOLD, 12));
-                    } else if ("Chờ duyệt".equals(val)) {
+                        ((JLabel) c).setFont(com.hrm.util.UIFonts.BOLD_SMALL);
+                    } else if ("Cho duyet".equals(val)) {
                         c.setForeground(new Color(230, 120, 0));
-                        ((JLabel) c).setFont(new Font("Segoe UI", Font.BOLD, 12));
-                    } else if ("Từ chối".equals(val) || "Tu choi".equals(val)
-                            || "Hết hiệu lực".equals(val) || "Het hieu luc".equals(val)) {
+                        ((JLabel) c).setFont(com.hrm.util.UIFonts.BOLD_SMALL);
+                    } else if ("Tu choi".equals(val) || "Het hieu luc".equals(val)) {
                         c.setForeground(UIColors.DANGER_RED);
-                        ((JLabel) c).setFont(new Font("Segoe UI", Font.BOLD, 12));
+                        ((JLabel) c).setFont(com.hrm.util.UIFonts.BOLD_SMALL);
                     }
                 }
             }
             return c;
         }
+    }
+
+    private String normalize(String value) {
+        if (value == null) {
+            return "";
+        }
+        String normalized = Normalizer.normalize(value, Normalizer.Form.NFD)
+            .replaceAll("\\p{M}+", "")
+            .replace('đ', 'd')
+            .replace('Đ', 'D');
+        return normalized.trim().toLowerCase();
     }
 }

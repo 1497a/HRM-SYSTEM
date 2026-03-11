@@ -218,6 +218,11 @@ public class DanhGiaBUS {
         }
 
         // Kiểm tra đã đánh giá chưa
+        if (SelfApprovalGuard.isSelfAction(maNguoiDanhGia, maNV)
+                && !SelfApprovalGuard.currentUserCanBypassSelfRestriction()) {
+            return KetQua.error("Bạn không thể tự đánh giá hiệu suất của chính mình.");
+        }
+
         DanhGiaHieuSuat existing = repository.findSubmissionByDotAndNV(maDot, maNV);
         if (existing != null) {
             return KetQua.error("Nhân viên này đã được đánh giá trong đợt này.");

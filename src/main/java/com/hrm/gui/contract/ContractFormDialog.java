@@ -80,7 +80,7 @@ public class ContractFormDialog extends JDialog {
 
         // Nhân viên từ danh sách
         cboNhanVien = new JComboBox<>();
-        cboNhanVien.setFont(new Font("Segoe UI", Font.PLAIN, 14));
+        cboNhanVien.setFont(com.hrm.util.UIFonts.TEXT_MEDIUM);
         java.util.List<NhanVien> dsNV = NhanVienBUS.getInstance().getDangLamViec();
         for (NhanVien nv : dsNV) {
             cboNhanVien.addItem(nv);
@@ -102,7 +102,7 @@ public class ContractFormDialog extends JDialog {
         cboLoaiHopDong = new JComboBox<>(new String[]{
             "thu_viec", "co_thoi_han", "khong_xac_dinh_thoi_han"
         });
-        cboLoaiHopDong.setFont(new Font("Segoe UI", Font.PLAIN, 14));
+        cboLoaiHopDong.setFont(com.hrm.util.UIFonts.TEXT_MEDIUM);
         cboLoaiHopDong.setRenderer(new DefaultListCellRenderer() {
             @Override
             public Component getListCellRendererComponent(JList<?> list, Object value,
@@ -125,7 +125,7 @@ public class ContractFormDialog extends JDialog {
         NumberFormat fmt = NumberFormat.getIntegerInstance(new Locale("vi", "VN"));
         fmt.setGroupingUsed(true);
         txtLuongCoSo = new JFormattedTextField(fmt);
-        txtLuongCoSo.setFont(new Font("Segoe UI", Font.PLAIN, 14));
+        txtLuongCoSo.setFont(com.hrm.util.UIFonts.TEXT_MEDIUM);
         txtLuongCoSo.setColumns(20);
         txtLuongCoSo.setValue(0L);
 
@@ -133,37 +133,37 @@ public class ContractFormDialog extends JDialog {
         SpinnerDateModel ngayKyModel = new SpinnerDateModel(new Date(), null, null, java.util.Calendar.DAY_OF_MONTH);
         spnNgayKy = new JSpinner(ngayKyModel);
         spnNgayKy.setEditor(new JSpinner.DateEditor(spnNgayKy, "dd/MM/yyyy"));
-        spnNgayKy.setFont(new Font("Segoe UI", Font.PLAIN, 14));
+        spnNgayKy.setFont(com.hrm.util.UIFonts.TEXT_MEDIUM);
 
         // Ngày hiệu lực
         SpinnerDateModel ngayHieuLucModel = new SpinnerDateModel(new Date(), null, null, java.util.Calendar.DAY_OF_MONTH);
         spnNgayHieuLuc = new JSpinner(ngayHieuLucModel);
         spnNgayHieuLuc.setEditor(new JSpinner.DateEditor(spnNgayHieuLuc, "dd/MM/yyyy"));
-        spnNgayHieuLuc.setFont(new Font("Segoe UI", Font.PLAIN, 14));
+        spnNgayHieuLuc.setFont(com.hrm.util.UIFonts.TEXT_MEDIUM);
 
         // Ngày hết hiệu lực
         SpinnerDateModel ngayHetModel = new SpinnerDateModel(new Date(), null, null, java.util.Calendar.DAY_OF_MONTH);
         spnNgayHetHieuLuc = new JSpinner(ngayHetModel);
         spnNgayHetHieuLuc.setEditor(new JSpinner.DateEditor(spnNgayHetHieuLuc, "dd/MM/yyyy"));
-        spnNgayHetHieuLuc.setFont(new Font("Segoe UI", Font.PLAIN, 14));
+        spnNgayHetHieuLuc.setFont(com.hrm.util.UIFonts.TEXT_MEDIUM);
 
         // Checkbox không xác định ngày hết hiệu lực
         chkKhongXacDinhNgayHet = new JCheckBox("Không xác định thời hạn kết thúc");
-        chkKhongXacDinhNgayHet.setFont(new Font("Segoe UI", Font.PLAIN, 13));
+        chkKhongXacDinhNgayHet.setFont(com.hrm.util.UIFonts.TEXT_NORMAL);
         chkKhongXacDinhNgayHet.setOpaque(false);
         chkKhongXacDinhNgayHet.addActionListener(e ->
                 spnNgayHetHieuLuc.setEnabled(!chkKhongXacDinhNgayHet.isSelected()));
 
         // Ghi chú
         txtGhiChu = new JTextArea(3, 20);
-        txtGhiChu.setFont(new Font("Segoe UI", Font.PLAIN, 14));
+        txtGhiChu.setFont(com.hrm.util.UIFonts.TEXT_MEDIUM);
         txtGhiChu.setLineWrap(true);
         txtGhiChu.setWrapStyleWord(true);
 
         // Buttons
         btnLuu = new PurpleButton("Lưu");
         btnHuy = new JButton("Hủy");
-        btnHuy.setFont(new Font("Segoe UI", Font.PLAIN, 14));
+        btnHuy.setFont(com.hrm.util.UIFonts.TEXT_MEDIUM);
         btnHuy.setCursor(new Cursor(Cursor.HAND_CURSOR));
 
         btnLuu.addActionListener(e -> luuHopDong());
@@ -204,7 +204,7 @@ public class ContractFormDialog extends JDialog {
 
         // Tiêu đề form
         JLabel lblTitle = new JLabel("THÔNG TIN HỢP ĐỒNG LAO ĐỘNG");
-        lblTitle.setFont(new Font("Segoe UI", Font.BOLD, 16));
+        lblTitle.setFont(com.hrm.util.UIFonts.HEADER_SUB);
         lblTitle.setForeground(UIColors.PRIMARY_PURPLE);
         gbc.gridx = 0; gbc.gridy = 0; gbc.gridwidth = 2;
         gbc.insets = new Insets(0, 8, 12, 8);
@@ -228,7 +228,7 @@ public class ContractFormDialog extends JDialog {
         // Row: Ngày hết hiệu lực + checkbox
         gbc.gridx = 0; gbc.gridy = 7;
         JLabel lblHetHieuLuc = new JLabel("Ngày hết hiệu lực:");
-        lblHetHieuLuc.setFont(new Font("Segoe UI", Font.PLAIN, 14));
+        lblHetHieuLuc.setFont(com.hrm.util.UIFonts.TEXT_MEDIUM);
         lblHetHieuLuc.setForeground(UIColors.TEXT_DARK);
         formPanel.add(lblHetHieuLuc, gbc);
 
@@ -247,7 +247,7 @@ public class ContractFormDialog extends JDialog {
         // Ghi chú
         gbc.gridx = 0; gbc.gridy = 8;
         JLabel lblGhiChu = new JLabel("Ghi chú:");
-        lblGhiChu.setFont(new Font("Segoe UI", Font.PLAIN, 14));
+        lblGhiChu.setFont(com.hrm.util.UIFonts.TEXT_MEDIUM);
         lblGhiChu.setForeground(UIColors.TEXT_DARK);
         formPanel.add(lblGhiChu, gbc);
 
@@ -277,7 +277,7 @@ public class ContractFormDialog extends JDialog {
     private void addFormRow(JPanel panel, GridBagConstraints gbc, int row, String label, JComponent field) {
         gbc.gridx = 0; gbc.gridy = row;
         JLabel lbl = new JLabel(label + ":");
-        lbl.setFont(new Font("Segoe UI", Font.PLAIN, 14));
+        lbl.setFont(com.hrm.util.UIFonts.TEXT_MEDIUM);
         lbl.setForeground(UIColors.TEXT_DARK);
         panel.add(lbl, gbc);
 
@@ -295,7 +295,7 @@ public class ContractFormDialog extends JDialog {
 
     private void fillForm(HopDongLaoDong hd) {
         lblSoHopDong.setText(hd.getSoHopDong() != null ? hd.getSoHopDong() : "(chua co)");
-        lblSoHopDong.setFont(new Font("Segoe UI", Font.PLAIN, 13));
+        lblSoHopDong.setFont(com.hrm.util.UIFonts.TEXT_NORMAL);
         lblSoHopDong.setForeground(java.awt.Color.BLACK);
 
         // Pre-select nhân viên
