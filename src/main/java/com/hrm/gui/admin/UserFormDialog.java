@@ -103,7 +103,7 @@ public class UserFormDialog extends JDialog {
             txtUsername.setEditable(false);
             txtMaNV = new JTextField(10);
             txtMaNV.setEditable(false);
-            txtMaNV.setBackground(new Color(245, 245, 245));
+            txtMaNV.setBackground(com.hrm.util.UIColors.LIGHT_GRAY_BG);
             txtFullName = new JTextField(20);
             txtEmail = new JTextField(20);
 
@@ -195,7 +195,7 @@ public class UserFormDialog extends JDialog {
             gbc.gridx = 1; gbc.gridy = row;
             JLabel hint = new JLabel("(Co the thay doi mat khau mac dinh truoc khi luu)");
             hint.setFont(new Font("Segoe UI", Font.ITALIC, 11));
-            hint.setForeground(Color.GRAY);
+            hint.setForeground(com.hrm.util.UIColors.TEXT_GRAY);
             formPanel.add(hint, gbc);
             row++;
 
@@ -220,7 +220,7 @@ public class UserFormDialog extends JDialog {
             gbc.gridx = 1; gbc.gridy = row;
             JLabel pwHint = new JLabel("(De trong neu khong muon doi mat khau)");
             pwHint.setFont(new Font("Segoe UI", Font.ITALIC, 11));
-            pwHint.setForeground(Color.GRAY);
+            pwHint.setForeground(com.hrm.util.UIColors.TEXT_GRAY);
             formPanel.add(pwHint, gbc);
             row++;
 

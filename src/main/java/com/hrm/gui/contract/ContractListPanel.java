@@ -165,7 +165,7 @@ public class ContractListPanel extends JPanel {
         // Ghi chú giải thích các trạng thái
         JLabel lblNote = new JLabel(
                 "<html><i>💡 <b>Thanh lý hợp đồng:</b> Hai bên thỏa thuận chấm dứt hợp đồng lao động trước thời hạn theo quy định pháp luật.</i></html>");
-        lblNote.setForeground(new Color(100, 100, 100));
+        lblNote.setForeground(com.hrm.util.UIColors.TEXT_GRAY);
         lblNote.setFont(com.hrm.util.UIFonts.TEXT_SMALL);
         panel.add(lblNote);
 
@@ -363,7 +363,7 @@ public class ContractListPanel extends JPanel {
             setToolTipText(null);
 
             if (!isSelected) {
-                c.setBackground(row % 2 == 0 ? Color.WHITE : UIColors.TABLE_ALT_ROW);
+                c.setBackground(row % 2 == 0 ? com.hrm.util.UIColors.WHITE : UIColors.TABLE_ALT_ROW);
                 c.setForeground(UIColors.TEXT_DARK);
 
                 // Tô màu + tooltip cột trạng thái (cột 8)
@@ -374,7 +374,7 @@ public class ContractListPanel extends JPanel {
                         ((JLabel) c).setFont(com.hrm.util.UIFonts.BOLD_SMALL);
                         setToolTipText("Hop dong dang co hieu luc");
                     } else if ("Hết hạn".equals(val)) {
-                        c.setForeground(new Color(230, 120, 0));
+                        c.setForeground(com.hrm.util.UIColors.WARNING_TEXT_AMBER);
                         ((JLabel) c).setFont(com.hrm.util.UIFonts.BOLD_SMALL);
                         setToolTipText("Hop dong da het thoi han");
                     } else if ("Thanh lý".equals(val)) {

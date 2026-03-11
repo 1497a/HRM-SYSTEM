@@ -76,7 +76,7 @@ public class ContractFormDialog extends JDialog {
         // Số hợp đồng - tự động tạo
         lblSoHopDong = new JLabel("(Tu dong tao khi luu)");
         lblSoHopDong.setFont(new Font("Segoe UI", Font.ITALIC, 13));
-        lblSoHopDong.setForeground(new java.awt.Color(120, 120, 120));
+        lblSoHopDong.setForeground(com.hrm.util.UIColors.TEXT_GRAY);
 
         // Nhân viên từ danh sách
         cboNhanVien = new JComboBox<>();
@@ -296,7 +296,7 @@ public class ContractFormDialog extends JDialog {
     private void fillForm(HopDongLaoDong hd) {
         lblSoHopDong.setText(hd.getSoHopDong() != null ? hd.getSoHopDong() : "(chua co)");
         lblSoHopDong.setFont(com.hrm.util.UIFonts.TEXT_NORMAL);
-        lblSoHopDong.setForeground(java.awt.Color.BLACK);
+        lblSoHopDong.setForeground(UIColors.TEXT_DARK);
 
         // Pre-select nhân viên
         for (int i = 0; i < cboNhanVien.getItemCount(); i++) {

@@ -34,7 +34,7 @@ public class StatusBadge extends JLabel {
         switch (type) {
             case SUCCESS:
                 setBackground(UIColors.SUCCESS_GREEN);
-                setForeground(Color.WHITE);
+                setForeground(com.hrm.util.UIColors.WHITE);
                 break;
             case WARNING:
                 setBackground(UIColors.WARNING_YELLOW);
@@ -42,15 +42,15 @@ public class StatusBadge extends JLabel {
                 break;
             case DANGER:
                 setBackground(UIColors.DANGER_RED);
-                setForeground(Color.WHITE);
+                setForeground(com.hrm.util.UIColors.WHITE);
                 break;
             case INFO:
                 setBackground(UIColors.INFO_BLUE);
-                setForeground(Color.WHITE);
+                setForeground(com.hrm.util.UIColors.WHITE);
                 break;
             case PURPLE:
                 setBackground(UIColors.PRIMARY_PURPLE);
-                setForeground(Color.WHITE);
+                setForeground(com.hrm.util.UIColors.WHITE);
                 break;
             default:
                 setBackground(UIColors.BORDER_GRAY);

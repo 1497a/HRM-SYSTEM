@@ -108,7 +108,7 @@ public class LeaveApproveDialog extends JDialog {
         txtReason.setEditable(false);
         txtReason.setLineWrap(true);
         txtReason.setWrapStyleWord(true);
-        txtReason.setBackground(new Color(245, 245, 245));
+        txtReason.setBackground(com.hrm.util.UIColors.LIGHT_GRAY_BG);
         reasonPanel.add(new JScrollPane(txtReason), BorderLayout.CENTER);
 
         // Note panel

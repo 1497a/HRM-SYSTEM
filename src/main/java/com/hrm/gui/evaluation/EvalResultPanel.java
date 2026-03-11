@@ -133,11 +133,11 @@ public class EvalResultPanel extends JPanel {
                 Component c = super.getTableCellRendererComponent(table, value, isSelected, hasFocus, row, column);
                 if (!isSelected && value != null) {
                     String rating = value.toString();
-                    if ("Xuất sắc".equals(rating))        { c.setBackground(new Color(200, 255, 200)); c.setForeground(new Color(0, 100, 0)); }
-                    else if ("Tốt".equals(rating))        { c.setBackground(new Color(220, 255, 220)); c.setForeground(new Color(0, 128, 0)); }
-                    else if ("Khá".equals(rating))        { c.setBackground(new Color(255, 255, 200)); c.setForeground(new Color(128, 128, 0)); }
-                    else if ("Trung bình".equals(rating)) { c.setBackground(new Color(255, 220, 200)); c.setForeground(new Color(200, 100, 0)); }
-                    else                                  { c.setBackground(new Color(255, 200, 200)); c.setForeground(Color.RED); }
+                    if ("Xuất sắc".equals(rating))        { c.setBackground(com.hrm.util.UIColors.LIGHT_GREEN_BG); c.setForeground(com.hrm.util.UIColors.DARK_GREEN); }
+                    else if ("Tốt".equals(rating))        { c.setBackground(com.hrm.util.UIColors.LIGHT_GREEN_BG); c.setForeground(com.hrm.util.UIColors.DARK_GREEN); }
+                    else if ("Khá".equals(rating))        { c.setBackground(com.hrm.util.UIColors.LIGHT_YELLOW_BG); c.setForeground(com.hrm.util.UIColors.WARNING_TEXT_AMBER); }
+                    else if ("Trung bình".equals(rating)) { c.setBackground(com.hrm.util.UIColors.LIGHT_RED_BG); c.setForeground(com.hrm.util.UIColors.WARNING_TEXT_AMBER); }
+                    else                                  { c.setBackground(com.hrm.util.UIColors.LIGHT_RED_BG); c.setForeground(com.hrm.util.UIColors.DANGER_RED); }
                 }
                 return c;
             }
@@ -168,7 +168,7 @@ public class EvalResultPanel extends JPanel {
         txtComment.setEditable(false);
         txtComment.setLineWrap(true);
         txtComment.setWrapStyleWord(true);
-        txtComment.setBackground(new Color(245, 245, 245));
+        txtComment.setBackground(com.hrm.util.UIColors.LIGHT_GRAY_BG);
 
         if (isManager) {
             cboNhanVien.addActionListener(e -> loadData());

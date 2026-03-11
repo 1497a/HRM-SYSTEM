@@ -3,6 +3,7 @@ package com.hrm.gui.notification;
 import com.hrm.model.PhongBan;
 import com.hrm.model.NhanVien;
 import com.hrm.model.ChucVu;
+import com.hrm.model.DataScope;
 import com.hrm.model.ThongBao;
 import com.hrm.model.TaiKhoan;
 import com.hrm.dao.ThongBaoDAO;
@@ -11,6 +12,7 @@ import com.hrm.bus.NhanVienBUS;
 import com.hrm.bus.ChucVuBUS;
 import com.hrm.bus.KetQua;
 import com.hrm.bus.ThongBaoBUS;
+import com.hrm.bus.XacThucBUS;
 import com.hrm.util.SessionContext;
 import com.hrm.util.UIColors;
 import com.hrm.util.UIHelper;
@@ -30,10 +32,17 @@ import java.util.List;
  * Tab 2: Gửi thông báo (chỉ ADMIN/HR).
  */
 public class NotificationPanel extends JPanel {
+    private static final String RECIPIENT_ALL_COMPANY = "Toàn công ty";
+    private static final String RECIPIENT_SCOPE = "Trong phạm vi của tôi";
+    private static final String RECIPIENT_EMPLOYEE = "Nhân viên cụ thể";
+    private static final String RECIPIENT_DEPARTMENT = "Phòng ban";
+    private static final String RECIPIENT_POSITION = "Chức vụ";
+    private static final String RECIPIENT_SELF = "Chính tôi";
 
     private final ThongBaoBUS thongBaoService;
     private final ThongBaoDAO thongBaoRepo;
     private final TaiKhoan currentUser;
+    private final DataScope sendScope;
     private final boolean canSend;
 
     // Tab 1
@@ -62,9 +71,9 @@ public class NotificationPanel extends JPanel {
         this.thongBaoService = ThongBaoBUS.getInstance();
         this.thongBaoRepo = ThongBaoDAO.getInstance();
         this.currentUser = SessionContext.getInstance().getCurrentUser();
+        this.sendScope = XacThucBUS.getInstance().getScopeForAction("NOTIFICATION_SEND");
 
-        SessionContext sc = SessionContext.getInstance();
-        this.canSend = sc.coQuyen("NOTIFICATION_SEND");
+        this.canSend = sendScope != DataScope.NONE;
 
         setLayout(new BorderLayout());
         setBackground(UIColors.LIGHT_GRAY_BG);
@@ -110,7 +119,7 @@ public class NotificationPanel extends JPanel {
         toolbar.add(btnLamMoi);
 
         // Table
-        String[] cols = {"Mã", "Tiêu đề", "Loại", "Ngày tạo", "Đã đọc"};
+        String[] cols = {"Mã", "Tiêu đề", "Loại", "Ngày tạo", "Trạng thái"};
         modelThongBao = new DefaultTableModel(cols, 0) {
             @Override
             public boolean isCellEditable(int row, int col) { return false; }
@@ -134,25 +143,26 @@ public class NotificationPanel extends JPanel {
         tblThongBao.getColumnModel().getColumn(1).setPreferredWidth(350);
         tblThongBao.getColumnModel().getColumn(2).setPreferredWidth(150);
         tblThongBao.getColumnModel().getColumn(3).setPreferredWidth(160);
-        tblThongBao.getColumnModel().getColumn(4).setPreferredWidth(80);
+        tblThongBao.getColumnModel().getColumn(4).setPreferredWidth(100);
 
-        // Renderer for "Đã đọc" column
+        // Renderer for status column
         tblThongBao.getColumnModel().getColumn(4).setCellRenderer(new DefaultTableCellRenderer() {
             @Override
             public Component getTableCellRendererComponent(JTable table, Object value,
                     boolean isSelected, boolean hasFocus, int row, int col) {
                 Component c = super.getTableCellRendererComponent(table, value, isSelected, hasFocus, row, col);
                 setHorizontalAlignment(SwingConstants.CENTER);
-                if (!isSelected && value != null) {
-                    boolean daDoc = Boolean.parseBoolean(value.toString());
-                    if (daDoc) {
-                        c.setForeground(UIColors.SUCCESS_GREEN);
-                        setText("Đã đọc");
-                    } else {
-                        c.setForeground(UIColors.DANGER_RED);
-                        setText("Chưa đọc");
-                        c.setFont(com.hrm.util.UIFonts.BOLD_SMALL);
-                    }
+                String trangThai = value != null ? value.toString() : "";
+                setText(trangThai);
+                c.setFont(com.hrm.util.UIFonts.TEXT_NORMAL);
+
+                if (isSelected) {
+                    c.setForeground(table.getSelectionForeground());
+                } else if ("Đã đọc".equals(trangThai)) {
+                    c.setForeground(UIColors.SUCCESS_GREEN);
+                } else {
+                    c.setForeground(UIColors.DANGER_RED);
+                    c.setFont(com.hrm.util.UIFonts.BOLD_SMALL);
                 }
                 return c;
             }
@@ -202,16 +212,23 @@ public class NotificationPanel extends JPanel {
         gbc.anchor = GridBagConstraints.WEST;
 
         // Title
-        JLabel lblTitle = new JLabel("Gui thong bao he thong");
+        JLabel lblTitle = new JLabel("Gửi thông báo");
         lblTitle.setFont(com.hrm.util.UIFonts.HEADER_SUB);
         lblTitle.setForeground(UIColors.PRIMARY_PURPLE);
         gbc.gridx = 0; gbc.gridy = 0; gbc.gridwidth = 2;
         form.add(lblTitle, gbc);
         gbc.gridwidth = 1;
 
+        JLabel lblScope = new JLabel("Phạm vi gửi: " + getScopeDisplayName());
+        lblScope.setFont(com.hrm.util.UIFonts.TEXT_NORMAL);
+        lblScope.setForeground(UIColors.TEXT_DARK);
+        gbc.gridy = 1; gbc.gridx = 0; gbc.gridwidth = 2;
+        form.add(lblScope, gbc);
+        gbc.gridwidth = 1;
+
         // Tiêu đề
-        gbc.gridy = 1; gbc.gridx = 0;
-        form.add(new JLabel("Tieu de:"), gbc);
+        gbc.gridy = 2; gbc.gridx = 0;
+        form.add(new JLabel("Tiêu đề:"), gbc);
         txtTieuDe = new JTextField(35);
         txtTieuDe.setFont(com.hrm.util.UIFonts.TEXT_MEDIUM);
         gbc.gridx = 1; gbc.fill = GridBagConstraints.HORIZONTAL;
@@ -219,8 +236,8 @@ public class NotificationPanel extends JPanel {
         gbc.fill = GridBagConstraints.NONE;
 
         // Nội dung
-        gbc.gridy = 2; gbc.gridx = 0;
-        form.add(new JLabel("Noi dung:"), gbc);
+        gbc.gridy = 3; gbc.gridx = 0;
+        form.add(new JLabel("Nội dung:"), gbc);
         txtNoiDung = new JTextArea(5, 35);
         txtNoiDung.setFont(com.hrm.util.UIFonts.TEXT_MEDIUM);
         txtNoiDung.setLineWrap(true);
@@ -231,20 +248,18 @@ public class NotificationPanel extends JPanel {
         gbc.fill = GridBagConstraints.NONE;
 
         // Loại thông báo
-        gbc.gridy = 3; gbc.gridx = 0;
-        form.add(new JLabel("Loai thong bao:"), gbc);
-        cboLoai = new JComboBox<>(new String[]{"he_thong", "don_tu", "thong_bao_chung"});
+        gbc.gridy = 4; gbc.gridx = 0;
+        form.add(new JLabel("Loại thông báo:"), gbc);
+        cboLoai = new JComboBox<>(new String[]{"Hệ thống", "Đơn từ", "Thông báo chung"});
         cboLoai.setFont(com.hrm.util.UIFonts.TEXT_MEDIUM);
         cboLoai.setPreferredSize(new Dimension(250, 32));
         gbc.gridx = 1;
         form.add(cboLoai, gbc);
 
         // Gửi đến
-        gbc.gridy = 4; gbc.gridx = 0;
-        form.add(new JLabel("Gui den:"), gbc);
-        cboRecipientType = new JComboBox<>(new String[]{
-            "Tat ca nhan vien", "Nhan vien cu the", "Phong ban", "Chuc vu"
-        });
+        gbc.gridy = 5; gbc.gridx = 0;
+        form.add(new JLabel("Gửi đến:"), gbc);
+        cboRecipientType = new JComboBox<>();
         cboRecipientType.setFont(com.hrm.util.UIFonts.TEXT_MEDIUM);
         cboRecipientType.setPreferredSize(new Dimension(220, 32));
         gbc.gridx = 1;
@@ -254,17 +269,14 @@ public class NotificationPanel extends JPanel {
         recipientDetailPanel = new JPanel(new CardLayout());
         recipientDetailPanel.setOpaque(false);
 
-        JPanel emptyCard = new JPanel();
-        emptyCard.setOpaque(false);
-        recipientDetailPanel.add(emptyCard, "Tat ca nhan vien");
+        recipientDetailPanel.add(createEmptyCard(), RECIPIENT_ALL_COMPANY);
+        recipientDetailPanel.add(createEmptyCard(), RECIPIENT_SCOPE);
+        recipientDetailPanel.add(createEmptyCard(), RECIPIENT_SELF);
 
         // Card nhân viên cụ thể
         cboNhanVien = new JComboBox<>();
         cboNhanVien.setFont(com.hrm.util.UIFonts.TEXT_NORMAL);
         cboNhanVien.setPreferredSize(new Dimension(300, 32));
-        for (NhanVien nv : NhanVienBUS.getInstance().getDangLamViec()) {
-            cboNhanVien.addItem(nv);
-        }
         cboNhanVien.setRenderer(new DefaultListCellRenderer() {
             @Override
             public Component getListCellRendererComponent(JList<?> list, Object value,
@@ -280,7 +292,7 @@ public class NotificationPanel extends JPanel {
         JPanel cardNV = new JPanel(new FlowLayout(FlowLayout.LEFT, 0, 0));
         cardNV.setOpaque(false);
         cardNV.add(cboNhanVien);
-        recipientDetailPanel.add(cardNV, "Nhan vien cu the");
+        recipientDetailPanel.add(cardNV, RECIPIENT_EMPLOYEE);
 
         // Card phòng ban
         cboPhongBan = new JComboBox<>();
@@ -301,7 +313,7 @@ public class NotificationPanel extends JPanel {
         JPanel cardPB = new JPanel(new FlowLayout(FlowLayout.LEFT, 0, 0));
         cardPB.setOpaque(false);
         cardPB.add(cboPhongBan);
-        recipientDetailPanel.add(cardPB, "Phong ban");
+        recipientDetailPanel.add(cardPB, RECIPIENT_DEPARTMENT);
 
         // Card chức vụ
         cboChucVu = new JComboBox<>();
@@ -322,25 +334,27 @@ public class NotificationPanel extends JPanel {
         JPanel cardCV = new JPanel(new FlowLayout(FlowLayout.LEFT, 0, 0));
         cardCV.setOpaque(false);
         cardCV.add(cboChucVu);
-        recipientDetailPanel.add(cardCV, "Chuc vu");
+        recipientDetailPanel.add(cardCV, RECIPIENT_POSITION);
 
         cboRecipientType.addActionListener(e -> {
             String sel = (String) cboRecipientType.getSelectedItem();
             if (sel != null) {
-                CardLayout cl = (CardLayout) recipientDetailPanel.getLayout();
-                cl.show(recipientDetailPanel, sel);
+                showRecipientCard(sel);
             }
         });
 
-        gbc.gridy = 5; gbc.gridx = 1;
+        gbc.gridy = 6; gbc.gridx = 1;
         form.add(recipientDetailPanel, gbc);
 
         // Nút gửi
-        gbc.gridy = 6; gbc.gridx = 1;
+        gbc.gridy = 7; gbc.gridx = 1;
         gbc.insets = new Insets(16, 8, 8, 8);
-        btnGui = UIHelper.createSuccessButton("Gui thong bao");
+        btnGui = UIHelper.createSuccessButton("Gửi thông báo");
         btnGui.addActionListener(e -> guiThongBao());
         form.add(btnGui, gbc);
+
+        loadScopedNhanVienOptions();
+        updateRecipientTypeOptions();
 
         panel.add(form, BorderLayout.NORTH);
         return panel;
@@ -363,7 +377,7 @@ public class NotificationPanel extends JPanel {
                         tb.getTieuDe(),
                         tb.getLoaiDisplay(),
                         ngayTao,
-                        tb.isDaDoc()
+                        tb.isDaDoc() ? "Đã đọc" : "Chưa đọc"
                 });
             }
         } catch (Exception ex) {
@@ -447,84 +461,178 @@ public class NotificationPanel extends JPanel {
     private void guiThongBao() {
         String tieuDe = txtTieuDe.getText().trim();
         String noiDung = txtNoiDung.getText().trim();
+        String loaiThongBao = getSelectedLoaiCode();
 
         if (tieuDe.isEmpty()) {
             JOptionPane.showMessageDialog(this,
-                    "Vui long nhap tieu de thong bao.",
-                    "Loi", JOptionPane.WARNING_MESSAGE);
+                    "Vui lòng nhập tiêu đề thông báo.",
+                    "Lỗi", JOptionPane.WARNING_MESSAGE);
             return;
         }
         if (noiDung.isEmpty()) {
             JOptionPane.showMessageDialog(this,
-                    "Vui long nhap noi dung thong bao.",
-                    "Loi", JOptionPane.WARNING_MESSAGE);
+                    "Vui lòng nhập nội dung thông báo.",
+                    "Lỗi", JOptionPane.WARNING_MESSAGE);
             return;
         }
         if (currentUser == null) return;
 
         String recipientType = (String) cboRecipientType.getSelectedItem();
+        if (recipientType == null) return;
 
-        if ("Nhan vien cu the".equals(recipientType) && cboNhanVien.getSelectedItem() == null) {
+        if (RECIPIENT_EMPLOYEE.equals(recipientType) && cboNhanVien.getSelectedItem() == null) {
             JOptionPane.showMessageDialog(this,
-                    "Vui long chon nhan vien de gui.",
-                    "Loi", JOptionPane.WARNING_MESSAGE);
+                    "Vui lòng chọn nhân viên để gửi.",
+                    "Lỗi", JOptionPane.WARNING_MESSAGE);
             return;
         }
-        if ("Phong ban".equals(recipientType) && cboPhongBan.getSelectedItem() == null) {
+        if (RECIPIENT_DEPARTMENT.equals(recipientType) && cboPhongBan.getSelectedItem() == null) {
             JOptionPane.showMessageDialog(this,
-                    "Vui long chon phong ban de gui.",
-                    "Loi", JOptionPane.WARNING_MESSAGE);
+                    "Vui lòng chọn phòng ban để gửi.",
+                    "Lỗi", JOptionPane.WARNING_MESSAGE);
             return;
         }
-        if ("Chuc vu".equals(recipientType) && cboChucVu.getSelectedItem() == null) {
+        if (RECIPIENT_POSITION.equals(recipientType) && cboChucVu.getSelectedItem() == null) {
             JOptionPane.showMessageDialog(this,
-                    "Vui long chon chuc vu de gui.",
-                    "Loi", JOptionPane.WARNING_MESSAGE);
+                    "Vui lòng chọn chức vụ để gửi.",
+                    "Lỗi", JOptionPane.WARNING_MESSAGE);
             return;
         }
 
         String target;
-        if ("Tat ca nhan vien".equals(recipientType)) {
-            target = "tat ca nhan vien";
-        } else if ("Nhan vien cu the".equals(recipientType)) {
+        if (RECIPIENT_ALL_COMPANY.equals(recipientType)) {
+            target = "toàn công ty";
+        } else if (RECIPIENT_SCOPE.equals(recipientType)) {
+            target = getScopeDisplayName().toLowerCase();
+        } else if (RECIPIENT_SELF.equals(recipientType)) {
+            target = "chính bạn";
+        } else if (RECIPIENT_EMPLOYEE.equals(recipientType)) {
             NhanVien nv = (NhanVien) cboNhanVien.getSelectedItem();
             target = nv.getMaNhanVien() + " - " + nv.getHoTen();
-        } else if ("Phong ban".equals(recipientType)) {
-            target = "phong ban: " + ((PhongBan) cboPhongBan.getSelectedItem()).getTenPhongBan();
+        } else if (RECIPIENT_DEPARTMENT.equals(recipientType)) {
+            target = "phòng ban: " + ((PhongBan) cboPhongBan.getSelectedItem()).getTenPhongBan();
         } else {
-            target = "chuc vu: " + ((ChucVu) cboChucVu.getSelectedItem()).getTenChucVu();
+            target = "chức vụ: " + ((ChucVu) cboChucVu.getSelectedItem()).getTenChucVu();
         }
 
         int confirm = JOptionPane.showConfirmDialog(this,
-                "Gui thong bao \"" + tieuDe + "\" den " + target + "?",
-                "Xac nhan gui", JOptionPane.YES_NO_OPTION);
+                "Gửi thông báo \"" + tieuDe + "\" đến " + target + "?",
+                "Xác nhận gửi", JOptionPane.YES_NO_OPTION);
         if (confirm != JOptionPane.YES_OPTION) return;
 
         try {
-            if ("Tat ca nhan vien".equals(recipientType)) {
-                thongBaoService.guiThongBaoTatCa(currentUser.getId(), tieuDe, noiDung);
-            } else if ("Nhan vien cu the".equals(recipientType)) {
+            if (RECIPIENT_ALL_COMPANY.equals(recipientType)) {
+                thongBaoService.guiThongBaoTatCa(currentUser.getId(), tieuDe, noiDung, loaiThongBao);
+            } else if (RECIPIENT_SCOPE.equals(recipientType) || RECIPIENT_SELF.equals(recipientType)) {
+                thongBaoService.guiThongBaoTheoDanhSachMaNV(
+                        currentUser.getId(),
+                        getScopedNhanVienIds(),
+                        tieuDe,
+                        noiDung,
+                        loaiThongBao
+                );
+            } else if (RECIPIENT_EMPLOYEE.equals(recipientType)) {
                 NhanVien nv = (NhanVien) cboNhanVien.getSelectedItem();
-                thongBaoService.guiThongBaoCaNhan(currentUser.getId(), nv.getMaNhanVien(), tieuDe, noiDung);
-            } else if ("Phong ban".equals(recipientType)) {
+                thongBaoService.guiThongBaoCaNhan(currentUser.getId(), nv.getMaNhanVien(), tieuDe, noiDung, loaiThongBao);
+            } else if (RECIPIENT_DEPARTMENT.equals(recipientType)) {
                 PhongBan dept = (PhongBan) cboPhongBan.getSelectedItem();
-                thongBaoService.guiThongBaoPhongBan(currentUser.getId(), dept.getId(), tieuDe, noiDung);
-            } else if ("Chuc vu".equals(recipientType)) {
+                thongBaoService.guiThongBaoPhongBan(currentUser.getId(), dept.getId(), tieuDe, noiDung, loaiThongBao);
+            } else if (RECIPIENT_POSITION.equals(recipientType)) {
                 ChucVu pos = (ChucVu) cboChucVu.getSelectedItem();
-                thongBaoService.guiThongBaoChucVu(currentUser.getId(), pos.getId(), tieuDe, noiDung);
+                thongBaoService.guiThongBaoChucVu(currentUser.getId(), pos.getId(), tieuDe, noiDung, loaiThongBao);
             }
 
             JOptionPane.showMessageDialog(this,
-                    "Da gui thong bao thanh cong.",
-                    "Thanh cong", JOptionPane.INFORMATION_MESSAGE);
+                    "Đã gửi thông báo thành công.",
+                    "Thành công", JOptionPane.INFORMATION_MESSAGE);
 
             txtTieuDe.setText("");
             txtNoiDung.setText("");
             loadThongBao();
         } catch (Exception ex) {
             JOptionPane.showMessageDialog(this,
-                    "Loi gui thong bao: " + ex.getMessage(),
-                    "Loi", JOptionPane.ERROR_MESSAGE);
+                    "Lỗi gửi thông báo: " + ex.getMessage(),
+                    "Lỗi", JOptionPane.ERROR_MESSAGE);
+        }
+    }
+
+    private JPanel createEmptyCard() {
+        JPanel panel = new JPanel();
+        panel.setOpaque(false);
+        return panel;
+    }
+
+    private void updateRecipientTypeOptions() {
+        DefaultComboBoxModel<String> model = new DefaultComboBoxModel<>();
+        switch (sendScope) {
+            case ALL:
+                model.addElement(RECIPIENT_ALL_COMPANY);
+                model.addElement(RECIPIENT_EMPLOYEE);
+                model.addElement(RECIPIENT_DEPARTMENT);
+                model.addElement(RECIPIENT_POSITION);
+                break;
+            case DEPT:
+            case TEAM:
+                model.addElement(RECIPIENT_SCOPE);
+                model.addElement(RECIPIENT_EMPLOYEE);
+                break;
+            case SELF:
+                model.addElement(RECIPIENT_SELF);
+                break;
+            default:
+                break;
+        }
+        cboRecipientType.setModel(model);
+        if (model.getSize() > 0) {
+            cboRecipientType.setSelectedIndex(0);
+            showRecipientCard((String) model.getSelectedItem());
+        }
+    }
+
+    private void loadScopedNhanVienOptions() {
+        cboNhanVien.removeAllItems();
+        if (currentUser == null || currentUser.getNhanVienId() == null) return;
+
+        for (NhanVien nv : NhanVienBUS.getInstance().getAllByActionScope("NOTIFICATION_SEND", currentUser.getNhanVienId())) {
+            cboNhanVien.addItem(nv);
+        }
+    }
+
+    private void showRecipientCard(String selection) {
+        CardLayout cl = (CardLayout) recipientDetailPanel.getLayout();
+        cl.show(recipientDetailPanel, selection);
+    }
+
+    private String getSelectedLoaiCode() {
+        Object selected = cboLoai.getSelectedItem();
+        if ("Hệ thống".equals(selected)) return "he_thong";
+        if ("Đơn từ".equals(selected)) return "don_tu";
+        return "thong_bao_chung";
+    }
+
+    private List<String> getScopedNhanVienIds() {
+        java.util.ArrayList<String> ids = new java.util.ArrayList<>();
+        for (int i = 0; i < cboNhanVien.getItemCount(); i++) {
+            NhanVien nv = cboNhanVien.getItemAt(i);
+            if (nv != null && nv.getMaNhanVien() != null && !nv.getMaNhanVien().trim().isEmpty()) {
+                ids.add(nv.getMaNhanVien());
+            }
+        }
+        return ids;
+    }
+
+    private String getScopeDisplayName() {
+        switch (sendScope) {
+            case ALL:
+                return "Toàn công ty";
+            case DEPT:
+                return "Phòng ban của bạn";
+            case TEAM:
+                return "Nhóm của bạn";
+            case SELF:
+                return "Chỉ bản thân";
+            default:
+                return "Không có quyền gửi";
         }
     }
 }

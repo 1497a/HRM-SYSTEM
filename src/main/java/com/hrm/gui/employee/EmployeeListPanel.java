@@ -347,7 +347,7 @@ public class EmployeeListPanel extends JPanel {
             setBorder(BorderFactory.createEmptyBorder(0, 8, 0, 8));
 
             if (!isSelected) {
-                c.setBackground(row % 2 == 0 ? Color.WHITE : UIColors.TABLE_ALT_ROW);
+                c.setBackground(row % 2 == 0 ? com.hrm.util.UIColors.WHITE : UIColors.TABLE_ALT_ROW);
                 c.setForeground(UIColors.TEXT_DARK);
 
                 // Tô màu cột trạng thái (cột 7)
@@ -356,7 +356,7 @@ public class EmployeeListPanel extends JPanel {
                     if (val.contains("lam viec") || val.contains("Dang")) {
                         c.setForeground(UIColors.SUCCESS_GREEN);
                     } else if (val.contains("Tam nghi")) {
-                        c.setForeground(new Color(230, 120, 0));
+                        c.setForeground(com.hrm.util.UIColors.WARNING_TEXT_AMBER);
                     } else if (val.contains("Nghi viec")) {
                         c.setForeground(UIColors.DANGER_RED);
                     }

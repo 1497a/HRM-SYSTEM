@@ -265,7 +265,7 @@ public class ReportPanel extends JPanel {
         table.setFont(com.hrm.util.UIFonts.TEXT_NORMAL);
         table.getTableHeader().setFont(com.hrm.util.UIFonts.BOLD_NORMAL);
         table.getTableHeader().setBackground(UIColors.PRIMARY_PURPLE);
-        table.getTableHeader().setForeground(java.awt.Color.WHITE); // Fix: trắng trên tím
+        table.getTableHeader().setForeground(UIColors.TEXT_DARK);
         table.getTableHeader().setOpaque(true);
         table.setSelectionBackground(UIColors.LIGHT_PURPLE);
         table.setSelectionForeground(UIColors.TEXT_DARK);

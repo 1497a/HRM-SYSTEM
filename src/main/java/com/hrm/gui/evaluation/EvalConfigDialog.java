@@ -146,7 +146,7 @@ public class EvalConfigDialog extends JDialog {
         rightPanel.add(formPanel, BorderLayout.CENTER);
 
         JPanel notePanel = new JPanel(new BorderLayout(5, 0));
-        notePanel.setBackground(new Color(255, 255, 200));
+        notePanel.setBackground(com.hrm.util.UIColors.LIGHT_YELLOW_BG);
         notePanel.setBorder(new EmptyBorder(8, 10, 8, 10));
         notePanel.add(new JLabel("<html><b>Lưu ý:</b> Tổng trọng số của tất cả tiêu chí phải bằng 100%</html>"), BorderLayout.CENTER);
         notePanel.add(lblTotalWeight, BorderLayout.EAST);
@@ -197,7 +197,7 @@ public class EvalConfigDialog extends JDialog {
         if (total == 100) {
             lblTotalWeight.setForeground(new Color(46, 204, 113));
         } else {
-            lblTotalWeight.setForeground(Color.RED);
+            lblTotalWeight.setForeground(com.hrm.util.UIColors.DANGER_RED);
         }
     }
 

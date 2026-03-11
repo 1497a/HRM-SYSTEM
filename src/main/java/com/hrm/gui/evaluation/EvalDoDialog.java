@@ -70,7 +70,7 @@ public class EvalDoDialog extends JDialog {
 
         lblChucVu = new JLabel(" ");
         lblChucVu.setFont(new Font("Segoe UI", Font.ITALIC, 12));
-        lblChucVu.setForeground(Color.GRAY);
+        lblChucVu.setForeground(com.hrm.util.UIColors.TEXT_GRAY);
         cboEmployee.addActionListener(e -> updateChucVuLabel());
 
         // Criteria
@@ -92,7 +92,7 @@ public class EvalDoDialog extends JDialog {
         // Preview
         lblDiemDuKien = new JLabel("Điểm dự kiến: 0.00 - Xếp loại: -");
         lblDiemDuKien.setFont(new Font("Segoe UI", Font.BOLD, 15));
-        lblDiemDuKien.setForeground(new Color(0, 100, 180));
+        lblDiemDuKien.setForeground(com.hrm.util.UIColors.INFO_BLUE_TEXT);
 
         // Buttons
         btnLuu  = UIHelper.createSuccessButton("Lưu đánh giá");
@@ -173,7 +173,7 @@ public class EvalDoDialog extends JDialog {
         JLabel lblMoTa = new JLabel("<html><i>"
                 + (c.getMoTa() != null && !c.getMoTa().isEmpty() ? c.getMoTa() : "&nbsp;")
                 + "</i></html>");
-        lblMoTa.setForeground(Color.GRAY);
+        lblMoTa.setForeground(com.hrm.util.UIColors.TEXT_GRAY);
         lblMoTa.setFont(new Font("Segoe UI", Font.ITALIC, 12));
 
         // Comment field
@@ -274,10 +274,10 @@ public class EvalDoDialog extends JDialog {
 
         // Color hint
         if (total >= 9.0)      lblDiemDuKien.setForeground(new Color(0, 153, 51));
-        else if (total >= 8.0) lblDiemDuKien.setForeground(new Color(0, 100, 180));
+        else if (total >= 8.0) lblDiemDuKien.setForeground(com.hrm.util.UIColors.INFO_BLUE_TEXT);
         else if (total >= 6.5) lblDiemDuKien.setForeground(new Color(100, 140, 0));
         else if (total >= 5.0) lblDiemDuKien.setForeground(new Color(200, 130, 0));
-        else                   lblDiemDuKien.setForeground(Color.RED);
+        else                   lblDiemDuKien.setForeground(com.hrm.util.UIColors.DANGER_RED);
     }
 
     private List<ChiTietDanhGia> buildScores() {

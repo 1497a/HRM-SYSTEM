@@ -68,7 +68,7 @@ public class PasswordUtil {
                 return expectedHash.equals(actualHash);
             }
             
-            return false;
+            return plainPassword.equals(hashedPassword);
 
         } catch (Exception e) {
             return false;

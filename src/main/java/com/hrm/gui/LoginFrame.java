@@ -92,7 +92,7 @@ public class LoginFrame extends JFrame {
 
         JLabel lblWelcome = new JLabel("WELCOME");
         lblWelcome.setFont(com.hrm.util.UIFonts.DISPLAY_LARGE);
-        lblWelcome.setForeground(Color.WHITE);
+        lblWelcome.setForeground(com.hrm.util.UIColors.WHITE);
         lblWelcome.setAlignmentX(Component.LEFT_ALIGNMENT);
 
         JLabel lblSubtitle = new JLabel("To the best HR Management System");

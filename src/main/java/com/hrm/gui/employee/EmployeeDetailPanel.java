@@ -665,7 +665,7 @@ public class EmployeeDetailPanel extends JDialog {
         cboTrangThaiNhanVien.setBorder(editable
                 ? BorderFactory.createLineBorder(UIColors.PRIMARY_PURPLE, 1)
                 : BorderFactory.createEmptyBorder(1, 1, 1, 1));
-        cboTrangThaiNhanVien.setBackground(editable ? Color.WHITE : new Color(240, 240, 240));
+        cboTrangThaiNhanVien.setBackground(editable ? com.hrm.util.UIColors.WHITE : com.hrm.util.UIColors.LIGHT_GRAY_BG);
     }
 
     private String statusDisplayOf(String key) {
@@ -727,10 +727,10 @@ public class EmployeeDetailPanel extends JDialog {
         txtFileCV.setEditable(editable);
         txtKinhNghiem.setEditable(editable);
 
-        Color bg = editable ? Color.WHITE : new Color(242, 242, 242);
+        Color bg = editable ? com.hrm.util.UIColors.WHITE : new Color(242, 242, 242);
         Border border = editable
                 ? BorderFactory.createLineBorder(UIColors.PRIMARY_PURPLE, 1)
-                : BorderFactory.createLineBorder(new Color(220, 220, 220), 1);
+                : BorderFactory.createLineBorder(com.hrm.util.UIColors.BORDER_GRAY, 1);
 
         applyEditorVisual(txtHoTen, bg, border);
         applyEditorVisual(txtNgaySinh, bg, border);
@@ -762,7 +762,7 @@ public class EmployeeDetailPanel extends JDialog {
 
     private void styleWarningButton(JButton button) {
         button.setFont(com.hrm.util.UIFonts.BOLD_NORMAL);
-        button.setBackground(new Color(230, 120, 0));
+        button.setBackground(com.hrm.util.UIColors.WARNING_TEXT_AMBER);
         button.setForeground(UIColors.WHITE);
         button.setFocusPainted(false);
         button.setBorderPainted(false);
@@ -971,7 +971,7 @@ public class EmployeeDetailPanel extends JDialog {
             case "cho_duyet":
             case "di_muon":
             case "ve_som":
-                return new Color(230, 120, 0);   // amber/warning
+                return com.hrm.util.UIColors.WARNING_TEXT_AMBER;   // amber/warning
             case "nghi_viec":
             case "tu_choi":
             case "huy":
@@ -1008,7 +1008,7 @@ public class EmployeeDetailPanel extends JDialog {
             setBorder(BorderFactory.createEmptyBorder(0, 8, 0, 8));
 
             if (!isSelected) {
-                c.setBackground(row % 2 == 0 ? Color.WHITE : UIColors.TABLE_ALT_ROW);
+                c.setBackground(row % 2 == 0 ? com.hrm.util.UIColors.WHITE : UIColors.TABLE_ALT_ROW);
                 c.setForeground(UIColors.TEXT_DARK);
 
                 if (col == 5 && value != null) {
@@ -1016,7 +1016,7 @@ public class EmployeeDetailPanel extends JDialog {
                     if (v.contains("Hiệu lực") || v.contains("hieu_luc")) {
                         c.setForeground(UIColors.SUCCESS_GREEN);
                     } else if (v.contains("Chờ duyệt") || v.contains("cho_duyet")) {
-                        c.setForeground(new Color(230, 120, 0));
+                        c.setForeground(com.hrm.util.UIColors.WARNING_TEXT_AMBER);
                     } else if (v.contains("Hết") || v.contains("Tu choi")) {
                         c.setForeground(UIColors.DANGER_RED);
                     }

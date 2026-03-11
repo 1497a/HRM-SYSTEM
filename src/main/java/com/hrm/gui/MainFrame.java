@@ -209,7 +209,7 @@ public class MainFrame extends JFrame {
 
         JLabel lblLogo = new JLabel("HRM System");
         lblLogo.setFont(com.hrm.util.UIFonts.HEADER_H2);
-        lblLogo.setForeground(Color.WHITE);
+        lblLogo.setForeground(com.hrm.util.UIColors.WHITE);
         logoSection.add(lblLogo);
 
         // Right - TaiKhoan info + Logout
@@ -219,7 +219,7 @@ public class MainFrame extends JFrame {
         // TaiKhoan name in header
         JLabel lblHeaderUser = new JLabel(displayName);
         lblHeaderUser.setFont(com.hrm.util.UIFonts.TEXT_MEDIUM);
-        lblHeaderUser.setForeground(Color.WHITE);
+        lblHeaderUser.setForeground(com.hrm.util.UIColors.WHITE);
 
         // VaiTro badge
         JLabel lblHeaderRole = new JLabel(roleName);
@@ -229,7 +229,7 @@ public class MainFrame extends JFrame {
         // Logout button in header
         JButton btnHeaderLogout = new JButton("Đăng xuất");
         btnHeaderLogout.setFont(com.hrm.util.UIFonts.TEXT_SMALL);
-        btnHeaderLogout.setForeground(Color.WHITE);
+        btnHeaderLogout.setForeground(com.hrm.util.UIColors.WHITE);
         btnHeaderLogout.setBackground(UIColors.DARK_PURPLE);
         btnHeaderLogout.setBorderPainted(false);
         btnHeaderLogout.setFocusPainted(false);
@@ -278,7 +278,7 @@ public class MainFrame extends JFrame {
         // Avatar circle
         JLabel lblAvatar = new JLabel(getInitials(displayName));
         lblAvatar.setFont(com.hrm.util.UIFonts.HEADER_H1);
-        lblAvatar.setForeground(Color.WHITE);
+        lblAvatar.setForeground(com.hrm.util.UIColors.WHITE);
         lblAvatar.setBackground(UIColors.PRIMARY_PURPLE);
         lblAvatar.setOpaque(true);
         lblAvatar.setPreferredSize(new Dimension(60, 60));
@@ -643,7 +643,7 @@ public class MainFrame extends JFrame {
         btn.addMouseListener(new java.awt.event.MouseAdapter() {
             @Override public void mouseEntered(java.awt.event.MouseEvent e) {
                 btn.setBackground(accent);
-                btn.setForeground(Color.WHITE);
+                btn.setForeground(com.hrm.util.UIColors.WHITE);
             }
             @Override public void mouseExited(java.awt.event.MouseEvent e) {
                 btn.setBackground(UIColors.WHITE);

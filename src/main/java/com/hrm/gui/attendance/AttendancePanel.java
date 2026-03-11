@@ -193,7 +193,7 @@ public class AttendancePanel extends JPanel {
         statsPanel.add(lbl("Tong:", String.valueOf(ds.size()), UIColors.PRIMARY_PURPLE));
         statsPanel.add(lbl("Dung gio:", String.valueOf(dg), UIColors.SUCCESS_GREEN));
         statsPanel.add(lbl("Di muon:", String.valueOf(dm), UIColors.DANGER_RED));
-        statsPanel.add(lbl("Vang:", String.valueOf(vm), Color.GRAY));
+        statsPanel.add(lbl("Vang:", String.valueOf(vm), com.hrm.util.UIColors.TEXT_GRAY));
         statsPanel.revalidate(); statsPanel.repaint();
     }
 
@@ -216,7 +216,7 @@ public class AttendancePanel extends JPanel {
 
         // Row 1: Panel thong tin nhan vien (an mac dinh)
         JPanel infoPanel = new JPanel(new GridLayout(0, 2, 8, 6));
-        infoPanel.setBackground(new Color(245, 247, 255));
+        infoPanel.setBackground(com.hrm.util.UIColors.LIGHT_PURPLE);
         infoPanel.setBorder(BorderFactory.createCompoundBorder(
             BorderFactory.createLineBorder(UIColors.PRIMARY_PURPLE, 1),
             new EmptyBorder(10, 12, 10, 12)));
@@ -391,7 +391,7 @@ public class AttendancePanel extends JPanel {
         GridBagConstraints g=gbc(); DateTimeFormatter fmt=DateTimeFormatter.ofPattern("HH:mm");
         g.gridx=0; g.gridy=0; f.add(new JLabel("Ma ca:"),g);
         JTextField tMa=new JTextField(edit?ex.getMaCaLam():"",20); tMa.setEditable(!edit);
-        if(edit)tMa.setBackground(new Color(240,240,240)); g.gridx=1; g.weightx=1; f.add(tMa,g);
+        if(edit)tMa.setBackground(com.hrm.util.UIColors.LIGHT_GRAY_BG); g.gridx=1; g.weightx=1; f.add(tMa,g);
         g.gridx=0; g.gridy=1; g.weightx=0; f.add(new JLabel("Ten ca:"),g);
         JTextField tTen=new JTextField(edit?ex.getTenCaLam():""); g.gridx=1; f.add(tTen,g);
         g.gridx=0; g.gridy=2; f.add(new JLabel("Gio bat dau:"),g);
@@ -600,7 +600,7 @@ public class AttendancePanel extends JPanel {
         if (bangLuongHienTai == null) {
             if (luongStats != null) {
                 luongStats.removeAll();
-                luongStats.add(lbl("Thang " + th + "/" + nm + ":", "Khong co du lieu", Color.GRAY));
+                luongStats.add(lbl("Thang " + th + "/" + nm + ":", "Khong co du lieu", com.hrm.util.UIColors.TEXT_GRAY));
                 luongStats.revalidate(); luongStats.repaint();
             }
             return;
@@ -614,7 +614,7 @@ public class AttendancePanel extends JPanel {
         if (ds.isEmpty()) {
             if (luongStats != null) {
                 luongStats.removeAll();
-                luongStats.add(lbl("Thang " + th + "/" + nm + ":", "Khong co du lieu cham cong", Color.GRAY));
+                luongStats.add(lbl("Thang " + th + "/" + nm + ":", "Khong co du lieu cham cong", com.hrm.util.UIColors.TEXT_GRAY));
                 luongStats.revalidate(); luongStats.repaint();
             }
             return;
@@ -655,7 +655,7 @@ public class AttendancePanel extends JPanel {
         JPanel main = new JPanel(new BorderLayout(10, 10));
         main.setBorder(new EmptyBorder(15, 20, 15, 20));
         JLabel hint = new JLabel("<html><i>Tick = hien thi | Bo tick = an cot</i></html>");
-        hint.setForeground(Color.GRAY); hint.setFont(com.hrm.util.UIFonts.TEXT_SMALL);
+        hint.setForeground(com.hrm.util.UIColors.TEXT_GRAY); hint.setFont(com.hrm.util.UIFonts.TEXT_SMALL);
         main.add(hint, BorderLayout.NORTH);
         JPanel listP = new JPanel(new GridLayout(0, 1, 0, 6)); listP.setOpaque(false);
         JCheckBox[] checks = new JCheckBox[colNames.length];
@@ -672,7 +672,7 @@ public class AttendancePanel extends JPanel {
         JPanel btnP = new JPanel(new FlowLayout(FlowLayout.CENTER, 10, 0));
         JButton bApply = btn("Ap dung", UIColors.PRIMARY_PURPLE);
         JButton bReset = btn("Hien tat ca", UIColors.SUCCESS_GREEN);
-        JButton bClose = btn("Dong", Color.GRAY);
+        JButton bClose = btn("Dong", com.hrm.util.UIColors.TEXT_GRAY);
         btnP.add(bApply); btnP.add(bReset); btnP.add(bClose);
         main.add(btnP, BorderLayout.SOUTH);
         bApply.addActionListener(e -> {
@@ -772,7 +772,7 @@ public class AttendancePanel extends JPanel {
         tblTP.getColumnModel().getColumn(2).setCellRenderer(new DefaultTableCellRenderer() {
             @Override public Component getTableCellRendererComponent(JTable t, Object v, boolean s, boolean f, int r, int c) {
                 super.getTableCellRendererComponent(t, v, s, f, r, c);
-                setHorizontalAlignment(RIGHT); setForeground(Color.BLACK); return this;
+                setHorizontalAlignment(RIGHT); setForeground(com.hrm.util.UIColors.TEXT_DARK); return this;
             }
         });
         for (ThanhPhanLuong tp : ct.getDanhSachThanhPhan()) {
@@ -827,7 +827,7 @@ public class AttendancePanel extends JPanel {
         tablePC.getColumnModel().getColumn(4).setCellRenderer(new DefaultTableCellRenderer() {
             @Override public Component getTableCellRendererComponent(JTable t, Object v, boolean s, boolean f, int r, int c) {
                 super.getTableCellRendererComponent(t, v, s, f, r, c);
-                setHorizontalAlignment(RIGHT); setForeground(Color.BLACK);
+                setHorizontalAlignment(RIGHT); setForeground(com.hrm.util.UIColors.TEXT_DARK);
                 setFont(com.hrm.util.UIFonts.BOLD_NORMAL); return this;
             }
         });
@@ -965,7 +965,7 @@ public class AttendancePanel extends JPanel {
 
         // Panel thong tin nhan vien
         infoPanelCN = new JPanel(new GridLayout(0, 2, 8, 6));
-        infoPanelCN.setBackground(new Color(245, 247, 255));
+        infoPanelCN.setBackground(com.hrm.util.UIColors.LIGHT_PURPLE);
         infoPanelCN.setBorder(BorderFactory.createCompoundBorder(
             BorderFactory.createLineBorder(UIColors.PRIMARY_PURPLE, 1),
             new EmptyBorder(10, 12, 10, 12)));
@@ -1011,13 +1011,13 @@ public class AttendancePanel extends JPanel {
         });
 
         JLabel hintCheckIn = new JLabel("(He thong tu nhan dien ca lam theo gio hien tai)");
-        hintCheckIn.setFont(new Font("Segoe UI", Font.ITALIC, 11)); hintCheckIn.setForeground(Color.GRAY);
+        hintCheckIn.setFont(new Font("Segoe UI", Font.ITALIC, 11)); hintCheckIn.setForeground(com.hrm.util.UIColors.TEXT_GRAY);
 
         JPanel actionRow = new JPanel(new FlowLayout(FlowLayout.LEFT, 10, 5)); actionRow.setOpaque(false);
         actionRow.add(btnCheckInCN); actionRow.add(btnCheckOutCN); actionRow.add(chkOT); actionRow.add(hintCheckIn);
 
         chamCongStatusPanelCN = new JPanel(new BorderLayout(5, 5));
-        chamCongStatusPanelCN.setBackground(new Color(245, 247, 255));
+        chamCongStatusPanelCN.setBackground(com.hrm.util.UIColors.LIGHT_PURPLE);
         chamCongStatusPanelCN.setBorder(BorderFactory.createCompoundBorder(
             BorderFactory.createLineBorder(UIColors.PRIMARY_PURPLE, 1),
             new EmptyBorder(10, 12, 10, 12)));
@@ -1069,7 +1069,7 @@ public class AttendancePanel extends JPanel {
                 @Override public Component getTableCellRendererComponent(JTable t, Object v, boolean s, boolean f, int r, int c) {
                     super.getTableCellRendererComponent(t, v, s, f, r, c);
                     setHorizontalAlignment(CENTER); String str = v != null ? v.toString() : "";
-                    setForeground("OT".equals(str) ? UIColors.PRIMARY_PURPLE : Color.GRAY);
+                    setForeground("OT".equals(str) ? UIColors.PRIMARY_PURPLE : com.hrm.util.UIColors.TEXT_GRAY);
                     setFont(new Font("Segoe UI", "OT".equals(str) ? Font.BOLD : Font.PLAIN, 13));
                     return this;
                 }
@@ -1159,7 +1159,7 @@ public class AttendancePanel extends JPanel {
             statsPanelCN.add(lbl("Tong ngay cong:", String.valueOf(ds.size()), UIColors.PRIMARY_PURPLE));
             statsPanelCN.add(lbl("Dung gio:", String.valueOf(dg), UIColors.SUCCESS_GREEN));
             statsPanelCN.add(lbl("Di muon:", String.valueOf(dm), UIColors.DANGER_RED));
-            statsPanelCN.add(lbl("Vang:", String.valueOf(vm), Color.GRAY));
+            statsPanelCN.add(lbl("Vang:", String.valueOf(vm), com.hrm.util.UIColors.TEXT_GRAY));
             statsPanelCN.add(lbl("Ca OT:", String.valueOf(ot), UIColors.PRIMARY_PURPLE));
             statsPanelCN.revalidate(); statsPanelCN.repaint();
         }
@@ -1196,7 +1196,7 @@ public class AttendancePanel extends JPanel {
         title.setFont(com.hrm.util.UIFonts.HEADER_SUB); title.setForeground(UIColors.TEXT_DARK);
 
         JPanel formPanel = new JPanel(new GridBagLayout());
-        formPanel.setBackground(new Color(245, 247, 255));
+        formPanel.setBackground(com.hrm.util.UIColors.LIGHT_PURPLE);
         formPanel.setBorder(BorderFactory.createCompoundBorder(
             BorderFactory.createLineBorder(UIColors.PRIMARY_PURPLE, 1),
             new EmptyBorder(12, 15, 12, 15)));
@@ -1335,19 +1335,19 @@ public class AttendancePanel extends JPanel {
 
     private JButton btn(String text, Color bg) {
         JButton b = new JButton(text); b.setFont(com.hrm.util.UIFonts.TEXT_NORMAL);
-        b.setBackground(bg); b.setForeground(Color.WHITE);
+        b.setBackground(bg); b.setForeground(com.hrm.util.UIColors.WHITE);
         b.setFocusPainted(false); b.setBorderPainted(false);
         b.setCursor(new Cursor(Cursor.HAND_CURSOR)); return b;
     }
 
     private JTable tbl(DefaultTableModel m) {
         JTable t = new JTable(m); t.setFont(com.hrm.util.UIFonts.TEXT_NORMAL);
-        t.setForeground(Color.BLACK); t.setRowHeight(32);
+        t.setForeground(com.hrm.util.UIColors.TEXT_DARK); t.setRowHeight(32);
         t.getTableHeader().setFont(com.hrm.util.UIFonts.BOLD_NORMAL);
         t.getTableHeader().setBackground(UIColors.PRIMARY_PURPLE);
-        t.getTableHeader().setForeground(Color.BLACK);
+        t.getTableHeader().setForeground(com.hrm.util.UIColors.TEXT_DARK);
         t.setSelectionBackground(UIColors.LIGHT_PURPLE);
-        t.setSelectionForeground(Color.BLACK);
+        t.setSelectionForeground(com.hrm.util.UIColors.TEXT_DARK);
         JTableHeader header = t.getTableHeader();
         header.setDefaultRenderer(new DefaultTableCellRenderer() {
             private final TableCellRenderer orig = header.getDefaultRenderer();
@@ -1360,7 +1360,7 @@ public class AttendancePanel extends JPanel {
         t.setDefaultRenderer(Object.class, new DefaultTableCellRenderer() {
             @Override public Component getTableCellRendererComponent(JTable table, Object v, boolean s, boolean f, int r, int c) {
                 super.getTableCellRendererComponent(table, v, s, f, r, c);
-                setForeground(Color.BLACK); return this;
+                setForeground(com.hrm.util.UIColors.TEXT_DARK); return this;
             }
         });
         return t;
@@ -1396,14 +1396,14 @@ public class AttendancePanel extends JPanel {
     private static final DefaultTableCellRenderer CENTER_R = new DefaultTableCellRenderer() {
         { setHorizontalAlignment(CENTER); }
         @Override public Component getTableCellRendererComponent(JTable t, Object v, boolean s, boolean f, int r, int c) {
-            super.getTableCellRendererComponent(t, v, s, f, r, c); setForeground(Color.BLACK); return this;
+            super.getTableCellRendererComponent(t, v, s, f, r, c); setForeground(com.hrm.util.UIColors.TEXT_DARK); return this;
         }
     };
 
     private static final DefaultTableCellRenderer RIGHT_R = new DefaultTableCellRenderer() {
         { setHorizontalAlignment(RIGHT); }
         @Override public Component getTableCellRendererComponent(JTable t, Object v, boolean s, boolean f, int r, int c) {
-            super.getTableCellRendererComponent(t, v, s, f, r, c); setForeground(Color.BLACK); return this;
+            super.getTableCellRendererComponent(t, v, s, f, r, c); setForeground(com.hrm.util.UIColors.TEXT_DARK); return this;
         }
     };
 
@@ -1415,7 +1415,7 @@ public class AttendancePanel extends JPanel {
             else if (str.contains("Cho") || str.contains("Chua")) setForeground(new Color(200, 150, 0));
             else if (str.contains("Dung") || str.contains("duyet") || str.contains("Hoat dong") || str.contains("tinh"))
                 setForeground(UIColors.SUCCESS_GREEN);
-            else if (str.contains("Vang") || str.contains("Ngung")) setForeground(Color.GRAY);
+            else if (str.contains("Vang") || str.contains("Ngung")) setForeground(com.hrm.util.UIColors.TEXT_GRAY);
             else setForeground(UIColors.TEXT_DARK);
             setHorizontalAlignment(CENTER); return this;
         }

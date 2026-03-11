@@ -76,7 +76,7 @@ public class PurpleTable extends JTable {
                 c.setBackground(UIColors.TABLE_SELECTION_BG);
                 c.setForeground(UIColors.TABLE_SELECTION_FG);
             } else {
-                c.setBackground(row % 2 == 0 ? Color.WHITE : UIColors.TABLE_ALT_ROW);
+                c.setBackground(row % 2 == 0 ? com.hrm.util.UIColors.WHITE : UIColors.TABLE_ALT_ROW);
                 c.setForeground(UIColors.TEXT_DARK);
             }
 
@@ -107,7 +107,7 @@ public class PurpleTable extends JTable {
                     c.setBackground(UIColors.TABLE_SELECTION_BG);
                     c.setForeground(UIColors.TABLE_SELECTION_FG);
                 } else {
-                    c.setBackground(row % 2 == 0 ? Color.WHITE : UIColors.TABLE_ALT_ROW);
+                    c.setBackground(row % 2 == 0 ? com.hrm.util.UIColors.WHITE : UIColors.TABLE_ALT_ROW);
                     c.setForeground(UIColors.TEXT_DARK);
                 }
 
@@ -168,7 +168,7 @@ public class PurpleTable extends JTable {
                 return panel;
             } else {
                 JPanel panel = new JPanel(new FlowLayout(FlowLayout.CENTER, 0, 5));
-                panel.setBackground(row % 2 == 0 ? Color.WHITE : UIColors.TABLE_ALT_ROW);
+                panel.setBackground(row % 2 == 0 ? com.hrm.util.UIColors.WHITE : UIColors.TABLE_ALT_ROW);
                 panel.add(badge);
                 return panel;
             }

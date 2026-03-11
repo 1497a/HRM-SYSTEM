@@ -143,18 +143,18 @@ public class AppointmentFormDialog extends JDialog {
         txtDenNgay = new JTextField();
         txtDenNgay.setFont(com.hrm.util.UIFonts.BOLD_MEDIUM);
         txtDenNgay.setEditable(false);
-        txtDenNgay.setBackground(new Color(245, 245, 245));
+        txtDenNgay.setBackground(com.hrm.util.UIColors.LIGHT_GRAY_BG);
 
         // Người duyệt, Ngày duyệt
         txtNguoiDuyet = new JTextField();
         txtNguoiDuyet.setFont(com.hrm.util.UIFonts.BOLD_MEDIUM);
         txtNguoiDuyet.setEditable(false);
-        txtNguoiDuyet.setBackground(new Color(245, 245, 245));
+        txtNguoiDuyet.setBackground(com.hrm.util.UIColors.LIGHT_GRAY_BG);
 
         txtNgayDuyet = new JTextField();
         txtNgayDuyet.setFont(com.hrm.util.UIFonts.BOLD_MEDIUM);
         txtNgayDuyet.setEditable(false);
-        txtNgayDuyet.setBackground(new Color(245, 245, 245));
+        txtNgayDuyet.setBackground(com.hrm.util.UIColors.LIGHT_GRAY_BG);
 
         // Buttons
         btnLuu = new PurpleButton("Lưu");
@@ -543,7 +543,7 @@ public class AppointmentFormDialog extends JDialog {
     private static void styleActionButton(JButton btn, Color bg) {
         btn.setFont(com.hrm.util.UIFonts.BOLD_NORMAL);
         btn.setBackground(bg);
-        btn.setForeground(Color.WHITE);
+        btn.setForeground(com.hrm.util.UIColors.WHITE);
         btn.setFocusPainted(false);
         btn.setBorderPainted(false);
         btn.setOpaque(true);

@@ -104,7 +104,7 @@ public class EmployeeFormDialog extends JDialog {
 
     private JPanel buildTab1() {
         JPanel panel = new JPanel(new GridBagLayout());
-        panel.setBackground(Color.WHITE);
+        panel.setBackground(com.hrm.util.UIColors.WHITE);
         panel.setBorder(BorderFactory.createEmptyBorder(16, 16, 16, 16));
 
         GridBagConstraints gbc = defaultGBC();
@@ -145,7 +145,7 @@ public class EmployeeFormDialog extends JDialog {
 
     private JPanel buildTab2() {
         JPanel panel = new JPanel(new GridBagLayout());
-        panel.setBackground(Color.WHITE);
+        panel.setBackground(com.hrm.util.UIColors.WHITE);
         panel.setBorder(BorderFactory.createEmptyBorder(16, 16, 16, 16));
 
         GridBagConstraints gbc = defaultGBC();

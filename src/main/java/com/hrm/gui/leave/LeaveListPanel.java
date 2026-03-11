@@ -128,13 +128,13 @@ public class LeaveListPanel extends JPanel {
                 if (!isSelected) {
                     String status = (String) value;
                     if (com.hrm.model.DonXinNghiPhep.TrangThai.DA_DUYET.getTenHienThi().equals(status)) {
-                        c.setBackground(new Color(200, 255, 200));
+                        c.setBackground(com.hrm.util.UIColors.LIGHT_GREEN_BG);
                     } else if (com.hrm.model.DonXinNghiPhep.TrangThai.TU_CHOI.getTenHienThi().equals(status)) {
-                        c.setBackground(new Color(255, 200, 200));
+                        c.setBackground(com.hrm.util.UIColors.LIGHT_RED_BG);
                     } else if (com.hrm.model.DonXinNghiPhep.TrangThai.CHO_DUYET.getTenHienThi().equals(status)) {
-                        c.setBackground(new Color(255, 255, 200));
+                        c.setBackground(com.hrm.util.UIColors.LIGHT_YELLOW_BG);
                     } else {
-                        c.setBackground(Color.WHITE);
+                        c.setBackground(com.hrm.util.UIColors.WHITE);
                     }
                 }
                 return c;
@@ -240,7 +240,7 @@ public class LeaveListPanel extends JPanel {
                     ": " + balance.getRemainingDays() + "/" + balance.getTotalDays() + " ngay");
             lbl.setFont(com.hrm.util.UIFonts.BOLD_SMALL);
             if (balance.getRemainingDays() <= 3) {
-                lbl.setForeground(Color.RED);
+                lbl.setForeground(com.hrm.util.UIColors.DANGER_RED);
             }
             balancePanel.add(lbl);
         }

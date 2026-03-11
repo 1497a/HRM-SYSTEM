@@ -10,7 +10,9 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
+import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Set;
 
 /**
  * Service cho module Thông báo.
@@ -65,12 +67,16 @@ public class ThongBaoBUS {
      * Gửi thông báo từ một người dùng đến người dùng khác.
      */
     public void guiThongBao(int maTaiKhoanGui, int maTaiKhoanNhan, String tieuDe, String noiDung) {
+        guiThongBao(maTaiKhoanGui, maTaiKhoanNhan, tieuDe, noiDung, "thong_bao_chung");
+    }
+
+    public void guiThongBao(int maTaiKhoanGui, int maTaiKhoanNhan, String tieuDe, String noiDung, String loai) {
         ThongBao tb = new ThongBao();
         tb.setMaTaiKhoanGui(maTaiKhoanGui);
         tb.setMaTaiKhoanNhan(maTaiKhoanNhan);
         tb.setTieuDe(tieuDe);
         tb.setNoiDung(noiDung);
-        tb.setLoaiThongBao("thong_bao_chung");
+        tb.setLoaiThongBao(normalizeLoai(loai));
         thongBaoRepo.insert(tb);
     }
 
@@ -78,12 +84,16 @@ public class ThongBaoBUS {
      * Gửi thông báo cá nhân từ người dùng đến một nhân viên cụ thể.
      */
     public void guiThongBaoCaNhan(int nguoiGui, String maNVNhan, String tieuDe, String noiDung) {
+        guiThongBaoCaNhan(nguoiGui, maNVNhan, tieuDe, noiDung, "thong_bao_chung");
+    }
+
+    public void guiThongBaoCaNhan(int nguoiGui, String maNVNhan, String tieuDe, String noiDung, String loai) {
         TaiKhoan nguoiNhan = findUserByMaNVDirect(maNVNhan);
         if (nguoiNhan == null) {
             System.err.println("ThongBaoBUS: Khong tim thay tai khoan cho maNV=" + maNVNhan);
             return;
         }
-        ThongBao tb = buildThongBao(nguoiGui, nguoiNhan.getId(), tieuDe, noiDung, "thong_bao_chung");
+        ThongBao tb = buildThongBao(nguoiGui, nguoiNhan.getId(), tieuDe, noiDung, loai);
         thongBaoRepo.insert(tb);
     }
 
@@ -91,24 +101,51 @@ public class ThongBaoBUS {
      * Gửi thông báo tới tất cả nhân viên thuộc một phòng ban.
      */
     public void guiThongBaoPhongBan(int nguoiGui, String maPhongBan, String tieuDe, String noiDung) {
+        guiThongBaoPhongBan(nguoiGui, maPhongBan, tieuDe, noiDung, "thong_bao_chung");
+    }
+
+    public void guiThongBaoPhongBan(int nguoiGui, String maPhongBan, String tieuDe, String noiDung, String loai) {
         List<Integer> maTaiKhoanList = findTaiKhoanByPhongBan(maPhongBan);
-        sendBulk(nguoiGui, maTaiKhoanList, tieuDe, noiDung);
+        sendBulk(nguoiGui, maTaiKhoanList, tieuDe, noiDung, loai);
     }
 
     /**
      * Gửi thông báo tới tất cả nhân viên có chức vụ chỉ định.
      */
     public void guiThongBaoChucVu(int nguoiGui, String maChucVu, String tieuDe, String noiDung) {
+        guiThongBaoChucVu(nguoiGui, maChucVu, tieuDe, noiDung, "thong_bao_chung");
+    }
+
+    public void guiThongBaoChucVu(int nguoiGui, String maChucVu, String tieuDe, String noiDung, String loai) {
         List<Integer> maTaiKhoanList = findTaiKhoanByChucVu(maChucVu);
-        sendBulk(nguoiGui, maTaiKhoanList, tieuDe, noiDung);
+        sendBulk(nguoiGui, maTaiKhoanList, tieuDe, noiDung, loai);
     }
 
     /**
      * Gửi thông báo tới tất cả tài khoản đang hoạt động.
      */
     public void guiThongBaoTatCa(int nguoiGui, String tieuDe, String noiDung) {
+        guiThongBaoTatCa(nguoiGui, tieuDe, noiDung, "thong_bao_chung");
+    }
+
+    public void guiThongBaoTatCa(int nguoiGui, String tieuDe, String noiDung, String loai) {
         List<Integer> maTaiKhoanList = findAllActiveTaiKhoan();
-        sendBulk(nguoiGui, maTaiKhoanList, tieuDe, noiDung);
+        sendBulk(nguoiGui, maTaiKhoanList, tieuDe, noiDung, loai);
+    }
+
+    public void guiThongBaoTheoDanhSachMaNV(int nguoiGui, List<String> dsMaNV, String tieuDe, String noiDung, String loai) {
+        if (dsMaNV == null || dsMaNV.isEmpty()) return;
+
+        Set<Integer> maTaiKhoanSet = new LinkedHashSet<>();
+        for (String maNV : dsMaNV) {
+            if (maNV == null || maNV.trim().isEmpty()) continue;
+            TaiKhoan nguoiNhan = findUserByMaNVDirect(maNV.trim());
+            if (nguoiNhan != null) {
+                maTaiKhoanSet.add(nguoiNhan.getId());
+            }
+        }
+
+        sendBulk(nguoiGui, new ArrayList<>(maTaiKhoanSet), tieuDe, noiDung, loai);
     }
 
     /**
@@ -182,17 +219,24 @@ public class ThongBaoBUS {
         tb.setMaTaiKhoanNhan(nguoiNhan);
         tb.setTieuDe(tieuDe);
         tb.setNoiDung(noiDung);
-        tb.setLoaiThongBao(loai);
+        tb.setLoaiThongBao(normalizeLoai(loai));
         return tb;
     }
 
-    private void sendBulk(int nguoiGui, List<Integer> maTaiKhoanList, String tieuDe, String noiDung) {
+    private void sendBulk(int nguoiGui, List<Integer> maTaiKhoanList, String tieuDe, String noiDung, String loai) {
         if (maTaiKhoanList.isEmpty()) return;
         List<ThongBao> batch = new ArrayList<>();
         for (int maTK : maTaiKhoanList) {
-            batch.add(buildThongBao(nguoiGui, maTK, tieuDe, noiDung, "thong_bao_chung"));
+            batch.add(buildThongBao(nguoiGui, maTK, tieuDe, noiDung, loai));
         }
         thongBaoRepo.insertBulk(batch);
+    }
+
+    private String normalizeLoai(String loai) {
+        if ("he_thong".equals(loai) || "don_tu".equals(loai) || "thong_bao_chung".equals(loai)) {
+            return loai;
+        }
+        return "thong_bao_chung";
     }
 
     private List<Integer> findTaiKhoanByPhongBan(String maPhongBan) {

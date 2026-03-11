@@ -138,6 +138,7 @@ public class UIHelper {
      * Returns a Vietnamese-locale-aware Comparator that sorts by first name (Tên).
      * Correctly handles accented characters (Á, Â, Ă, etc.).
      */
+    @SuppressWarnings("deprecation")
     public static Comparator<Object> vietnameseNameComparator() {
         Collator collator = Collator.getInstance(new Locale("vi", "VN"));
         collator.setStrength(Collator.PRIMARY);

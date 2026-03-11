@@ -82,9 +82,9 @@ public class RoleManagementPanel extends JPanel {
                 if (!isSelected) {
                     String isSystem = (String) value;
                     if ("Co".equals(isSystem)) {
-                        c.setBackground(new Color(255, 255, 200));
+                        c.setBackground(com.hrm.util.UIColors.LIGHT_YELLOW_BG);
                     } else {
-                        c.setBackground(Color.WHITE);
+                        c.setBackground(com.hrm.util.UIColors.WHITE);
                     }
                 }
                 setHorizontalAlignment(SwingConstants.CENTER);

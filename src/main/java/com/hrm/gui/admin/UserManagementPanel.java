@@ -91,11 +91,11 @@ public class UserManagementPanel extends JPanel {
                 if (!isSelected) {
                     String status = (String) value;
                     if ("Hoat dong".equals(status)) {
-                        c.setBackground(new Color(200, 255, 200));
+                        c.setBackground(com.hrm.util.UIColors.LIGHT_GREEN_BG);
                     } else if ("Khoa".equals(status)) {
-                        c.setBackground(new Color(255, 200, 200));
+                        c.setBackground(com.hrm.util.UIColors.LIGHT_RED_BG);
                     } else {
-                        c.setBackground(new Color(255, 255, 200));
+                        c.setBackground(com.hrm.util.UIColors.LIGHT_YELLOW_BG);
                     }
                 }
                 setHorizontalAlignment(SwingConstants.CENTER);

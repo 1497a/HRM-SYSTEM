@@ -56,15 +56,21 @@ public final class UIColors {
 
     /** Success green - #28A745 */
     public static final Color SUCCESS_GREEN = new Color(40, 167, 69);
+    public static final Color DARK_GREEN = new Color(0, 128, 0);
+    public static final Color LIGHT_GREEN_BG = new Color(200, 255, 200);
 
     /** Warning yellow - #FFC107 */
     public static final Color WARNING_YELLOW = new Color(255, 193, 7);
+    public static final Color WARNING_TEXT_AMBER = new Color(230, 120, 0);
+    public static final Color LIGHT_YELLOW_BG = new Color(255, 255, 200);
 
     /** Danger red - #DC3545 */
     public static final Color DANGER_RED = new Color(220, 53, 69);
+    public static final Color LIGHT_RED_BG = new Color(255, 200, 200);
 
     /** Info blue - #17A2B8 */
     public static final Color INFO_BLUE = new Color(23, 162, 184);
+    public static final Color INFO_BLUE_TEXT = new Color(0, 100, 180);
 
     // ========================
     // SIDEBAR COLORS

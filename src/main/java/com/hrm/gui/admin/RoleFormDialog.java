@@ -70,7 +70,7 @@ public class RoleFormDialog extends JDialog {
         // Mã vai trò luôn chỉ đọc — tự sinh cho vai trò mới, cố định cho vai trò đang sửa
         txtCode = new JTextField(20);
         txtCode.setEditable(false);
-        txtCode.setBackground(new Color(240, 240, 240));
+        txtCode.setBackground(com.hrm.util.UIColors.LIGHT_GRAY_BG);
 
         txtName = new JTextField(20);
         txtDescription = new JTextArea(3, 20);

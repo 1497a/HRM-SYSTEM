@@ -39,7 +39,7 @@ public class PurpleButton extends JButton {
 
     private void initStyle() {
         setFont(com.hrm.util.UIFonts.BOLD_MEDIUM);
-        setForeground(Color.WHITE);
+        setForeground(com.hrm.util.UIColors.WHITE);
         setBackground(normalBackground);
         setFocusPainted(false);
         setBorderPainted(false);
@@ -86,7 +86,7 @@ public class PurpleButton extends JButton {
         super.setEnabled(enabled);
         if (enabled) {
             setBackground(normalBackground);
-            setForeground(Color.WHITE);
+            setForeground(com.hrm.util.UIColors.WHITE);
         } else {
             setBackground(UIColors.BORDER_GRAY);
             setForeground(UIColors.TEXT_GRAY);

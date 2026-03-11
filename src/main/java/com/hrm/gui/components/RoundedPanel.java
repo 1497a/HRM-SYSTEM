@@ -33,7 +33,7 @@ public class RoundedPanel extends JPanel {
         this.drawShadow = false;
 
         setOpaque(false);
-        setBackground(Color.WHITE);
+        setBackground(com.hrm.util.UIColors.WHITE);
     }
 
     /**
@@ -54,7 +54,7 @@ public class RoundedPanel extends JPanel {
         this.drawShadow = false;
 
         setOpaque(false);
-        setBackground(Color.WHITE);
+        setBackground(com.hrm.util.UIColors.WHITE);
     }
 
     /**
@@ -117,7 +117,7 @@ public class RoundedPanel extends JPanel {
      */
     public static RoundedPanel createCard() {
         RoundedPanel panel = new RoundedPanel(15);
-        panel.setBackground(Color.WHITE);
+        panel.setBackground(com.hrm.util.UIColors.WHITE);
         panel.setBorderStyle(UIColors.BORDER_GRAY, 1);
         panel.setDrawShadow(true);
         return panel;
@@ -128,7 +128,7 @@ public class RoundedPanel extends JPanel {
      */
     public static RoundedPanel createFlatCard() {
         RoundedPanel panel = new RoundedPanel(10);
-        panel.setBackground(Color.WHITE);
+        panel.setBackground(com.hrm.util.UIColors.WHITE);
         panel.setBorderStyle(UIColors.BORDER_GRAY, 1);
         return panel;
     }
@@ -149,7 +149,7 @@ public class RoundedPanel extends JPanel {
     public static RoundedPanel createStatCard(String title, String value, Color accentColor) {
         RoundedPanel card = new RoundedPanel(new BorderLayout());
         card.setCornerRadius(10);
-        card.setBackground(Color.WHITE);
+        card.setBackground(com.hrm.util.UIColors.WHITE);
         card.setBorderStyle(UIColors.BORDER_GRAY, 1);
         card.setBorder(BorderFactory.createEmptyBorder(20, 20, 20, 20));
 

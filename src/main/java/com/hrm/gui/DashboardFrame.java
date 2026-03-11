@@ -189,7 +189,7 @@ public class DashboardFrame extends JFrame {
 
     private void setupLayout() {
         JPanel mainPanel = new JPanel(new BorderLayout(0, 0));
-        mainPanel.setBackground(new Color(245, 245, 245));
+        mainPanel.setBackground(com.hrm.util.UIColors.LIGHT_GRAY_BG);
 
         // Header Panel - TaiKhoan Info
         JPanel headerPanel = createHeaderPanel();
@@ -197,7 +197,7 @@ public class DashboardFrame extends JFrame {
         // Main Content Area with CardLayout
         cardLayout = new CardLayout();
         mainContentArea = new JPanel(cardLayout);
-        mainContentArea.setBackground(new Color(245, 245, 245));
+        mainContentArea.setBackground(com.hrm.util.UIColors.LIGHT_GRAY_BG);
 
         // Dashboard Card
         JPanel dashboardPanel = createDashboardPanel();
@@ -214,9 +214,9 @@ public class DashboardFrame extends JFrame {
         // Status Panel
         JPanel statusPanel = new JPanel(new BorderLayout());
         statusPanel.setBorder(BorderFactory.createCompoundBorder(
-            BorderFactory.createMatteBorder(1, 0, 0, 0, Color.LIGHT_GRAY),
+            BorderFactory.createMatteBorder(1, 0, 0, 0, com.hrm.util.UIColors.BORDER_GRAY),
             new EmptyBorder(5, 10, 5, 10)));
-        statusPanel.setBackground(new Color(240, 240, 240));
+        statusPanel.setBackground(com.hrm.util.UIColors.LIGHT_GRAY_BG);
         statusPanel.add(lblStatus, BorderLayout.WEST);
 
         JLabel lblTime = new JLabel(java.time.LocalDateTime.now().format(
@@ -263,7 +263,7 @@ public class DashboardFrame extends JFrame {
 
         JLabel lblWelcome = new JLabel("Xin chào, " + currentUser.getHoTen());
         lblWelcome.setFont(com.hrm.util.UIFonts.HEADER_H2);
-        lblWelcome.setForeground(Color.WHITE);
+        lblWelcome.setForeground(com.hrm.util.UIColors.WHITE);
 
         JLabel lblRole = new JLabel("Vai trò: " + currentUser.getVaiTros().toString());
         lblRole.setFont(com.hrm.util.UIFonts.TEXT_MEDIUM);
@@ -280,7 +280,7 @@ public class DashboardFrame extends JFrame {
         lblAvatar.setHorizontalAlignment(SwingConstants.CENTER);
         lblAvatar.setText(getInitials(currentUser.getHoTen()));
         lblAvatar.setFont(com.hrm.util.UIFonts.HEADER_H1);
-        lblAvatar.setForeground(Color.WHITE);
+        lblAvatar.setForeground(com.hrm.util.UIColors.WHITE);
 
         // Navigation buttons
         JPanel navPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT, 10, 0));
@@ -295,7 +295,7 @@ public class DashboardFrame extends JFrame {
         JButton btnEval = UIHelper.createNavButton("Đánh giá");
         btnEval.addActionListener(e -> showEvaluationPanel());
 
-        JButton btnLogout = UIHelper.createStyledButton("Đăng Xuất", com.hrm.util.UIColors.DANGER_RED, Color.WHITE);
+        JButton btnLogout = UIHelper.createStyledButton("Đăng Xuất", com.hrm.util.UIColors.DANGER_RED, com.hrm.util.UIColors.WHITE);
         btnLogout.addActionListener(e -> performLogout());
 
         navPanel.add(btnHome);
@@ -313,9 +313,9 @@ public class DashboardFrame extends JFrame {
 
     private JPanel createQuickCard(String title, String description, Color color, Runnable action) {
         JPanel card = new JPanel(new BorderLayout(10, 10));
-        card.setBackground(Color.WHITE);
+        card.setBackground(com.hrm.util.UIColors.WHITE);
         card.setBorder(BorderFactory.createCompoundBorder(
-            BorderFactory.createLineBorder(new Color(220, 220, 220)),
+            BorderFactory.createLineBorder(com.hrm.util.UIColors.BORDER_GRAY),
             new EmptyBorder(20, 20, 20, 20)
         ));
         card.setCursor(new Cursor(Cursor.HAND_CURSOR));
@@ -327,11 +327,11 @@ public class DashboardFrame extends JFrame {
 
         JLabel lblTitle = new JLabel(title);
         lblTitle.setFont(com.hrm.util.UIFonts.HEADER_SUB);
-        lblTitle.setForeground(new Color(50, 50, 50));
+        lblTitle.setForeground(com.hrm.util.UIColors.TEXT_DARK);
 
         JLabel lblDesc = new JLabel("<html>" + description + "</html>");
         lblDesc.setFont(com.hrm.util.UIFonts.TEXT_SMALL);
-        lblDesc.setForeground(Color.GRAY);
+        lblDesc.setForeground(com.hrm.util.UIColors.TEXT_GRAY);
 
         JPanel textPanel = new JPanel(new BorderLayout(5, 5));
         textPanel.setOpaque(false);
@@ -350,12 +350,12 @@ public class DashboardFrame extends JFrame {
 
             @Override
             public void mouseEntered(java.awt.event.MouseEvent e) {
-                card.setBackground(new Color(248, 248, 248));
+                card.setBackground(com.hrm.util.UIColors.LIGHT_GRAY_BG);
             }
 
             @Override
             public void mouseExited(java.awt.event.MouseEvent e) {
-                card.setBackground(Color.WHITE);
+                card.setBackground(com.hrm.util.UIColors.WHITE);
             }
         });
 

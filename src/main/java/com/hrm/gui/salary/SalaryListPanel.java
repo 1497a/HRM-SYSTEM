@@ -716,7 +716,7 @@ public class SalaryListPanel extends JPanel {
                 if (v.contains("Đã khóa")) {
                     c.setForeground(UIColors.SUCCESS_GREEN);
                 } else if (v.contains("Đã duyệt")) {
-                    c.setForeground(new Color(230, 120, 0));
+                    c.setForeground(com.hrm.util.UIColors.WARNING_TEXT_AMBER);
                 } else if (v.contains("Đã tính")) {
                     c.setForeground(UIColors.INFO_BLUE);
                 } else {

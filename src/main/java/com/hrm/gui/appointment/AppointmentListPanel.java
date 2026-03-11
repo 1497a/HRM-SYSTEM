@@ -371,7 +371,7 @@ public class AppointmentListPanel extends JPanel {
             setBorder(BorderFactory.createEmptyBorder(0, 8, 0, 8));
 
             if (!isSelected) {
-                c.setBackground(row % 2 == 0 ? Color.WHITE : UIColors.TABLE_ALT_ROW);
+                c.setBackground(row % 2 == 0 ? com.hrm.util.UIColors.WHITE : UIColors.TABLE_ALT_ROW);
                 c.setForeground(UIColors.TEXT_DARK);
 
                 if (col == COL_TRANG_THAI && value != null) {
@@ -380,7 +380,7 @@ public class AppointmentListPanel extends JPanel {
                         c.setForeground(UIColors.SUCCESS_GREEN);
                         ((JLabel) c).setFont(com.hrm.util.UIFonts.BOLD_SMALL);
                     } else if ("Cho duyet".equals(val)) {
-                        c.setForeground(new Color(230, 120, 0));
+                        c.setForeground(com.hrm.util.UIColors.WARNING_TEXT_AMBER);
                         ((JLabel) c).setFont(com.hrm.util.UIFonts.BOLD_SMALL);
                     } else if ("Tu choi".equals(val) || "Het hieu luc".equals(val)) {
                         c.setForeground(UIColors.DANGER_RED);
