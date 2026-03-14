@@ -31,6 +31,7 @@ public class SalaryListPanel extends JPanel {
     private final LuongBUS salaryService;
     private final DataScope currentScope;
     private final boolean canCalculate;
+    private final boolean canLock;
     private final String maNVHienTai;
     private final java.util.Set<String> maNVTrongPhamVi; // null = ALL
 
@@ -62,6 +63,7 @@ public class SalaryListPanel extends JPanel {
         TaiKhoan currentUser = session.getCurrentUser();
         this.currentScope = XacThucBUS.getInstance().getScopeForAction("PAYROLL_VIEW");
         this.canCalculate = session.coQuyen("PAYROLL_CALCULATE");
+        this.canLock      = session.coQuyen("PAYROLL_LOCK");
         this.maNVHienTai = currentUser != null ? currentUser.getNhanVienId() : null;
         if ((currentScope == DataScope.DEPT || currentScope == DataScope.TEAM) && maNVHienTai != null) {
             this.maNVTrongPhamVi = com.hrm.bus.NhanVienBUS.getInstance()
@@ -92,8 +94,8 @@ public class SalaryListPanel extends JPanel {
 
         btnTinhLuong.setVisible(canCalculate);
         btnTinhLaiBangLuong.setVisible(canCalculate);
-        btnDuyetBangLuong.setVisible(canCalculate);
-        btnKhoaBangLuong.setVisible(canCalculate);
+        btnDuyetBangLuong.setVisible(canLock);         // chỉ TRUONG_PHONG_KT / TONG_GIAM_DOC
+        btnKhoaBangLuong.setVisible(canLock);          // chỉ TRUONG_PHONG_KT / TONG_GIAM_DOC
         btnTinhLaiNhanVien.setVisible(canCalculate);
 
         loadBangLuong();

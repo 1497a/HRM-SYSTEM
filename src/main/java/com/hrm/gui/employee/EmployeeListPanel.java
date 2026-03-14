@@ -274,12 +274,12 @@ public class EmployeeListPanel extends JPanel {
                 // Lọc theo trạng thái (cột 7)
                 String trangThai = entry.getStringValue(7);
                 boolean matchStatus = true;
-                if ("Dang lam viec".equals(trangThaiFilter)) {
-                    matchStatus = "Đang làm việc".equals(trangThai) || "Dang lam viec".equals(trangThai);
-                } else if ("Tam nghi".equals(trangThaiFilter)) {
-                    matchStatus = "Tạm nghỉ".equals(trangThai) || "Tam nghi".equals(trangThai);
-                } else if ("Nghi viec".equals(trangThaiFilter)) {
-                    matchStatus = "Nghỉ việc".equals(trangThai) || "Nghi viec".equals(trangThai);
+                if ("Đang làm việc".equals(trangThaiFilter)) {
+                    matchStatus = trangThai.contains("lam viec") || trangThai.contains("Đang làm việc");
+                } else if ("Tạm nghỉ".equals(trangThaiFilter)) {
+                    matchStatus = trangThai.contains("Tạm nghỉ") || trangThai.contains("Tam nghi");
+                } else if ("Nghỉ việc".equals(trangThaiFilter)) {
+                    matchStatus = trangThai.contains("Nghỉ việc") || trangThai.contains("Nghi viec");
                 }
                 return matchSearch && matchDept && matchStatus;
             }

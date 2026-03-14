@@ -137,17 +137,6 @@ public class BoNhiemBUS {
                 boNhiemRepo.endBoNhiem(cuHieuLucNV.getMaBoNhiem(), bn.getTuNgay().minusDays(1));
             }
 
-            // Kết thúc bổ nhiệm chính của người đang giữ cùng chức vụ trong phòng ban
-            // CHỈ áp dụng với các chức vụ quản lý / độc quyền (ví dụ: Giám đốc, Trưởng phòng, Trưởng nhóm)
-            // Trong dữ liệu mẫu v3: GD (cấp 1), TP (cấp 2), TT (cấp 3). Các cấp lớn hơn (CV=4, NV=5...) không độc quyền.
-            ChucVu chucVu = chucVuRepo.findById(bn.getChucVuId());
-            if (chucVu != null && chucVu.getCapBac() <= 3) {
-                BoNhiem cuHieuLucChucVu = boNhiemRepo.findBoNhiemChinhHieuLucByChucVuInDept(
-                        bn.getPhongBanId(), bn.getChucVuId(), maBoNhiem);
-                if (cuHieuLucChucVu != null) {
-                    boNhiemRepo.endBoNhiem(cuHieuLucChucVu.getMaBoNhiem(), bn.getTuNgay().minusDays(1));
-                }
-            }
         }
 
         // Cập nhật trạng thái và người duyệt

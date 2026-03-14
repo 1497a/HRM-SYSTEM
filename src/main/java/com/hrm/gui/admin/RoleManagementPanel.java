@@ -47,17 +47,17 @@ public class RoleManagementPanel extends JPanel {
         setBackground(UIColors.LIGHT_GRAY_BG);
 
         // Buttons
-        btnCreate = UIHelper.createPrimaryButton("Tao moi");
+        btnCreate = UIHelper.createPrimaryButton("Tạo mới");
         btnCreate.addActionListener(e -> createRole());
 
-        btnEdit = UIHelper.createPrimaryButton("Sua");
+        btnEdit = UIHelper.createPrimaryButton("Sửa");
         btnEdit.addActionListener(e -> editRole());
 
-        btnDelete = UIHelper.createDangerButton("Xoa");
+        btnDelete = UIHelper.createDangerButton("Xóa");
         btnDelete.addActionListener(e -> deleteRole());
 
         // Table
-        String[] columns = {"Ma vai tro", "Ten vai tro", "Mo ta", "So quyen", "He thong"};
+        String[] columns = {"Mã vai trò", "Tên vai trò", "Mô tả", "Số quyền", "Hệ thống"};
         tableModel = new DefaultTableModel(columns, 0) {
             @Override
             public boolean isCellEditable(int row, int column) {
@@ -81,7 +81,7 @@ public class RoleManagementPanel extends JPanel {
                 Component c = super.getTableCellRendererComponent(table, value, isSelected, hasFocus, row, column);
                 if (!isSelected) {
                     String isSystem = (String) value;
-                    if ("Co".equals(isSystem)) {
+                    if ("Có".equals(isSystem)) {
                         c.setBackground(com.hrm.util.UIColors.LIGHT_YELLOW_BG);
                     } else {
                         c.setBackground(com.hrm.util.UIColors.WHITE);
@@ -120,12 +120,12 @@ public class RoleManagementPanel extends JPanel {
 
         // Center - table
         JScrollPane scrollPane = new JScrollPane(table);
-        scrollPane.setBorder(new TitledBorder("Danh sach vai tro"));
+        scrollPane.setBorder(new TitledBorder("Danh sách vai trò"));
 
         // Info panel
         JPanel infoPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
         infoPanel.setOpaque(false);
-        infoPanel.add(new JLabel("Luu y: Vai tro he thong (ADMIN) khong the xoa"));
+        infoPanel.add(new JLabel("Lưu ý: Vai trò hệ thống (ADMIN) không thể xóa."));
 
         add(topPanel, BorderLayout.NORTH);
         add(scrollPane, BorderLayout.CENTER);
@@ -142,7 +142,7 @@ public class RoleManagementPanel extends JPanel {
                 role.getTenVaiTro(),
                 role.getMoTa(),
                 role.getQuyens().size(),
-                role.isLaHeThong() ? "Co" : "-"
+                role.isLaHeThong() ? "Có" : "-"
             };
             tableModel.addRow(row);
         }
@@ -161,8 +161,8 @@ public class RoleManagementPanel extends JPanel {
         int selectedRow = table.getSelectedRow();
         if (selectedRow < 0) {
             JOptionPane.showMessageDialog(this,
-                    "Vui long chon vai tro can sua",
-                    "Thong bao",
+                    "Vui lòng chọn vai trò cần sửa.",
+                    "Thông báo",
                     JOptionPane.WARNING_MESSAGE);
             return;
         }
@@ -184,8 +184,8 @@ public class RoleManagementPanel extends JPanel {
         int selectedRow = table.getSelectedRow();
         if (selectedRow < 0) {
             JOptionPane.showMessageDialog(this,
-                    "Vui long chon vai tro can xoa",
-                    "Thong bao",
+                    "Vui lòng chọn vai trò cần xóa.",
+                    "Thông báo",
                     JOptionPane.WARNING_MESSAGE);
             return;
         }
@@ -194,8 +194,8 @@ public class RoleManagementPanel extends JPanel {
         String roleCode = (String) tableModel.getValueAt(modelRow, 0);
 
         int confirm = JOptionPane.showConfirmDialog(this,
-                "Ban co chac muon xoa vai tro '" + roleCode + "'?",
-                "Xac nhan xoa",
+                "Bạn có chắc muốn xóa vai trò '" + roleCode + "'?",
+                "Xác nhận xóa",
                 JOptionPane.YES_NO_OPTION,
                 JOptionPane.WARNING_MESSAGE);
 
@@ -203,14 +203,14 @@ public class RoleManagementPanel extends JPanel {
             KetQua<Void> result = authService.deleteRole(roleCode);
             if (result.isSuccess()) {
                 JOptionPane.showMessageDialog(this,
-                        "Da xoa vai tro thanh cong!",
-                        "Thong bao",
+                        "Đã xóa vai trò thành công!",
+                        "Thông báo",
                         JOptionPane.INFORMATION_MESSAGE);
                 loadData();
             } else {
                 JOptionPane.showMessageDialog(this,
                         result.getMessage(),
-                        "Loi",
+                        "Lỗi",
                         JOptionPane.ERROR_MESSAGE);
             }
         }

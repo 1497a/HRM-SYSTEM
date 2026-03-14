@@ -1,30 +1,36 @@
 package com.hrm.gui;
 
-import com.hrm.gui.leave.LeaveListPanel;
-import com.hrm.gui.leave.LeaveCreateDialog;
+import com.hrm.bus.XacThucBUS;
 import com.hrm.gui.evaluation.EvalCycleListPanel;
 import com.hrm.gui.evaluation.EvalResultPanel;
+import com.hrm.gui.leave.LeaveCreateDialog;
+import com.hrm.gui.leave.LeaveListPanel;
+import com.hrm.model.DataScope;
 import com.hrm.model.TaiKhoan;
-import com.hrm.bus.XacThucBUS;
 import com.hrm.util.SessionContext;
+import com.hrm.util.UIColors;
+import com.hrm.util.UIFonts;
 import com.hrm.util.UIHelper;
 
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
 import java.awt.*;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 
 /**
- * Dashboard Frame - Main screen after login
- * Shows user info and role-based menu
+ * Dashboard Frame - Main screen after login.
  */
 public class DashboardFrame extends JFrame {
-    private TaiKhoan currentUser;
-    private JPanel contentPanel;
+    private static final String CARD_DASHBOARD = "DASHBOARD";
+    private static final String CARD_LEAVE = "LEAVE";
+    private static final String CARD_EVAL = "EVAL";
+
+    private final TaiKhoan currentUser;
     private JPanel mainContentArea;
     private JLabel lblStatus;
     private CardLayout cardLayout;
 
-    // Menu Items
     private JMenuItem mnuEmployeeList;
     private JMenuItem mnuEmployeeCreate;
     private JMenuItem mnuLeaveList;
@@ -39,15 +45,11 @@ public class DashboardFrame extends JFrame {
     private JMenuItem mnuReports;
     private JMenuItem mnuSettings;
 
-    private static final String CARD_DASHBOARD = "DASHBOARD";
-    private static final String CARD_LEAVE = "LEAVE";
-    private static final String CARD_EVAL = "EVAL";
-
     public DashboardFrame() {
         this.currentUser = SessionContext.getInstance().getCurrentUser();
         initComponents();
-        setupMenuBar();
-        setupLayout();
+        setJMenuBar(createMenuBar());
+        setContentPane(createMainPanel());
         applyRolePermissions();
         centerOnScreen();
     }
@@ -59,195 +61,130 @@ public class DashboardFrame extends JFrame {
         setMinimumSize(new Dimension(900, 650));
 
         lblStatus = new JLabel("Sẵn sàng");
-        lblStatus.setFont(com.hrm.util.UIFonts.TEXT_SMALL);
+        lblStatus.setFont(UIFonts.TEXT_SMALL);
     }
 
-    private void setupMenuBar() {
+    private JMenuBar createMenuBar() {
         JMenuBar menuBar = new JMenuBar();
-
-        // File Menu
-        JMenu mnuFile = new JMenu("Hệ Thống");
-        mnuFile.setMnemonic('H');
-
-        JMenuItem mnuDashboard = new JMenuItem("Trang chủ");
-        mnuDashboard.addActionListener(e -> showDashboard());
-
-        JMenuItem mnuProfile = new JMenuItem("Thông tin cá nhân");
-        mnuProfile.addActionListener(e -> showProfile());
-
-        JMenuItem mnuChangePassword = new JMenuItem("Đổi mật khẩu");
-        mnuChangePassword.addActionListener(e -> showMessage("Chức năng đổi mật khẩu"));
-
-        JMenuItem mnuLogout = new JMenuItem("Đăng xuất");
-        mnuLogout.addActionListener(e -> performLogout());
-
-        JMenuItem mnuExit = new JMenuItem("Thoát");
-        mnuExit.addActionListener(e -> System.exit(0));
-
-        mnuFile.add(mnuDashboard);
-        mnuFile.addSeparator();
-        mnuFile.add(mnuProfile);
-        mnuFile.add(mnuChangePassword);
-        mnuFile.addSeparator();
-        mnuFile.add(mnuLogout);
-        mnuFile.add(mnuExit);
-
-        // Employee Menu
-        JMenu mnuEmployee = new JMenu("Nhân Viên");
-        mnuEmployee.setMnemonic('N');
-
-        mnuEmployeeList = new JMenuItem("Danh sách nhân viên");
-        mnuEmployeeList.addActionListener(e -> showMessage("Danh sách nhân viên"));
-
-        mnuEmployeeCreate = new JMenuItem("Thêm nhân viên mới");
-        mnuEmployeeCreate.addActionListener(e -> showMessage("Thêm nhân viên mới"));
-
-        mnuEmployee.add(mnuEmployeeList);
-        mnuEmployee.add(mnuEmployeeCreate);
-
-        // Leave Menu
-        JMenu mnuLeave = new JMenu("Nghỉ Phép");
-        mnuLeave.setMnemonic('P');
-
-        mnuLeaveList = new JMenuItem("Quản lý nghỉ phép");
-        mnuLeaveList.addActionListener(e -> showLeavePanel());
-
-        mnuLeaveRequest = new JMenuItem("Tạo đơn nghỉ phép");
-        mnuLeaveRequest.addActionListener(e -> createLeaveRequest());
-
-        mnuLeaveApprove = new JMenuItem("Duyệt đơn (cho Quản lý)");
-        mnuLeaveApprove.addActionListener(e -> showLeavePanel());
-
-        mnuLeave.add(mnuLeaveList);
-        mnuLeave.add(mnuLeaveRequest);
-        mnuLeave.addSeparator();
-        mnuLeave.add(mnuLeaveApprove);
-
-        // Evaluation Menu
-        JMenu mnuEvaluation = new JMenu("Đánh Giá");
-        mnuEvaluation.setMnemonic('D');
-
-        mnuEvalList = new JMenuItem("Quản lý đánh giá");
-        mnuEvalList.addActionListener(e -> showEvaluationPanel());
-
-        mnuEvalSelf = new JMenuItem("Kết quả của tôi");
-        mnuEvalSelf.addActionListener(e -> showEvalResults());
-
-        mnuEvalReview = new JMenuItem("Đánh giá nhân viên");
-        mnuEvalReview.addActionListener(e -> showEvaluationPanel());
-
-        mnuEvalManage = new JMenuItem("Cấu hình kỳ đánh giá");
-        mnuEvalManage.addActionListener(e -> showEvaluationPanel());
-
-        mnuEvaluation.add(mnuEvalList);
-        mnuEvaluation.add(mnuEvalSelf);
-        mnuEvaluation.addSeparator();
-        mnuEvaluation.add(mnuEvalReview);
-        mnuEvaluation.add(mnuEvalManage);
-
-        // Admin Menu
-        JMenu mnuAdmin = new JMenu("Quản Trị");
-        mnuAdmin.setMnemonic('Q');
-
-        mnuUserManage = new JMenuItem("Quản lý tài khoản");
-        mnuUserManage.addActionListener(e -> showMessage("Quản lý tài khoản"));
-
-        mnuRoleManage = new JMenuItem("Quản lý vai trò");
-        mnuRoleManage.addActionListener(e -> showMessage("Quản lý vai trò"));
-
-        mnuReports = new JMenuItem("Báo cáo");
-        mnuReports.addActionListener(e -> showMessage("Báo cáo"));
-
-        mnuSettings = new JMenuItem("Cài đặt hệ thống");
-        mnuSettings.addActionListener(e -> showMessage("Cài đặt hệ thống"));
-
-        mnuAdmin.add(mnuUserManage);
-        mnuAdmin.add(mnuRoleManage);
-        mnuAdmin.addSeparator();
-        mnuAdmin.add(mnuReports);
-        mnuAdmin.add(mnuSettings);
-
-        // Help Menu
-        JMenu mnuHelp = new JMenu("Trợ Giúp");
-        mnuHelp.setMnemonic('T');
-
-        JMenuItem mnuAbout = new JMenuItem("Giới thiệu");
-        mnuAbout.addActionListener(e -> showAbout());
-
-        mnuHelp.add(mnuAbout);
-
-        // Add menus to bar
-        menuBar.add(mnuFile);
-        menuBar.add(mnuEmployee);
-        menuBar.add(mnuLeave);
-        menuBar.add(mnuEvaluation);
-        menuBar.add(mnuAdmin);
-        menuBar.add(mnuHelp);
-
-        setJMenuBar(menuBar);
+        menuBar.add(createSystemMenu());
+        menuBar.add(createEmployeeMenu());
+        menuBar.add(createLeaveMenu());
+        menuBar.add(createEvaluationMenu());
+        menuBar.add(createAdminMenu());
+        menuBar.add(createHelpMenu());
+        return menuBar;
     }
 
-    private void setupLayout() {
-        JPanel mainPanel = new JPanel(new BorderLayout(0, 0));
-        mainPanel.setBackground(com.hrm.util.UIColors.LIGHT_GRAY_BG);
+    private JMenu createSystemMenu() {
+        JMenu menu = createMenu("Hệ thống", 'H');
+        menu.add(createMenuItem("Trang chủ", e -> showDashboard()));
+        menu.addSeparator();
+        menu.add(createMenuItem("Thông tin cá nhân", e -> showProfile()));
+        menu.add(createMenuItem("Đổi mật khẩu", e -> showMessage("Đổi mật khẩu")));
+        menu.addSeparator();
+        menu.add(createMenuItem("Đăng xuất", e -> performLogout()));
+        menu.add(createMenuItem("Thoát", e -> System.exit(0)));
+        return menu;
+    }
 
-        // Header Panel - TaiKhoan Info
-        JPanel headerPanel = createHeaderPanel();
+    private JMenu createEmployeeMenu() {
+        JMenu menu = createMenu("Nhân viên", 'N');
+        mnuEmployeeList = createMenuItem("Danh sách nhân viên", e -> showMessage("Danh sách nhân viên"));
+        mnuEmployeeCreate = createMenuItem("Thêm nhân viên mới", e -> showMessage("Thêm nhân viên mới"));
+        menu.add(mnuEmployeeList);
+        menu.add(mnuEmployeeCreate);
+        return menu;
+    }
 
-        // Main Content Area with CardLayout
+    private JMenu createLeaveMenu() {
+        JMenu menu = createMenu("Nghỉ phép", 'P');
+        mnuLeaveList = createMenuItem("Quản lý nghỉ phép", e -> showLeavePanel());
+        mnuLeaveRequest = createMenuItem("Tạo đơn nghỉ phép", e -> createLeaveRequest());
+        mnuLeaveApprove = createMenuItem("Duyệt đơn (cho quản lý)", e -> showLeavePanel());
+        menu.add(mnuLeaveList);
+        menu.add(mnuLeaveRequest);
+        menu.addSeparator();
+        menu.add(mnuLeaveApprove);
+        return menu;
+    }
+
+    private JMenu createEvaluationMenu() {
+        JMenu menu = createMenu("Đánh giá", 'Đ');
+        mnuEvalList = createMenuItem("Quản lý đánh giá", e -> showEvaluationPanel());
+        mnuEvalSelf = createMenuItem("Kết quả của tôi", e -> showEvalResults());
+        mnuEvalReview = createMenuItem("Đánh giá nhân viên", e -> showEvaluationPanel());
+        mnuEvalManage = createMenuItem("Cấu hình kỳ đánh giá", e -> showEvaluationPanel());
+        menu.add(mnuEvalList);
+        menu.add(mnuEvalSelf);
+        menu.addSeparator();
+        menu.add(mnuEvalReview);
+        menu.add(mnuEvalManage);
+        return menu;
+    }
+
+    private JMenu createAdminMenu() {
+        JMenu menu = createMenu("Quản trị", 'Q');
+        mnuUserManage = createMenuItem("Quản lý tài khoản", e -> showMessage("Quản lý tài khoản"));
+        mnuRoleManage = createMenuItem("Quản lý vai trò", e -> showMessage("Quản lý vai trò"));
+        mnuReports = createMenuItem("Báo cáo", e -> showMessage("Báo cáo"));
+        mnuSettings = createMenuItem("Cài đặt hệ thống", e -> showMessage("Cài đặt hệ thống"));
+        menu.add(mnuUserManage);
+        menu.add(mnuRoleManage);
+        menu.addSeparator();
+        menu.add(mnuReports);
+        menu.add(mnuSettings);
+        return menu;
+    }
+
+    private JMenu createHelpMenu() {
+        JMenu menu = createMenu("Trợ giúp", 'T');
+        menu.add(createMenuItem("Giới thiệu", e -> showAbout()));
+        return menu;
+    }
+
+    private JMenu createMenu(String text, char mnemonic) {
+        JMenu menu = new JMenu(text);
+        menu.setMnemonic(mnemonic);
+        return menu;
+    }
+
+    private JMenuItem createMenuItem(String text, java.awt.event.ActionListener action) {
+        JMenuItem item = new JMenuItem(text);
+        item.addActionListener(action);
+        return item;
+    }
+
+    private JPanel createMainPanel() {
+        JPanel mainPanel = new JPanel(new BorderLayout());
+        mainPanel.setBackground(UIColors.LIGHT_GRAY_BG);
+        mainPanel.add(createHeaderPanel(), BorderLayout.NORTH);
+        mainPanel.add(createContentArea(), BorderLayout.CENTER);
+        mainPanel.add(createStatusPanel(), BorderLayout.SOUTH);
+        return mainPanel;
+    }
+
+    private JPanel createContentArea() {
         cardLayout = new CardLayout();
         mainContentArea = new JPanel(cardLayout);
-        mainContentArea.setBackground(com.hrm.util.UIColors.LIGHT_GRAY_BG);
-
-        // Dashboard Card
-        JPanel dashboardPanel = createDashboardPanel();
-        mainContentArea.add(dashboardPanel, CARD_DASHBOARD);
-
-        // Leave Panel Card
-        LeaveListPanel leavePanel = new LeaveListPanel();
-        mainContentArea.add(leavePanel, CARD_LEAVE);
-
-        // Evaluation Panel Card
-        EvalCycleListPanel evalPanel = new EvalCycleListPanel();
-        mainContentArea.add(evalPanel, CARD_EVAL);
-
-        // Status Panel
-        JPanel statusPanel = new JPanel(new BorderLayout());
-        statusPanel.setBorder(BorderFactory.createCompoundBorder(
-            BorderFactory.createMatteBorder(1, 0, 0, 0, com.hrm.util.UIColors.BORDER_GRAY),
-            new EmptyBorder(5, 10, 5, 10)));
-        statusPanel.setBackground(com.hrm.util.UIColors.LIGHT_GRAY_BG);
-        statusPanel.add(lblStatus, BorderLayout.WEST);
-
-        JLabel lblTime = new JLabel(java.time.LocalDateTime.now().format(
-            java.time.format.DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm")));
-        lblTime.setFont(com.hrm.util.UIFonts.TEXT_SMALL);
-        statusPanel.add(lblTime, BorderLayout.EAST);
-
-        mainPanel.add(headerPanel, BorderLayout.NORTH);
-        mainPanel.add(mainContentArea, BorderLayout.CENTER);
-        mainPanel.add(statusPanel, BorderLayout.SOUTH);
-
-        setContentPane(mainPanel);
+        mainContentArea.setBackground(UIColors.LIGHT_GRAY_BG);
+        mainContentArea.add(createDashboardPanel(), CARD_DASHBOARD);
+        mainContentArea.add(new LeaveListPanel(), CARD_LEAVE);
+        mainContentArea.add(new EvalCycleListPanel(), CARD_EVAL);
+        return mainContentArea;
     }
 
     private JPanel createDashboardPanel() {
-        JPanel panel = new JPanel(new BorderLayout(10, 10));
+        JPanel panel = new JPanel(new BorderLayout());
         panel.setBorder(new EmptyBorder(10, 10, 10, 10));
         panel.setOpaque(false);
 
-        // Content Panel - Dashboard Cards
-        contentPanel = new JPanel(new GridLayout(2, 3, 15, 15));
+        JPanel contentPanel = new JPanel(new GridLayout(2, 3, 15, 15));
         contentPanel.setOpaque(false);
         contentPanel.setBorder(new EmptyBorder(20, 10, 20, 10));
 
-        // Quick Access Cards removed based on user request
-
-        // Wrap content in scroll pane
         JScrollPane scrollPane = new JScrollPane(contentPanel);
         scrollPane.setBorder(null);
         scrollPane.getViewport().setOpaque(false);
-
         panel.add(scrollPane, BorderLayout.CENTER);
         return panel;
     }
@@ -257,130 +194,83 @@ public class DashboardFrame extends JFrame {
         headerPanel.setBackground(new Color(0, 102, 153));
         headerPanel.setBorder(new EmptyBorder(15, 20, 15, 20));
 
-        // Welcome Message
         JPanel welcomePanel = new JPanel(new GridLayout(2, 1));
         welcomePanel.setOpaque(false);
 
         JLabel lblWelcome = new JLabel("Xin chào, " + currentUser.getHoTen());
-        lblWelcome.setFont(com.hrm.util.UIFonts.HEADER_H2);
-        lblWelcome.setForeground(com.hrm.util.UIColors.WHITE);
+        lblWelcome.setFont(UIFonts.HEADER_H2);
+        lblWelcome.setForeground(UIColors.WHITE);
 
-        JLabel lblRole = new JLabel("Vai trò: " + currentUser.getVaiTros().toString());
-        lblRole.setFont(com.hrm.util.UIFonts.TEXT_MEDIUM);
+        JLabel lblRole = new JLabel("Vai trò: " + currentUser.getVaiTros());
+        lblRole.setFont(UIFonts.TEXT_MEDIUM);
         lblRole.setForeground(new Color(200, 220, 240));
 
         welcomePanel.add(lblWelcome);
         welcomePanel.add(lblRole);
 
-        // TaiKhoan Avatar/Icon
-        JLabel lblAvatar = new JLabel();
+        JLabel lblAvatar = new JLabel(getInitials(currentUser.getHoTen()));
         lblAvatar.setPreferredSize(new Dimension(60, 60));
         lblAvatar.setOpaque(true);
         lblAvatar.setBackground(new Color(0, 80, 120));
         lblAvatar.setHorizontalAlignment(SwingConstants.CENTER);
-        lblAvatar.setText(getInitials(currentUser.getHoTen()));
-        lblAvatar.setFont(com.hrm.util.UIFonts.HEADER_H1);
-        lblAvatar.setForeground(com.hrm.util.UIColors.WHITE);
+        lblAvatar.setFont(UIFonts.HEADER_H1);
+        lblAvatar.setForeground(UIColors.WHITE);
 
-        // Navigation buttons
         JPanel navPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT, 10, 0));
         navPanel.setOpaque(false);
-
-        JButton btnHome = UIHelper.createNavButton("Trang chủ");
-        btnHome.addActionListener(e -> showDashboard());
-
-        JButton btnLeave = UIHelper.createNavButton("Nghỉ phép");
-        btnLeave.addActionListener(e -> showLeavePanel());
-
-        JButton btnEval = UIHelper.createNavButton("Đánh giá");
-        btnEval.addActionListener(e -> showEvaluationPanel());
-
-        JButton btnLogout = UIHelper.createStyledButton("Đăng Xuất", com.hrm.util.UIColors.DANGER_RED, com.hrm.util.UIColors.WHITE);
-        btnLogout.addActionListener(e -> performLogout());
-
-        navPanel.add(btnHome);
-        navPanel.add(btnLeave);
-        navPanel.add(btnEval);
+        navPanel.add(createNavButton("Trang chủ", e -> showDashboard()));
+        navPanel.add(createNavButton("Nghỉ phép", e -> showLeavePanel()));
+        navPanel.add(createNavButton("Đánh giá", e -> showEvaluationPanel()));
         navPanel.add(Box.createHorizontalStrut(20));
-        navPanel.add(btnLogout);
+        navPanel.add(createLogoutButton());
 
         headerPanel.add(lblAvatar, BorderLayout.WEST);
         headerPanel.add(welcomePanel, BorderLayout.CENTER);
         headerPanel.add(navPanel, BorderLayout.EAST);
-
         return headerPanel;
     }
 
-    private JPanel createQuickCard(String title, String description, Color color, Runnable action) {
-        JPanel card = new JPanel(new BorderLayout(10, 10));
-        card.setBackground(com.hrm.util.UIColors.WHITE);
-        card.setBorder(BorderFactory.createCompoundBorder(
-            BorderFactory.createLineBorder(com.hrm.util.UIColors.BORDER_GRAY),
-            new EmptyBorder(20, 20, 20, 20)
-        ));
-        card.setCursor(new Cursor(Cursor.HAND_CURSOR));
+    private JButton createNavButton(String text, java.awt.event.ActionListener action) {
+        JButton button = UIHelper.createNavButton(text);
+        button.addActionListener(action);
+        return button;
+    }
 
-        // Color stripe at top
-        JPanel stripe = new JPanel();
-        stripe.setBackground(color);
-        stripe.setPreferredSize(new Dimension(0, 5));
+    private JButton createLogoutButton() {
+        JButton button = UIHelper.createStyledButton("Đăng xuất", UIColors.DANGER_RED, UIColors.WHITE);
+        button.addActionListener(e -> performLogout());
+        return button;
+    }
 
-        JLabel lblTitle = new JLabel(title);
-        lblTitle.setFont(com.hrm.util.UIFonts.HEADER_SUB);
-        lblTitle.setForeground(com.hrm.util.UIColors.TEXT_DARK);
+    private JPanel createStatusPanel() {
+        JPanel statusPanel = new JPanel(new BorderLayout());
+        statusPanel.setBorder(BorderFactory.createCompoundBorder(
+                BorderFactory.createMatteBorder(1, 0, 0, 0, UIColors.BORDER_GRAY),
+                new EmptyBorder(5, 10, 5, 10)));
+        statusPanel.setBackground(UIColors.LIGHT_GRAY_BG);
+        statusPanel.add(lblStatus, BorderLayout.WEST);
 
-        JLabel lblDesc = new JLabel("<html>" + description + "</html>");
-        lblDesc.setFont(com.hrm.util.UIFonts.TEXT_SMALL);
-        lblDesc.setForeground(com.hrm.util.UIColors.TEXT_GRAY);
-
-        JPanel textPanel = new JPanel(new BorderLayout(5, 5));
-        textPanel.setOpaque(false);
-        textPanel.add(lblTitle, BorderLayout.NORTH);
-        textPanel.add(lblDesc, BorderLayout.CENTER);
-
-        card.add(stripe, BorderLayout.NORTH);
-        card.add(textPanel, BorderLayout.CENTER);
-
-        // Click handler
-        card.addMouseListener(new java.awt.event.MouseAdapter() {
-            @Override
-            public void mouseClicked(java.awt.event.MouseEvent e) {
-                action.run();
-            }
-
-            @Override
-            public void mouseEntered(java.awt.event.MouseEvent e) {
-                card.setBackground(com.hrm.util.UIColors.LIGHT_GRAY_BG);
-            }
-
-            @Override
-            public void mouseExited(java.awt.event.MouseEvent e) {
-                card.setBackground(com.hrm.util.UIColors.WHITE);
-            }
-        });
-
-        return card;
+        JLabel lblTime = new JLabel(LocalDateTime.now().format(DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm")));
+        lblTime.setFont(UIFonts.TEXT_SMALL);
+        statusPanel.add(lblTime, BorderLayout.EAST);
+        return statusPanel;
     }
 
     private void applyRolePermissions() {
         XacThucBUS auth = XacThucBUS.getInstance();
 
-        // Employee Menu
-        mnuEmployeeList.setEnabled(auth.getScopeForAction("EMPLOYEE_VIEW") != com.hrm.model.DataScope.NONE);
+        mnuEmployeeList.setEnabled(auth.getScopeForAction("EMPLOYEE_VIEW") != DataScope.NONE);
         mnuEmployeeCreate.setEnabled(auth.coQuyen("EMPLOYEE_CREATE"));
 
-        // Leave Menu - all users can view their own
         mnuLeaveList.setEnabled(true);
         mnuLeaveRequest.setEnabled(auth.coQuyen("LEAVE_CREATE"));
-        mnuLeaveApprove.setEnabled(auth.getScopeForAction("LEAVE_APPROVE") != com.hrm.model.DataScope.NONE);
+        mnuLeaveApprove.setEnabled(auth.getScopeForAction("LEAVE_APPROVE") != DataScope.NONE);
 
-        // Evaluation Menu
         mnuEvalList.setEnabled(true);
-        mnuEvalSelf.setEnabled(auth.getScopeForAction("EVAL_VIEW") != com.hrm.model.DataScope.NONE);
-        mnuEvalReview.setEnabled(auth.getScopeForAction("EVAL_REVIEW") != com.hrm.model.DataScope.NONE);
+        mnuEvalSelf.setEnabled(auth.getScopeForAction("EVAL_VIEW") != DataScope.NONE);
+        mnuEvalReview.setEnabled(auth.getScopeForAction("EVAL_REVIEW") != DataScope.NONE);
         mnuEvalManage.setEnabled(auth.coQuyen("EVAL_MANAGE"));
 
-        // Admin Menu
         mnuUserManage.setEnabled(auth.coQuyen("USER_VIEW"));
         mnuRoleManage.setEnabled(auth.coQuyen("ROLE_VIEW"));
         mnuReports.setEnabled(auth.coQuyen("REPORT_VIEW"));
@@ -390,13 +280,14 @@ public class DashboardFrame extends JFrame {
     }
 
     private void updateStatus() {
-        String permissions = currentUser.coVaiTro("ADMIN") ? "Toàn quyền" :
-            "Quyền hạn theo vai trò";
-        lblStatus.setText("Vai trò: " + currentUser.getVaiTros().toString() + " | " + permissions);
+        String permissions = currentUser.coVaiTro("ADMIN") ? "Toàn quyền" : "Quyền hạn theo vai trò";
+        lblStatus.setText("Vai trò: " + currentUser.getVaiTros() + " | " + permissions);
     }
 
     private String getInitials(String fullName) {
-        if (fullName == null || fullName.isEmpty()) return "?";
+        if (fullName == null || fullName.isEmpty()) {
+            return "?";
+        }
         String[] parts = fullName.split(" ");
         if (parts.length >= 2) {
             return ("" + parts[0].charAt(0) + parts[parts.length - 1].charAt(0)).toUpperCase();
@@ -404,28 +295,26 @@ public class DashboardFrame extends JFrame {
         return ("" + fullName.charAt(0)).toUpperCase();
     }
 
-    // Navigation methods
     private void showDashboard() {
-        cardLayout.show(mainContentArea, CARD_DASHBOARD);
-        lblStatus.setText("Trang chủ | Vai trò: " + currentUser.getVaiTros().toString());
+        showCard(CARD_DASHBOARD, "Trang chủ");
     }
 
     private void showLeavePanel() {
-        // Refresh the leave panel
-        mainContentArea.remove(mainContentArea.getComponent(1));
-        LeaveListPanel newLeavePanel = new LeaveListPanel();
-        mainContentArea.add(newLeavePanel, CARD_LEAVE, 1);
-        cardLayout.show(mainContentArea, CARD_LEAVE);
-        lblStatus.setText("Quản lý nghỉ phép | Vai trò: " + currentUser.getVaiTros().toString());
+        refreshCard(CARD_LEAVE, new LeaveListPanel(), "Quản lý nghỉ phép");
     }
 
     private void showEvaluationPanel() {
-        // Refresh the eval panel
-        mainContentArea.remove(mainContentArea.getComponent(2));
-        EvalCycleListPanel newEvalPanel = new EvalCycleListPanel();
-        mainContentArea.add(newEvalPanel, CARD_EVAL, 2);
-        cardLayout.show(mainContentArea, CARD_EVAL);
-        lblStatus.setText("Quản lý đánh giá | Vai trò: " + currentUser.getVaiTros().toString());
+        refreshCard(CARD_EVAL, new EvalCycleListPanel(), "Quản lý đánh giá");
+    }
+
+    private void refreshCard(String cardName, JComponent component, String statusText) {
+        mainContentArea.add(component, cardName);
+        showCard(cardName, statusText);
+    }
+
+    private void showCard(String cardName, String statusText) {
+        cardLayout.show(mainContentArea, cardName);
+        lblStatus.setText(statusText + " | Vai trò: " + currentUser.getVaiTros());
     }
 
     private void createLeaveRequest() {
@@ -446,64 +335,63 @@ public class DashboardFrame extends JFrame {
     }
 
     private void showProfile() {
-        StringBuilder info = new StringBuilder();
-        info.append("THÔNG TIN TÀI KHOẢN\n");
-        info.append("==================\n\n");
-        info.append("Họ tên: ").append(currentUser.getHoTen()).append("\n");
-        info.append("Tên đăng nhập: ").append(currentUser.getTenDangNhap()).append("\n");
-        info.append("Email: ").append(currentUser.getEmail()).append("\n");
-        info.append("Vai trò: ").append(currentUser.getVaiTros().toString()).append("\n\n");
-        info.append("QUYỀN HẠN:\n");
-        info.append("---------\n");
-
-        currentUser.getVaiTros().forEach(role -> {
-            role.getQuyens().forEach(p -> {
-                info.append("- ").append(p.getTenQuyen()).append("\n");
-            });
-        });
-
-        JTextArea textArea = new JTextArea(info.toString());
+        JTextArea textArea = new JTextArea(buildProfileText());
         textArea.setEditable(false);
         textArea.setFont(new Font("Monospaced", Font.PLAIN, 12));
 
         JScrollPane scrollPane = new JScrollPane(textArea);
         scrollPane.setPreferredSize(new Dimension(400, 400));
 
-        JOptionPane.showMessageDialog(this, scrollPane, "Thông Tin Cá Nhân",
-            JOptionPane.INFORMATION_MESSAGE);
+        JOptionPane.showMessageDialog(this, scrollPane, "Thông tin cá nhân", JOptionPane.INFORMATION_MESSAGE);
+    }
+
+    private String buildProfileText() {
+        StringBuilder info = new StringBuilder();
+        info.append("THÔNG TIN TÀI KHOẢN\n");
+        info.append("==================\n\n");
+        info.append("Họ tên: ").append(currentUser.getHoTen()).append('\n');
+        info.append("Tên đăng nhập: ").append(currentUser.getTenDangNhap()).append('\n');
+        info.append("Email: ").append(currentUser.getEmail()).append('\n');
+        info.append("Vai trò: ").append(currentUser.getVaiTros()).append("\n\n");
+        info.append("QUYỀN HẠN:\n");
+        info.append("---------\n");
+
+        currentUser.getVaiTros().forEach(role ->
+                role.getQuyens().forEach(permission ->
+                        info.append("- ").append(permission.getTenQuyen()).append('\n')));
+        return info.toString();
     }
 
     private void showAbout() {
         JOptionPane.showMessageDialog(this,
-            "HRM SYSTEM\n" +
-            "Hệ Thống Quản Lý Nhân Sự\n\n" +
-            "Phiên bản: 1.0\n" +
-            "Module: Leave + Evaluation\n" +
-            "Java Swing Desktop Application\n\n" +
-            "© 2024 HRM System",
-            "Giới Thiệu",
-            JOptionPane.INFORMATION_MESSAGE);
+                "HRM SYSTEM\n" +
+                        "Hệ thống quản lý nhân sự\n\n" +
+                        "Phiên bản: 1.0\n" +
+                        "Module: Leave + Evaluation\n" +
+                        "Java Swing Desktop Application\n\n" +
+                        "© 2024 HRM System",
+                "Giới thiệu",
+                JOptionPane.INFORMATION_MESSAGE);
     }
 
     private void showMessage(String feature) {
         JOptionPane.showMessageDialog(this,
-            "Chức năng: " + feature + "\n\nĐang phát triển...",
-            "Thông Báo",
-            JOptionPane.INFORMATION_MESSAGE);
+                "Chức năng: " + feature + "\n\nĐang phát triển...",
+                "Thông báo",
+                JOptionPane.INFORMATION_MESSAGE);
     }
 
     private void performLogout() {
         int confirm = JOptionPane.showConfirmDialog(this,
-            "Bạn có chắc muốn đăng xuất?",
-            "Xác Nhận Đăng Xuất",
-            JOptionPane.YES_NO_OPTION,
-            JOptionPane.QUESTION_MESSAGE);
+                "Bạn có chắc muốn đăng xuất?",
+                "Xác nhận đăng xuất",
+                JOptionPane.YES_NO_OPTION,
+                JOptionPane.QUESTION_MESSAGE);
 
         if (confirm == JOptionPane.YES_OPTION) {
             XacThucBUS.getInstance().logout();
-            LoginFrame loginFrame = new LoginFrame();
-            loginFrame.setVisible(true);
-            this.dispose();
+            new LoginFrame().setVisible(true);
+            dispose();
         }
     }
 

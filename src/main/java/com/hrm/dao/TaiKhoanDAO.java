@@ -162,32 +162,16 @@ public class TaiKhoanDAO {
     }
 
     /**
-     * Xóa tài khoản theo ID (xóa liên kết quyền trước).
+     * Xóa tài khoản theo ID.
+     * Vai trò lưu trực tiếp trong cột maVaiTro của TAIKHOAN (không có bảng TAIKHOAN_QUYEN).
+     * Các FK liên quan (THONGBAO, LOG_AUDIT) đã có ON DELETE CASCADE / SET NULL.
      */
     public void delete(int id) {
-        String delPerms = "DELETE FROM TAIKHOAN_QUYEN WHERE maTaiKhoan = ?";
-        String delUser  = "DELETE FROM TAIKHOAN WHERE maTaiKhoan = ?";
-
-        try (Connection conn = DatabaseConnection.getConnection()) {
-            conn.setAutoCommit(false);
-            try {
-                // Xóa quyền liên kết
-                try (PreparedStatement ps = conn.prepareStatement(delPerms)) {
-                    ps.setInt(1, id);
-                    ps.executeUpdate();
-                }
-                // Xóa tài khoản
-                try (PreparedStatement ps = conn.prepareStatement(delUser)) {
-                    ps.setInt(1, id);
-                    ps.executeUpdate();
-                }
-                conn.commit();
-            } catch (SQLException e) {
-                conn.rollback();
-                throw e;
-            } finally {
-                conn.setAutoCommit(true);
-            }
+        String delUser = "DELETE FROM TAIKHOAN WHERE maTaiKhoan = ?";
+        try (Connection conn = DatabaseConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(delUser)) {
+            ps.setInt(1, id);
+            ps.executeUpdate();
         } catch (SQLException e) {
             System.err.println("Lỗi delete tài khoản #" + id + ": " + e.getMessage());
             e.printStackTrace();

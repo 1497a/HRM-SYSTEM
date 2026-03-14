@@ -50,7 +50,7 @@ public class UserFormDialog extends JDialog {
     private ButtonGroup statusGroup;
 
     public UserFormDialog(Frame parent, TaiKhoan user) {
-        super(parent, user == null ? "Tao tai khoan moi" : "Sua tai khoan", true);
+        super(parent, user == null ? "Tạo tài khoản mới" : "Sửa tài khoản", true);
         this.authService = XacThucBUS.getInstance();
         this.nhanVienService = NhanVienBUS.getInstance();
         this.editingUser = user;
@@ -90,7 +90,7 @@ public class UserFormDialog extends JDialog {
             });
 
             // When employee changes, auto-fill default password from DOB
-            lblDefaultPassword = new JLabel("Mat khau mac dinh: (chua chon nhan vien)");
+            lblDefaultPassword = new JLabel("Mật khẩu mặc định: (chưa chọn nhân viên)");
             lblDefaultPassword.setFont(new Font("Segoe UI", Font.ITALIC, 12));
             lblDefaultPassword.setForeground(new Color(100, 100, 200));
 
@@ -108,8 +108,8 @@ public class UserFormDialog extends JDialog {
             txtEmail = new JTextField(20);
 
             // Status: radio buttons (mutually exclusive)
-            rdoHoatDong = new JRadioButton("Hoat dong");
-            rdoBiKhoa = new JRadioButton("Bi khoa");
+            rdoHoatDong = new JRadioButton("Hoạt động");
+            rdoBiKhoa = new JRadioButton("Bị khóa");
             statusGroup = new ButtonGroup();
             statusGroup.add(rdoHoatDong);
             statusGroup.add(rdoBiKhoa);
@@ -140,7 +140,7 @@ public class UserFormDialog extends JDialog {
         if (cboNhanVien == null || lblDefaultPassword == null) return;
         NhanVien selectedNV = (NhanVien) cboNhanVien.getSelectedItem();
         if (selectedNV == null) {
-            lblDefaultPassword.setText("Mat khau mac dinh: (chua chon nhan vien)");
+            lblDefaultPassword.setText("Mật khẩu mặc định: (chưa chọn nhân viên)");
             txtPassword.setText("");
             return;
         }
@@ -155,11 +155,11 @@ public class UserFormDialog extends JDialog {
 
         if (!dob.isEmpty()) {
             txtPassword.setText(dob);
-            lblDefaultPassword.setText("Mat khau mac dinh: " + dob + " (ngay sinh)");
+            lblDefaultPassword.setText("Mật khẩu mặc định: " + dob + " (ngày sinh)");
         } else {
             String fallback = selectedNV.getMaNhanVien() + "@123";
             txtPassword.setText(fallback);
-            lblDefaultPassword.setText("Mat khau mac dinh: " + fallback + " (khong co ngay sinh)");
+            lblDefaultPassword.setText("Mật khẩu mặc định: " + fallback + " (không có ngày sinh)");
         }
     }
 
@@ -176,7 +176,7 @@ public class UserFormDialog extends JDialog {
 
         if (editingUser == null) {
             gbc.gridx = 0; gbc.gridy = row; gbc.anchor = GridBagConstraints.NORTHWEST;
-            formPanel.add(new JLabel("Nhan vien:"), gbc);
+            formPanel.add(new JLabel("Nhân viên:"), gbc);
             gbc.gridx = 1; gbc.fill = GridBagConstraints.HORIZONTAL; gbc.weightx = 1;
             cboNhanVien.setPreferredSize(new Dimension(280, 28));
             formPanel.add(cboNhanVien, gbc);
@@ -188,12 +188,12 @@ public class UserFormDialog extends JDialog {
 
             gbc.gridx = 0; gbc.gridy = row; gbc.fill = GridBagConstraints.NONE; gbc.weightx = 0;
             gbc.anchor = GridBagConstraints.WEST;
-            formPanel.add(new JLabel("Mat khau:"), gbc);
+            formPanel.add(new JLabel("Mật khẩu:"), gbc);
             gbc.gridx = 1; gbc.fill = GridBagConstraints.HORIZONTAL;
             formPanel.add(txtPassword, gbc);
             row++;
             gbc.gridx = 1; gbc.gridy = row;
-            JLabel hint = new JLabel("(Co the thay doi mat khau mac dinh truoc khi luu)");
+            JLabel hint = new JLabel("(Có thể thay đổi mật khẩu mặc định trước khi lưu)");
             hint.setFont(new Font("Segoe UI", Font.ITALIC, 11));
             hint.setForeground(com.hrm.util.UIColors.TEXT_GRAY);
             formPanel.add(hint, gbc);
@@ -201,13 +201,13 @@ public class UserFormDialog extends JDialog {
 
         } else {
             gbc.gridx = 0; gbc.gridy = row;
-            formPanel.add(new JLabel("Ten dang nhap:"), gbc);
+            formPanel.add(new JLabel("Tên đăng nhập:"), gbc);
             gbc.gridx = 1; gbc.fill = GridBagConstraints.HORIZONTAL; gbc.weightx = 1;
             formPanel.add(txtUsername, gbc);
             row++;
 
             gbc.gridx = 0; gbc.gridy = row; gbc.fill = GridBagConstraints.NONE; gbc.weightx = 0;
-            formPanel.add(new JLabel("Ma nhan vien:"), gbc);
+            formPanel.add(new JLabel("Mã nhân viên:"), gbc);
             gbc.gridx = 1; gbc.fill = GridBagConstraints.HORIZONTAL;
             formPanel.add(txtMaNV, gbc);
             row++;

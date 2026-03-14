@@ -1,6 +1,7 @@
 package com.hrm.gui.admin;
 
 import com.hrm.model.TaiKhoan;
+import com.hrm.model.VaiTro;
 import com.hrm.bus.XacThucBUS;
 import com.hrm.bus.KetQua;
 import com.hrm.util.SessionContext;
@@ -30,6 +31,7 @@ public class UserManagementPanel extends JPanel {
     private TableRowSorter<DefaultTableModel> sorter;
     private JTextField txtSearch;
     private JComboBox<String> cboTrangThai;
+    private JComboBox<String> cboVaiTro;
     private JButton btnCreate;
     private JButton btnEdit;
     private JButton btnDelete;
@@ -51,21 +53,21 @@ public class UserManagementPanel extends JPanel {
 
         // Search field
         txtSearch = new JTextField(20);
-        txtSearch.putClientProperty("JTextField.placeholderText", "Tim kiem theo ten dang nhap...");
+        txtSearch.putClientProperty("JTextField.placeholderText", "Tìm kiếm theo tên đăng nhập...");
         txtSearch.addActionListener(e -> searchUsers());
 
         // Buttons
-        btnCreate = UIHelper.createPrimaryButton("Tao moi");
+        btnCreate = UIHelper.createPrimaryButton("Tạo mới");
         btnCreate.addActionListener(e -> createUser());
 
-        btnEdit = UIHelper.createPrimaryButton("Sua");
+        btnEdit = UIHelper.createPrimaryButton("Sửa");
         btnEdit.addActionListener(e -> editUser());
 
-        btnDelete = UIHelper.createDangerButton("Xoa");
+        btnDelete = UIHelper.createDangerButton("Xóa");
         btnDelete.addActionListener(e -> deleteUser());
 
         // Table
-        String[] columns = {"ID nhan vien", "Ten dang nhap", "Ho ten", "Email", "Vai tro", "Trang thai"};
+        String[] columns = {"ID", "Tên đăng nhập", "Họ tên", "Email", "Vai trò", "Trạng thái"};
         tableModel = new DefaultTableModel(columns, 0) {
             @Override
             public boolean isCellEditable(int row, int column) {
@@ -90,9 +92,9 @@ public class UserManagementPanel extends JPanel {
                 Component c = super.getTableCellRendererComponent(table, value, isSelected, hasFocus, row, column);
                 if (!isSelected) {
                     String status = (String) value;
-                    if ("Hoat dong".equals(status)) {
+                    if ("Hoạt động".equals(status)) {
                         c.setBackground(com.hrm.util.UIColors.LIGHT_GREEN_BG);
-                    } else if ("Khoa".equals(status)) {
+                    } else if ("Bị khóa".equals(status)) {
                         c.setBackground(com.hrm.util.UIColors.LIGHT_RED_BG);
                     } else {
                         c.setBackground(com.hrm.util.UIColors.LIGHT_YELLOW_BG);
@@ -122,8 +124,16 @@ public class UserManagementPanel extends JPanel {
         sorter.setSortKeys(List.of(new RowSorter.SortKey(0, SortOrder.ASCENDING)));
 
         // Status filter combo
-        cboTrangThai = new JComboBox<>(new String[]{"Tat ca", "Hoat dong", "Khoa"});
+        cboTrangThai = new JComboBox<>(new String[]{"Tất cả", "Hoạt động", "Bị khóa"});
         cboTrangThai.addActionListener(e -> applyFilter());
+
+        // Role filter combo
+        cboVaiTro = new JComboBox<>();
+        cboVaiTro.addItem("Tất cả vai trò");
+        for (VaiTro vt : authService.getAllRoles()) {
+            cboVaiTro.addItem(vt.getTenVaiTro());
+        }
+        cboVaiTro.addActionListener(e -> applyFilter());
     }
 
     private void setupLayout() {
@@ -133,10 +143,12 @@ public class UserManagementPanel extends JPanel {
 
         JPanel searchPanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 10, 0));
         searchPanel.setOpaque(false);
-        searchPanel.add(new JLabel("Tim kiem:"));
+        searchPanel.add(new JLabel("Tìm kiếm:"));
         searchPanel.add(txtSearch);
-        searchPanel.add(new JLabel("Trang thai:"));
+        searchPanel.add(new JLabel("Trạng thái:"));
         searchPanel.add(cboTrangThai);
+        searchPanel.add(new JLabel("Vai trò:"));
+        searchPanel.add(cboVaiTro);
 
         JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT, 10, 0));
         buttonPanel.setOpaque(false);
@@ -155,7 +167,7 @@ public class UserManagementPanel extends JPanel {
 
         // Center - table
         JScrollPane scrollPane = new JScrollPane(table);
-        scrollPane.setBorder(new TitledBorder("Danh sach tai khoan"));
+        scrollPane.setBorder(new TitledBorder("Danh sách tài khoản"));
 
         add(topPanel, BorderLayout.NORTH);
         add(scrollPane, BorderLayout.CENTER);
@@ -166,7 +178,7 @@ public class UserManagementPanel extends JPanel {
         List<TaiKhoan> users = authService.getAllUsers();
 
         for (TaiKhoan user : users) {
-            String status = user.isBiKhoa() ? "Khoa" : (user.isHoatDong() ? "Hoat dong" : "Ngung");
+            String status = user.isBiKhoa() ? "Bị khóa" : (user.isHoatDong() ? "Hoạt động" : "Ngừng");
             Object[] row = {
                 user.getId(),
                 user.getTenDangNhap(),
@@ -186,21 +198,28 @@ public class UserManagementPanel extends JPanel {
     private void applyFilter() {
         String keyword = txtSearch.getText().toLowerCase().trim();
         String trangThai = (String) cboTrangThai.getSelectedItem();
+        String vaiTro = (String) cboVaiTro.getSelectedItem();
 
         RowFilter<DefaultTableModel, Object> nameFilter = keyword.isEmpty() ? null :
             RowFilter.regexFilter("(?i)" + java.util.regex.Pattern.quote(keyword), 1, 2);
 
-        RowFilter<DefaultTableModel, Object> statusFilter = (trangThai == null || "Tat ca".equals(trangThai)) ? null :
+        RowFilter<DefaultTableModel, Object> statusFilter = (trangThai == null || "Tất cả".equals(trangThai)) ? null :
             RowFilter.regexFilter("(?i)" + java.util.regex.Pattern.quote(trangThai), 5);
 
-        if (nameFilter == null && statusFilter == null) {
+        RowFilter<DefaultTableModel, Object> roleFilter = (vaiTro == null || "Tất cả vai trò".equals(vaiTro)) ? null :
+            RowFilter.regexFilter("(?i)" + java.util.regex.Pattern.quote(vaiTro), 4);
+
+        List<RowFilter<DefaultTableModel, Object>> active = new java.util.ArrayList<>();
+        if (nameFilter != null) active.add(nameFilter);
+        if (statusFilter != null) active.add(statusFilter);
+        if (roleFilter != null) active.add(roleFilter);
+
+        if (active.isEmpty()) {
             sorter.setRowFilter(null);
-        } else if (nameFilter == null) {
-            sorter.setRowFilter(statusFilter);
-        } else if (statusFilter == null) {
-            sorter.setRowFilter(nameFilter);
+        } else if (active.size() == 1) {
+            sorter.setRowFilter(active.get(0));
         } else {
-            sorter.setRowFilter(RowFilter.andFilter(List.of(nameFilter, statusFilter)));
+            sorter.setRowFilter(RowFilter.andFilter(active));
         }
     }
 
@@ -217,8 +236,8 @@ public class UserManagementPanel extends JPanel {
         int selectedRow = table.getSelectedRow();
         if (selectedRow < 0) {
             JOptionPane.showMessageDialog(this,
-                    "Vui long chon tai khoan can sua",
-                    "Thong bao",
+                    "Vui lòng chọn tài khoản cần sửa.",
+                    "Thông báo",
                     JOptionPane.WARNING_MESSAGE);
             return;
         }
@@ -243,19 +262,19 @@ public class UserManagementPanel extends JPanel {
         int selectedRow = table.getSelectedRow();
         if (selectedRow < 0) {
             JOptionPane.showMessageDialog(this,
-                    "Vui long chon tai khoan can xoa",
-                    "Thong bao",
+                    "Vui lòng chọn tài khoản cần xóa.",
+                    "Thông báo",
                     JOptionPane.WARNING_MESSAGE);
             return;
         }
 
         int modelRow = table.convertRowIndexToModel(selectedRow);
         int userId = (int) tableModel.getValueAt(modelRow, 0);
-        String username = (String) tableModel.getValueAt(selectedRow, 1);
+        String username = (String) tableModel.getValueAt(modelRow, 1);
 
         int confirm = JOptionPane.showConfirmDialog(this,
-                "Ban co chac muon xoa tai khoan '" + username + "'?",
-                "Xac nhan xoa",
+                "Bạn có chắc muốn xóa tài khoản '" + username + "'?",
+                "Xác nhận xóa",
                 JOptionPane.YES_NO_OPTION,
                 JOptionPane.WARNING_MESSAGE);
 
@@ -263,14 +282,14 @@ public class UserManagementPanel extends JPanel {
             KetQua<Void> result = authService.deleteUser(userId);
             if (result.isSuccess()) {
                 JOptionPane.showMessageDialog(this,
-                        "Da xoa tai khoan thanh cong!",
-                        "Thong bao",
+                        "Đã xóa tài khoản thành công!",
+                        "Thông báo",
                         JOptionPane.INFORMATION_MESSAGE);
                 loadData();
             } else {
                 JOptionPane.showMessageDialog(this,
                         result.getMessage(),
-                        "Loi",
+                        "Lỗi",
                         JOptionPane.ERROR_MESSAGE);
             }
         }

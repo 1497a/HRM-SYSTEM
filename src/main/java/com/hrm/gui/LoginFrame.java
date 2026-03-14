@@ -1,9 +1,10 @@
 package com.hrm.gui;
 
-import com.hrm.model.TaiKhoan;
 import com.hrm.bus.XacThucBUS;
 import com.hrm.gui.components.PurpleButton;
+import com.hrm.model.TaiKhoan;
 import com.hrm.util.UIColors;
+import com.hrm.util.UIFonts;
 
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
@@ -13,10 +14,15 @@ import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
 
 /**
- * LoginFrame - Split-panel login screen with purple theme
- * Uses Mock XacThucBUS for authentication
+ * LoginFrame - Split-panel login screen with purple theme.
  */
 public class LoginFrame extends JFrame {
+    private static final String APP_TITLE = "HRM System - Đăng nhập";
+    private static final String LOGIN_TEXT = "ĐĂNG NHẬP";
+    private static final String PROCESSING_TEXT = "Đang xử lý...";
+    private static final Dimension FRAME_SIZE = new Dimension(900, 550);
+    private static final Dimension FIELD_SIZE = new Dimension(280, 40);
+    private static final Dimension BUTTON_SIZE = new Dimension(280, 45);
 
     private JTextField txtUsername;
     private JPasswordField txtPassword;
@@ -35,140 +41,129 @@ public class LoginFrame extends JFrame {
     }
 
     private void initComponents() {
-        setTitle("HRM System - Dang Nhap");
+        setTitle(APP_TITLE);
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setResizable(false);
-        setSize(900, 550);
+        setSize(FRAME_SIZE);
 
-        // Username field
-        txtUsername = new JTextField(20);
-        txtUsername.setFont(com.hrm.util.UIFonts.TEXT_MEDIUM);
-        txtUsername.setBorder(BorderFactory.createCompoundBorder(
-                BorderFactory.createMatteBorder(0, 0, 2, 0, UIColors.BORDER_GRAY),
-                BorderFactory.createEmptyBorder(8, 5, 8, 5)));
-        txtUsername.setPreferredSize(new Dimension(280, 40));
+        txtUsername = createTextField();
+        txtPassword = createPasswordField();
 
-        // Password field
-        txtPassword = new JPasswordField(20);
-        txtPassword.setFont(com.hrm.util.UIFonts.TEXT_MEDIUM);
-        txtPassword.setBorder(BorderFactory.createCompoundBorder(
-                BorderFactory.createMatteBorder(0, 0, 2, 0, UIColors.BORDER_GRAY),
-                BorderFactory.createEmptyBorder(8, 5, 8, 5)));
-        txtPassword.setPreferredSize(new Dimension(280, 40));
+        btnLogin = new PurpleButton(LOGIN_TEXT);
+        btnLogin.setPreferredSize(BUTTON_SIZE);
 
-        // Login button
-        btnLogin = new PurpleButton("DANG NHAP");
-        btnLogin.setPreferredSize(new Dimension(280, 45));
-
-        // Show password checkbox
-        chkShowPassword = new JCheckBox("Hien thi mat khau");
-        chkShowPassword.setFont(com.hrm.util.UIFonts.TEXT_SMALL);
+        chkShowPassword = new JCheckBox("Hiển thị mật khẩu");
+        chkShowPassword.setFont(UIFonts.TEXT_SMALL);
         chkShowPassword.setForeground(UIColors.TEXT_GRAY);
         chkShowPassword.setOpaque(false);
         chkShowPassword.setFocusPainted(false);
 
-        // Error label
         lblError = new JLabel(" ");
         lblError.setForeground(UIColors.DANGER_RED);
-        lblError.setFont(com.hrm.util.UIFonts.TEXT_SMALL);
+        lblError.setFont(UIFonts.TEXT_SMALL);
         lblError.setHorizontalAlignment(SwingConstants.CENTER);
     }
 
+    private JTextField createTextField() {
+        JTextField field = new JTextField(20);
+        configureInputField(field);
+        return field;
+    }
+
+    private JPasswordField createPasswordField() {
+        JPasswordField field = new JPasswordField(20);
+        configureInputField(field);
+        field.setEchoChar('\u2022');
+        return field;
+    }
+
+    private void configureInputField(JTextField field) {
+        field.setFont(UIFonts.TEXT_MEDIUM);
+        field.setBorder(BorderFactory.createCompoundBorder(
+                BorderFactory.createMatteBorder(0, 0, 2, 0, UIColors.BORDER_GRAY),
+                BorderFactory.createEmptyBorder(8, 5, 8, 5)));
+        field.setPreferredSize(FIELD_SIZE);
+        field.setMaximumSize(FIELD_SIZE);
+        field.setAlignmentX(Component.LEFT_ALIGNMENT);
+    }
+
     private void setupLayout() {
-        // Main panel with split layout
         JPanel mainPanel = new JPanel(new GridLayout(1, 2));
-        mainPanel.setPreferredSize(new Dimension(900, 550));
+        mainPanel.setPreferredSize(FRAME_SIZE);
+        mainPanel.add(createWelcomePanel());
+        mainPanel.add(createLoginPanel());
+        setContentPane(mainPanel);
+    }
 
-        // ========================
-        // LEFT PANEL - Purple Welcome
-        // ========================
-        JPanel leftPanel = new JPanel(new GridBagLayout());
-        leftPanel.setBackground(UIColors.PRIMARY_PURPLE);
+    private JPanel createWelcomePanel() {
+        JPanel panel = new JPanel(new GridBagLayout());
+        panel.setBackground(UIColors.PRIMARY_PURPLE);
 
-        JPanel welcomeContent = new JPanel();
-        welcomeContent.setLayout(new BoxLayout(welcomeContent, BoxLayout.Y_AXIS));
-        welcomeContent.setOpaque(false);
-        welcomeContent.setBorder(new EmptyBorder(0, 50, 0, 50));
+        JPanel content = new JPanel();
+        content.setLayout(new BoxLayout(content, BoxLayout.Y_AXIS));
+        content.setOpaque(false);
+        content.setBorder(new EmptyBorder(0, 50, 0, 50));
 
-        JLabel lblWelcome = new JLabel("WELCOME");
-        lblWelcome.setFont(com.hrm.util.UIFonts.DISPLAY_LARGE);
-        lblWelcome.setForeground(com.hrm.util.UIColors.WHITE);
+        JLabel lblWelcome = new JLabel("CHÀO MỪNG");
+        lblWelcome.setFont(UIFonts.DISPLAY_LARGE);
+        lblWelcome.setForeground(UIColors.WHITE);
         lblWelcome.setAlignmentX(Component.LEFT_ALIGNMENT);
 
-        JLabel lblSubtitle = new JLabel("To the best HR Management System");
+        JLabel lblSubtitle = new JLabel("Đăng nhập vào hệ thống quản lý nhân sự");
         lblSubtitle.setFont(new Font("Segoe UI", Font.PLAIN, 18));
         lblSubtitle.setForeground(new Color(255, 255, 255, 200));
         lblSubtitle.setAlignmentX(Component.LEFT_ALIGNMENT);
 
-        // Decorative line
         JPanel line = new JPanel();
         line.setBackground(new Color(255, 255, 255, 100));
         line.setPreferredSize(new Dimension(60, 4));
         line.setMaximumSize(new Dimension(60, 4));
         line.setAlignmentX(Component.LEFT_ALIGNMENT);
 
-        welcomeContent.add(lblWelcome);
-        welcomeContent.add(Box.createVerticalStrut(15));
-        welcomeContent.add(line);
-        welcomeContent.add(Box.createVerticalStrut(15));
-        welcomeContent.add(lblSubtitle);
+        content.add(lblWelcome);
+        content.add(Box.createVerticalStrut(15));
+        content.add(line);
+        content.add(Box.createVerticalStrut(15));
+        content.add(lblSubtitle);
 
-        leftPanel.add(welcomeContent);
+        panel.add(content);
+        return panel;
+    }
 
-        // ========================
-        // RIGHT PANEL - Login Form
-        // ========================
-        JPanel rightPanel = new JPanel(new GridBagLayout());
-        rightPanel.setBackground(UIColors.WHITE);
+    private JPanel createLoginPanel() {
+        JPanel panel = new JPanel(new GridBagLayout());
+        panel.setBackground(UIColors.WHITE);
+        panel.add(createFormPanel());
+        return panel;
+    }
 
+    private JPanel createFormPanel() {
         JPanel formPanel = new JPanel();
         formPanel.setLayout(new BoxLayout(formPanel, BoxLayout.Y_AXIS));
         formPanel.setOpaque(false);
         formPanel.setBorder(new EmptyBorder(0, 60, 0, 60));
 
-        // Login title
-        JLabel lblTitle = new JLabel("LOGIN");
-        lblTitle.setFont(com.hrm.util.UIFonts.DISPLAY_TITLE);
+        JLabel lblTitle = new JLabel(LOGIN_TEXT);
+        lblTitle.setFont(UIFonts.DISPLAY_TITLE);
         lblTitle.setForeground(UIColors.TEXT_DARK);
         lblTitle.setAlignmentX(Component.LEFT_ALIGNMENT);
 
-        // Username section
-        JLabel lblUsername = new JLabel("Ten dang nhap");
-        lblUsername.setFont(com.hrm.util.UIFonts.TEXT_NORMAL);
-        lblUsername.setForeground(UIColors.TEXT_LIGHT_GRAY);
-        lblUsername.setAlignmentX(Component.LEFT_ALIGNMENT);
-
-        txtUsername.setMaximumSize(new Dimension(280, 40));
-        txtUsername.setAlignmentX(Component.LEFT_ALIGNMENT);
-
-        // Password section
-        JLabel lblPassword = new JLabel("Mat khau");
-        lblPassword.setFont(com.hrm.util.UIFonts.TEXT_NORMAL);
-        lblPassword.setForeground(UIColors.TEXT_LIGHT_GRAY);
-        lblPassword.setAlignmentX(Component.LEFT_ALIGNMENT);
-
-        txtPassword.setMaximumSize(new Dimension(280, 40));
-        txtPassword.setAlignmentX(Component.LEFT_ALIGNMENT);
+        JLabel lblUsername = createFieldLabel("Tên đăng nhập");
+        JLabel lblPassword = createFieldLabel("Mật khẩu");
 
         chkShowPassword.setAlignmentX(Component.LEFT_ALIGNMENT);
-
-        // Error label
         lblError.setAlignmentX(Component.LEFT_ALIGNMENT);
         lblError.setMaximumSize(new Dimension(280, 30));
-
-        // Login button
         btnLogin.setAlignmentX(Component.LEFT_ALIGNMENT);
-        btnLogin.setMaximumSize(new Dimension(280, 45));
+        btnLogin.setMaximumSize(BUTTON_SIZE);
 
-        // Demo accounts info - static label
-        JLabel lblDemo = new JLabel("<html><div style='text-align:center;'><b>Tai khoan:</b> admin / 123</div></html>");
+        JLabel lblDemo = new JLabel("<html><div style='text-align:center;'><b>Tài khoản:</b> admin / 123</div></html>");
         lblDemo.setFont(new Font("Segoe UI", Font.PLAIN, 11));
         lblDemo.setForeground(UIColors.TEXT_LIGHT_GRAY);
         lblDemo.setAlignmentX(Component.LEFT_ALIGNMENT);
         lblDemo.setHorizontalAlignment(SwingConstants.CENTER);
         lblDemo.setMaximumSize(new Dimension(280, 120));
 
-        // Assemble form
         formPanel.add(lblTitle);
         formPanel.add(Box.createVerticalStrut(40));
         formPanel.add(lblUsername);
@@ -186,29 +181,21 @@ public class LoginFrame extends JFrame {
         formPanel.add(btnLogin);
         formPanel.add(Box.createVerticalStrut(30));
         formPanel.add(lblDemo);
+        return formPanel;
+    }
 
-        rightPanel.add(formPanel);
-
-        // Add panels to main
-        mainPanel.add(leftPanel);
-        mainPanel.add(rightPanel);
-
-        setContentPane(mainPanel);
+    private JLabel createFieldLabel(String text) {
+        JLabel label = new JLabel(text);
+        label.setFont(UIFonts.TEXT_NORMAL);
+        label.setForeground(UIColors.TEXT_LIGHT_GRAY);
+        label.setAlignmentX(Component.LEFT_ALIGNMENT);
+        return label;
     }
 
     private void setupEvents() {
         btnLogin.addActionListener(this::performLogin);
+        chkShowPassword.addActionListener(e -> togglePasswordVisibility());
 
-        // Show/hide password
-        chkShowPassword.addActionListener(e -> {
-            if (chkShowPassword.isSelected()) {
-                txtPassword.setEchoChar((char) 0);
-            } else {
-                txtPassword.setEchoChar('\u2022');
-            }
-        });
-
-        // Enter key to login
         KeyAdapter enterKeyAdapter = new KeyAdapter() {
             @Override
             public void keyPressed(KeyEvent e) {
@@ -220,7 +207,6 @@ public class LoginFrame extends JFrame {
         txtUsername.addKeyListener(enterKeyAdapter);
         txtPassword.addKeyListener(enterKeyAdapter);
 
-        // Clear error when typing
         KeyAdapter clearErrorAdapter = new KeyAdapter() {
             @Override
             public void keyTyped(KeyEvent e) {
@@ -230,8 +216,11 @@ public class LoginFrame extends JFrame {
         txtUsername.addKeyListener(clearErrorAdapter);
         txtPassword.addKeyListener(clearErrorAdapter);
 
-        // Focus on username field
         SwingUtilities.invokeLater(() -> txtUsername.requestFocusInWindow());
+    }
+
+    private void togglePasswordVisibility() {
+        txtPassword.setEchoChar(chkShowPassword.isSelected() ? (char) 0 : '\u2022');
     }
 
     private void performLogin(ActionEvent e) {
@@ -239,23 +228,20 @@ public class LoginFrame extends JFrame {
         String password = new String(txtPassword.getPassword());
 
         if (username.isEmpty()) {
-            showError("Vui long nhap ten dang nhap!");
+            showError("Vui lòng nhập tên đăng nhập.");
             txtUsername.requestFocus();
             return;
         }
 
         if (password.isEmpty()) {
-            showError("Vui long nhap mat khau!");
+            showError("Vui lòng nhập mật khẩu.");
             txtPassword.requestFocus();
             return;
         }
 
-        // Disable button during login
-        btnLogin.setEnabled(false);
-        btnLogin.setText("Dang xu ly...");
+        setLoadingState(true);
 
-        // Use SwingWorker for login operation
-        SwingWorker<TaiKhoan, Void> worker = new SwingWorker<TaiKhoan, Void>() {
+        SwingWorker<TaiKhoan, Void> worker = new SwingWorker<>() {
             @Override
             protected TaiKhoan doInBackground() {
                 return authService.authenticate(username, password);
@@ -266,25 +252,28 @@ public class LoginFrame extends JFrame {
                 try {
                     TaiKhoan user = get();
                     if (user != null) {
-                        // Success - open MainFrame
                         MainFrame mainFrame = new MainFrame();
                         mainFrame.setVisible(true);
                         dispose();
                     } else {
-                        showError("Ten dang nhap hoac mat khau khong dung!");
+                        showError("Tên đăng nhập hoặc mật khẩu không đúng.");
                         txtPassword.setText("");
                         txtPassword.requestFocus();
                     }
                 } catch (Exception ex) {
-                    showError("Loi dang nhap: " + ex.getMessage());
+                    showError("Lỗi đăng nhập: " + ex.getMessage());
                     ex.printStackTrace();
                 } finally {
-                    btnLogin.setEnabled(true);
-                    btnLogin.setText("DANG NHAP");
+                    setLoadingState(false);
                 }
             }
         };
         worker.execute();
+    }
+
+    private void setLoadingState(boolean loading) {
+        btnLogin.setEnabled(!loading);
+        btnLogin.setText(loading ? PROCESSING_TEXT : LOGIN_TEXT);
     }
 
     private void showError(String message) {

@@ -96,11 +96,14 @@ public class ContractListPanel extends JPanel {
         cboNhanVien.setFont(com.hrm.util.UIFonts.TEXT_MEDIUM);
         cboNhanVien.addItem("Tất cả");
 
-        com.hrm.model.TaiKhoan currentUser = SessionContext.getInstance().getCurrentUser();
-        boolean isManager = currentUser.coQuyen("CONTRACT_VIEW_ALL") || currentUser.coQuyen("CONTRACT_VIEW_TEAM");
+        DataScope contractScope = XacThucBUS.getInstance().getScopeForAction("CONTRACT_VIEW");
+        boolean isManager = contractScope == DataScope.ALL
+                         || contractScope == DataScope.DEPT
+                         || contractScope == DataScope.TEAM;
 
         if (isManager) {
-            List<com.hrm.model.NhanVien> dsNV = com.hrm.bus.NhanVienBUS.getInstance().getAllByActionScope("EMPLOYEE_VIEW", currentUser.getNhanVienId());
+            com.hrm.model.TaiKhoan currentUser = SessionContext.getInstance().getCurrentUser();
+            List<com.hrm.model.NhanVien> dsNV = com.hrm.bus.NhanVienBUS.getInstance().getAllByActionScope("EMPLOYEE_VIEW", currentUser != null ? currentUser.getNhanVienId() : null);
             for (com.hrm.model.NhanVien nv : dsNV) {
                 cboNhanVien.addItem(nv);
             }

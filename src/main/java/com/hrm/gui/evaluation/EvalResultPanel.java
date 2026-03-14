@@ -150,6 +150,7 @@ public class EvalResultPanel extends JPanel {
             submissionSorter.setSortable(i, false);
         }
         submissionSorter.setComparator(0, Comparator.comparingInt(a -> (Integer) a));
+        submissionSorter.setSortable(0, true); // ID
         submissionSorter.setSortable(2, true); // Nhân viên
 
         // Comparator tiếng Việt cho cột Nhân viên

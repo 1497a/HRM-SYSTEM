@@ -272,6 +272,10 @@ public class XacThucBUS {
 
         try {
             taiKhoanRepo.update(user);
+            // Cập nhật vai trò (lưu trực tiếp trong cột maVaiTro)
+            if (user.getVaiTros() != null && !user.getVaiTros().isEmpty()) {
+                taiKhoanRepo.updateRole(user.getId(), user.getVaiTros().get(0).getId());
+            }
             return KetQua.success(null, "Cập nhật tài khoản thành công.");
         } catch (Exception e) {
             System.err.println("Lỗi updateUser: " + e.getMessage());
