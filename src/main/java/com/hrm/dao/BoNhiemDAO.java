@@ -432,6 +432,23 @@ public class BoNhiemDAO {
         return false;
     }
 
+    /**
+     * Kiểm tra một chức vụ còn đang được sử dụng bởi bổ nhiệm hiệu lực hay không.
+     */
+    public boolean hasActiveBoNhiemByChucVu(String maChucVu) {
+        String sql = "SELECT COUNT(*) FROM BONHIEM WHERE maChucVu=? AND trangThai='hieu_luc'";
+        try (Connection conn = DatabaseConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setString(1, maChucVu);
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) return rs.getInt(1) > 0;
+            }
+        } catch (SQLException e) {
+            throw new RuntimeException("Lỗi kiểm tra bổ nhiệm theo chức vụ: " + e.getMessage(), e);
+        }
+        return false;
+    }
+
     // ============================
     // endBoNhiem - set denNgay + trangThai=het_hieu_luc
     // ============================

@@ -24,13 +24,13 @@ USE hrm_db;
 DELETE FROM PHONGBAN;
 
 INSERT INTO PHONGBAN (maPhongBan, tenPhongBan, phongBanCha, moTa, trangThai) VALUES
-('CONGTY',   'Cong ty TNHH ABC Technology',  NULL,      'Cong ty cong nghe phan mem va giai phap CNTT',             'hoatDong'),
-('PHONGNS',  'Phong Nhan su',                'CONGTY',  'Quan ly nhan su, tuyen dung, luong thuong',                'hoatDong'),
-('PHONGKT',  'Phong Ke toan - Tai chinh',    'CONGTY',  'Quan ly tai chinh, ke toan, thue',                        'hoatDong'),
-('PHONGKD',  'Phong Kinh doanh',             'CONGTY',  'Phat trien kinh doanh, ban hang, cham soc khach hang',    'hoatDong'),
-('PHONGIT',  'Phong Cong nghe thong tin',    'CONGTY',  'Phat trien phan mem, he thong CNTT, bao mat',             'hoatDong'),
-('PHONGMKT', 'Phong Marketing',              'CONGTY',  'Truyen thong, quang cao, thuong hieu, digital marketing', 'hoatDong'),
-('TEAM_IT',  'Team Phat trien IT',           'PHONGIT', 'Phat trien ung dung, API, kiem thu phan mem',             'hoatDong');
+('CONGTY',   'Công ty TNHH ABC Technology',  NULL,      'Công ty công nghệ phần mềm và giải pháp CNTT',             'hoatDong'),
+('PHONGNS',  'Phòng Nhân sự',                'CONGTY',  'Quản lý nhân sự, tuyển dụng, lương thưởng',                'hoatDong'),
+('PHONGKT',  'Phòng Kế toán - Tài chính',    'CONGTY',  'Quản lý tài chính, kế toán, thuế',                        'hoatDong'),
+('PHONGKD',  'Phòng Kinh doanh',             'CONGTY',  'Phát triển kinh doanh, bán hàng, chăm sóc khách hàng',    'hoatDong'),
+('PHONGIT',  'Phòng Công nghệ thông tin',    'CONGTY',  'Phát triển phần mềm, hệ thống CNTT, bảo mật',             'hoatDong'),
+('PHONGMKT', 'Phòng Marketing',              'CONGTY',  'Truyền thông, quảng cáo, thương hiệu, digital marketing', 'hoatDong'),
+('TEAM_IT',  'Team Phát triển IT',           'PHONGIT', 'Phát triển ứng dụng, API, kiểm thử phần mềm',             'hoatDong');
 
 -- =====================================================
 -- 2. CHUC VU
@@ -38,14 +38,14 @@ INSERT INTO PHONGBAN (maPhongBan, tenPhongBan, phongBanCha, moTa, trangThai) VAL
 DELETE FROM CHUCVU;
 
 INSERT INTO CHUCVU (maChucVu, tenChucVu, capBac, heSoLuong, phuCapChucVu, moTa, trangThai) VALUES
-('GD',  'Giam doc',       1, 5.00, 15000000, 'Cap lanh dao cao nhat cong ty',                    'hoatDong'),
-('TP',  'Truong phong',   2, 3.00,  5000000, 'Quan ly cap phong ban',                             'hoatDong'),
-('TT',  'Truong nhom',    3, 2.20,  2000000, 'Quan ly cap team / nhom',                           'hoatDong'),
-('CV',  'Chuyen vien',    4, 1.70,   500000, 'Nhan vien co kinh nghiem tu 2 nam tro len',         'hoatDong'),
-('KTV', 'Ke toan vien',   5, 1.30,   200000, 'Nhan vien chuyen mon ke toan - tai chinh',          'hoatDong'),
-('NSV', 'Nhan su vien',   5, 1.30,   200000, 'Nhan vien chuyen mon nhan su - tuyen dung',         'hoatDong'),
-('NV',  'Nhan vien',      5, 1.30,   200000, 'Nhan vien chinh thuc cac phong ban khac',           'hoatDong'),
-('TV',  'Thu viec',       6, 0.85,        0, 'Nhan su dang trong thoi gian thu viec',              'hoatDong');
+('GD',  'Giám đốc',       1, 5.00, 15000000, 'Cấp lãnh đạo cao nhất công ty',                     'hoatDong'),
+('TP',  'Trưởng phòng',   2, 3.00,  5000000, 'Quản lý cấp phòng ban',                              'hoatDong'),
+('TT',  'Trưởng nhóm',    3, 2.20,  2000000, 'Quản lý cấp team / nhóm',                            'hoatDong'),
+('CV',  'Chuyên viên',    4, 1.70,   500000, 'Nhân viên có kinh nghiệm từ 2 năm trở lên',         'hoatDong'),
+('KTV', 'Kế toán viên',   5, 1.30,   200000, 'Nhân viên chuyên môn kế toán - tài chính',          'hoatDong'),
+('NSV', 'Nhân sự viên',   5, 1.30,   200000, 'Nhân viên chuyên môn nhân sự - tuyển dụng',         'hoatDong'),
+('NV',  'Nhân viên',      5, 1.30,   200000, 'Nhân viên chính thức các phòng ban khác',           'hoatDong'),
+('TV',  'Thử việc',       6, 0.85,        0, 'Nhân sự đang trong thời gian thử việc',              'hoatDong');
 
 -- =====================================================
 -- 3. NHAN VIEN - 13 nhân viên
@@ -100,24 +100,24 @@ INSERT INTO THONGTINCANHAN (maNV, hoTen, ngaySinh, gioiTinh, cccd, dienThoai, em
 --   Nhân viên thường → báo cáo TP/TT trực tiếp
 INSERT INTO BONHIEM (maNV, maPhongBan, maChucVu, loaiBoNhiem, tyLeHuongLuong, maQuanLy, nguoiDuyet, tuNgay, trangThai, lyDo) VALUES
 -- Cấp công ty
-('NV001', 'CONGTY',   'GD',  'chinh', 100.00, NULL,    NULL,    '2015-01-05', 'hieu_luc', 'Bo nhiem Giam doc dieu hanh'),
+('NV001', 'CONGTY',   'GD',  'chinh', 100.00, NULL,    NULL,    '2015-01-05', 'hieu_luc', 'Bổ nhiệm Giám đốc điều hành'),
 -- Phòng Nhân sự
-('NV002', 'PHONGNS',  'TP',  'chinh', 100.00, 'NV001', 'NV001', '2017-02-01', 'hieu_luc', 'Bo nhiem Truong phong Nhan su'),
-('NV003', 'PHONGNS',  'NSV', 'chinh', 100.00, 'NV002', 'NV001', '2021-06-01', 'hieu_luc', 'Nhan su vien - tuyen dung'),
+('NV002', 'PHONGNS',  'TP',  'chinh', 100.00, 'NV001', 'NV001', '2017-02-01', 'hieu_luc', 'Bổ nhiệm Trưởng phòng Nhân sự'),
+('NV003', 'PHONGNS',  'NSV', 'chinh', 100.00, 'NV002', 'NV001', '2021-06-01', 'hieu_luc', 'Nhân sự viên - tuyển dụng'),
 -- Phòng Kế toán
-('NV004', 'PHONGKT',  'TP',  'chinh', 100.00, 'NV001', 'NV001', '2017-04-01', 'hieu_luc', 'Bo nhiem Truong phong Ke toan'),
-('NV005', 'PHONGKT',  'KTV', 'chinh', 100.00, 'NV004', 'NV001', '2021-07-01', 'hieu_luc', 'Ke toan vien'),
+('NV004', 'PHONGKT',  'TP',  'chinh', 100.00, 'NV001', 'NV001', '2017-04-01', 'hieu_luc', 'Bổ nhiệm Trưởng phòng Kế toán'),
+('NV005', 'PHONGKT',  'KTV', 'chinh', 100.00, 'NV004', 'NV001', '2021-07-01', 'hieu_luc', 'Kế toán viên'),
 -- Phòng Kinh doanh
-('NV006', 'PHONGKD',  'TP',  'chinh', 100.00, 'NV001', 'NV001', '2017-07-01', 'hieu_luc', 'Bo nhiem Truong phong Kinh doanh'),
-('NV007', 'PHONGKD',  'CV',  'chinh', 100.00, 'NV006', 'NV001', '2020-06-01', 'hieu_luc', 'Chuyen vien Kinh doanh'),
+('NV006', 'PHONGKD',  'TP',  'chinh', 100.00, 'NV001', 'NV001', '2017-07-01', 'hieu_luc', 'Bổ nhiệm Trưởng phòng Kinh doanh'),
+('NV007', 'PHONGKD',  'CV',  'chinh', 100.00, 'NV006', 'NV001', '2020-06-01', 'hieu_luc', 'Chuyên viên Kinh doanh'),
 -- Phòng IT
-('NV008', 'PHONGIT',  'TP',  'chinh', 100.00, 'NV001', 'NV001', '2018-01-15', 'hieu_luc', 'Bo nhiem Truong phong Cong nghe thong tin'),
-('NV009', 'TEAM_IT',  'TT',  'chinh', 100.00, 'NV008', 'NV008', '2019-08-01', 'hieu_luc', 'Truong nhom phat trien IT'),
-('NV010', 'TEAM_IT',  'NV',  'chinh', 100.00, 'NV009', 'NV008', '2022-02-01', 'hieu_luc', 'Nhan vien phat trien IT'),
-('NV011', 'TEAM_IT',  'TV',  'chinh', 100.00, 'NV009', 'NV008', '2025-10-01', 'hieu_luc', 'Thu viec phat trien IT'),
+('NV008', 'PHONGIT',  'TP',  'chinh', 100.00, 'NV001', 'NV001', '2018-01-15', 'hieu_luc', 'Bổ nhiệm Trưởng phòng Công nghệ thông tin'),
+('NV009', 'TEAM_IT',  'TT',  'chinh', 100.00, 'NV008', 'NV008', '2019-08-01', 'hieu_luc', 'Trưởng nhóm phát triển IT'),
+('NV010', 'TEAM_IT',  'NV',  'chinh', 100.00, 'NV009', 'NV008', '2022-02-01', 'hieu_luc', 'Nhân viên phát triển IT'),
+('NV011', 'TEAM_IT',  'TV',  'chinh', 100.00, 'NV009', 'NV008', '2025-10-01', 'hieu_luc', 'Thử việc phát triển IT'),
 -- Phòng Marketing
-('NV012', 'PHONGMKT', 'TP',  'chinh', 100.00, 'NV001', 'NV001', '2018-07-01', 'hieu_luc', 'Bo nhiem Truong phong Marketing'),
-('NV013', 'PHONGMKT', 'NV',  'chinh', 100.00, 'NV012', 'NV001', '2021-03-01', 'hieu_luc', 'Nhan vien Marketing');
+('NV012', 'PHONGMKT', 'TP',  'chinh', 100.00, 'NV001', 'NV001', '2018-07-01', 'hieu_luc', 'Bổ nhiệm Trưởng phòng Marketing'),
+('NV013', 'PHONGMKT', 'NV',  'chinh', 100.00, 'NV012', 'NV001', '2021-03-01', 'hieu_luc', 'Nhân viên Marketing');
 
 -- =====================================================
 -- 5.5. VAI TRÒ & QUYỀN
@@ -734,10 +734,10 @@ INSERT INTO SODUNGPHEP (maNV, nam, maLoaiPhep, soNgayDuocCap, soNgayDaDung) VALU
 -- =====================================================
 -- Cot: maNV, maLoaiPhep, tuNgay, denNgay, soNgayNghi, lyDo, fileDinhKem, nguoiDuyet, ngayDuyet, lyDoTuChoi, trangThai
 INSERT INTO DONXINNGHIPHEP (maNV, maLoaiPhep, tuNgay, denNgay, soNgayNghi, lyDo, fileDinhKem, nguoiDuyet, ngayDuyet, lyDoTuChoi, trangThai) VALUES
-('NV002', 'PHEP_NAM', '2026-01-14', '2026-01-14', 1, 'Viec ca nhan',                    NULL, 'NV001', '2026-01-13', NULL, 'da_duyet'),
-('NV009', 'PHEP_OM',  '2026-01-08', '2026-01-08', 1, 'Om cap toc',                      NULL, 'NV008', '2026-01-08', NULL, 'da_duyet'),
-('NV010', 'PHEP_NAM', '2026-02-10', '2026-02-13', 4, 'Du lich nghi Tet Duong lich muon', NULL, 'NV009', '2026-02-07', NULL, 'da_duyet'),
-('NV007', 'PHEP_NAM', '2026-02-16', '2026-02-16', 1, 'Viec gia dinh',                   NULL, NULL,    NULL,         NULL, 'cho_duyet');
+('NV002', 'PHEP_NAM', '2026-01-14', '2026-01-14', 1, 'Việc cá nhân',                     NULL, 'NV001', '2026-01-13', NULL, 'da_duyet'),
+('NV009', 'PHEP_OM',  '2026-01-08', '2026-01-08', 1, 'Ốm cấp tốc',                       NULL, 'NV008', '2026-01-08', NULL, 'da_duyet'),
+('NV010', 'PHEP_NAM', '2026-02-10', '2026-02-13', 4, 'Du lịch nghỉ Tết Dương lịch muộn', NULL, 'NV009', '2026-02-07', NULL, 'da_duyet'),
+('NV007', 'PHEP_NAM', '2026-02-16', '2026-02-16', 1, 'Việc gia đình',                    NULL, NULL,    NULL,         NULL, 'cho_duyet');
 
 -- =====================================================
 -- 14. BẢNG LƯƠNG
@@ -745,8 +745,8 @@ INSERT INTO DONXINNGHIPHEP (maNV, maLoaiPhep, tuNgay, denNgay, soNgayNghi, lyDo,
 -- trangThai ENUM: 'dang_xu_ly' | 'da_duyet' | 'da_khoa'
 -- nguoiTao/nguoiDuyet là INT (id auto-increment của NHANVIEN), để NULL khi không xác định
 INSERT INTO BANGLUONG (thang, nam, tenBangLuong, nguoiTao, nguoiDuyet, ngayDuyet, trangThai) VALUES
-( 1, 2026, 'Bang luong thang 01/2026', NULL, NULL, '2026-02-03', 'da_duyet'),
-( 2, 2026, 'Bang luong thang 02/2026', NULL, NULL, NULL,         'dang_xu_ly');
+( 1, 2026, 'Bảng lương tháng 01/2026', NULL, NULL, '2026-02-03', 'da_duyet'),
+( 2, 2026, 'Bảng lương tháng 02/2026', NULL, NULL, NULL,         'dang_xu_ly');
 
 -- Chi tiet luong T1/2026 (maBangLuong = 1, mau 6 NV dai dien)
 -- Cot: maBangLuong, maNV, luongCoSo, tongLuongChucVu, luongLamThem, tongThuNhap, tongKhauTru, luongThucLanh, soNgayCong, soGioLamThem
@@ -762,31 +762,31 @@ INSERT INTO CHITIETLUONG (maBangLuong, maNV, luongCoSo, tongLuongChucVu, luongLa
 -- 15. ĐÁNH GIÁ HIỆU SUẤT
 -- =====================================================
 INSERT INTO DOTDANHGIA (tenDot, nam, kyDanhGia, tuNgay, denNgay, moTa, trangThai) VALUES
-('Danh gia hieu suat Q3/2025', 2025, 'quy_3', '2025-09-01', '2025-09-30', 'Danh gia Q3/2025',             'da_ket_thuc'),
-('Danh gia cuoi nam 2025',     2025, 'nam',   '2025-12-01', '2025-12-31', 'Tong ket KPI nam 2025',        'da_ket_thuc'),
-('Danh gia hieu suat Q1/2026', 2026, 'quy_1', '2026-04-01', '2026-04-30', 'Chuan bi dot danh gia Q1/2026','chua_bat_dau');
+('Đánh giá hiệu suất Q3/2025', 2025, 'quy_3', '2025-09-01', '2025-09-30', 'Đánh giá Q3/2025',              'da_ket_thuc'),
+('Đánh giá cuối năm 2025',     2025, 'nam',   '2025-12-01', '2025-12-31', 'Tổng kết KPI năm 2025',         'da_ket_thuc'),
+('Đánh giá hiệu suất Q1/2026', 2026, 'quy_1', '2026-04-01', '2026-04-30', 'Chuẩn bị đợt đánh giá Q1/2026', 'chua_bat_dau');
 
 INSERT INTO DANHGIAHIEUSUAT (maDot, maNV, nguoiDanhGia, tongDiem, xepLoai, nhanXetChung, ngayDanhGia, trangThai) VALUES
 -- Q3/2025
-(1, 'NV008', 'NV001', 8.7, 'tot',      'TP IT chu dong xu ly su co, dam bao tien do du an',   '2025-09-30', 'da_xac_nhan'),
-(1, 'NV009', 'NV008', 8.2, 'tot',      'TT nhom phat trien on dinh, giao tiep tot',            '2025-09-30', 'da_xac_nhan'),
-(1, 'NV010', 'NV009', 7.3, 'kha',      'NV co gang nhung can cai thien dung gio',              '2025-09-30', 'da_xac_nhan'),
-(1, 'NV011', 'NV009', 7.3, 'kha',      'Thu viec tich cuc, hoc nhanh',                         '2025-09-30', 'da_xac_nhan'),
+(1, 'NV008', 'NV001', 8.7, 'tot',      'TP IT chủ động xử lý sự cố, đảm bảo tiến độ dự án',    '2025-09-30', 'da_xac_nhan'),
+(1, 'NV009', 'NV008', 8.2, 'tot',      'TT nhóm phát triển ổn định, giao tiếp tốt',            '2025-09-30', 'da_xac_nhan'),
+(1, 'NV010', 'NV009', 7.3, 'kha',      'NV cố gắng nhưng cần cải thiện đúng giờ',              '2025-09-30', 'da_xac_nhan'),
+(1, 'NV011', 'NV009', 7.3, 'kha',      'Thử việc tích cực, học nhanh',                          '2025-09-30', 'da_xac_nhan'),
 -- Cuoi nam 2025
-(2, 'NV008', 'NV001', 8.8, 'xuat_sac', 'Du an lon hoan thanh dung han, chat luong cao',        '2025-12-31', 'da_xac_nhan'),
-(2, 'NV009', 'NV008', 8.3, 'tot',      'Hoan thanh tot nhiem vu TT, team tinh than cao',       '2025-12-31', 'da_xac_nhan'),
-(2, 'NV010', 'NV009', 7.6, 'kha',      'Tien bo ro ret, can han che vang mat',                 '2025-12-31', 'da_xac_nhan');
+(2, 'NV008', 'NV001', 8.8, 'xuat_sac', 'Dự án lớn hoàn thành đúng hạn, chất lượng cao',         '2025-12-31', 'da_xac_nhan'),
+(2, 'NV009', 'NV008', 8.3, 'tot',      'Hoàn thành tốt nhiệm vụ TT, team tinh thần cao',        '2025-12-31', 'da_xac_nhan'),
+(2, 'NV010', 'NV009', 7.6, 'kha',      'Tiến bộ rõ rệt, cần hạn chế vắng mặt',                   '2025-12-31', 'da_xac_nhan');
 
 
 
 INSERT INTO TIEUCHIDANHGIA (tenTieuChi, moTa, nhomTieuChi, diemToiDa, trangThai) VALUES
-('Chat luong cong viec',    'Chat luong dau ra, sản phẩm, dich vu cung cap',       'Ket qua',  30, 'hoatDong'),
-('Tien do hoan thanh',      'Hoan thanh dung han, khong tre deadline',              'Ket qua',  20, 'hoatDong'),
-('Kha nang sáng tao',       'De xuat giai phap, cai tien quy trinh',               'Nang luc', 10, 'hoatDong'),
-('Kỹ năng chuyen mon',      'Trinh do chuyen mon, kỹ năng ky thuat',               'Nang luc', 10, 'hoatDong'),
-('Lam viec nhom',           'Phoi hop, ho tro dong nghiep, tinh than team',        'Thai do',  10, 'hoatDong'),
-('Tuan thu noi quy',        'Chap hanh quy che, di lam dung giờ, tac phong',       'Thai do',  10, 'hoatDong'),
-('Phát triển ban than',     'Hoc hoi kỹ năng mới, nang cao trinh do',              'Nang luc', 10, 'hoatDong');
+('Chất lượng công việc',    'Chất lượng đầu ra, sản phẩm, dịch vụ cung cấp',        'Kết quả',  30, 'hoatDong'),
+('Tiến độ hoàn thành',      'Hoàn thành đúng hạn, không trễ deadline',               'Kết quả',  20, 'hoatDong'),
+('Khả năng sáng tạo',       'Đề xuất giải pháp, cải tiến quy trình',                'Năng lực', 10, 'hoatDong'),
+('Kỹ năng chuyên môn',      'Trình độ chuyên môn, kỹ năng kỹ thuật',                'Năng lực', 10, 'hoatDong'),
+('Làm việc nhóm',           'Phối hợp, hỗ trợ đồng nghiệp, tinh thần team',         'Thái độ',  10, 'hoatDong'),
+('Tuân thủ nội quy',        'Chấp hành quy chế, đi làm đúng giờ, tác phong',        'Thái độ',  10, 'hoatDong'),
+('Phát triển bản thân',     'Học hỏi kỹ năng mới, nâng cao trình độ',               'Năng lực', 10, 'hoatDong');
 
 -- =====================================================
 -- 15.5. ĐÁNH GIÁ HIỆU SUẤT - CHI TIẾT
@@ -799,86 +799,86 @@ INSERT INTO DOTDANHGIA_TIEUCHI (maDot, maTieuChi, trongSo) VALUES
 -- Chi tiết đánh giá
 INSERT INTO CHITIETDANHGIA (maDanhGia, maTieuChi, diem, nhanXet) VALUES
 -- Q3/2025: NV008 (Tổng 8.7/10 ~ 87/100)
-(1, 1, 28.00, 'Chat luong rat tot'), 
-(1, 2, 18.00, 'Dung tien do'),       
-(1, 3,  8.00, 'Kha sang tao'),       
-(1, 4,  8.00, 'Chuyen mon vung'),    
-(1, 5,  8.00, 'Lam viec nhom tot'),  
-(1, 6,  9.00, 'Tuan thu tot'),       
-(1, 7,  8.00, 'Co gang nang cao nang luc'), 
+(1, 1, 28.00, 'Chất lượng rất tốt'), 
+(1, 2, 18.00, 'Đúng tiến độ'),       
+(1, 3,  8.00, 'Khá sáng tạo'),       
+(1, 4,  8.00, 'Chuyên môn vững'),    
+(1, 5,  8.00, 'Làm việc nhóm tốt'),  
+(1, 6,  9.00, 'Tuân thủ tốt'),       
+(1, 7,  8.00, 'Cố gắng nâng cao năng lực'), 
 -- Q3/2025: NV009 (Tổng 8.2 ~ 82/100)
-(2, 1, 25.00, 'Chat luong tot'),
-(2, 2, 17.00, 'Da phan dung han'),
-(2, 3,  8.00, 'De xuat nhieu cai tien'),
-(2, 4,  8.00, 'Chuyen mon tot'),
-(2, 5,  8.00, 'Ho tro team nhiet tinh'),
-(2, 6,  8.00, 'Chap hanh quy che'),
-(2, 7,  8.00, 'Hoc them ky nang moi'),
+(2, 1, 25.00, 'Chất lượng tốt'),
+(2, 2, 17.00, 'Đa phần đúng hạn'),
+(2, 3,  8.00, 'Đề xuất nhiều cải tiến'),
+(2, 4,  8.00, 'Chuyên môn tốt'),
+(2, 5,  8.00, 'Hỗ trợ team nhiệt tình'),
+(2, 6,  8.00, 'Chấp hành quy chế'),
+(2, 7,  8.00, 'Học thêm kỹ năng mới'),
 -- Q3/2025: NV010 (Tổng 7.3 ~ 73/100)
-(3, 1, 23.00, 'Chat luong kha'),
-(3, 2, 15.00, 'Doi khi tre han'),
-(3, 3,  7.00, 'Chua co nhieu y tuong'),
-(3, 4,  7.00, 'Chuyen mon can cai thien them'),
-(3, 5,  7.00, 'Phoi hop chua tot lam'),
-(3, 6,  7.00, 'Can di lam dung gio hon'),
-(3, 7,  7.00, 'Co tinh than hoc hoi'),
+(3, 1, 23.00, 'Chất lượng khá'),
+(3, 2, 15.00, 'Đôi khi trễ hạn'),
+(3, 3,  7.00, 'Chưa có nhiều ý tưởng'),
+(3, 4,  7.00, 'Chuyên môn cần cải thiện thêm'),
+(3, 5,  7.00, 'Phối hợp chưa tốt lắm'),
+(3, 6,  7.00, 'Cần đi làm đúng giờ hơn'),
+(3, 7,  7.00, 'Có tinh thần học hỏi'),
 -- Q3/2025: NV011 (Tổng 7.3 ~ 73/100)
-(4, 1, 22.00, 'Lam viec duoc giao tot'),
-(4, 2, 16.00, 'Theo kip tien do'),
-(4, 3,  7.00, 'Moi lam viec chua the hien nhieu'),
-(4, 4,  7.00, 'Kien thuc co ban vung'),
-(4, 5,  7.00, 'Tich cuc'),
-(4, 6,  7.00, 'Tac phong tot'),
-(4, 7,  7.00, 'Ham hoc hoi'),
+(4, 1, 22.00, 'Làm việc được giao tốt'),
+(4, 2, 16.00, 'Theo kịp tiến độ'),
+(4, 3,  7.00, 'Mới làm việc, chưa thể hiện nhiều'),
+(4, 4,  7.00, 'Kiến thức cơ bản vững'),
+(4, 5,  7.00, 'Tích cực'),
+(4, 6,  7.00, 'Tác phong tốt'),
+(4, 7,  7.00, 'Ham học hỏi'),
 -- Cuoi nam 2025: NV008 (Tổng 8.8 ~ 88/100)
-(5, 1, 29.00, 'Hoan thanh xuat sac'),
-(5, 2, 19.00, 'Luon cham deadline'),
-(5, 3,  8.00, 'Co cac giai phap huu hieu cho he thong'),
-(5, 4,  8.00, 'Am hieu sau ve kien truc'),
-(5, 5,  8.00, 'Teamwork hoan hao'),
-(5, 6,  8.00, 'Chap hanh the le tot'),
-(5, 7,  8.00, 'Hoc the chung chi PMI'),
+(5, 1, 29.00, 'Hoàn thành xuất sắc'),
+(5, 2, 19.00, 'Luôn bám deadline'),
+(5, 3,  8.00, 'Có các giải pháp hữu hiệu cho hệ thống'),
+(5, 4,  8.00, 'Am hiểu sâu về kiến trúc'),
+(5, 5,  8.00, 'Teamwork hoàn hảo'),
+(5, 6,  8.00, 'Chấp hành thể lệ tốt'),
+(5, 7,  8.00, 'Học thêm chứng chỉ PMI'),
 -- Cuoi nam 2025: NV009 (Tổng 8.3 ~ 83/100)
-(6, 1, 25.00, 'Tot'),
-(6, 2, 18.00, 'Dung han'),
-(6, 3,  8.00, 'Sang tao trong UX'),
-(6, 4,  8.00, 'Kien thuc tot'),
-(6, 5,  8.00, 'Tot'),
-(6, 6,  8.00, 'Nghiem tuc'),
-(6, 7,  8.00, 'Luon tich cuc nang cao tay nghe'),
+(6, 1, 25.00, 'Tốt'),
+(6, 2, 18.00, 'Đúng hạn'),
+(6, 3,  8.00, 'Sáng tạo trong UX'),
+(6, 4,  8.00, 'Kiến thức tốt'),
+(6, 5,  8.00, 'Tốt'),
+(6, 6,  8.00, 'Nghiêm túc'),
+(6, 7,  8.00, 'Luôn tích cực nâng cao tay nghề'),
 -- Cuoi nam 2025: NV010 (Tổng 7.6 ~ 76/100)
-(7, 1, 24.00, 'Hoan thanh cong viec'),
-(7, 2, 16.00, 'Khac phuc tinh trang tre deadline'),
-(7, 3,  7.00, 'Binh thuong'),
-(7, 4,  7.00, 'Khong thay doi nhieu'),
-(7, 5,  7.00, 'Da cai thien giao tiep voi dong nghiep'),
-(7, 6,  8.00, 'Da han che viec di muon'),
-(7, 7,  7.00, 'Binh thuong');
+(7, 1, 24.00, 'Hoàn thành công việc'),
+(7, 2, 16.00, 'Khắc phục tình trạng trễ deadline'),
+(7, 3,  7.00, 'Bình thường'),
+(7, 4,  7.00, 'Không thay đổi nhiều'),
+(7, 5,  7.00, 'Đã cải thiện giao tiếp với đồng nghiệp'),
+(7, 6,  8.00, 'Đã hạn chế việc đi muộn'),
+(7, 7,  7.00, 'Bình thường');
 
 -- =====================================================
 -- 15. TUYỂN DỤNG
 -- =====================================================
 -- Bước 1: Tạo yêu cầu tuyển dụng (YEUCAUTUYENDUNG)
 INSERT INTO YEUCAUTUYENDUNG (maPhongBan, maChucVu, soLuong, lyDo, mucLuongDuKien, yeuCauKinhNghiem, yeuCauHocVan, hanTuyenDung, nguoiDuyet, ngayDuyet, trangThai) VALUES
-('PHONGIT',  'NV',  1, 'Mo rong team, tang tai nang IT',    '20-30 trieu',  'Java/Spring Boot, 3+ nam KN', 'Dai hoc CNTT',      '2026-02-28', NULL, '2026-01-12', 'da_duyet'),
-('PHONGKT',  'KTV', 1, 'Bo sung nhan luc phong KT',          '10-15 trieu',  'Ke toan tong hop 2+ nam',     'Dai hoc Ke toan',   '2026-03-15', NULL, '2026-01-18', 'da_duyet'),
-('PHONGNS',  'NSV', 1, 'Tang cuong tuyen dung cho Q2',       '9-13 trieu',   'Tuyen dung, C&B, Excel',      'Dai hoc QTKD/NS',   '2026-02-15', NULL, '2026-01-22', 'da_duyet'),
-('PHONGMKT', 'NV',  1, 'Tuyen them NV cho chien dich H1',    '10-15 trieu',  'Digital marketing, SEO/SEM',  'Dai hoc Marketing', '2026-03-31', NULL, NULL,         'cho_duyet');
+('PHONGIT',  'NV',  1, 'Mở rộng team, tăng tài năng IT',     '20-30 triệu',  'Java/Spring Boot, 3+ năm KN', 'Đại học CNTT',      '2026-02-28', NULL, '2026-01-12', 'da_duyet'),
+('PHONGKT',  'KTV', 1, 'Bổ sung nhân lực phòng KT',          '10-15 triệu',  'Kế toán tổng hợp 2+ năm',     'Đại học Kế toán',   '2026-03-15', NULL, '2026-01-18', 'da_duyet'),
+('PHONGNS',  'NSV', 1, 'Tăng cường tuyển dụng cho Q2',       '9-13 triệu',   'Tuyển dụng, C&B, Excel',      'Đại học QTKD/NS',   '2026-02-15', NULL, '2026-01-22', 'da_duyet'),
+('PHONGMKT', 'NV',  1, 'Tuyển thêm NV cho chiến dịch H1',    '10-15 triệu',  'Digital marketing, SEO/SEM',  'Đại học Marketing', '2026-03-31', NULL, NULL,         'cho_duyet');
 
 -- Bước 2: Đăng tin tuyển dụng (TINTUYENDUNG) - tương ứng với maYeuCau 1,2,3,4
 INSERT INTO TINTUYENDUNG (maYeuCau, tieuDe, noiDung, mucLuong, diaDiem, hanNopHoSo, trangThai) VALUES
-(1, 'Tuyen Senior IT Developer',   'Phat trien he thong, Java/Spring Boot, 3+ nam KN',        '20-30 trieu',  'TP.HCM', '2026-02-28', 'dang_tuyen'),
-(2, 'Tuyen Ke toan vien',          'Ke toan tong hop, thue, co kinh nghiem 2+ nam',           '10-15 trieu',  'TP.HCM', '2026-03-15', 'dang_tuyen'),
-(3, 'Tuyen Nhan su vien',          'Tuyen dung, C&B, thong thao Excel',                        '9-13 trieu',   'TP.HCM', '2026-02-15', 'tam_dung'),
-(4, 'Tuyen Marketing Executive',   'Digital marketing, SEO/SEM, content',                     '10-15 trieu',  'TP.HCM', '2026-03-31', 'dang_tuyen');
+(1, 'Tuyển Senior IT Developer',   'Phát triển hệ thống, Java/Spring Boot, 3+ năm KN',         '20-30 triệu',  'TP.HCM', '2026-02-28', 'dang_tuyen'),
+(2, 'Tuyển Kế toán viên',          'Kế toán tổng hợp, thuế, có kinh nghiệm 2+ năm',            '10-15 triệu',  'TP.HCM', '2026-03-15', 'dang_tuyen'),
+(3, 'Tuyển Nhân sự viên',          'Tuyển dụng, C&B, thông thạo Excel',                         '9-13 triệu',   'TP.HCM', '2026-02-15', 'tam_dung'),
+(4, 'Tuyển Marketing Executive',   'Digital marketing, SEO/SEM, content',                      '10-15 triệu',  'TP.HCM', '2026-03-31', 'dang_tuyen');
 
 -- Bước 3: Ứng viên (UNGVIEN) - maTin tham chiếu TINTUYENDUNG
 INSERT INTO UNGVIEN (maTin, hoTen, email, dienThoai, ngaySinh, gioiTinh, trinhDoHocVan, kinhNghiem, nguonUngTuyen, trangThai, nhanXet) VALUES
-(1, 'Tran Van An',    'an.tran@gmail.com',   '0912345001', '1992-05-10', 'nam', 'Dai hoc CNTT', '5 nam Java/Spring Boot',     'LinkedIn',   'dang_phong_van', 'Ung vien tiem nang Senior Java'),
-(1, 'Nguyen Thi Be',  'be.nguyen@gmail.com', '0912345002', '1990-08-15', 'nu',  'Dai hoc CNTT', 'Fullstack, kinh nghiem 5 nam','TopCV',      'dang_phong_van', 'Fullstack, kinh nghiem 5 nam'),
-(2, 'Le Minh Cuong',  'cuong.le@gmail.com',  '0912345003', '1995-03-22', 'nam', 'Dai hoc KT',   'Ke toan tong hop 3 nam',     'VietnamWorks','moi',            NULL),
-(3, 'Pham Thi Dieu',  'dieu.pham@gmail.com', '0912345004', '1993-11-01', 'nu',  'Dai hoc QTKD', 'NS tuyen dung cong ty lon',  'Referral',   'moi',            'NSV truoc day o cong ty lon'),
-(4, 'Hoang Van Em',   'em.hoang@gmail.com',  '0912345005', '1997-07-18', 'nam', 'Dai hoc MKT',  'Digital marketing 2 nam',    'TopCV',      'moi',            NULL);
+(1, 'Trần Văn An',    'an.tran@gmail.com',   '0912345001', '1992-05-10', 'nam', 'Đại học CNTT', '5 năm Java/Spring Boot',      'LinkedIn',   'dang_phong_van', 'Ứng viên tiềm năng Senior Java'),
+(1, 'Nguyễn Thị Bé',  'be.nguyen@gmail.com', '0912345002', '1990-08-15', 'nu',  'Đại học CNTT', 'Fullstack, kinh nghiệm 5 năm', 'TopCV',      'dang_phong_van', 'Fullstack, kinh nghiệm 5 năm'),
+(2, 'Lê Minh Cường',  'cuong.le@gmail.com',  '0912345003', '1995-03-22', 'nam', 'Đại học KT',   'Kế toán tổng hợp 3 năm',      'VietnamWorks','moi',            NULL),
+(3, 'Phạm Thị Diệu',  'dieu.pham@gmail.com', '0912345004', '1993-11-01', 'nu',  'Đại học QTKD', 'NS tuyển dụng công ty lớn',   'Referral',   'moi',            'NSV trước đây ở công ty lớn'),
+(4, 'Hoàng Văn Em',   'em.hoang@gmail.com',  '0912345005', '1997-07-18', 'nam', 'Đại học MKT',  'Digital marketing 2 năm',     'TopCV',      'moi',            NULL);
 
 -- =====================================================
 -- 16. THÔNG BÁO
@@ -898,19 +898,19 @@ INSERT INTO THONGBAO (tieuDe, noiDung, loaiThongBao, maTaiKhoanGui, maTaiKhoanNh
  'BGD Công ty TNHH ABC Technology chân thành chúc toàn thể CBNV một năm mới 2026 an khang thịnh vượng!',
  'thong_bao_chung', 2, 13, FALSE, NULL),
 ('Bảng lương T01/2026 đã sẵn sàng',
- 'BL thang 01/2026 da duoc phe duyet. Vui long dang nhap de kiem tra.',
+ 'BL tháng 01/2026 đã được phê duyệt. Vui lòng đăng nhập để kiểm tra.',
  'he_thong', 1, 2,  FALSE, NULL),
 ('Bảng lương T01/2026 đã sẵn sàng',
- 'BL thang 01/2026 da duoc phe duyet. Vui long dang nhap de kiem tra.',
+ 'BL tháng 01/2026 đã được phê duyệt. Vui lòng đăng nhập để kiểm tra.',
  'he_thong', 1, 9,  FALSE, NULL),
 ('Đơn nghỉ phép đã được phê duyệt',
- 'Don nghi phep ngay 14/01/2026 cua ban da duoc phe duyet. Chuc ban nghi vui!',
+ 'Đơn nghỉ phép ngày 14/01/2026 của bạn đã được phê duyệt. Chúc bạn nghỉ vui!',
  'don_tu', 1, 3,    TRUE,  '2026-01-13 17:00:00'),
 ('Đơn nghỉ phép đã được phê duyệt',
- 'Don nghi phep 10-13/02/2026 cua ban da duoc phe duyet.',
+ 'Đơn nghỉ phép 10-13/02/2026 của bạn đã được phê duyệt.',
  'don_tu', 10, 11,  FALSE, NULL),
 ('Yêu cầu tuyển dụng mới cần phê duyệt',
- 'NV008 (TP IT) gui yeu cau tuyen 1 Senior Developer. Vui long xem xet.',
+ 'NV008 (TP IT) gửi yêu cầu tuyển 1 Senior Developer. Vui lòng xem xét.',
  'don_tu', 3, 2,    TRUE,  '2026-01-12 09:00:00'),
 ('Lịch đánh giá Q1/2026 sắp diễn ra',
  'Đợt đánh giá hiệu suất Q1/2026 bắt đầu 06/04/2026. Mời CBQL chuẩn bị tiêu chí.',
@@ -924,12 +924,12 @@ INSERT INTO THONGBAO (tieuDe, noiDung, loaiThongBao, maTaiKhoanGui, maTaiKhoanNh
 -- =====================================================
 DELETE FROM CAUHINH_PHUCAP;
 INSERT INTO CAUHINH_PHUCAP (loai, tenKhoan, kieuTinh, giaTri, nguon, hoatDong) VALUES
-('phu_cap', 'Phu cap an trua',              'co_dinh',   750000, 'CongTy',   1),
-('phu_cap', 'Phu cap dien thoai',           'co_dinh',   500000, 'CongTy',   1),
-('phu_cap', 'Phu cap di lai',               'co_dinh',   600000, 'CongTy',   1),
-('phu_cap', 'Phu cap tham nien (3-5 nam)',  'co_dinh',   500000, 'CongTy',   1),
-('phu_cap', 'Phu cap tham nien (5+ nam)',   'co_dinh',  1000000, 'CongTy',   1),
-('phu_cap', 'Thuong hieu qua hang thang',   'phan_tram',   5.00, 'CongTy',   1),
+('phu_cap', 'Phụ cấp ăn trưa',               'co_dinh',   750000, 'CongTy',   1),
+('phu_cap', 'Phụ cấp điện thoại',            'co_dinh',   500000, 'CongTy',   1),
+('phu_cap', 'Phụ cấp đi lại',                'co_dinh',   600000, 'CongTy',   1),
+('phu_cap', 'Phụ cấp thâm niên (3-5 năm)',   'co_dinh',   500000, 'CongTy',   1),
+('phu_cap', 'Phụ cấp thâm niên (5+ năm)',    'co_dinh',  1000000, 'CongTy',   1),
+('phu_cap', 'Thưởng hiệu quả hàng tháng',    'phan_tram',   5.00, 'CongTy',   1),
 ('khau_tru','BHXH NLD (8%)',               'phan_tram',   8.00, 'LuatDinh', 1),
 ('khau_tru','BHYT NLD (1.5%)',             'phan_tram',   1.50, 'LuatDinh', 1),
 ('khau_tru','BHTN NLD (1%)',               'phan_tram',   1.00, 'LuatDinh', 1),

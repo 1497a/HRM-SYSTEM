@@ -2,6 +2,7 @@ package com.hrm.bus;
 
 import com.hrm.dao.ChucVuDAO;
 import com.hrm.dao.LichSuLuongDAO;
+import com.hrm.dao.BoNhiemDAO;
 import com.hrm.model.ChucVu;
 import com.hrm.model.LichSuHeSoLuong;
 import com.hrm.util.SessionContext;
@@ -20,6 +21,7 @@ public class ChucVuBUS {
 
     private final ChucVuDAO positionRepo = new ChucVuDAO();
     private final LichSuLuongDAO historyRepo = LichSuLuongDAO.getInstance();
+    private final BoNhiemDAO boNhiemRepo = BoNhiemDAO.getInstance();
 
     /**
      * Lấy tất cả chức vụ.
@@ -172,6 +174,10 @@ public class ChucVuBUS {
 
         if (pos == null) {
             throw new IllegalArgumentException("Không tìm thấy chức vụ.");
+        }
+
+        if (boNhiemRepo.hasActiveBoNhiemByChucVu(maChucVu)) {
+            throw new IllegalArgumentException("Không thể ngừng hoạt động chức vụ vì còn nhân viên đang giữ chức vụ này.");
         }
 
         pos.setTrangThai("ngung_hoat_dong");
