@@ -178,16 +178,7 @@ public class UngVien {
      * Trả về tên trạng thái bằng tiếng Việt.
      */
     public String getTrangThaiDisplay() {
-        if (maNV != null && !maNV.isEmpty()) return "Đã chuyển thành nhân viên";
-        if (trangThai == null) return "";
-        switch (trangThai) {
-            case "moi":             return "Mới";
-            case "dang_phong_van":  return "Đang phỏng vấn";
-            case "trung_tuyen":     return "Trúng Tuyển";
-            case "da_chuyen_nhan_vien": return "Đã chuyển thành nhân viên";
-            case "tu_choi":         return "Từ chối";
-            default:                return trangThai;
-        }
+        return RecruitmentStatus.displayUngVien(trangThai, maNV);
     }
 
     @Override

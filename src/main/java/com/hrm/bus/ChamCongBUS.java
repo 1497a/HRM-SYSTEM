@@ -17,6 +17,8 @@ public class ChamCongBUS {
 
     private static ChamCongBUS instance;
     private final ChamCongDAO repository;
+    private static final String ACTION_ATTENDANCE_VIEW = "ATTENDANCE_VIEW";
+    private static final String ACTION_ATTENDANCE_APPROVE = "ATTENDANCE_APPROVE";
 
     /** Số giờ OT tối đa trong một tháng */
     private static final double OT_TONG_TOI_DA_THANG = 40.0;
@@ -48,11 +50,11 @@ public class ChamCongBUS {
 
     // Legacy: used by existing AttendancePanel
     public List<CaLam> getDanhSachCaLam() {
-        return repository.findActiveCaLam();
+        return getActiveCaLam();
     }
 
     public List<CaLam> getTatCaCaLam() {
-        return repository.findAllCaLam();
+        return getAllCaLam();
     }
 
     /**
@@ -125,6 +127,9 @@ public class ChamCongBUS {
      */
     public KetQua<ChamCong> checkIn(String maNV, String maCaLam, String phuongThuc) {
         LocalDate today = LocalDate.now();
+        if (isBlank(maNV)) {
+            return KetQua.error("Mã nhân viên không hợp lệ.");
+        }
         if (repository.findChamCongByNVAndNgay(maNV, today) != null) {
             return KetQua.error("Bạn đã check-in hôm nay rồi.");
         }
@@ -133,34 +138,10 @@ public class ChamCongBUS {
             return KetQua.error("Ca làm không hợp lệ.");
         }
 
-        LocalDateTime now = LocalDateTime.now();
-        ChamCong cc = new ChamCong();
-        cc.setMaNV(maNV);
-        cc.setNgay(today);
-        cc.setMaCaLam(maCaLam);
-        cc.setTenCaLam(caLam.getTenCaLam());
-        cc.setGioVao(now);
-
-        // Xác định phương thức chấm công
-        ChamCong.PhuongThuc pt = ChamCong.PhuongThuc.THU_CONG;
-        if (phuongThuc != null) {
-            try {
-                pt = ChamCong.PhuongThuc.fromDbValue(phuongThuc);
-            } catch (IllegalArgumentException ignored) {}
-        }
-        cc.setPhuongThucChamCong(pt);
-
-        // Xác định trạng thái: đi muộn nếu quá 15 phút
-        LocalTime gioBatDau = caLam.getGioBatDau();
-        LocalTime gioVaoActual = now.toLocalTime();
-        if (gioVaoActual.isAfter(gioBatDau.plusMinutes(PHUT_DI_MUON))) {
-            cc.setTrangThai(ChamCong.TrangThai.DI_MUON);
-        } else {
-            cc.setTrangThai(ChamCong.TrangThai.DUNG_GIO);
-        }
+        ChamCong cc = taoBanGhiCheckIn(maNV, today, caLam, LocalDateTime.now(), resolvePhuongThuc(phuongThuc), false);
 
         repository.saveChamCong(cc);
-        return KetQua.success(cc, "Check-in thành công lúc " + now.toLocalTime().toString().substring(0, 5) + ".");
+        return KetQua.success(cc, "Check-in thành công lúc " + cc.getGioVao().toLocalTime().toString().substring(0, 5) + ".");
     }
 
     // Legacy: used by existing AttendancePanel
@@ -172,6 +153,9 @@ public class ChamCongBUS {
      * Check-out: tính soGioLam, gioLamThem nếu có OT đã duyệt.
      */
     public KetQua<ChamCong> checkOut(String maNV) {
+        if (isBlank(maNV)) {
+            return KetQua.error("Mã nhân viên không hợp lệ.");
+        }
         LocalDate today = LocalDate.now();
         ChamCong cc = repository.findChamCongByNVAndNgay(maNV, today);
         if (cc == null) {
@@ -244,7 +228,7 @@ public class ChamCongBUS {
     }
 
     public List<ChamCong> getChamCongTatCaTheoThangByScope(int thang, int nam, String currentMaNV) {
-        com.hrm.model.DataScope scope = com.hrm.bus.XacThucBUS.getInstance().getScopeForAction("ATTENDANCE_VIEW");
+        com.hrm.model.DataScope scope = getScopeForAction(ACTION_ATTENDANCE_VIEW);
         return repository.findByThangByScope(thang, nam, scope, currentMaNV);
     }
 
@@ -267,12 +251,8 @@ public class ChamCongBUS {
      * Validate: tổng OT trong tháng không vượt quá 40 giờ.
      */
     public KetQua<DangKyLamThem> taoDonLamThem(String maNV, LocalDate ngay, double soGio, String lyDo) {
-        if (soGio <= 0 || soGio > 8) {
-            return KetQua.error("Số giờ OT phải từ 0.5 đến 8 giờ.");
-        }
-        if (lyDo == null || lyDo.trim().isEmpty()) {
-            return KetQua.error("Vui lòng nhập lý do làm thêm.");
-        }
+        KetQua<Void> overtimeValidation = validateOvertimeInput(soGio, lyDo);
+        if (!overtimeValidation.isSuccess()) return KetQua.error(overtimeValidation.getMessage());
 
         // Kiểm tra tổng OT trong tháng
         double tongOTThang = repository.getTongGioOTDaDuyetTrongThang(maNV, ngay.getMonthValue(), ngay.getYear());
@@ -292,46 +272,14 @@ public class ChamCongBUS {
      * Duyệt đơn OT.
      */
     public KetQua<DangKyLamThem> duyetDonLamThem(int maDK, String nguoiDuyetId) {
-        DangKyLamThem dk = repository.findById(maDK);
-        if (dk == null) {
-            return KetQua.error("Không tìm thấy đơn OT.");
-        }
-        if (!dk.dangChoDuyet()) {
-            return KetQua.error("Đơn đã được xử lý rồi.");
-        }
-        if (SelfApprovalGuard.isSelfAction(nguoiDuyetId, dk.getMaNV())
-                && !SelfApprovalGuard.currentUserCanBypassSelfRestriction()) {
-            return KetQua.error("Bạn không thể tự duyệt đơn làm thêm của chính mình.");
-        }
-        LocalDateTime now = LocalDateTime.now();
-        repository.updateTrangThai(maDK, "da_duyet", nguoiDuyetId, now);
-        dk.setTrangThai(DangKyLamThem.TrangThai.DA_DUYET);
-        dk.setNguoiDuyet(nguoiDuyetId);
-        dk.setNgayDuyet(now);
-        return KetQua.success(dk, "Đã duyệt đơn làm thêm.");
+        return processOTRequest(maDK, nguoiDuyetId, true);
     }
 
     /**
      * Từ chối đơn OT.
      */
     public KetQua<DangKyLamThem> tuChoiDonLamThem(int maDK, String nguoiDuyetId) {
-        DangKyLamThem dk = repository.findById(maDK);
-        if (dk == null) {
-            return KetQua.error("Không tìm thấy đơn OT.");
-        }
-        if (!dk.dangChoDuyet()) {
-            return KetQua.error("Đơn đã được xử lý rồi.");
-        }
-        if (SelfApprovalGuard.isSelfAction(nguoiDuyetId, dk.getMaNV())
-                && !SelfApprovalGuard.currentUserCanBypassSelfRestriction()) {
-            return KetQua.error("Bạn không thể tự từ chối đơn làm thêm của chính mình.");
-        }
-        LocalDateTime now = LocalDateTime.now();
-        repository.updateTrangThai(maDK, "tu_choi", nguoiDuyetId, now);
-        dk.setTrangThai(DangKyLamThem.TrangThai.TU_CHOI);
-        dk.setNguoiDuyet(nguoiDuyetId);
-        dk.setNgayDuyet(now);
-        return KetQua.success(dk, "Đã từ chối đơn làm thêm.");
+        return processOTRequest(maDK, nguoiDuyetId, false);
     }
 
     public List<DangKyLamThem> getDonChoDuyet() {
@@ -339,7 +287,7 @@ public class ChamCongBUS {
     }
 
     public List<DangKyLamThem> getDonChoDuyetOTByScope(String currentMaNV) {
-        com.hrm.model.DataScope scope = com.hrm.bus.XacThucBUS.getInstance().getScopeForAction("ATTENDANCE_APPROVE");
+        com.hrm.model.DataScope scope = getScopeForAction(ACTION_ATTENDANCE_APPROVE);
         return repository.findChoDuyetOTByScope(scope, currentMaNV);
     }
 
@@ -349,7 +297,7 @@ public class ChamCongBUS {
     }
 
     public List<DangKyLamThem> getDonByMaNV(String maNV) {
-        return repository.findByMaNV(maNV);
+        return getDonLamThemCuaNV(maNV);
     }
 
     public List<DangKyLamThem> getDonLamThemCuaNV(String maNV) {
@@ -358,7 +306,10 @@ public class ChamCongBUS {
 
     // Legacy compat
     public KetQua<DangKyLamThem> duyetDonLamThem(int maDK, String nguoiDuyetId, double heSoOT) {
-        return duyetDonLamThem(maDK, nguoiDuyetId);
+        if (heSoOT <= 0) {
+            return KetQua.error("Hệ số OT phải lớn hơn 0.");
+        }
+        return processOTRequest(maDK, nguoiDuyetId, true, heSoOT);
     }
 
     /** Get all OT requests (all statuses). */
@@ -368,7 +319,7 @@ public class ChamCongBUS {
 
     /** Get all OT requests by scope. */
     public List<DangKyLamThem> getDonLamThemTatCaByScope(String currentMaNV) {
-        com.hrm.model.DataScope scope = com.hrm.bus.XacThucBUS.getInstance().getScopeForAction("ATTENDANCE_VIEW");
+        com.hrm.model.DataScope scope = getScopeForAction(ACTION_ATTENDANCE_VIEW);
         return repository.findAllDangKyLamThemByScope(scope, currentMaNV);
     }
 
@@ -389,12 +340,14 @@ public class ChamCongBUS {
         return repository.findAllCauHinhPC();
     }
 
+    public CauHinhPhuCap getCauHinhPCById(int maPC) {
+        return repository.findCauHinhPCById(maPC);
+    }
+
     public KetQua<CauHinhPhuCap> themCauHinhPC(ThanhPhanLuong.Loai loai, String tenKhoan,
             CauHinhPhuCap.KieuTinh kieuTinh, double giaTri, String nguon) {
-        if (tenKhoan == null || tenKhoan.trim().isEmpty()) {
-            return KetQua.error("Tên khoản không được để trống.");
-        }
-        if (giaTri <= 0) return KetQua.error("Giá trị phải lớn hơn 0.");
+        KetQua<Void> validation = validateKhoanLuongInput(tenKhoan, giaTri);
+        if (!validation.isSuccess()) return KetQua.error(validation.getMessage());
         CauHinhPhuCap pc = new CauHinhPhuCap(loai, tenKhoan.trim(), kieuTinh, giaTri, nguon);
         repository.insertCauHinhPC(pc);
         return KetQua.success(pc, "Đã thêm khoản '" + tenKhoan + "'.");
@@ -404,10 +357,8 @@ public class ChamCongBUS {
             CauHinhPhuCap.KieuTinh kieuTinh, double giaTri, String nguon) {
         CauHinhPhuCap pc = repository.findCauHinhPCById(maPC);
         if (pc == null) return KetQua.error("Không tìm thấy khoản phụ cấp.");
-        if (tenKhoan == null || tenKhoan.trim().isEmpty()) {
-            return KetQua.error("Tên khoản không được để trống.");
-        }
-        if (giaTri <= 0) return KetQua.error("Giá trị phải lớn hơn 0.");
+        KetQua<Void> validation = validateKhoanLuongInput(tenKhoan, giaTri);
+        if (!validation.isSuccess()) return KetQua.error(validation.getMessage());
         pc.setLoai(loai);
         pc.setTenKhoan(tenKhoan.trim());
         pc.setKieuTinh(kieuTinh);
@@ -434,6 +385,7 @@ public class ChamCongBUS {
      *        fallback ca gần nhất trong vòng ±2h.
      */
     public KetQua<ChamCong> checkInAuto(String maNV, boolean laOT) {
+        if (isBlank(maNV)) return KetQua.error("Mã nhân viên không hợp lệ.");
         if (repository.findChamCongByNVAndNgay(maNV, LocalDate.now()) != null)
             return KetQua.error("Bạn đã check-in hôm nay rồi.");
 
@@ -464,18 +416,13 @@ public class ChamCongBUS {
             return KetQua.error("Không tìm thấy ca làm phù hợp với giờ hiện tại ("
                 + nowTime.format(java.time.format.DateTimeFormatter.ofPattern("HH:mm")) + ").");
 
-        LocalDateTime now = LocalDateTime.now();
-        ChamCong cc = new ChamCong();
-        cc.setMaNV(maNV);
-        cc.setNgay(LocalDate.now());
-        cc.setMaCaLam(caLamPhuHop.getMaCaLam());
-        cc.setTenCaLam(caLamPhuHop.getTenCaLam());
-        cc.setGioVao(now);
-        cc.setPhuongThucChamCong(ChamCong.PhuongThuc.THU_CONG);
-        cc.setTrangThai(
-            now.toLocalTime().isAfter(caLamPhuHop.getGioBatDau().plusMinutes(PHUT_DI_MUON))
-                ? ChamCong.TrangThai.DI_MUON : ChamCong.TrangThai.DUNG_GIO);
-        cc.setLaOT(laOT);
+        ChamCong cc = taoBanGhiCheckIn(
+                maNV,
+                LocalDate.now(),
+                caLamPhuHop,
+                LocalDateTime.now(),
+                ChamCong.PhuongThuc.THU_CONG,
+                laOT);
         repository.saveChamCong(cc);
         String otTag = laOT ? " [CA OT]" : "";
         return KetQua.success(cc, "Check-in thành công" + otTag + " — Ca: "
@@ -505,6 +452,18 @@ public class ChamCongBUS {
         return repository.coOTDaDuyetTheoNgay(maNV, LocalDate.now());
     }
 
+    public String getMaNVByTaiKhoan(int maTaiKhoan) {
+        return repository.getMaNVByTaiKhoan(maTaiKhoan);
+    }
+
+    public String getMaNhanVienById(String maNV) {
+        return repository.getMaNhanVienById(maNV);
+    }
+
+    public ChamCongDAO.NhanVienInfo findNhanVienByMa(String maNV) {
+        return repository.findNhanVienByMa(maNV);
+    }
+
     // =====================================================================
     // ĐĂNG KÝ LÀM THÊM — overload với khoảng giờ
     // =====================================================================
@@ -514,11 +473,14 @@ public class ChamCongBUS {
             LocalTime gioVao, LocalTime gioRa, String lyDo) {
         if (gioVao == null || gioRa == null)
             return KetQua.error("Vui lòng nhập giờ bắt đầu và kết thúc OT.");
-        if (lyDo == null || lyDo.trim().isEmpty())
-            return KetQua.error("Vui lòng nhập lý do làm thêm.");
         double soGio = DangKyLamThem.tinhSoGioOT(gioVao, gioRa);
-        if (soGio < 0.5 || soGio > 8)
-            return KetQua.error("Khoảng thời gian OT phải từ 0.5 đến 8 giờ.");
+        KetQua<Void> overtimeValidation = validateOvertimeInput(soGio, lyDo);
+        if (!overtimeValidation.isSuccess()) {
+            if (overtimeValidation.getMessage().contains("Số giờ OT")) {
+                return KetQua.error("Khoảng thời gian OT phải từ 0.5 đến 8 giờ.");
+            }
+            return KetQua.error(overtimeValidation.getMessage());
+        }
         DangKyLamThem dk = new DangKyLamThem(maNV, ngay, gioVao, gioRa, lyDo.trim());
         repository.saveDangKyLamThem(dk);
         return KetQua.success(dk, "Đã tạo đơn OT: " + gioVao + " → " + gioRa
@@ -530,7 +492,98 @@ public class ChamCongBUS {
         DangKyLamThem dk = repository.findById(maDK);
         if (dk == null) return KetQua.error("Không tìm thấy đơn OT.");
         if (!dk.dangChoDuyet()) return KetQua.error("Chỉ xóa được đơn đang chờ duyệt.");
+        if (isBlank(maNV) || !maNV.equals(dk.getMaNV())) {
+            return KetQua.error("Bạn không có quyền xóa đơn OT này.");
+        }
         repository.deleteDangKyLamThem(maDK);
         return KetQua.success(null, "Đã xóa đơn OT.");
+    }
+
+    private KetQua<Void> validateOvertimeInput(double soGio, String lyDo) {
+        if (soGio < 0.5 || soGio > 8) {
+            return KetQua.error("Số giờ OT phải từ 0.5 đến 8 giờ.");
+        }
+        if (lyDo == null || lyDo.trim().isEmpty()) {
+            return KetQua.error("Vui lòng nhập lý do làm thêm.");
+        }
+        return KetQua.success(null, "");
+    }
+
+    private KetQua<Void> validateKhoanLuongInput(String tenKhoan, double giaTri) {
+        if (tenKhoan == null || tenKhoan.trim().isEmpty()) {
+            return KetQua.error("Tên khoản không được để trống.");
+        }
+        if (giaTri <= 0) {
+            return KetQua.error("Giá trị phải lớn hơn 0.");
+        }
+        return KetQua.success(null, "");
+    }
+
+    private KetQua<DangKyLamThem> processOTRequest(int maDK, String nguoiDuyetId, boolean approve) {
+        return processOTRequest(maDK, nguoiDuyetId, approve, null);
+    }
+
+    private KetQua<DangKyLamThem> processOTRequest(int maDK, String nguoiDuyetId, boolean approve, Double heSoOT) {
+        DangKyLamThem dk = repository.findById(maDK);
+        KetQua<Void> requestValidation = validateOTRequestForProcessing(dk);
+        if (!requestValidation.isSuccess()) return KetQua.error(requestValidation.getMessage());
+        if (SelfApprovalGuard.isSelfAction(nguoiDuyetId, dk.getMaNV())
+                && !SelfApprovalGuard.currentUserCanBypassSelfRestriction()) {
+            return KetQua.error(approve
+                    ? "Bạn không thể tự duyệt đơn làm thêm của chính mình."
+                    : "Bạn không thể tự từ chối đơn làm thêm của chính mình.");
+        }
+        if (approve && heSoOT != null) {
+            repository.updateHeSoOT(maDK, heSoOT);
+            dk.setHeSoOT(heSoOT);
+        }
+        LocalDateTime now = LocalDateTime.now();
+        repository.updateTrangThai(maDK, approve ? "da_duyet" : "tu_choi", nguoiDuyetId, now);
+        dk.setTrangThai(approve ? DangKyLamThem.TrangThai.DA_DUYET : DangKyLamThem.TrangThai.TU_CHOI);
+        dk.setNguoiDuyet(nguoiDuyetId);
+        dk.setNgayDuyet(now);
+        return KetQua.success(dk, approve ? "Đã duyệt đơn làm thêm." : "Đã từ chối đơn làm thêm.");
+    }
+
+    private ChamCong taoBanGhiCheckIn(String maNV, LocalDate ngay, CaLam caLam, LocalDateTime gioVao,
+            ChamCong.PhuongThuc phuongThuc, boolean laOT) {
+        ChamCong cc = new ChamCong();
+        cc.setMaNV(maNV);
+        cc.setNgay(ngay);
+        cc.setMaCaLam(caLam.getMaCaLam());
+        cc.setTenCaLam(caLam.getTenCaLam());
+        cc.setGioVao(gioVao);
+        cc.setPhuongThucChamCong(phuongThuc);
+        cc.setTrangThai(gioVao.toLocalTime().isAfter(caLam.getGioBatDau().plusMinutes(PHUT_DI_MUON))
+                ? ChamCong.TrangThai.DI_MUON : ChamCong.TrangThai.DUNG_GIO);
+        cc.setLaOT(laOT);
+        return cc;
+    }
+
+    private ChamCong.PhuongThuc resolvePhuongThuc(String phuongThuc) {
+        if (isBlank(phuongThuc)) return ChamCong.PhuongThuc.THU_CONG;
+        try {
+            return ChamCong.PhuongThuc.fromDbValue(phuongThuc);
+        } catch (IllegalArgumentException ignored) {
+            return ChamCong.PhuongThuc.THU_CONG;
+        }
+    }
+
+    private KetQua<Void> validateOTRequestForProcessing(DangKyLamThem dk) {
+        if (dk == null) {
+            return KetQua.error("Không tìm thấy đơn OT.");
+        }
+        if (!dk.dangChoDuyet()) {
+            return KetQua.error("Đơn đã được xử lý rồi.");
+        }
+        return KetQua.success(null, "");
+    }
+
+    private com.hrm.model.DataScope getScopeForAction(String action) {
+        return XacThucBUS.getInstance().getScopeForAction(action);
+    }
+
+    private boolean isBlank(String value) {
+        return value == null || value.trim().isEmpty();
     }
 }

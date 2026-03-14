@@ -157,14 +157,7 @@ public class YeuCauTuyenDung {
      * Trả về tên trạng thái bằng tiếng Việt.
      */
     public String getTrangThaiDisplay() {
-        if (trangThai == null) return "";
-        switch (trangThai) {
-            case "cho_duyet":    return "Chờ duyệt";
-            case "da_duyet":     return "Đã duyệt";
-            case "tu_choi":      return "Từ chối";
-            case "da_tuyen_du":  return "Đã tuyển đủ";
-            default:             return trangThai;
-        }
+        return RecruitmentStatus.displayYeuCau(trangThai);
     }
 
     @Override

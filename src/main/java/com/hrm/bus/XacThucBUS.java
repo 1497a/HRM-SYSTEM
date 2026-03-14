@@ -18,6 +18,10 @@ import java.util.Set;
  */
 public class XacThucBUS {
 
+    private static final int MIN_PASSWORD_LENGTH = 6;
+    private static final String ROLE_ADMIN = "ADMIN";
+    private static final String USERNAME_ADMIN = "admin";
+
     private static XacThucBUS instance;
     private final TaiKhoanDAO taiKhoanRepo;
 
@@ -45,30 +49,11 @@ public class XacThucBUS {
      * @return TaiKhoan nếu thành công, null nếu thất bại
      */
     public TaiKhoan authenticate(String username, String password) {
-        if (username == null || username.trim().isEmpty()) {
-            return null;
-        }
-        if (password == null || password.isEmpty()) {
-            return null;
-        }
+        if (isBlank(username) || isBlank(password)) return null;
 
         TaiKhoan user = taiKhoanRepo.findByUsername(username.trim());
-
-        if (user == null) {
-            return null;
-        }
-
-        if (!user.isHoatDong()) {
-            return null;
-        }
-
-        if (user.isBiKhoa()) {
-            return null;
-        }
-
-        if (!PasswordUtil.verifyPassword(password, user.getMatKhau())) {
-            return null;
-        }
+        if (user == null || !user.isHoatDong() || user.isBiKhoa()) return null;
+        if (!PasswordUtil.verifyPassword(password, user.getMatKhau())) return null;
 
         SessionContext.getInstance().setCurrentUser(user);
         return user;
@@ -105,14 +90,14 @@ public class XacThucBUS {
 
     private boolean isBuiltInAdminAccount(TaiKhoan user) {
         if (user == null) return false;
-        return "admin".equalsIgnoreCase(user.getTenDangNhap());
+        return USERNAME_ADMIN.equalsIgnoreCase(user.getTenDangNhap());
     }
 
     private boolean isCurrentAdminSelfUpdate(TaiKhoan target) {
         if (target == null) return false;
         TaiKhoan current = SessionContext.getInstance().getCurrentUser();
         if (current == null || current.getId() != target.getId()) return false;
-        return current.coVaiTro("ADMIN");
+        return current.coVaiTro(ROLE_ADMIN);
     }
 
     /**
@@ -125,7 +110,7 @@ public class XacThucBUS {
     public com.hrm.model.DataScope getScopeForAction(String action) {
         TaiKhoan user = getCurrentUser();
         if (user == null) return com.hrm.model.DataScope.NONE;
-        if ("admin".equalsIgnoreCase(user.getTenDangNhap()) || user.coVaiTro("ADMIN")) {
+        if (USERNAME_ADMIN.equalsIgnoreCase(user.getTenDangNhap()) || user.coVaiTro(ROLE_ADMIN)) {
             return com.hrm.model.DataScope.ALL;
         }
         for (com.hrm.model.VaiTro role : user.getVaiTros()) {
@@ -155,12 +140,11 @@ public class XacThucBUS {
      * Đổi mật khẩu cho người dùng (yêu cầu xác minh mật khẩu cũ).
      */
     public KetQua<Void> changePassword(int userId, String oldPass, String newPass) {
-        if (oldPass == null || oldPass.isEmpty()) {
+        if (isBlank(oldPass)) {
             return KetQua.error("Mật khẩu cũ không được để trống.");
         }
-        if (newPass == null || newPass.length() < 6) {
-            return KetQua.error("Mật khẩu mới phải có ít nhất 6 ký tự.");
-        }
+        KetQua<Void> passwordValidation = validateNewPassword(newPass);
+        if (!passwordValidation.isSuccess()) return passwordValidation;
 
         TaiKhoan user = taiKhoanRepo.findById(userId);
         if (user == null) {
@@ -170,27 +154,16 @@ public class XacThucBUS {
             return KetQua.error("Mật khẩu cũ không đúng.");
         }
 
-        String hashedNew = PasswordUtil.hashPassword(newPass);
-        boolean updated = taiKhoanRepo.updatePassword(userId, hashedNew);
-        if (updated) {
-            return KetQua.success(null, "Đổi mật khẩu thành công.");
-        }
-        return KetQua.error("Không thể cập nhật mật khẩu. Vui lòng thử lại.");
+        return updatePassword(userId, newPass, "Đổi mật khẩu thành công.", "Không thể cập nhật mật khẩu. Vui lòng thử lại.");
     }
 
     /**
      * Admin reset mật khẩu người dùng khác (không cần mật khẩu cũ).
      */
     public KetQua<Void> resetPassword(int userId, String newPass) {
-        if (newPass == null || newPass.isEmpty()) {
-            return KetQua.error("Mật khẩu mới không được để trống.");
-        }
-        String hashedNew = PasswordUtil.hashPassword(newPass);
-        boolean updated = taiKhoanRepo.updatePassword(userId, hashedNew);
-        if (updated) {
-            return KetQua.success(null, "Đã cập nhật mật khẩu thành công.");
-        }
-        return KetQua.error("Không thể cập nhật mật khẩu.");
+        KetQua<Void> passwordValidation = validateNewPassword(newPass);
+        if (!passwordValidation.isSuccess()) return passwordValidation;
+        return updatePassword(userId, newPass, "Đã cập nhật mật khẩu thành công.", "Không thể cập nhật mật khẩu.");
     }
 
     // =====================================================================
@@ -213,13 +186,13 @@ public class XacThucBUS {
      */
     public KetQua<Integer> createUser(String tenDangNhap, String matKhau,
                                       String maNV, String maVaiTro, String email) {
-        if (tenDangNhap == null || tenDangNhap.trim().isEmpty()) {
+        if (isBlank(tenDangNhap)) {
             return KetQua.error("Tên đăng nhập không được để trống.");
         }
         if (matKhau == null || matKhau.isEmpty()) {
             return KetQua.error("Mật khẩu không được để trống.");
         }
-        if (maVaiTro == null || maVaiTro.trim().isEmpty()) {
+        if (isBlank(maVaiTro)) {
             return KetQua.error("Vai trò không được để trống.");
         }
 
@@ -229,8 +202,9 @@ public class XacThucBUS {
         }
 
         // Kiểm tra mỗi nhân viên chỉ có 1 tài khoản
-        if (maNV != null && !maNV.trim().isEmpty()) {
-            TaiKhoan existing = taiKhoanRepo.findByMaNV(maNV);
+        String normalizedMaNV = normalizeOptional(maNV);
+        if (normalizedMaNV != null) {
+            TaiKhoan existing = taiKhoanRepo.findByMaNV(normalizedMaNV);
             if (existing != null) {
                 return KetQua.error("Nhân viên này đã có tài khoản ('" + existing.getTenDangNhap()
                         + "'). Mỗi nhân viên chỉ được có một tài khoản.");
@@ -238,7 +212,7 @@ public class XacThucBUS {
         }
 
         String hashedPassword = PasswordUtil.hashPassword(matKhau);
-        int newId = taiKhoanRepo.insert(trimmedUsername, hashedPassword, maNV, maVaiTro.trim(), email);
+        int newId = taiKhoanRepo.insert(trimmedUsername, hashedPassword, normalizedMaNV, maVaiTro.trim(), email);
 
         if (newId < 0) {
             return KetQua.error("Không thể tạo tài khoản. Vui lòng thử lại.");
@@ -250,32 +224,17 @@ public class XacThucBUS {
      * Cập nhật thông tin tài khoản.
      */
     public KetQua<Void> updateUser(TaiKhoan user) {
-        if (user == null) {
-            return KetQua.error("Không tìm thấy tài khoản.");
-        }
-        TaiKhoan existing = taiKhoanRepo.findById(user.getId());
+        TaiKhoan existing = findExistingUser(user);
         if (existing == null) {
             return KetQua.error("Không tìm thấy tài khoản.");
         }
 
-        // Bảo vệ tài khoản admin hệ thống
-        if (isBuiltInAdminAccount(existing) || isCurrentAdminSelfUpdate(existing)) {
-            user.setHoatDong(true);
-            user.setBiKhoa(false);
-            VaiTro adminRole = getRoleByCode("ADMIN");
-            if (adminRole != null) {
-                List<VaiTro> fixedRoles = new ArrayList<>();
-                fixedRoles.add(adminRole);
-                user.setVaiTros(fixedRoles);
-            }
-        }
+        enforceAdminProtection(existing, user);
 
         try {
             taiKhoanRepo.update(user);
             // Cập nhật vai trò (lưu trực tiếp trong cột maVaiTro)
-            if (user.getVaiTros() != null && !user.getVaiTros().isEmpty()) {
-                taiKhoanRepo.updateRole(user.getId(), user.getVaiTros().get(0).getId());
-            }
+            updatePrimaryRole(user);
             return KetQua.success(null, "Cập nhật tài khoản thành công.");
         } catch (Exception e) {
             System.err.println("Lỗi updateUser: " + e.getMessage());
@@ -294,10 +253,10 @@ public class XacThucBUS {
         }
 
         TaiKhoan current = SessionContext.getInstance().getCurrentUser();
-        if (current != null && current.getId() == id && current.coVaiTro("ADMIN")) {
+        if (current != null && current.getId() == id && current.coVaiTro(ROLE_ADMIN)) {
             return KetQua.error("Không thể xóa tài khoản admin đang đăng nhập.");
         }
-        if ("admin".equalsIgnoreCase(user.getTenDangNhap())) {
+        if (USERNAME_ADMIN.equalsIgnoreCase(user.getTenDangNhap())) {
             return KetQua.error("Không thể xóa tài khoản admin hệ thống.");
         }
 
@@ -320,10 +279,10 @@ public class XacThucBUS {
     }
 
     public KetQua<Void> createRole(String maVaiTro, String tenVaiTro, String moTa) {
-        if (maVaiTro == null || maVaiTro.trim().isEmpty()) {
+        if (isBlank(maVaiTro)) {
             return KetQua.error("Mã vai trò không được để trống.");
         }
-        if (tenVaiTro == null || tenVaiTro.trim().isEmpty()) {
+        if (isBlank(tenVaiTro)) {
             return KetQua.error("Tên vai trò không được để trống.");
         }
 
@@ -355,7 +314,7 @@ public class XacThucBUS {
     }
 
     public KetQua<Void> deleteRole(String code) {
-        if (code == null || code.trim().isEmpty()) {
+        if (isBlank(code)) {
             return KetQua.error("Mã vai trò không hợp lệ.");
         }
         boolean deleted = taiKhoanRepo.deleteRole(code.trim());
@@ -374,10 +333,11 @@ public class XacThucBUS {
     }
 
     public KetQua<Void> setRolePermissions(String maVaiTro, List<String> permissionCodes) {
-        if (maVaiTro == null || maVaiTro.trim().isEmpty()) {
+        if (isBlank(maVaiTro)) {
             return KetQua.error("Mã vai trò không hợp lệ.");
         }
-        if ("ADMIN".equalsIgnoreCase(maVaiTro.trim())) {
+        String normalizedRoleCode = maVaiTro.trim();
+        if (ROLE_ADMIN.equalsIgnoreCase(normalizedRoleCode)) {
             return KetQua.error("Không thể chỉnh quyền vai trò ADMIN. ADMIN luôn toàn quyền.");
         }
         if (permissionCodes == null) {
@@ -385,7 +345,7 @@ public class XacThucBUS {
         }
 
         try {
-            taiKhoanRepo.setRolePermissions(maVaiTro.trim(), permissionCodes);
+            taiKhoanRepo.setRolePermissions(normalizedRoleCode, permissionCodes);
             return KetQua.success(null, "Cập nhật quyền cho vai trò thành công.");
         } catch (Exception e) {
             System.err.println("Lỗi setRolePermissions: " + e.getMessage());
@@ -398,7 +358,7 @@ public class XacThucBUS {
      * Tìm tài khoản theo mã nhân viên (String).
      */
     public TaiKhoan findByMaNV(String maNV) {
-        if (maNV == null || maNV.trim().isEmpty()) {
+        if (isBlank(maNV)) {
             return null;
         }
         return taiKhoanRepo.findByMaNV(maNV);
@@ -433,10 +393,7 @@ public class XacThucBUS {
             return KetQua.error("Không tìm thấy tài khoản.");
         }
 
-        if (isBuiltInAdminAccount(target) && !"ADMIN".equalsIgnoreCase(maVaiTro)) {
-            return KetQua.error("Không thể thay đổi vai trò của tài khoản admin.");
-        }
-        if (isCurrentAdminSelfUpdate(target) && !"ADMIN".equalsIgnoreCase(maVaiTro)) {
+        if (isProtectedAdminRoleChange(target, maVaiTro)) {
             return KetQua.error("Không thể thay đổi vai trò của tài khoản admin.");
         }
 
@@ -461,5 +418,61 @@ public class XacThucBUS {
         );
 
         return fromRoles;
+    }
+
+    private boolean isBlank(String value) {
+        return value == null || value.trim().isEmpty();
+    }
+
+    private String normalizeOptional(String value) {
+        if (isBlank(value)) return null;
+        return value.trim();
+    }
+
+    private KetQua<Void> validateNewPassword(String newPass) {
+        if (isBlank(newPass)) {
+            return KetQua.error("Mật khẩu mới không được để trống.");
+        }
+        if (newPass.length() < MIN_PASSWORD_LENGTH) {
+            return KetQua.error("Mật khẩu mới phải có ít nhất " + MIN_PASSWORD_LENGTH + " ký tự.");
+        }
+        return KetQua.success(null, "");
+    }
+
+    private KetQua<Void> updatePassword(int userId, String newPass, String successMsg, String failMsg) {
+        String hashedNew = PasswordUtil.hashPassword(newPass);
+        boolean updated = taiKhoanRepo.updatePassword(userId, hashedNew);
+        if (updated) return KetQua.success(null, successMsg);
+        return KetQua.error(failMsg);
+    }
+
+    private void enforceAdminProtection(TaiKhoan existing, TaiKhoan updateTarget) {
+        if (!(isBuiltInAdminAccount(existing) || isCurrentAdminSelfUpdate(existing))) {
+            return;
+        }
+        updateTarget.setHoatDong(true);
+        updateTarget.setBiKhoa(false);
+        VaiTro adminRole = getRoleByCode(ROLE_ADMIN);
+        if (adminRole == null) return;
+        List<VaiTro> fixedRoles = new ArrayList<>();
+        fixedRoles.add(adminRole);
+        updateTarget.setVaiTros(fixedRoles);
+    }
+
+    private void updatePrimaryRole(TaiKhoan user) {
+        if (user.getVaiTros() == null || user.getVaiTros().isEmpty()) {
+            return;
+        }
+        taiKhoanRepo.updateRole(user.getId(), user.getVaiTros().get(0).getId());
+    }
+
+    private TaiKhoan findExistingUser(TaiKhoan user) {
+        if (user == null) return null;
+        return taiKhoanRepo.findById(user.getId());
+    }
+
+    private boolean isProtectedAdminRoleChange(TaiKhoan target, String maVaiTro) {
+        return !ROLE_ADMIN.equalsIgnoreCase(maVaiTro)
+                && (isBuiltInAdminAccount(target) || isCurrentAdminSelfUpdate(target));
     }
 }

@@ -5,11 +5,11 @@ import com.hrm.model.BoNhiem;
 import com.hrm.model.PhongBan;
 import com.hrm.model.NhanVien;
 import com.hrm.model.ChucVu;
-import com.hrm.dao.PhongBanDAO;
-import com.hrm.dao.ChucVuDAO;
 import com.hrm.bus.BoNhiemBUS;
+import com.hrm.bus.ChucVuBUS;
 import com.hrm.bus.NhanVienBUS;
 import com.hrm.bus.KetQua;
+import com.hrm.bus.PhongBanBUS;
 import com.hrm.util.SessionContext;
 import com.hrm.util.UIColors;
 
@@ -32,9 +32,9 @@ public class AppointmentFormDialog extends JDialog {
     // Mode: view (read-only khi có boNhiem)
     private final BoNhiem boNhiemHienThi;
 
-    // Repositories
-    private final PhongBanDAO departmentRepo = new PhongBanDAO();
-    private final ChucVuDAO positionRepo = new ChucVuDAO();
+    // Services
+    private final PhongBanBUS departmentService = new PhongBanBUS();
+    private final ChucVuBUS positionService = new ChucVuBUS();
 
     // Form fields
     private JComboBox<NhanVien> cboNhanVien;
@@ -167,7 +167,7 @@ public class AppointmentFormDialog extends JDialog {
     }
 
     private void loadDepartments() {
-        List<PhongBan> departments = departmentRepo.findActive();
+        List<PhongBan> departments = departmentService.getActiveDepartments();
         for (PhongBan dept : departments) {
             cboPhongBan.addItem(dept);
         }
@@ -185,7 +185,7 @@ public class AppointmentFormDialog extends JDialog {
     }
 
     private void loadPositions() {
-        List<ChucVu> positions = positionRepo.findActive();
+        List<ChucVu> positions = positionService.getActivePositions();
         for (ChucVu pos : positions) {
             cboChucVu.addItem(pos);
         }

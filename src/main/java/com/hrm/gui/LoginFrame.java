@@ -73,7 +73,7 @@ public class LoginFrame extends JFrame {
     private JPasswordField createPasswordField() {
         JPasswordField field = new JPasswordField(20);
         configureInputField(field);
-        field.setEchoChar('\u2022');
+        field.setEchoChar('•');
         return field;
     }
 
@@ -220,7 +220,7 @@ public class LoginFrame extends JFrame {
     }
 
     private void togglePasswordVisibility() {
-        txtPassword.setEchoChar(chkShowPassword.isSelected() ? (char) 0 : '\u2022');
+        txtPassword.setEchoChar(chkShowPassword.isSelected() ? (char) 0 : '•');
     }
 
     private void performLogin(ActionEvent e) {

@@ -21,7 +21,6 @@ import java.text.NumberFormat;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
-import java.util.Comparator;
 import java.util.List;
 import java.util.Locale;
 import java.util.stream.Collectors;
@@ -45,8 +44,6 @@ public class SalaryListPanel extends JPanel {
     private JTable tblChiTiet;
     private DefaultTableModel modelChiTiet;
     private JButton btnTinhLaiNhanVien;
-    private JComboBox<BangLuong> cboKyLuong;
-    private JButton btnXemChiTietCaNhan;
     private JTabbedPane tabbedPane;
 
     private List<BangLuong> danhSachBL = new ArrayList<>();
@@ -78,7 +75,7 @@ public class SalaryListPanel extends JPanel {
         setBackground(UIColors.LIGHT_GRAY_BG);
 
         if (currentScope == DataScope.SELF) {
-            buildSelfView();
+            add(new SalarySelfViewPanel(salaryService, maNVHienTai), BorderLayout.CENTER);
         } else {
             buildManagementView();
         }
@@ -101,52 +98,6 @@ public class SalaryListPanel extends JPanel {
         loadBangLuong();
     }
 
-    private void buildSelfView() {
-        JPanel panel = new JPanel(new BorderLayout(12, 12));
-        panel.setBackground(UIColors.LIGHT_GRAY_BG);
-        panel.setBorder(new EmptyBorder(12, 12, 12, 12));
-
-        JPanel toolbar = new JPanel(new FlowLayout(FlowLayout.LEFT, 8, 4));
-        toolbar.setOpaque(false);
-
-        JLabel lblTitle = new JLabel("Phiếu lương của tôi");
-        lblTitle.setFont(com.hrm.util.UIFonts.HEADER_H3);
-
-        toolbar.add(lblTitle);
-        toolbar.add(Box.createHorizontalStrut(12));
-        toolbar.add(new JLabel("Kỳ lương:"));
-
-        cboKyLuong = new JComboBox<>();
-        cboKyLuong.setFont(com.hrm.util.UIFonts.TEXT_MEDIUM);
-        cboKyLuong.setPreferredSize(new Dimension(260, 34));
-        cboKyLuong.setRenderer(new DefaultListCellRenderer() {
-            @Override
-            public Component getListCellRendererComponent(JList<?> list, Object value, int index,
-                    boolean isSelected, boolean cellHasFocus) {
-                BangLuong bl = (BangLuong) value;
-                String text = bl == null ? "" : buildBangLuongLabel(bl);
-                return super.getListCellRendererComponent(list, text, index, isSelected, cellHasFocus);
-            }
-        });
-        cboKyLuong.addActionListener(e -> {
-            BangLuong selected = (BangLuong) cboKyLuong.getSelectedItem();
-            if (selected != null) {
-                selectedMaBL = selected.getMaBL();
-                loadChiTietCaNhan(selectedMaBL);
-            }
-        });
-        toolbar.add(cboKyLuong);
-
-        btnXemChiTietCaNhan = UIHelper.createPrimaryButton("Xem chi tiết");
-        btnXemChiTietCaNhan.addActionListener(e -> showChiTietDialog());
-        toolbar.add(btnXemChiTietCaNhan);
-
-        panel.add(toolbar, BorderLayout.NORTH);
-        panel.add(buildChiTietTablePanel("Phiếu lương cá nhân"), BorderLayout.CENTER);
-        add(panel, BorderLayout.CENTER);
-
-        loadBangLuong();
-    }
 
     private JPanel buildBangLuongTab() {
         JPanel panel = new JPanel(new BorderLayout(8, 8));
@@ -195,7 +146,7 @@ public class SalaryListPanel extends JPanel {
         for (int i = 0; i < widths.length; i++) {
             tblBangLuong.getColumnModel().getColumn(i).setPreferredWidth(widths[i]);
         }
-        tblBangLuong.getColumnModel().getColumn(10).setCellRenderer(new StatusCellRenderer());
+        tblBangLuong.getColumnModel().getColumn(10).setCellRenderer(new SalaryStatusRenderer());
 
         tblBangLuong.getSelectionModel().addListSelectionListener(e -> {
             if (!e.getValueIsAdjusting()) {
@@ -291,11 +242,7 @@ public class SalaryListPanel extends JPanel {
     private void loadBangLuong() {
         try {
             danhSachBL = salaryService.getAll();
-            if (currentScope == DataScope.SELF) {
-                loadBangLuongSelf();
-            } else {
-                loadBangLuongManagement();
-            }
+            loadBangLuongManagement();
         } catch (Exception ex) {
             JOptionPane.showMessageDialog(this,
                     "Lỗi tải danh sách bảng lương: " + ex.getMessage(),
@@ -323,42 +270,6 @@ public class SalaryListPanel extends JPanel {
         updateActionButtonsForSelection();
     }
 
-    private void loadBangLuongSelf() {
-        DefaultComboBoxModel<BangLuong> comboModel = new DefaultComboBoxModel<>();
-        List<BangLuong> kyLuongCaNhan = new ArrayList<>();
-
-        if (maNVHienTai != null) {
-            for (BangLuong bl : danhSachBL) {
-                if (salaryService.getChiTietCaNhan(bl.getMaBL(), maNVHienTai) != null) {
-                    kyLuongCaNhan.add(bl);
-                }
-            }
-        }
-
-        kyLuongCaNhan.sort(Comparator.comparingInt(BangLuong::getNam).reversed()
-                .thenComparing(Comparator.comparingInt(BangLuong::getThang).reversed()));
-
-        for (BangLuong bl : kyLuongCaNhan) {
-            comboModel.addElement(bl);
-        }
-
-        cboKyLuong.setModel(comboModel);
-        btnXemChiTietCaNhan.setEnabled(comboModel.getSize() > 0);
-
-        if (comboModel.getSize() > 0) {
-            cboKyLuong.setSelectedIndex(0);
-            BangLuong selected = (BangLuong) cboKyLuong.getSelectedItem();
-            if (selected != null) {
-                selectedMaBL = selected.getMaBL();
-                loadChiTietCaNhan(selectedMaBL);
-            }
-        } else {
-            selectedMaBL = -1;
-            currentChiTietList = new ArrayList<>();
-            modelChiTiet.setRowCount(0);
-        }
-    }
-
     private void loadChiTiet(int maBL) {
         try {
             currentChiTietList = applyScopeFilter(salaryService.getChiTiet(maBL));
@@ -367,22 +278,6 @@ public class SalaryListPanel extends JPanel {
         } catch (Exception ex) {
             JOptionPane.showMessageDialog(this,
                     "Lỗi tải chi tiết lương: " + ex.getMessage(),
-                    "Lỗi", JOptionPane.ERROR_MESSAGE);
-        }
-    }
-
-    private void loadChiTietCaNhan(int maBL) {
-        try {
-            ChiTietLuong ct = maNVHienTai != null ? salaryService.getChiTietCaNhan(maBL, maNVHienTai) : null;
-            currentChiTietList = new ArrayList<>();
-            if (ct != null) {
-                currentChiTietList.add(ct);
-            }
-            fillChiTietTable(currentChiTietList);
-            btnXemChiTietCaNhan.setEnabled(ct != null);
-        } catch (Exception ex) {
-            JOptionPane.showMessageDialog(this,
-                    "Lỗi tải phiếu lương cá nhân: " + ex.getMessage(),
                     "Lỗi", JOptionPane.ERROR_MESSAGE);
         }
     }
@@ -707,26 +602,4 @@ public class SalaryListPanel extends JPanel {
         return value != null ? value : "";
     }
 
-    private static class StatusCellRenderer extends DefaultTableCellRenderer {
-        @Override
-        public Component getTableCellRendererComponent(JTable table, Object value,
-                boolean isSelected, boolean hasFocus, int row, int col) {
-            Component c = super.getTableCellRendererComponent(table, value, isSelected, hasFocus, row, col);
-            setHorizontalAlignment(SwingConstants.CENTER);
-            if (!isSelected && value != null) {
-                String v = value.toString();
-                if (v.contains("Đã khóa")) {
-                    c.setForeground(UIColors.SUCCESS_GREEN);
-                } else if (v.contains("Đã duyệt")) {
-                    c.setForeground(com.hrm.util.UIColors.WARNING_TEXT_AMBER);
-                } else if (v.contains("Đã tính")) {
-                    c.setForeground(UIColors.INFO_BLUE);
-                } else {
-                    c.setForeground(UIColors.TEXT_DARK);
-                }
-                ((JLabel) c).setFont(com.hrm.util.UIFonts.BOLD_SMALL);
-            }
-            return c;
-        }
-    }
 }

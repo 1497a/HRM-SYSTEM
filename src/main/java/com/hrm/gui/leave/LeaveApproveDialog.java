@@ -2,6 +2,7 @@ package com.hrm.gui.leave;
 
 import com.hrm.model.DonXinNghiPhep;
 import com.hrm.model.TaiKhoan;
+import com.hrm.bus.KetQua;
 import com.hrm.bus.NghiPhepBUS;
 import com.hrm.util.SessionContext;
 import com.hrm.util.UIHelper;
@@ -178,7 +179,7 @@ public class LeaveApproveDialog extends JDialog {
             approverName = currentUser.getHoTen();
         }
 
-        NghiPhepBUS.KetQua<?> result = leaveService.processRequest(
+        KetQua<?> result = leaveService.processRequest(
                 requestId,
                 approve,
                 approverId,

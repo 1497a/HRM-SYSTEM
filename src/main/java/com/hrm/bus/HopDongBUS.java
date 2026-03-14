@@ -14,6 +14,10 @@ import java.util.List;
  * Singleton pattern.
  */
 public class HopDongBUS {
+    private static final String LOAI_THU_VIEC = "thu_viec";
+    private static final String LOAI_XAC_DINH_THOI_HAN = "xac_dinh_thoi_han";
+    private static final String TRANG_THAI_HIEU_LUC = "hieu_luc";
+    private static final String TRANG_THAI_THANH_LY = "thanh_ly";
 
     private static HopDongBUS instance;
 
@@ -47,47 +51,14 @@ public class HopDongBUS {
         }
 
         // Tự động tạo số hợp đồng
-        LocalDate today = LocalDate.now();
-        int seq = hopDongRepo.countByYearMonth(today.getYear(), today.getMonthValue()) + 1;
-        String soHopDong = String.format("HD-%04d%02d-%04d", today.getYear(), today.getMonthValue(), seq);
-        hd.setSoHopDong(soHopDong);
+        hd.setSoHopDong(generateSoHopDong());
 
-        // Validate ngày ký và ngày hiệu lực
-        if (hd.getNgayKy() == null) {
-            return KetQua.error("Ngày ký không được để trống.");
-        }
-        if (hd.getNgayHieuLuc() == null) {
-            return KetQua.error("Ngày hiệu lực không được để trống.");
-        }
-        if (hd.getNgayHieuLuc().isBefore(hd.getNgayKy())) {
-            return KetQua.error("Ngày hiệu lực phải bằng hoặc sau ngày ký.");
-        }
+        KetQua<Void> dateValidation = validateNgayKyVaNgayHieuLuc(hd);
+        if (!dateValidation.isSuccess()) return KetQua.error(dateValidation.getMessage());
 
         // Validate theo loại hợp đồng
-        String loai = hd.getLoaiHopDong();
-        if ("thu_viec".equals(loai)) {
-            if (hd.getNgayHetHieuLuc() == null) {
-                return KetQua.error("Hợp đồng thử việc phải có ngày hết hiệu lực.");
-            }
-            long soNgay = ChronoUnit.DAYS.between(hd.getNgayHieuLuc(), hd.getNgayHetHieuLuc());
-            if (soNgay > 60) {
-                return KetQua.error("Hợp đồng thử việc không được vượt quá 60 ngày.");
-            }
-            if (soNgay <= 0) {
-                return KetQua.error("Ngày hết hiệu lực phải sau ngày hiệu lực.");
-            }
-        } else if ("xac_dinh_thoi_han".equals(loai)) {
-            if (hd.getNgayHetHieuLuc() == null) {
-                return KetQua.error("Hợp đồng xác định thời hạn phải có ngày hết hiệu lực.");
-            }
-            long soThang = ChronoUnit.MONTHS.between(hd.getNgayHieuLuc(), hd.getNgayHetHieuLuc());
-            if (soThang > 36) {
-                return KetQua.error("Hợp đồng xác định thời hạn không được vượt quá 36 tháng.");
-            }
-            if (hd.getNgayHetHieuLuc().isBefore(hd.getNgayHieuLuc())) {
-                return KetQua.error("Ngày hết hiệu lực phải sau ngày hiệu lực.");
-            }
-        }
+        KetQua<Void> typeValidation = validateTheoLoaiHopDong(hd);
+        if (!typeValidation.isSuccess()) return KetQua.error(typeValidation.getMessage());
         // khong_xac_dinh: ngayHetHieuLuc có thể null
 
         // Kiểm tra nhân viên đã có hợp đồng hiệu lực chưa
@@ -98,7 +69,7 @@ public class HopDongBUS {
         }
 
         // Thiết lập trạng thái
-        hd.setTrangThai("hieu_luc");
+        hd.setTrangThai(TRANG_THAI_HIEU_LUC);
 
         try {
             hopDongRepo.insert(hd);
@@ -122,10 +93,10 @@ public class HopDongBUS {
         if (hd == null) {
             return KetQua.error("Không tìm thấy hợp đồng.");
         }
-        if ("thanh_ly".equals(hd.getTrangThai())) {
+        if (TRANG_THAI_THANH_LY.equals(hd.getTrangThai())) {
             return KetQua.error("Hợp đồng đã được thanh lý.");
         }
-        hopDongRepo.updateTrangThai(maHopDong, "thanh_ly");
+        hopDongRepo.updateTrangThai(maHopDong, TRANG_THAI_THANH_LY);
         return KetQua.success(null, "Thanh lý hợp đồng thành công.");
     }
 
@@ -163,8 +134,67 @@ public class HopDongBUS {
         }
         return null;
     }
+
+    private KetQua<Void> validateNgayKyVaNgayHieuLuc(HopDongLaoDong hd) {
+        if (hd.getNgayKy() == null) {
+            return KetQua.error("Ngày ký không được để trống.");
+        }
+        if (hd.getNgayHieuLuc() == null) {
+            return KetQua.error("Ngày hiệu lực không được để trống.");
+        }
+        if (hd.getNgayHieuLuc().isBefore(hd.getNgayKy())) {
+            return KetQua.error("Ngày hiệu lực phải bằng hoặc sau ngày ký.");
+        }
+        return KetQua.success(null, "");
+    }
+
+    private KetQua<Void> validateTheoLoaiHopDong(HopDongLaoDong hd) {
+        String loai = hd.getLoaiHopDong();
+        if (LOAI_THU_VIEC.equals(loai)) {
+            return validateHopDongThuViec(hd);
+        }
+        if (LOAI_XAC_DINH_THOI_HAN.equals(loai)) {
+            return validateHopDongXacDinhThoiHan(hd);
+        }
+        return KetQua.success(null, "");
+    }
+
+    private KetQua<Void> validateHopDongThuViec(HopDongLaoDong hd) {
+        if (hd.getNgayHetHieuLuc() == null) {
+            return KetQua.error("Hợp đồng thử việc phải có ngày hết hiệu lực.");
+        }
+        long soNgay = ChronoUnit.DAYS.between(hd.getNgayHieuLuc(), hd.getNgayHetHieuLuc());
+        if (soNgay > 60) {
+            return KetQua.error("Hợp đồng thử việc không được vượt quá 60 ngày.");
+        }
+        if (soNgay <= 0) {
+            return KetQua.error("Ngày hết hiệu lực phải sau ngày hiệu lực.");
+        }
+        return KetQua.success(null, "");
+    }
+
+    private KetQua<Void> validateHopDongXacDinhThoiHan(HopDongLaoDong hd) {
+        if (hd.getNgayHetHieuLuc() == null) {
+            return KetQua.error("Hợp đồng xác định thời hạn phải có ngày hết hiệu lực.");
+        }
+        long soThang = ChronoUnit.MONTHS.between(hd.getNgayHieuLuc(), hd.getNgayHetHieuLuc());
+        if (soThang > 36) {
+            return KetQua.error("Hợp đồng xác định thời hạn không được vượt quá 36 tháng.");
+        }
+        if (hd.getNgayHetHieuLuc().isBefore(hd.getNgayHieuLuc())) {
+            return KetQua.error("Ngày hết hiệu lực phải sau ngày hiệu lực.");
+        }
+        return KetQua.success(null, "");
+    }
+
     private String getCurrentUserNhanVienId() {
         com.hrm.model.TaiKhoan currentUser = com.hrm.util.SessionContext.getInstance().getCurrentUser();
         return currentUser != null ? currentUser.getNhanVienId() : null;
+    }
+
+    private String generateSoHopDong() {
+        LocalDate today = LocalDate.now();
+        int seq = hopDongRepo.countByYearMonth(today.getYear(), today.getMonthValue()) + 1;
+        return String.format("HD-%04d%02d-%04d", today.getYear(), today.getMonthValue(), seq);
     }
 }

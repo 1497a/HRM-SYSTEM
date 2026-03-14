@@ -1,0 +1,187 @@
+package com.hrm.gui.notification;
+
+import com.hrm.bus.KetQua;
+import com.hrm.bus.ThongBaoBUS;
+import com.hrm.model.TaiKhoan;
+import com.hrm.model.ThongBao;
+import com.hrm.util.UIColors;
+import com.hrm.util.UIHelper;
+
+import javax.swing.*;
+import javax.swing.border.EmptyBorder;
+import javax.swing.border.TitledBorder;
+import javax.swing.table.DefaultTableCellRenderer;
+import javax.swing.table.DefaultTableModel;
+import java.awt.*;
+import java.time.format.DateTimeFormatter;
+import java.util.List;
+
+/**
+ * Tab 1 - Thong bao cua nguoi dung hien tai.
+ */
+class TabMyNotificationsPanel extends JPanel {
+
+    private static final DateTimeFormatter DATE_FORMAT = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm");
+
+    private final ThongBaoBUS service;
+    private final TaiKhoan currentUser;
+
+    private JTable tblThongBao;
+    private DefaultTableModel modelThongBao;
+    private List<ThongBao> danhSachThongBao;
+
+    TabMyNotificationsPanel(ThongBaoBUS service, TaiKhoan currentUser) {
+        this.service = service;
+        this.currentUser = currentUser;
+        setLayout(new BorderLayout(8, 8));
+        setBackground(UIColors.LIGHT_GRAY_BG);
+        setBorder(new EmptyBorder(12, 12, 12, 12));
+
+        JPanel toolbar = new JPanel(new FlowLayout(FlowLayout.LEFT, 8, 4));
+        toolbar.setOpaque(false);
+
+        JButton btnDanhDauDaDoc = UIHelper.createPrimaryButton("Đánh dấu đã đọc");
+        JButton btnDanhDauTatCa = UIHelper.createDefaultButton("Đánh dấu tất cả đã đọc");
+        JButton btnLamMoi = UIHelper.createDefaultButton("Làm mới");
+
+        btnDanhDauDaDoc.addActionListener(e -> danhDauDaDoc());
+        btnDanhDauTatCa.addActionListener(e -> danhDauTatCa());
+        btnLamMoi.addActionListener(e -> loadThongBao());
+
+        toolbar.add(btnDanhDauDaDoc);
+        toolbar.add(btnDanhDauTatCa);
+        toolbar.add(btnLamMoi);
+
+        String[] cols = {"Mã", "Tiêu đề", "Loại", "Ngày tạo", "Trạng thái"};
+        modelThongBao = new DefaultTableModel(cols, 0) {
+            @Override public boolean isCellEditable(int row, int col) { return false; }
+        };
+        tblThongBao = new JTable(modelThongBao);
+        tblThongBao.setRowHeight(28);
+        tblThongBao.setFont(com.hrm.util.UIFonts.TEXT_NORMAL);
+        tblThongBao.getTableHeader().setFont(com.hrm.util.UIFonts.BOLD_NORMAL);
+        tblThongBao.getTableHeader().setBackground(UIColors.PRIMARY_PURPLE);
+        tblThongBao.getTableHeader().setForeground(UIColors.TEXT_DARK);
+        tblThongBao.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+        tblThongBao.setSelectionBackground(UIColors.LIGHT_PURPLE);
+        tblThongBao.setSelectionForeground(UIColors.TEXT_DARK);
+
+        tblThongBao.getColumnModel().getColumn(0).setMinWidth(0);
+        tblThongBao.getColumnModel().getColumn(0).setMaxWidth(0);
+        tblThongBao.getColumnModel().getColumn(0).setWidth(0);
+        tblThongBao.getColumnModel().getColumn(1).setPreferredWidth(350);
+        tblThongBao.getColumnModel().getColumn(2).setPreferredWidth(150);
+        tblThongBao.getColumnModel().getColumn(3).setPreferredWidth(160);
+        tblThongBao.getColumnModel().getColumn(4).setPreferredWidth(100);
+
+        tblThongBao.getColumnModel().getColumn(4).setCellRenderer(new DefaultTableCellRenderer() {
+            @Override
+            public Component getTableCellRendererComponent(JTable table, Object value,
+                    boolean isSelected, boolean hasFocus, int row, int col) {
+                Component c = super.getTableCellRendererComponent(table, value, isSelected, hasFocus, row, col);
+                setHorizontalAlignment(SwingConstants.CENTER);
+                String trangThai = value != null ? value.toString() : "";
+                setText(trangThai);
+                c.setFont(com.hrm.util.UIFonts.TEXT_NORMAL);
+                if (isSelected) {
+                    c.setForeground(table.getSelectionForeground());
+                } else if ("Đã đọc".equals(trangThai)) {
+                    c.setForeground(UIColors.SUCCESS_GREEN);
+                } else {
+                    c.setForeground(UIColors.DANGER_RED);
+                    c.setFont(com.hrm.util.UIFonts.BOLD_SMALL);
+                }
+                return c;
+            }
+        });
+
+        tblThongBao.getSelectionModel().addListSelectionListener(e -> {
+            if (!e.getValueIsAdjusting()) {
+                int row = tblThongBao.getSelectedRow();
+                if (row >= 0 && danhSachThongBao != null && row < danhSachThongBao.size()) {
+                    ThongBao tb = danhSachThongBao.get(row);
+                    if (!tb.isDaDoc()) markAsRead(tb.getMaThongBao());
+                    showNoiDung(tb);
+                }
+            }
+        });
+
+        JScrollPane scroll = new JScrollPane(tblThongBao);
+        scroll.setBorder(new TitledBorder("Danh sách thông báo"));
+
+        add(toolbar, BorderLayout.NORTH);
+        add(scroll, BorderLayout.CENTER);
+
+        loadThongBao();
+    }
+
+    void loadThongBao() {
+        modelThongBao.setRowCount(0);
+        if (currentUser == null) return;
+        try {
+            danhSachThongBao = service.getThongBaoCuaToi(currentUser.getId());
+            for (ThongBao tb : danhSachThongBao) {
+                String ngayTao = tb.getNgayTao() != null ? tb.getNgayTao().format(DATE_FORMAT) : "";
+                modelThongBao.addRow(new Object[]{
+                    tb.getMaThongBao(), tb.getTieuDe(), tb.getLoaiDisplay(),
+                    ngayTao, tb.isDaDoc() ? "Đã đọc" : "Chưa đọc"
+                });
+            }
+        } catch (Exception ex) {
+            JOptionPane.showMessageDialog(this, "Lỗi tải thông báo: " + ex.getMessage(),
+                    "Lỗi", JOptionPane.ERROR_MESSAGE);
+        }
+    }
+
+    private void danhDauDaDoc() {
+        int row = tblThongBao.getSelectedRow();
+        if (row < 0) {
+            JOptionPane.showMessageDialog(this, "Vui lòng chọn thông báo cần đánh dấu.",
+                    "Thông báo", JOptionPane.INFORMATION_MESSAGE);
+            return;
+        }
+        int maThongBao = (int) modelThongBao.getValueAt(row, 0);
+        try {
+            KetQua<Void> result = service.danhDauDaDoc(maThongBao);
+            if (result.isSuccess()) loadThongBao();
+            else JOptionPane.showMessageDialog(this, result.getMessage(), "Lỗi", JOptionPane.ERROR_MESSAGE);
+        } catch (Exception ex) {
+            JOptionPane.showMessageDialog(this, "Lỗi: " + ex.getMessage(), "Lỗi", JOptionPane.ERROR_MESSAGE);
+        }
+    }
+
+    private void danhDauTatCa() {
+        if (currentUser == null) return;
+        try {
+            KetQua<Void> result = service.danhDauTatCaDaDoc(currentUser.getId());
+            if (result.isSuccess()) {
+                loadThongBao();
+                JOptionPane.showMessageDialog(this, "Đã đánh dấu tất cả là đã đọc.",
+                        "Thành công", JOptionPane.INFORMATION_MESSAGE);
+            } else {
+                JOptionPane.showMessageDialog(this, result.getMessage(), "Lỗi", JOptionPane.ERROR_MESSAGE);
+            }
+        } catch (Exception ex) {
+            JOptionPane.showMessageDialog(this, "Lỗi: " + ex.getMessage(), "Lỗi", JOptionPane.ERROR_MESSAGE);
+        }
+    }
+
+    private void markAsRead(int maThongBao) {
+        try { service.danhDauDaDoc(maThongBao); loadThongBao(); } catch (Exception ignored) {}
+    }
+
+    private void showNoiDung(ThongBao tb) {
+        JTextArea area = new JTextArea(tb.getNoiDung() != null ? tb.getNoiDung() : "");
+        area.setEditable(false);
+        area.setFont(com.hrm.util.UIFonts.TEXT_MEDIUM);
+        area.setLineWrap(true);
+        area.setWrapStyleWord(true);
+        area.setBackground(UIColors.LIGHT_GRAY_BG);
+        area.setBorder(new EmptyBorder(8, 8, 8, 8));
+        JScrollPane scroll = new JScrollPane(area);
+        scroll.setPreferredSize(new Dimension(420, 200));
+        JOptionPane.showMessageDialog(this, scroll,
+                tb.getTieuDe() != null ? tb.getTieuDe() : "Thông báo",
+                JOptionPane.INFORMATION_MESSAGE);
+    }
+}

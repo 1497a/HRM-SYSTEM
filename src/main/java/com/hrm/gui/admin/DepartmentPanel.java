@@ -1,7 +1,9 @@
 package com.hrm.gui.admin;
 
-import com.hrm.model.PhongBan;
+import com.hrm.bus.KetQua;
 import com.hrm.bus.PhongBanBUS;
+import com.hrm.model.PhongBan;
+import com.hrm.util.DialogUtil;
 import com.hrm.util.SessionContext;
 import com.hrm.util.UIHelper;
 
@@ -9,27 +11,29 @@ import javax.swing.*;
 import javax.swing.table.DefaultTableModel;
 import javax.swing.table.TableRowSorter;
 import java.awt.*;
+import java.text.Normalizer;
 import java.util.List;
 import java.util.Objects;
 
 public class DepartmentPanel extends JPanel {
 
-    private PhongBanBUS service = new PhongBanBUS();
+    private static final String STATUS_ALL = "Tất cả";
+    private static final String STATUS_ACTIVE = "Hoạt động";
+    private static final String STATUS_INACTIVE = "Ngừng hoạt động";
+
+    private final PhongBanBUS service = new PhongBanBUS();
     private JTable table;
     private DefaultTableModel tableModel;
     private TableRowSorter<DefaultTableModel> sorter;
 
     private JTextField txtSearch;
     private JComboBox<String> cboFilter;
-
-    // Buttons cần phân quyền
     private JButton btnThem;
 
     public DepartmentPanel() {
         setLayout(new BorderLayout());
         setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
 
-        // ── PANEL TRÊN: Tiêu đề + Tìm kiếm + Lọc
         JPanel topPanel = new JPanel(new BorderLayout());
 
         JLabel title = new JLabel("QUẢN LÝ PHÒNG BAN");
@@ -37,12 +41,10 @@ public class DepartmentPanel extends JPanel {
         title.setBorder(BorderFactory.createEmptyBorder(0, 0, 10, 0));
         topPanel.add(title, BorderLayout.NORTH);
 
-        // Gợi ý tìm kiếm
         JLabel lblHint = new JLabel("Tìm theo: Mã / Tên phòng ban / Trạng thái");
         lblHint.setFont(new Font("Arial", Font.ITALIC, 11));
         topPanel.add(lblHint, BorderLayout.SOUTH);
 
-        // Panel chứa search + filter
         JPanel searchFilterPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
 
         JLabel lblSearch = new JLabel("Tìm kiếm:");
@@ -50,11 +52,7 @@ public class DepartmentPanel extends JPanel {
         txtSearch.setToolTipText("Nhập mã hoặc tên phòng ban để tìm kiếm");
 
         JLabel lblFilter = new JLabel("    Trạng thái:");
-        cboFilter = new JComboBox<>(new String[] {
-                "\u0054\u1ea5\u0074\u0020\u0063\u1ea3",
-                "\u0048\u006f\u1ea1\u0074\u0020\u0111\u1ed9\u006e\u0067",
-                "\u004e\u0067\u1eeb\u006e\u0067\u0020\u0068\u006f\u1ea1\u0074\u0020\u0111\u1ed9\u006e\u0067"
-        });
+        cboFilter = new JComboBox<>(new String[]{STATUS_ALL, STATUS_ACTIVE, STATUS_INACTIVE});
 
         searchFilterPanel.add(lblSearch);
         searchFilterPanel.add(txtSearch);
@@ -62,12 +60,11 @@ public class DepartmentPanel extends JPanel {
         searchFilterPanel.add(cboFilter);
 
         topPanel.add(searchFilterPanel, BorderLayout.CENTER);
-
         add(topPanel, BorderLayout.NORTH);
 
-        // ── BẢNG
         tableModel = new DefaultTableModel(
-                new Object[] { "Mã PB", "Tên phòng ban", "Phòng ban cha", "Trạng thái" }, 0) {
+                new Object[]{"Mã PB", "Tên phòng ban", "Phòng ban cha", "Trạng thái"}, 0) {
+            @Override
             public boolean isCellEditable(int row, int col) {
                 return false;
             }
@@ -82,36 +79,25 @@ public class DepartmentPanel extends JPanel {
         table.getColumnModel().getColumn(2).setPreferredWidth(160);
         table.getColumnModel().getColumn(3).setPreferredWidth(100);
 
-        // Thêm sorter để có thể filter
         sorter = new TableRowSorter<>(tableModel);
         table.setRowSorter(sorter);
 
         add(new JScrollPane(table), BorderLayout.CENTER);
 
-        // ── THANH NÚT
         btnThem = UIHelper.createPrimaryButton("+ Thêm");
-
         JPanel btnPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
         btnPanel.add(btnThem);
         add(btnPanel, BorderLayout.SOUTH);
 
-        // ── PHÂN QUYỀN
         setupPermissions();
 
-        // ── SỰ KIỆN
         btnThem.addActionListener(e -> showAddDialog());
-
-        // Tìm kiếm realtime
         txtSearch.addKeyListener(new java.awt.event.KeyAdapter() {
             public void keyReleased(java.awt.event.KeyEvent e) {
                 applyFilter();
             }
         });
-
-        // Lọc theo trạng thái
         cboFilter.addActionListener(e -> applyFilter());
-
-        // Double-click mở dialog chi tiết
         table.addMouseListener(new java.awt.event.MouseAdapter() {
             public void mouseClicked(java.awt.event.MouseEvent e) {
                 if (e.getClickCount() == 2) {
@@ -123,13 +109,9 @@ public class DepartmentPanel extends JPanel {
         refreshTable();
     }
 
-    // ── PHÂN QUYỀN
-
     private void setupPermissions() {
         btnThem.setVisible(SessionContext.getInstance().coQuyen("DEPARTMENT_MANAGE"));
     }
-
-    // ── LỌC DỮ LIỆU
 
     private void applyFilter() {
         String searchText = txtSearch.getText().toLowerCase().trim();
@@ -137,12 +119,10 @@ public class DepartmentPanel extends JPanel {
 
         RowFilter<DefaultTableModel, Object> rf = new RowFilter<DefaultTableModel, Object>() {
             public boolean include(Entry<? extends DefaultTableModel, ? extends Object> entry) {
-                // Lọc theo mã (cột 0) hoặc tên (cột 1)
                 String ma = entry.getStringValue(0).toLowerCase();
                 String tenPhongBan = entry.getStringValue(1).toLowerCase();
                 boolean matchSearch = searchText.isEmpty() || ma.contains(searchText) || tenPhongBan.contains(searchText);
 
-                // Lọc theo trạng thái (cột 3)
                 String trangThai = normalizeTrangThai(entry.getStringValue(3));
                 boolean matchStatus = true;
 
@@ -159,12 +139,10 @@ public class DepartmentPanel extends JPanel {
         sorter.setRowFilter(rf);
     }
 
-    // ── LÀM MỚI BẢNG
-
     private void refreshTable() {
         tableModel.setRowCount(0);
         for (PhongBan d : service.getAllDepartments()) {
-            String tenCha = "— (goc)";
+            String tenCha = "- (gốc)";
             if (d.getPhongBanChaId() != null) {
                 PhongBan cha = service.getById(d.getPhongBanChaId());
                 if (cha != null) {
@@ -172,7 +150,7 @@ public class DepartmentPanel extends JPanel {
                 }
             }
 
-            tableModel.addRow(new Object[] {
+            tableModel.addRow(new Object[]{
                     d.getId(),
                     d.getTenPhongBan(),
                     tenCha,
@@ -180,12 +158,9 @@ public class DepartmentPanel extends JPanel {
             });
         }
 
-        // Reset filter sau khi refresh
         txtSearch.setText("");
         cboFilter.setSelectedIndex(0);
     }
-
-    // ── FORM THÊM
 
     private void showAddDialog() {
         JTextField txtMa = new JTextField();
@@ -195,33 +170,31 @@ public class DepartmentPanel extends JPanel {
         JComboBox<String> comboCha = buildParentCombo(dsActive, null);
 
         Object[] fields = {
-                "Ma phong ban (*):", txtMa,
-                "Ten phong ban (*):", txtTen,
-                "Phong ban cha:", comboCha
+                "Mã phòng ban (*):", txtMa,
+                "Tên phòng ban (*):", txtTen,
+                "Phòng ban cha:", comboCha
         };
 
-        int ok = JOptionPane.showConfirmDialog(this, fields, "Them phong ban moi", JOptionPane.OK_CANCEL_OPTION);
-
+        int ok = JOptionPane.showConfirmDialog(this, fields, "Thêm phòng ban mới", JOptionPane.OK_CANCEL_OPTION);
         if (ok != JOptionPane.OK_OPTION) {
             return;
         }
 
         String maCha = getSelectedMa(comboCha, dsActive);
 
-        try {
-            service.addDepartment(txtMa.getText().trim(), txtTen.getText().trim(), maCha);
-            refreshTable();
-            JOptionPane.showMessageDialog(this, "Them phong ban thanh cong!");
-        } catch (IllegalArgumentException ex) {
-            JOptionPane.showMessageDialog(this, ex.getMessage(), "Loi", JOptionPane.ERROR_MESSAGE);
+        KetQua<Void> kq = service.addDepartment(txtMa.getText().trim(), txtTen.getText().trim(), maCha);
+        if (!kq.isSuccess()) {
+            DialogUtil.showError(this, kq.getMessage());
+            return;
         }
+        refreshTable();
+        DialogUtil.showSuccess(this, kq.getMessage());
     }
-
-    // ── DIALOG CHI TIẾT / SỬA (double-click)
 
     private void showDetailDialog() {
         int row = table.getSelectedRow();
         if (row == -1) return;
+
         int modelRow = table.convertRowIndexToModel(row);
         String ma = (String) tableModel.getValueAt(modelRow, 0);
         PhongBan dept = service.getById(ma);
@@ -241,14 +214,11 @@ public class DepartmentPanel extends JPanel {
         dsActive.removeIf(d -> d.getId().equals(ma));
         JComboBox<String> comboCha = buildParentCombo(dsActive, dept.getPhongBanChaId());
         comboCha.setEnabled(canEdit);
-        JComboBox<String> cboTrangThai = new JComboBox<>(new String[]{
-                "\u0048\u006f\u1ea1\u0074\u0020\u0111\u1ed9\u006e\u0067",
-                "\u004e\u0067\u1eeb\u006e\u0067\u0020\u0068\u006f\u1ea1\u0074\u0020\u0111\u1ed9\u006e\u0067"
-        });
+
+        JComboBox<String> cboTrangThai = new JComboBox<>(new String[]{STATUS_ACTIVE, STATUS_INACTIVE});
         cboTrangThai.setSelectedItem(toTrangThaiDisplay(dept.getTrangThai()));
         cboTrangThai.setEnabled(canEdit);
 
-        // Form
         JPanel form = new JPanel(new GridBagLayout());
         form.setBorder(BorderFactory.createEmptyBorder(16, 16, 8, 16));
         GridBagConstraints gbc = new GridBagConstraints();
@@ -257,19 +227,25 @@ public class DepartmentPanel extends JPanel {
 
         JComponent[] fields = {txtMa, txtTen, comboCha, cboTrangThai};
         for (int i = 0; i < fields.length; i++) {
-            gbc.gridx = 0; gbc.gridy = i; gbc.fill = GridBagConstraints.NONE; gbc.weightx = 0;
+            gbc.gridx = 0;
+            gbc.gridy = i;
+            gbc.fill = GridBagConstraints.NONE;
+            gbc.weightx = 0;
+
             JLabel lbl = new JLabel(
                     i == 0 ? "Mã phòng ban:" :
                     i == 1 ? "Tên phòng ban (*):" :
                     i == 2 ? "Phòng ban cha:" : "Trạng thái:");
             lbl.setFont(com.hrm.util.UIFonts.TEXT_MEDIUM);
             form.add(lbl, gbc);
-            gbc.gridx = 1; gbc.fill = GridBagConstraints.HORIZONTAL; gbc.weightx = 1.0;
+
+            gbc.gridx = 1;
+            gbc.fill = GridBagConstraints.HORIZONTAL;
+            gbc.weightx = 1.0;
             fields[i].setPreferredSize(new Dimension(220, 28));
             form.add(fields[i], gbc);
         }
 
-        // Buttons
         JPanel btnPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT, 8, 8));
         JButton btnHuy = UIHelper.createDefaultButton("Hủy");
         btnHuy.addActionListener(e -> dialog.dispose());
@@ -279,26 +255,32 @@ public class DepartmentPanel extends JPanel {
             JButton btnLuu = UIHelper.createSuccessButton("Lưu");
             btnLuu.addActionListener(e -> {
                 String maCha = getSelectedMa(comboCha, dsActive);
-                try {
-                    String tenMoi = txtTen.getText().trim();
-                    if (!Objects.equals(tenMoi, dept.getTenPhongBan())
-                            || !Objects.equals(maCha, dept.getPhongBanChaId())) {
-                        service.updateDepartment(ma, tenMoi, maCha);
+                String tenMoi = txtTen.getText().trim();
+                if (!Objects.equals(tenMoi, dept.getTenPhongBan()) || !Objects.equals(maCha, dept.getPhongBanChaId())) {
+                    KetQua<Void> kqCapNhat = service.updateDepartment(ma, tenMoi, maCha);
+                    if (!kqCapNhat.isSuccess()) {
+                        DialogUtil.showError(dialog, kqCapNhat.getMessage());
+                        return;
                     }
-                    String rawTrangThaiMoi = toTrangThaiRaw((String) cboTrangThai.getSelectedItem());
-                    if (!normalizeTrangThai(rawTrangThaiMoi).equals(normalizeTrangThai(dept.getTrangThai()))) {
-                        if ("hoatDong".equals(rawTrangThaiMoi)) {
-                            service.activateDepartment(ma);
-                        } else {
-                            service.deactivateDepartment(ma);
-                        }
-                    }
-                    refreshTable();
-                    dialog.dispose();
-                    JOptionPane.showMessageDialog(DepartmentPanel.this, "Cập nhật phòng ban thành công!");
-                } catch (IllegalArgumentException ex) {
-                    JOptionPane.showMessageDialog(dialog, ex.getMessage(), "Loi", JOptionPane.ERROR_MESSAGE);
                 }
+
+                String rawTrangThaiMoi = toTrangThaiRaw((String) cboTrangThai.getSelectedItem());
+                if (!normalizeTrangThai(rawTrangThaiMoi).equals(normalizeTrangThai(dept.getTrangThai()))) {
+                    KetQua<Void> kqTrangThai;
+                    if ("hoatdong".equals(normalizeTrangThai(rawTrangThaiMoi))) {
+                        kqTrangThai = service.activateDepartment(ma);
+                    } else {
+                        kqTrangThai = service.deactivateDepartment(ma);
+                    }
+                    if (!kqTrangThai.isSuccess()) {
+                        DialogUtil.showError(dialog, kqTrangThai.getMessage());
+                        return;
+                    }
+                }
+
+                refreshTable();
+                dialog.dispose();
+                DialogUtil.showSuccess(DepartmentPanel.this, "Cập nhật phòng ban thành công!");
             });
             btnPanel.add(btnLuu);
         }
@@ -315,7 +297,7 @@ public class DepartmentPanel extends JPanel {
 
     private JComboBox<String> buildParentCombo(List<PhongBan> dsActive, String maChaHienTai) {
         String[] items = new String[dsActive.size() + 1];
-        items[0] = "— Khong co (phong ban goc) —";
+        items[0] = "- Không có (phòng ban gốc)";
         int selectedIndex = 0;
 
         for (int i = 0; i < dsActive.size(); i++) {
@@ -340,10 +322,8 @@ public class DepartmentPanel extends JPanel {
 
     private String toTrangThaiDisplay(String raw) {
         String normalized = normalizeTrangThai(raw);
-        if ("hoatdong".equals(normalized)) return "\u0048\u006f\u1ea1\u0074\u0020\u0111\u1ed9\u006e\u0067";
-        if ("ngunghoatdong".equals(normalized) || "ngung".equals(normalized)) {
-            return "\u004e\u0067\u1eeb\u006e\u0067\u0020\u0068\u006f\u1ea1\u0074\u0020\u0111\u1ed9\u006e\u0067";
-        }
+        if ("hoatdong".equals(normalized)) return STATUS_ACTIVE;
+        if ("ngunghoatdong".equals(normalized) || "ngung".equals(normalized)) return STATUS_INACTIVE;
         return raw == null ? "" : raw;
     }
 
@@ -356,13 +336,12 @@ public class DepartmentPanel extends JPanel {
 
     private String normalizeTrangThai(String value) {
         if (value == null) return "";
-        String v = value.toLowerCase().trim();
-        v = v.replace("áº¡", "a").replace("ạ", "a")
-             .replace("á»™", "o").replace("ộ", "o")
-             .replace("á»«", "u").replace("ừ", "u")
-             .replace("á»", "o").replace("ờ", "o")
-             .replace("Ä‘", "d").replace("đ", "d");
-        v = v.replace("_", "").replace(" ", "").replace("-", "");
-        return v;
+        String v = Normalizer.normalize(value, Normalizer.Form.NFD)
+                .replaceAll("\\p{M}+", "")
+                .replace('đ', 'd')
+                .replace('Đ', 'D')
+                .toLowerCase()
+                .trim();
+        return v.replace("_", "").replace(" ", "").replace("-", "");
     }
 }

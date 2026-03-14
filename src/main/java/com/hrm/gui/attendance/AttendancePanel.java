@@ -5,7 +5,6 @@ import com.hrm.bus.ChamCongBUS;
 import com.hrm.bus.KetQua;
 import com.hrm.bus.LuongBUS;
 import com.hrm.bus.XacThucBUS;
-import com.hrm.dao.ChamCongDAO;
 import com.hrm.util.SessionContext;
 import com.hrm.util.UIColors;
 
@@ -97,8 +96,7 @@ public class AttendancePanel extends JPanel {
                    || attendanceScope == DataScope.DEPT
                    || attendanceScope == DataScope.TEAM;
         if (currentUser != null) {
-            maNVCaNhan = ChamCongDAO.getInstance()
-                .getMaNVByTaiKhoan(currentUser.getId());
+            maNVCaNhan = svc.getMaNVByTaiKhoan(currentUser.getId());
         }
         moneyFmt = NumberFormat.getInstance(new Locale("vi", "VN"));
         setLayout(new BorderLayout()); setBackground(UIColors.LIGHT_GRAY_BG);
@@ -172,7 +170,7 @@ public class AttendancePanel extends JPanel {
         DateTimeFormatter fN = DateTimeFormatter.ofPattern("dd/MM");
         DateTimeFormatter fG = DateTimeFormatter.ofPattern("HH:mm");
         for (ChamCong cc : ds) {
-            String maNhanVien = ChamCongDAO.getInstance().getMaNhanVienById(cc.getMaNV());
+            String maNhanVien = svc.getMaNhanVienById(cc.getMaNV());
             modelCC.addRow(new Object[]{
                 maNhanVien,
                 cc.getEmployeeName() != null ? cc.getEmployeeName() : "NV-" + cc.getMaNV(),
@@ -239,7 +237,7 @@ public class AttendancePanel extends JPanel {
         btnTim.addActionListener(e -> {
             String ma = txtMaNV.getText().trim();
             if (ma.isEmpty()) { JOptionPane.showMessageDialog(d, "Vui long nhap ma nhan vien."); return; }
-            ChamCongDAO.NhanVienInfo info = ChamCongDAO.getInstance().findNhanVienByMa(ma);
+                var info = svc.findNhanVienByMa(ma);
             if (info == null) {
                 infoPanel.setVisible(false); maNVRef[0] = null;
                 JOptionPane.showMessageDialog(d, "Khong tim thay nhan vien: " + ma, "Loi", JOptionPane.ERROR_MESSAGE);
@@ -266,7 +264,7 @@ public class AttendancePanel extends JPanel {
         g.gridx = 0; g.gridy = 3; g.gridwidth = 1; g.weightx = 0;
         f.add(new JLabel("Ca lam:"), g);
         JComboBox<String> cCa = new JComboBox<>();
-        for (CaLam ca : svc.getDanhSachCaLam()) cCa.addItem(ca.getMaCaLam() + " - " + ca.getTenCaLam());
+        for (CaLam ca : svc.getActiveCaLam()) cCa.addItem(ca.getMaCaLam() + " - " + ca.getTenCaLam());
         g.gridx = 1; g.gridwidth = 2; g.weightx = 1; f.add(cCa, g);
 
         // Row 4: Gio vao
@@ -315,24 +313,17 @@ public class AttendancePanel extends JPanel {
                 String maCa = ((String) cCa.getSelectedItem()).split(" - ")[0].trim();
                 String[] v  = tV.getText().trim().split(":");
                 String[] r  = tR.getText().trim().split(":");
-                ChamCong cc = new ChamCong();
-                cc.setMaNV(maNVRef[0]);
-                cc.setNgay(ngay);
-                cc.setMaCaLam(maCa);
-                CaLam caL = svc.getDanhSachCaLam().stream()
-                    .filter(c -> c.getMaCaLam().equals(maCa)).findFirst().orElse(null);
-                cc.setTenCaLam(caL != null ? caL.getTenCaLam() : maCa);
-                cc.setGioVao(ngay.atTime(Integer.parseInt(v[0]), Integer.parseInt(v[1])));
-                cc.setGioRa(ngay.atTime(Integer.parseInt(r[0]), Integer.parseInt(r[1])));
-                cc.setSoGioLam(cc.tinhSoGioLam());
-                cc.setPhuongThucChamCong(ChamCong.PhuongThuc.THU_CONG);
-                cc.setEmployeeName(lblHoTenVal.getText());
-                cc.setTrangThai(tts[cTT.getSelectedIndex()]);
-                if (caL != null && cc.getSoGioLam() > caL.getSoGioChuan())
-                    cc.setGioLamThem(cc.getSoGioLam() - caL.getSoGioChuan());
-                ChamCongDAO.getInstance().saveChamCong(cc);
-                JOptionPane.showMessageDialog(d, "Da them cham cong cho: " + lblHoTenVal.getText(), "Thanh cong", JOptionPane.INFORMATION_MESSAGE);
-                d.dispose(); loadCC();
+                LocalDateTime gioVao = ngay.atTime(Integer.parseInt(v[0]), Integer.parseInt(v[1]));
+                LocalDateTime gioRa = ngay.atTime(Integer.parseInt(r[0]), Integer.parseInt(r[1]));
+                KetQua<ChamCong> res = svc.themChamCongThuCong(
+                        maNVRef[0], ngay, maCa, gioVao, gioRa, tts[cTT.getSelectedIndex()], "Nhap thu cong");
+                JOptionPane.showMessageDialog(d, res.getMessage(),
+                        res.isSuccess() ? "Thanh cong" : "Loi",
+                        res.isSuccess() ? JOptionPane.INFORMATION_MESSAGE : JOptionPane.ERROR_MESSAGE);
+                if (res.isSuccess()) {
+                    d.dispose();
+                    loadCC();
+                }
             } catch (Exception ex) {
                 JOptionPane.showMessageDialog(d, "Loi: " + ex.getMessage(), "Loi", JOptionPane.ERROR_MESSAGE);
             }
@@ -365,7 +356,8 @@ public class AttendancePanel extends JPanel {
         JButton bT=btn("+ Them ca moi",UIColors.SUCCESS_GREEN); bT.addActionListener(e->dlgCaLam(null));
         JButton bS=btn("Sua",UIColors.PRIMARY_PURPLE); bS.addActionListener(e->{
             int row=tableCaLam.getSelectedRow(); if(row<0){JOptionPane.showMessageDialog(this,"Chon ca lam.");return;}
-            CaLam ca=ChamCongDAO.getInstance().findCaLamById((String)modelCaLam.getValueAt(row,0));
+            String maCa = (String) modelCaLam.getValueAt(row,0);
+            CaLam ca = svc.getAllCaLam().stream().filter(c -> c.getMaCaLam().equals(maCa)).findFirst().orElse(null);
             if(ca!=null)dlgCaLam(ca);});
         JButton bX=btn("Xoa",UIColors.DANGER_RED); bX.addActionListener(e->xoaCaLam());
         bp.add(bT); bp.add(bS); bp.add(bX); hdr.add(bp,BorderLayout.EAST); p.add(hdr,BorderLayout.NORTH);
@@ -378,7 +370,7 @@ public class AttendancePanel extends JPanel {
 
     private void loadCaLam() {
         modelCaLam.setRowCount(0); DateTimeFormatter f=DateTimeFormatter.ofPattern("HH:mm");
-        for(CaLam ca:svc.getTatCaCaLam()) modelCaLam.addRow(new Object[]{ca.getMaCaLam(),ca.getTenCaLam(),
+        for(CaLam ca:svc.getAllCaLam()) modelCaLam.addRow(new Object[]{ca.getMaCaLam(),ca.getTenCaLam(),
             ca.getGioBatDau().format(f),ca.getGioKetThuc().format(f),ca.getSoGioChuan(),
             ca.isChoPhepLamThem()?"Co":"Khong",ca.conHoatDong()?"Hoat dong":"Ngung hoat dong"});
     }
@@ -460,10 +452,10 @@ public class AttendancePanel extends JPanel {
         modelOT.setRowCount(0);
         DateTimeFormatter f = DateTimeFormatter.ofPattern("dd/MM/yyyy");
         List<DangKyLamThem> dsOT = canManageAll
-            ? ChamCongDAO.getInstance().findAllDonOT()
-            : ChamCongDAO.getInstance().findAllDangKyLamThemByScope(attendanceManageScope, maNVCaNhan);
+            ? svc.getDonLamThemTatCa()
+            : svc.getDonLamThemTatCaByScope(maNVCaNhan);
         for (DangKyLamThem don : dsOT) {
-            String maNhanVien = ChamCongDAO.getInstance().getMaNhanVienById(don.getMaNV());
+            String maNhanVien = svc.getMaNhanVienById(don.getMaNV());
             String tenNV = don.getEmployeeName() != null ? don.getEmployeeName() : maNhanVien;
             modelOT.addRow(new Object[]{
                 don.getMaDK(),
@@ -509,7 +501,7 @@ public class AttendancePanel extends JPanel {
     }
 
     private String getMaNVNguoiDuyet() {
-        return ChamCongDAO.getInstance().getMaNVByTaiKhoan(currentUser.getId());
+        return svc.getMaNVByTaiKhoan(currentUser.getId());
     }
 
     private void chinhHeSo() {
@@ -622,7 +614,7 @@ public class AttendancePanel extends JPanel {
 
         double tQ=0, tO=0, tK=0;
         for (ChiTietLuong ct : ds) {
-            String maNhanVien = ChamCongDAO.getInstance().getMaNhanVienById(ct.getMaNV());
+            String maNhanVien = svc.getMaNhanVienById(ct.getMaNV());
             modelLuong.addRow(new Object[]{
                 maNhanVien, ct.getTenNV(),
                 fmtTien(ct.getLuongCoBan()), (int) ct.getSoNgayCong(),
@@ -720,7 +712,7 @@ public class AttendancePanel extends JPanel {
 
         List<ChiTietLuong> dsCT = luongSvc.getChiTiet(bangLuongHienTai.getMaBL());
         ChiTietLuong ct = dsCT.stream()
-            .filter(c -> ChamCongDAO.getInstance().getMaNhanVienById(c.getMaNV()).equals(maNhanVienHienThi))
+            .filter(c -> svc.getMaNhanVienById(c.getMaNV()).equals(maNhanVienHienThi))
             .findFirst().orElse(null);
         if (ct == null) { JOptionPane.showMessageDialog(this, "Khong tim thay chi tiet."); return; }
 
@@ -807,7 +799,7 @@ public class AttendancePanel extends JPanel {
             int row = tablePC.getSelectedRow();
             if (row < 0) { JOptionPane.showMessageDialog(this, "Chon khoan de sua."); return; }
             int maPC = (int) modelPC.getValueAt(row, 0);
-            CauHinhPhuCap pc = ChamCongDAO.getInstance().findCauHinhPCById(maPC);
+            CauHinhPhuCap pc = svc.getCauHinhPCById(maPC);
             if (pc != null) dlgPhuCap(pc);
         });
         JButton bXoa = btn("Xoa", UIColors.DANGER_RED); bXoa.addActionListener(e -> xoaPhuCap());
@@ -1029,7 +1021,7 @@ public class AttendancePanel extends JPanel {
         btnTim.addActionListener(e -> {
             String ma = txtMaNVCN.getText().trim();
             if (ma.isEmpty()) { JOptionPane.showMessageDialog(this, "Vui long nhap ma nhan vien.", "Thong bao", JOptionPane.WARNING_MESSAGE); return; }
-            ChamCongDAO.NhanVienInfo info = ChamCongDAO.getInstance().findNhanVienByMa(ma);
+                var info = svc.findNhanVienByMa(ma);
             if (info == null) {
                 infoPanelCN.setVisible(false); chamCongStatusPanelCN.setVisible(false);
                 if (histPanelCN != null) histPanelCN.setVisible(false);
@@ -1084,7 +1076,7 @@ public class AttendancePanel extends JPanel {
 
         // Tu dong load thong tin nguoi dang dang nhap neu co lien ket NV
         if (maNVCaNhan != null) {
-            String maNhanVienStr = ChamCongDAO.getInstance().getMaNhanVienById(maNVCaNhan);
+                String maNhanVienStr = svc.getMaNhanVienById(maNVCaNhan);
             if (maNhanVienStr != null) {
                 txtMaNVCN.setText(maNhanVienStr);
                 btnTim.doClick();

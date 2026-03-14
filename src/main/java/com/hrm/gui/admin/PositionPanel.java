@@ -1,9 +1,10 @@
 package com.hrm.gui.admin;
 
+import com.hrm.bus.ChucVuBUS;
+import com.hrm.bus.KetQua;
 import com.hrm.model.ChucVu;
 import com.hrm.model.LichSuHeSoLuong;
-import com.hrm.dao.ChucVuDAO;
-import com.hrm.bus.ChucVuBUS;
+import com.hrm.util.DialogUtil;
 import com.hrm.util.SessionContext;
 import com.hrm.util.UIHelper;
 
@@ -11,13 +12,18 @@ import javax.swing.*;
 import javax.swing.table.DefaultTableModel;
 import javax.swing.table.TableRowSorter;
 import java.awt.*;
+import java.text.Normalizer;
 import java.text.NumberFormat;
 import java.util.List;
 import java.util.Locale;
 
 public class PositionPanel extends JPanel {
 
-    private ChucVuBUS service = new ChucVuBUS();
+    private static final String STATUS_ALL = "Tất cả";
+    private static final String STATUS_ACTIVE = "Hoạt động";
+    private static final String STATUS_INACTIVE = "Ngừng hoạt động";
+
+    private final ChucVuBUS service = new ChucVuBUS();
     private JTable table;
     private DefaultTableModel tableModel;
     private TableRowSorter<DefaultTableModel> sorter;
@@ -25,15 +31,12 @@ public class PositionPanel extends JPanel {
 
     private JTextField txtSearch;
     private JComboBox<String> cboFilter;
-
-    // Buttons cần phân quyền
     private JButton btnThem;
 
     public PositionPanel() {
         setLayout(new BorderLayout());
         setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
 
-        // ── PANEL TRÊN: Tiêu đề + Tìm kiếm + Lọc
         JPanel topPanel = new JPanel(new BorderLayout());
 
         JLabel title = new JLabel("QUẢN LÝ CHỨC VỤ");
@@ -46,19 +49,14 @@ public class PositionPanel extends JPanel {
         lblHint.setFont(new Font("Arial", Font.ITALIC, 11));
         topPanel.add(lblHint, BorderLayout.SOUTH);
 
-        // Panel chứa search + filter
         JPanel searchFilterPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
 
         JLabel lblSearch = new JLabel("Tìm kiếm:");
         txtSearch = new JTextField(20);
         txtSearch.setToolTipText("Nhập mã hoặc tên chức vụ để tìm kiếm");
 
-        JLabel lblFilter = new JLabel("    Trạng thái:");
-        cboFilter = new JComboBox<>(new String[] {
-                "\u0054\u1ea5\u0074\u0020\u0063\u1ea3",
-                "\u0048\u006f\u1ea1\u0074\u0020\u0111\u1ed9\u006e\u0067",
-                "\u004e\u0067\u1eeb\u006e\u0067\u0020\u0068\u006f\u1ea1\u0074\u0020\u0111\u1ed9\u006e\u0067"
-        });
+        JLabel lblFilter = new JLabel("    Trang thai:");
+        cboFilter = new JComboBox<>(new String[]{STATUS_ALL, STATUS_ACTIVE, STATUS_INACTIVE});
 
         searchFilterPanel.add(lblSearch);
         searchFilterPanel.add(txtSearch);
@@ -66,10 +64,8 @@ public class PositionPanel extends JPanel {
         searchFilterPanel.add(cboFilter);
 
         topPanel.add(searchFilterPanel, BorderLayout.CENTER);
-
         add(topPanel, BorderLayout.NORTH);
 
-        // ── BẢNG
         tableModel = new DefaultTableModel(
                 new Object[] { "Mã CV", "Tên chức vụ", "Cấp bậc", "Hệ số lương", "Phụ cấp (VND)", "Trạng thái" }, 0) {
             public boolean isCellEditable(int row, int col) {
@@ -88,36 +84,26 @@ public class PositionPanel extends JPanel {
         table.getColumnModel().getColumn(4).setPreferredWidth(110);
         table.getColumnModel().getColumn(5).setPreferredWidth(90);
 
-        // Thêm sorter để có thể filter
         sorter = new TableRowSorter<>(tableModel);
         table.setRowSorter(sorter);
 
         add(new JScrollPane(table), BorderLayout.CENTER);
 
-        // ── THANH NÚT
-        btnThem = UIHelper.createPrimaryButton("+ Thêm");
-
+        btnThem = UIHelper.createPrimaryButton("+ Them");
         JPanel btnPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
         btnPanel.add(btnThem);
         add(btnPanel, BorderLayout.SOUTH);
 
-        // ── PHÂN QUYỀN
         setupPermissions();
 
-        // ── SỰ KIỆN
         btnThem.addActionListener(e -> showAddDialog());
-
-        // Tìm kiếm realtime
         txtSearch.addKeyListener(new java.awt.event.KeyAdapter() {
             public void keyReleased(java.awt.event.KeyEvent e) {
                 applyFilter();
             }
         });
-
-        // Lọc theo trạng thái
         cboFilter.addActionListener(e -> applyFilter());
 
-        // Double-click mở dialog chi tiết
         table.addMouseListener(new java.awt.event.MouseAdapter() {
             public void mouseClicked(java.awt.event.MouseEvent e) {
                 if (e.getClickCount() == 2) {
@@ -129,13 +115,9 @@ public class PositionPanel extends JPanel {
         refreshTable();
     }
 
-    // ── PHÂN QUYỀN
-
     private void setupPermissions() {
         btnThem.setVisible(SessionContext.getInstance().coQuyen("POSITION_MANAGE"));
     }
-
-    // ── LỌC DỮ LIỆU
 
     private void applyFilter() {
         String searchText = txtSearch.getText().toLowerCase().trim();
@@ -143,12 +125,10 @@ public class PositionPanel extends JPanel {
 
         RowFilter<DefaultTableModel, Object> rf = new RowFilter<DefaultTableModel, Object>() {
             public boolean include(Entry<? extends DefaultTableModel, ? extends Object> entry) {
-                // Lọc theo mã (cột 0) hoặc tên (cột 1)
                 String ma = entry.getStringValue(0).toLowerCase();
                 String tenChucVu = entry.getStringValue(1).toLowerCase();
                 boolean matchSearch = searchText.isEmpty() || ma.contains(searchText) || tenChucVu.contains(searchText);
 
-                // Lọc theo trạng thái (cột 5)
                 String trangThai = normalizeTrangThai(entry.getStringValue(5));
                 boolean matchStatus = true;
 
@@ -165,12 +145,10 @@ public class PositionPanel extends JPanel {
         sorter.setRowFilter(rf);
     }
 
-    // ── LÀM MỚI BẢNG
-
     private void refreshTable() {
         tableModel.setRowCount(0);
         for (ChucVu p : service.getAllPositions()) {
-            tableModel.addRow(new Object[] {
+            tableModel.addRow(new Object[]{
                     p.getId(),
                     p.getTenChucVu(),
                     "Cap " + p.getCapBac(),
@@ -180,12 +158,9 @@ public class PositionPanel extends JPanel {
             });
         }
 
-        // Reset filter sau khi refresh
         txtSearch.setText("");
         cboFilter.setSelectedIndex(0);
     }
-
-    // ── FORM THÊM
 
     private void showAddDialog() {
         JTextField txtMa = new JTextField();
@@ -206,7 +181,6 @@ public class PositionPanel extends JPanel {
         };
 
         int ok = JOptionPane.showConfirmDialog(this, fields, "Them chuc vu moi", JOptionPane.OK_CANCEL_OPTION);
-
         if (ok != JOptionPane.OK_OPTION) {
             return;
         }
@@ -217,8 +191,8 @@ public class PositionPanel extends JPanel {
                 JOptionPane.showMessageDialog(this, "Ma chuc vu khong duoc de trong.", "Loi nhap lieu", JOptionPane.ERROR_MESSAGE);
                 return;
             }
-            // Kiểm tra trùng mã chức vụ đang hoạt động
-            if (new ChucVuDAO().existsActiveByCode(maChucVu)) {
+
+            if (service.existsActiveByCode(maChucVu)) {
                 JOptionPane.showMessageDialog(this,
                         "Ma chuc vu '" + maChucVu + "' da ton tai va dang hoat dong. Vui long dung ma khac.",
                         "Trung ma chuc vu", JOptionPane.ERROR_MESSAGE);
@@ -229,24 +203,25 @@ public class PositionPanel extends JPanel {
             double heSo = Double.parseDouble(txtHeSo.getText().trim());
             double phuCap = Double.parseDouble(txtPhuCap.getText().trim());
 
-            service.addPosition(maChucVu, txtTen.getText().trim(), capBac, heSo, phuCap,
+            KetQua<Void> kq = service.addPosition(maChucVu, txtTen.getText().trim(), capBac, heSo, phuCap,
                     txtMoTa.getText().trim());
-            refreshTable();
-            JOptionPane.showMessageDialog(this, "Them chuc vu thanh cong!");
+            if (!kq.isSuccess()) {
+                DialogUtil.showError(this, kq.getMessage());
+                return;
+            }
 
+            refreshTable();
+            DialogUtil.showSuccess(this, kq.getMessage());
         } catch (NumberFormatException ex) {
             JOptionPane.showMessageDialog(this, "Cap bac, he so, phu cap phai la so hop le.", "Loi nhap lieu",
                     JOptionPane.ERROR_MESSAGE);
-        } catch (IllegalArgumentException ex) {
-            JOptionPane.showMessageDialog(this, ex.getMessage(), "Loi", JOptionPane.ERROR_MESSAGE);
         }
     }
-
-    // ── DIALOG CHI TIẾT / SỬA (double-click)
 
     private void showDetailDialog() {
         int row = table.getSelectedRow();
         if (row == -1) return;
+
         int modelRow = table.convertRowIndexToModel(row);
         String ma = (String) tableModel.getValueAt(modelRow, 0);
         ChucVu pos = service.getById(ma);
@@ -255,7 +230,7 @@ public class PositionPanel extends JPanel {
         boolean canEdit = SessionContext.getInstance().coQuyen("POSITION_MANAGE");
 
         Frame frame = (Frame) SwingUtilities.getWindowAncestor(this);
-        JDialog dialog = new JDialog(frame, "Chi tiết chức vụ - " + pos.getTenChucVu(), true);
+        JDialog dialog = new JDialog(frame, "Chi tiet chuc vu - " + pos.getTenChucVu(), true);
 
         JTextField txtMa = new JTextField(pos.getId());
         txtMa.setEnabled(false);
@@ -265,70 +240,100 @@ public class PositionPanel extends JPanel {
         JTextField txtPhuCap = new JTextField(String.valueOf(pos.getPhuCapChucVu()));
         JTextArea txtMoTa = new JTextArea(pos.getMoTa() != null ? pos.getMoTa() : "", 3, 20);
         txtMoTa.setLineWrap(true);
-        JComboBox<String> cboTrangThai = new JComboBox<>(new String[]{
-                "\u0048\u006f\u1ea1\u0074\u0020\u0111\u1ed9\u006e\u0067",
-                "\u004e\u0067\u1eeb\u006e\u0067\u0020\u0068\u006f\u1ea1\u0074\u0020\u0111\u1ed9\u006e\u0067"
-        });
+
+        JComboBox<String> cboTrangThai = new JComboBox<>(new String[]{STATUS_ACTIVE, STATUS_INACTIVE});
         cboTrangThai.setSelectedItem(toTrangThaiDisplay(pos.getTrangThai()));
         cboTrangThai.setEnabled(canEdit);
 
         for (JComponent c : new JComponent[]{txtTen, txtCapBac, txtHeSo, txtPhuCap, txtMoTa}) {
-            if (c instanceof JTextField) ((JTextField) c).setEditable(canEdit);
-            else ((JTextArea) c).setEditable(canEdit);
+            if (c instanceof JTextField) {
+                ((JTextField) c).setEditable(canEdit);
+            } else {
+                ((JTextArea) c).setEditable(canEdit);
+            }
         }
 
-        // Form
         JPanel form = new JPanel(new GridBagLayout());
         form.setBorder(BorderFactory.createEmptyBorder(16, 16, 8, 16));
         GridBagConstraints gbc = new GridBagConstraints();
         gbc.insets = new Insets(5, 8, 5, 8);
         gbc.anchor = GridBagConstraints.WEST;
 
-        String[] labels = {"Mã chức vụ:", "Tên chức vụ (*):", "Cấp bậc:", "Hệ số lương (*):", "Phụ cấp (VND):", "Mô tả:", "Trạng thái:"};
+        String[] labels = {
+                "Ma chuc vu:", "Ten chuc vu (*):", "Cap bac:", "He so luong (*):",
+                "Phu cap (VND):", "Mo ta:", "Trang thai:"
+        };
         JComponent[] flds = {txtMa, txtTen, txtCapBac, txtHeSo, txtPhuCap, new JScrollPane(txtMoTa), cboTrangThai};
+
         for (int i = 0; i < labels.length; i++) {
-            gbc.gridx = 0; gbc.gridy = i; gbc.fill = GridBagConstraints.NONE; gbc.weightx = 0;
+            gbc.gridx = 0;
+            gbc.gridy = i;
+            gbc.fill = GridBagConstraints.NONE;
+            gbc.weightx = 0;
+
             JLabel lbl = new JLabel(labels[i]);
             lbl.setFont(com.hrm.util.UIFonts.TEXT_NORMAL);
             form.add(lbl, gbc);
-            gbc.gridx = 1; gbc.fill = GridBagConstraints.HORIZONTAL; gbc.weightx = 1.0;
+
+            gbc.gridx = 1;
+            gbc.fill = GridBagConstraints.HORIZONTAL;
+            gbc.weightx = 1.0;
             flds[i].setPreferredSize(new Dimension(210, i == 5 ? 60 : 28));
             form.add(flds[i], gbc);
         }
 
-        // Buttons
         JPanel btnPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT, 8, 8));
-        JButton btnHuy = UIHelper.createDefaultButton("Hủy");
+        JButton btnHuy = UIHelper.createDefaultButton("Huy");
         btnHuy.addActionListener(e -> dialog.dispose());
 
-        JButton btnLichSuBtn = UIHelper.createDefaultButton("Xem lịch sử hệ số");
+        JButton btnLichSuBtn = UIHelper.createDefaultButton("Xem lich su he so");
         btnLichSuBtn.addActionListener(e -> showHistoryDialog());
         btnPanel.add(btnLichSuBtn);
         btnPanel.add(btnHuy);
 
         if (canEdit) {
-            JButton btnLuu = UIHelper.createSuccessButton("Lưu");
+            JButton btnLuu = UIHelper.createSuccessButton("Luu");
             btnLuu.addActionListener(e -> {
                 try {
                     int capBac = Integer.parseInt(txtCapBac.getText().trim());
                     double heSo = Double.parseDouble(txtHeSo.getText().trim());
                     double phuCap = Double.parseDouble(txtPhuCap.getText().trim());
-                    service.updatePosition(ma, txtTen.getText().trim(), capBac, heSo, phuCap, txtMoTa.getText().trim());
+
+                    KetQua<Void> kqCapNhat = service.updatePosition(
+                            ma,
+                            txtTen.getText().trim(),
+                            capBac,
+                            heSo,
+                            phuCap,
+                            txtMoTa.getText().trim()
+                    );
+                    if (!kqCapNhat.isSuccess()) {
+                        DialogUtil.showError(dialog, kqCapNhat.getMessage());
+                        return;
+                    }
+
                     String rawTrangThaiMoi = toTrangThaiRaw((String) cboTrangThai.getSelectedItem());
                     if (!normalizeTrangThai(rawTrangThaiMoi).equals(normalizeTrangThai(pos.getTrangThai()))) {
+                        KetQua<Void> kqTrangThai;
                         if ("hoat_dong".equals(rawTrangThaiMoi)) {
-                            service.activatePosition(ma);
+                            kqTrangThai = service.activatePosition(ma);
                         } else {
-                            service.deactivatePosition(ma);
+                            kqTrangThai = service.deactivatePosition(ma);
+                        }
+                        if (!kqTrangThai.isSuccess()) {
+                            DialogUtil.showError(dialog, kqTrangThai.getMessage());
+                            return;
                         }
                     }
+
                     refreshTable();
                     dialog.dispose();
-                    JOptionPane.showMessageDialog(PositionPanel.this, "Cập nhật chức vụ thành công!");
+                    DialogUtil.showSuccess(PositionPanel.this, "Cap nhat chuc vu thanh cong!");
                 } catch (NumberFormatException ex) {
-                    JOptionPane.showMessageDialog(dialog, "Cap bac, he so, phu cap phai la so hop le.", "Loi nhap lieu", JOptionPane.ERROR_MESSAGE);
-                } catch (IllegalArgumentException ex) {
-                    JOptionPane.showMessageDialog(dialog, ex.getMessage(), "Loi", JOptionPane.ERROR_MESSAGE);
+                    JOptionPane.showMessageDialog(dialog,
+                            "Cap bac, he so, phu cap phai la so hop le.",
+                            "Loi nhap lieu",
+                            JOptionPane.ERROR_MESSAGE);
                 }
             });
             btnPanel.add(btnLuu);
@@ -344,8 +349,6 @@ public class PositionPanel extends JPanel {
         dialog.setVisible(true);
     }
 
-    // ── DIALOG XEM LỊCH SỬ
-
     private void showHistoryDialog() {
         int row = table.getSelectedRow();
         if (row == -1) {
@@ -360,16 +363,17 @@ public class PositionPanel extends JPanel {
         List<LichSuHeSoLuong> danhSach = service.getHistoryByMaChucVu(ma);
 
         DefaultTableModel histModel = new DefaultTableModel(
-                new Object[] { "Ngay thay doi", "He so cu", "He so moi", "Phu cap cu (VND)", "Phu cap moi (VND)",
-                        "Nguoi thay doi" },
-                0) {
+                new Object[]{"Ngay thay doi", "He so cu", "He so moi", "Phu cap cu (VND)", "Phu cap moi (VND)", "Nguoi thay doi"},
+                0
+        ) {
+            @Override
             public boolean isCellEditable(int r, int c) {
                 return false;
             }
         };
 
         for (LichSuHeSoLuong h : danhSach) {
-            histModel.addRow(new Object[] {
+            histModel.addRow(new Object[]{
                     h.getNgayThayDoi(),
                     h.getHeSoLuongCu() + "x",
                     h.getHeSoLuongMoi() + "x",
@@ -385,7 +389,7 @@ public class PositionPanel extends JPanel {
         scroll.setPreferredSize(new Dimension(640, 200));
 
         JDialog dialog = new JDialog((Frame) SwingUtilities.getWindowAncestor(this),
-                "Lich su he so luong — " + ten + " (" + ma + ")", true);
+                "Lich su he so luong - " + ten + " (" + ma + ")", true);
         dialog.setLayout(new BorderLayout());
 
         if (danhSach.isEmpty()) {
@@ -407,10 +411,8 @@ public class PositionPanel extends JPanel {
 
     private String toTrangThaiDisplay(String raw) {
         String normalized = normalizeTrangThai(raw);
-        if ("hoatdong".equals(normalized)) return "\u0048\u006f\u1ea1\u0074\u0020\u0111\u1ed9\u006e\u0067";
-        if ("ngunghoatdong".equals(normalized) || "ngung".equals(normalized)) {
-            return "\u004e\u0067\u1eeb\u006e\u0067\u0020\u0068\u006f\u1ea1\u0074\u0020\u0111\u1ed9\u006e\u0067";
-        }
+        if ("hoatdong".equals(normalized)) return STATUS_ACTIVE;
+        if ("ngunghoatdong".equals(normalized) || "ngung".equals(normalized)) return STATUS_INACTIVE;
         return raw == null ? "" : raw;
     }
 
@@ -423,13 +425,12 @@ public class PositionPanel extends JPanel {
 
     private String normalizeTrangThai(String value) {
         if (value == null) return "";
-        String v = value.toLowerCase().trim();
-        v = v.replace("áº¡", "a").replace("ạ", "a")
-             .replace("á»™", "o").replace("ộ", "o")
-             .replace("á»«", "u").replace("ừ", "u")
-             .replace("á»", "o").replace("ờ", "o")
-             .replace("Ä‘", "d").replace("đ", "d");
-        v = v.replace("_", "").replace(" ", "").replace("-", "");
-        return v;
+        String v = Normalizer.normalize(value, Normalizer.Form.NFD)
+                .replaceAll("\\p{M}+", "")
+                .replace('đ', 'd')
+                .replace('Đ', 'D')
+                .toLowerCase()
+                .trim();
+        return v.replace("_", "").replace(" ", "").replace("-", "");
     }
 }

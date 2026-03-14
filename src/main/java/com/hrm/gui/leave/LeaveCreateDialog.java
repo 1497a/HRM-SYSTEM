@@ -2,6 +2,7 @@ package com.hrm.gui.leave;
 
 import com.hrm.model.LoaiPhep;
 import com.hrm.model.TaiKhoan;
+import com.hrm.bus.KetQua;
 import com.hrm.bus.NghiPhepBUS;
 import com.hrm.util.SessionContext;
 import com.hrm.util.UIHelper;
@@ -186,7 +187,7 @@ public class LeaveCreateDialog extends JDialog {
         LocalDate start = startDate.toInstant().atZone(ZoneId.systemDefault()).toLocalDate();
         LocalDate end = endDate.toInstant().atZone(ZoneId.systemDefault()).toLocalDate();
 
-        NghiPhepBUS.KetQua<?> result = leaveService.createRequest(
+        KetQua<?> result = leaveService.createRequest(
                 currentUser.getNhanVienId(),
                 currentUser.getHoTen(),
                 leaveType.getId(),

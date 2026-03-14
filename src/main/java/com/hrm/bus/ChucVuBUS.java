@@ -18,6 +18,9 @@ import java.util.stream.Collectors;
  * Tự động ghi lịch sử khi hệ số lương hoặc phụ cấp thay đổi.
  */
 public class ChucVuBUS {
+    private static final String TRANG_THAI_HOAT_DONG = "hoatdong";
+    private static final String TRANG_THAI_NGUNG_HOAT_DONG = "ngung_hoat_dong";
+    private static final String DEFAULT_USER_NAME = "Admin";
 
     private final ChucVuDAO positionRepo = new ChucVuDAO();
     private final LichSuLuongDAO historyRepo = LichSuLuongDAO.getInstance();
@@ -54,6 +57,10 @@ public class ChucVuBUS {
         return positionRepo.findById(maChucVu);
     }
 
+    public boolean existsActiveByCode(String maChucVu) {
+        return positionRepo.existsActiveByCode(maChucVu);
+    }
+
     /**
      * Lấy lịch sử thay đổi hệ số lương của một chức vụ.
      */
@@ -71,27 +78,27 @@ public class ChucVuBUS {
      * @param phuCapChucVu phụ cấp chức vụ (>=0)
      * @param moTa         mô tả
      */
-    public void addPosition(String maChucVu, String tenChucVu, int capBac,
-                            double heSoLuong, double phuCapChucVu, String moTa) {
+    public KetQua<Void> addPosition(String maChucVu, String tenChucVu, int capBac,
+                                    double heSoLuong, double phuCapChucVu, String moTa) {
 
-        if (maChucVu == null || maChucVu.trim().isEmpty()) {
-            throw new IllegalArgumentException("Mã chức vụ không được để trống.");
+        if (isBlank(maChucVu)) {
+            return KetQua.error("Mã chức vụ không được để trống.");
         }
 
-        if (tenChucVu == null || tenChucVu.trim().isEmpty()) {
-            throw new IllegalArgumentException("Tên chức vụ không được để trống.");
+        if (isBlank(tenChucVu)) {
+            return KetQua.error("Tên chức vụ không được để trống.");
         }
 
         if (positionRepo.existsById(maChucVu.trim())) {
-            throw new IllegalArgumentException("Mã chức vụ '" + maChucVu + "' đã tồn tại.");
+            return KetQua.error("Mã chức vụ '" + maChucVu + "' đã tồn tại.");
         }
 
         if (heSoLuong <= 0) {
-            throw new IllegalArgumentException("Hệ số lương phải lớn hơn 0.");
+            return KetQua.error("Hệ số lương phải lớn hơn 0.");
         }
 
         if (phuCapChucVu < 0) {
-            throw new IllegalArgumentException("Phụ cấp không được âm.");
+            return KetQua.error("Phụ cấp không được âm.");
         }
 
         ChucVu pos = new ChucVu(
@@ -101,35 +108,36 @@ public class ChucVuBUS {
                 heSoLuong,
                 phuCapChucVu,
                 moTa,
-                "hoatdong"
+                TRANG_THAI_HOAT_DONG
         );
 
         positionRepo.save(pos);
+        return KetQua.success(null, "Thêm chức vụ thành công.");
     }
 
     /**
      * Cập nhật thông tin chức vụ.
      * Tự động ghi lịch sử nếu hệ số lương hoặc phụ cấp thay đổi.
      */
-    public void updatePosition(String maChucVu, String tenMoi, int capBacMoi,
-                               double heSoMoi, double phuCapMoi, String moTaMoi) {
+    public KetQua<Void> updatePosition(String maChucVu, String tenMoi, int capBacMoi,
+                                       double heSoMoi, double phuCapMoi, String moTaMoi) {
 
         ChucVu pos = positionRepo.findById(maChucVu);
 
         if (pos == null) {
-            throw new IllegalArgumentException("Không tìm thấy chức vụ.");
+            return KetQua.error("Không tìm thấy chức vụ.");
         }
 
-        if (tenMoi == null || tenMoi.trim().isEmpty()) {
-            throw new IllegalArgumentException("Tên chức vụ không được để trống.");
+        if (isBlank(tenMoi)) {
+            return KetQua.error("Tên chức vụ không được để trống.");
         }
 
         if (heSoMoi <= 0) {
-            throw new IllegalArgumentException("Hệ số lương phải lớn hơn 0.");
+            return KetQua.error("Hệ số lương phải lớn hơn 0.");
         }
 
         if (phuCapMoi < 0) {
-            throw new IllegalArgumentException("Phụ cấp không được âm.");
+            return KetQua.error("Phụ cấp không được âm.");
         }
 
         boolean heSoThayDoi = Double.compare(pos.getHeSoLuong(), heSoMoi) != 0;
@@ -163,40 +171,43 @@ public class ChucVuBUS {
         pos.setMoTa(moTaMoi);
 
         positionRepo.update(pos);
+        return KetQua.success(null, "Cập nhật chức vụ thành công.");
     }
 
     /**
      * Ngừng hoạt động chức vụ.
      */
-    public void deactivatePosition(String maChucVu) {
+    public KetQua<Void> deactivatePosition(String maChucVu) {
 
         ChucVu pos = positionRepo.findById(maChucVu);
 
         if (pos == null) {
-            throw new IllegalArgumentException("Không tìm thấy chức vụ.");
+            return KetQua.error("Không tìm thấy chức vụ.");
         }
 
         if (boNhiemRepo.hasActiveBoNhiemByChucVu(maChucVu)) {
-            throw new IllegalArgumentException("Không thể ngừng hoạt động chức vụ vì còn nhân viên đang giữ chức vụ này.");
+            return KetQua.error("Không thể ngừng hoạt động chức vụ vì còn nhân viên đang giữ chức vụ này.");
         }
 
-        pos.setTrangThai("ngung_hoat_dong");
+        pos.setTrangThai(TRANG_THAI_NGUNG_HOAT_DONG);
         positionRepo.update(pos);
+        return KetQua.success(null, "Đã ngừng hoạt động chức vụ.");
     }
 
     /**
      * Kích hoạt lại chức vụ đã ngừng.
      */
-    public void activatePosition(String maChucVu) {
+    public KetQua<Void> activatePosition(String maChucVu) {
 
         ChucVu pos = positionRepo.findById(maChucVu);
 
         if (pos == null) {
-            throw new IllegalArgumentException("Không tìm thấy chức vụ.");
+            return KetQua.error("Không tìm thấy chức vụ.");
         }
 
-        pos.setTrangThai("hoatdong");
+        pos.setTrangThai(TRANG_THAI_HOAT_DONG);
         positionRepo.update(pos);
+        return KetQua.success(null, "Đã kích hoạt lại chức vụ.");
     }
 
     /**
@@ -217,6 +228,10 @@ public class ChucVuBUS {
             return session.getCurrentUser().getTenDangNhap();
         }
 
-        return "Admin";
+        return DEFAULT_USER_NAME;
+    }
+
+    private boolean isBlank(String value) {
+        return value == null || value.trim().isEmpty();
     }
 }

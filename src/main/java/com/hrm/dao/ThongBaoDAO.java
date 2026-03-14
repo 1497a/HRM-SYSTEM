@@ -4,7 +4,6 @@ import com.hrm.model.ThongBao;
 import com.hrm.util.DatabaseConnection;
 
 import java.sql.*;
-import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -212,5 +211,67 @@ public class ThongBaoDAO {
             System.err.println("Lỗi markAllAsRead: " + e.getMessage());
             e.printStackTrace();
         }
+    }
+    public Integer findMaTaiKhoanByMaNV(String maNV) {
+        String sql = "SELECT maTaiKhoan FROM TAIKHOAN WHERE maNV = ?";
+        try (Connection conn = DatabaseConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setString(1, maNV);
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    return rs.getInt(1);
+                }
+            }
+        } catch (SQLException e) {
+            System.err.println("Loi findMaTaiKhoanByMaNV: " + e.getMessage());
+            e.printStackTrace();
+        }
+        return null;
+    }
+
+    public List<Integer> findTaiKhoanByPhongBan(String maPhongBan) {
+        return findTaiKhoanByBoNhiemField("maPhongBan", maPhongBan, "findTaiKhoanByPhongBan");
+    }
+
+    public List<Integer> findTaiKhoanByChucVu(String maChucVu) {
+        return findTaiKhoanByBoNhiemField("maChucVu", maChucVu, "findTaiKhoanByChucVu");
+    }
+
+    public List<Integer> findAllActiveTaiKhoan() {
+        List<Integer> list = new ArrayList<>();
+        String sql = "SELECT maTaiKhoan FROM TAIKHOAN WHERE hoatDong = TRUE AND biKhoa = FALSE";
+        try (Connection conn = DatabaseConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql);
+             ResultSet rs = ps.executeQuery()) {
+            while (rs.next()) {
+                list.add(rs.getInt(1));
+            }
+        } catch (SQLException e) {
+            System.err.println("Loi findAllActiveTaiKhoan: " + e.getMessage());
+            e.printStackTrace();
+        }
+        return list;
+    }
+
+    private List<Integer> findTaiKhoanByBoNhiemField(String fieldName, String value, String logTag) {
+        List<Integer> list = new ArrayList<>();
+        String sql = "SELECT DISTINCT tk.maTaiKhoan FROM TAIKHOAN tk "
+                + "JOIN NHANVIEN nv ON tk.maNV = nv.maNV "
+                + "JOIN BONHIEM bn ON nv.maNV = bn.maNV "
+                + "WHERE bn." + fieldName + " = ? AND bn.trangThai = 'hieu_luc' "
+                + "AND nv.trangThai = 'dang_lam_viec' AND tk.hoatDong = TRUE";
+        try (Connection conn = DatabaseConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setString(1, value);
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    list.add(rs.getInt(1));
+                }
+            }
+        } catch (SQLException e) {
+            System.err.println("Loi " + logTag + ": " + e.getMessage());
+            e.printStackTrace();
+        }
+        return list;
     }
 }

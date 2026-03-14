@@ -16,6 +16,7 @@ import java.util.Set;
  * Đã cập nhật để maNV là String (ví dụ: "NV001", "NV002", ...).
  */
 public class DanhGiaBUS {
+    private static final String ACTION_EVAL_VIEW = "EVAL_VIEW";
 
     private static DanhGiaBUS instance;
     private final DanhGiaDAO repository;
@@ -81,18 +82,8 @@ public class DanhGiaBUS {
     public KetQua<DotDanhGia> taoDotDanhGia(String tenDot, int nam, String kyDanhGia,
                                             LocalDate tuNgay, LocalDate denNgay,
                                             List<TieuChiDanhGia> selectedCriteria) {
-        if (tenDot == null || tenDot.trim().isEmpty()) {
-            return KetQua.error("Tên đợt đánh giá không được để trống.");
-        }
-        if (tuNgay == null || denNgay == null) {
-            return KetQua.error("Vui lòng chọn ngày bắt đầu và ngày kết thúc.");
-        }
-        if (!denNgay.isAfter(tuNgay)) {
-            return KetQua.error("Ngày kết thúc phải sau ngày bắt đầu.");
-        }
-        if (selectedCriteria == null || selectedCriteria.isEmpty()) {
-            return KetQua.error("Vui lòng chọn ít nhất một tiêu chí đánh giá.");
-        }
+        KetQua<Void> cycleValidation = validateCycleInput(tenDot, tuNgay, denNgay, selectedCriteria);
+        if (!cycleValidation.isSuccess()) return KetQua.error(cycleValidation.getMessage());
 
         // Kiểm tra tổng trọng số = 100% (cho phép sai số nhỏ)
         double tongTrongSo = selectedCriteria.stream()
@@ -136,15 +127,8 @@ public class DanhGiaBUS {
 
     public KetQua<TieuChiDanhGia> saveCriteria(String tenTieuChi, String moTa, String nhomTieuChi,
                                                double diemToiDa, double trongSo) {
-        if (tenTieuChi == null || tenTieuChi.trim().isEmpty()) {
-            return KetQua.error("Tên tiêu chí không được để trống.");
-        }
-        if (diemToiDa <= 0) {
-            return KetQua.error("Điểm tối đa phải lớn hơn 0.");
-        }
-        if (trongSo < 0 || trongSo > 100) {
-            return KetQua.error("Trọng số phải từ 0 đến 100.");
-        }
+        KetQua<Void> criteriaValidation = validateCriteriaInput(tenTieuChi, diemToiDa, trongSo);
+        if (!criteriaValidation.isSuccess()) return KetQua.error(criteriaValidation.getMessage());
 
         TieuChiDanhGia tc = new TieuChiDanhGia();
         tc.setTenTieuChi(tenTieuChi.trim());
@@ -165,15 +149,8 @@ public class DanhGiaBUS {
             return KetQua.error("Không tìm thấy tiêu chí #" + maTieuChi);
         }
 
-        if (tenTieuChi == null || tenTieuChi.trim().isEmpty()) {
-            return KetQua.error("Tên tiêu chí không được để trống.");
-        }
-        if (diemToiDa <= 0) {
-            return KetQua.error("Điểm tối đa phải lớn hơn 0.");
-        }
-        if (trongSo < 0 || trongSo > 100) {
-            return KetQua.error("Trọng số phải từ 0 đến 100.");
-        }
+        KetQua<Void> criteriaValidation = validateCriteriaInput(tenTieuChi, diemToiDa, trongSo);
+        if (!criteriaValidation.isSuccess()) return KetQua.error(criteriaValidation.getMessage());
 
         tc.setTenTieuChi(tenTieuChi.trim());
         tc.setMoTa(moTa != null ? moTa.trim() : tc.getMoTa());
@@ -228,7 +205,6 @@ public class DanhGiaBUS {
             return KetQua.error("Nhân viên này đã được đánh giá trong đợt này.");
         }
 
-        // Validate chi tiết điểm
         if (chiTiets == null || chiTiets.isEmpty()) {
             return KetQua.error("Vui lòng nhập điểm cho các tiêu chí.");
         }
@@ -238,21 +214,11 @@ public class DanhGiaBUS {
             return KetQua.error("Đợt đánh giá chưa được cấu hình tiêu chí.");
         }
 
-        Set<Integer> validTieuChiIds = new HashSet<>();
-        for (TieuChiDanhGia tc : tieuChis) {
-            validTieuChiIds.add(tc.getMaTieuChi());
-        }
+        Set<Integer> validTieuChiIds = taoTapTieuChiHopLe(tieuChis);
 
-        double tongDiem = 0.0;
-        for (ChiTietDanhGia ct : chiTiets) {
-            if (!validTieuChiIds.contains(ct.getTieuChiId())) {
-                return KetQua.error("Có tiêu chí không thuộc đợt đánh giá này.");
-            }
-            if (ct.getDiem() < 0 || ct.getDiem() > 10) {
-                return KetQua.error("Điểm phải từ 0 đến 10.");
-            }
-            tongDiem += ct.getDiem() * ct.getTrongSo() / 100.0;
-        }
+        KetQua<Double> tongDiemResult = tinhTongDiem(chiTiets, validTieuChiIds);
+        if (!tongDiemResult.isSuccess()) return KetQua.error(tongDiemResult.getMessage());
+        double tongDiem = tongDiemResult.getData();
 
         // Tạo đánh giá
         DanhGiaHieuSuat dg = new DanhGiaHieuSuat();
@@ -335,7 +301,7 @@ public class DanhGiaBUS {
 
     public List<DanhGiaHieuSuat> getAllSubmissionsByScope(String currentMaNV) {
         com.hrm.model.DataScope scope = com.hrm.bus.XacThucBUS.getInstance()
-                .getScopeForAction("EVAL_VIEW");
+                .getScopeForAction(ACTION_EVAL_VIEW);
         List<DanhGiaHieuSuat> list = repository.findAllByScope(scope, currentMaNV);
         loadChiTietForList(list);
         return list;
@@ -353,31 +319,56 @@ public class DanhGiaBUS {
         return repository.findScoresByDanhGia(maDanhGia);
     }
 
-    // ============================
-    // Generic result wrapper
-    // ============================
-
-    public static class KetQua<T> {
-        private boolean success;
-        private String message;
-        private T data;
-
-        private KetQua(boolean success, String message, T data) {
-            this.success = success;
-            this.message = message;
-            this.data = data;
+    private KetQua<Void> validateCycleInput(String tenDot, LocalDate tuNgay, LocalDate denNgay,
+                                            List<TieuChiDanhGia> selectedCriteria) {
+        if (tenDot == null || tenDot.trim().isEmpty()) {
+            return KetQua.error("Tên đợt đánh giá không được để trống.");
         }
-
-        public static <T> KetQua<T> success(T data, String message) {
-            return new KetQua<>(true, message, data);
+        if (tuNgay == null || denNgay == null) {
+            return KetQua.error("Vui lòng chọn ngày bắt đầu và ngày kết thúc.");
         }
-
-        public static <T> KetQua<T> error(String message) {
-            return new KetQua<>(false, message, null);
+        if (!denNgay.isAfter(tuNgay)) {
+            return KetQua.error("Ngày kết thúc phải sau ngày bắt đầu.");
         }
-
-        public boolean isSuccess() { return success; }
-        public String getMessage() { return message; }
-        public T getData() { return data; }
+        if (selectedCriteria == null || selectedCriteria.isEmpty()) {
+            return KetQua.error("Vui lòng chọn ít nhất một tiêu chí đánh giá.");
+        }
+        return KetQua.success(null, "");
     }
+
+    private KetQua<Void> validateCriteriaInput(String tenTieuChi, double diemToiDa, double trongSo) {
+        if (tenTieuChi == null || tenTieuChi.trim().isEmpty()) {
+            return KetQua.error("Tên tiêu chí không được để trống.");
+        }
+        if (diemToiDa <= 0) {
+            return KetQua.error("Điểm tối đa phải lớn hơn 0.");
+        }
+        if (trongSo < 0 || trongSo > 100) {
+            return KetQua.error("Trọng số phải từ 0 đến 100.");
+        }
+        return KetQua.success(null, "");
+    }
+
+    private Set<Integer> taoTapTieuChiHopLe(List<TieuChiDanhGia> tieuChis) {
+        Set<Integer> validTieuChiIds = new HashSet<>();
+        for (TieuChiDanhGia tc : tieuChis) {
+            validTieuChiIds.add(tc.getMaTieuChi());
+        }
+        return validTieuChiIds;
+    }
+
+    private KetQua<Double> tinhTongDiem(List<ChiTietDanhGia> chiTiets, Set<Integer> validTieuChiIds) {
+        double tongDiem = 0.0;
+        for (ChiTietDanhGia ct : chiTiets) {
+            if (!validTieuChiIds.contains(ct.getTieuChiId())) {
+                return KetQua.error("Có tiêu chí không thuộc đợt đánh giá này.");
+            }
+            if (ct.getDiem() < 0 || ct.getDiem() > 10) {
+                return KetQua.error("Điểm phải từ 0 đến 10.");
+            }
+            tongDiem += ct.getDiem() * ct.getTrongSo() / 100.0;
+        }
+        return KetQua.success(tongDiem, "");
+    }
+
 }

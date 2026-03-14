@@ -14,6 +14,12 @@ import java.util.List;
  * Đã cập nhật để maNV là String (ví dụ: "NV001", "NV002", ...).
  */
 public class NghiPhepBUS {
+    private static final String MA_LOAI_PHEP_NAM = "AL";
+    private static final String ACTION_LEAVE_APPROVE = "LEAVE_APPROVE";
+    private static final String ACTION_LEAVE_VIEW = "LEAVE_VIEW";
+    private static final String TRANG_THAI_DA_DUYET = "da_duyet";
+    private static final String TRANG_THAI_TU_CHOI = "tu_choi";
+    private static final String TRANG_THAI_HUY = "huy";
 
     private static NghiPhepBUS instance;
     private final NghiPhepDAO repository;
@@ -58,7 +64,7 @@ public class NghiPhepBUS {
                                                 String maLoaiPhep, LocalDate tuNgay,
                                                 LocalDate denNgay, String lyDo) {
         // Validation
-        if (maNV == null || maNV.trim().isEmpty()) {
+        if (isBlank(maNV)) {
             return KetQua.error("Mã nhân viên không hợp lệ.");
         }
         if (tuNgay == null || denNgay == null) {
@@ -82,7 +88,7 @@ public class NghiPhepBUS {
         }
 
         // Kiểm tra số ngày phép còn lại (chỉ áp dụng cho phép năm - AL)
-        if ("AL".equals(maLoaiPhep)) {
+        if (MA_LOAI_PHEP_NAM.equals(maLoaiPhep)) {
             int namHienTai = LocalDate.now().getYear();
             SoDungPhep soDu = repository.findByMaNVAndNamAndLoai(maNV, namHienTai, maLoaiPhep);
             if (soDu == null || soDu.getRemainingDays() < soNgayNghi) {
@@ -133,22 +139,22 @@ public class NghiPhepBUS {
 
         if (duyet) {
             // Trừ số ngày phép nếu là phép năm
-            if ("AL".equals(don.getLoaiPhepId())) {
+            if (MA_LOAI_PHEP_NAM.equals(don.getLoaiPhepId())) {
                 int namHienTai = LocalDate.now().getYear();
-                SoDungPhep soDu = repository.findByMaNVAndNamAndLoai(don.getNhanVienId(), namHienTai, "AL");
+                SoDungPhep soDu = repository.findByMaNVAndNamAndLoai(don.getNhanVienId(), namHienTai, MA_LOAI_PHEP_NAM);
                 if (soDu == null || soDu.getRemainingDays() < don.getSoNgayNghi()) {
                     return KetQua.error("Số ngày phép còn lại không đủ để duyệt đơn này.");
                 }
-                repository.capNhatSoDaDung(don.getNhanVienId(), namHienTai, "AL", don.getSoNgayNghi());
+                repository.capNhatSoDaDung(don.getNhanVienId(), namHienTai, MA_LOAI_PHEP_NAM, don.getSoNgayNghi());
             }
 
             createAttendanceForApprovedLeave(don);
             don.setTrangThai(DonXinNghiPhep.TrangThai.DA_DUYET);
-            repository.updateTrangThai(maDon, "da_duyet", maNguoiDuyet, now, null);
+            repository.updateTrangThai(maDon, TRANG_THAI_DA_DUYET, maNguoiDuyet, now, null);
             return KetQua.success(don, "Đã duyệt đơn xin nghỉ phép #" + maDon);
         } else {
             don.setTrangThai(DonXinNghiPhep.TrangThai.TU_CHOI);
-            repository.updateTrangThai(maDon, "tu_choi", maNguoiDuyet, now, ghiChu);
+            repository.updateTrangThai(maDon, TRANG_THAI_TU_CHOI, maNguoiDuyet, now, ghiChu);
             return KetQua.success(don, "Đã từ chối đơn xin nghỉ phép #" + maDon);
         }
     }
@@ -162,12 +168,12 @@ public class NghiPhepBUS {
             return KetQua.error("Không tìm thấy đơn xin nghỉ phép #" + maDon);
         }
 
-        if (!maNVHuy.equals(don.getNhanVienId())) {
+        if (isBlank(maNVHuy) || !maNVHuy.equals(don.getNhanVienId())) {
             return KetQua.error("Bạn không có quyền hủy đơn này.");
         }
 
         don.setTrangThai(DonXinNghiPhep.TrangThai.HUY);
-        repository.updateTrangThai(maDon, "huy", maNVHuy, null, null);
+        repository.updateTrangThai(maDon, TRANG_THAI_HUY, maNVHuy, null, null);
         return KetQua.success(don, "Đã hủy đơn xin nghỉ phép #" + maDon);
     }
 
@@ -189,13 +195,13 @@ public class NghiPhepBUS {
 
     public List<DonXinNghiPhep> getPendingRequestsByScope(String currentMaNV) {
         com.hrm.model.DataScope scope = com.hrm.bus.XacThucBUS.getInstance()
-                .getScopeForAction("LEAVE_APPROVE");
+                .getScopeForAction(ACTION_LEAVE_APPROVE);
         return repository.findChoDuyetByScope(scope, currentMaNV);
     }
 
     public List<DonXinNghiPhep> getAllRequestsByScope(String currentMaNV) {
         com.hrm.model.DataScope scope = com.hrm.bus.XacThucBUS.getInstance()
-                .getScopeForAction("LEAVE_VIEW");
+                .getScopeForAction(ACTION_LEAVE_VIEW);
         return repository.findAllByScope(scope, currentMaNV);
     }
 
@@ -236,31 +242,8 @@ public class NghiPhepBUS {
         }
     }
 
-    // ============================
-    // Generic result wrapper (giữ nguyên)
-    // ============================
-
-    public static class KetQua<T> {
-        private boolean success;
-        private String message;
-        private T data;
-
-        private KetQua(boolean success, String message, T data) {
-            this.success = success;
-            this.message = message;
-            this.data = data;
-        }
-
-        public static <T> KetQua<T> success(T data, String message) {
-            return new KetQua<>(true, message, data);
-        }
-
-        public static <T> KetQua<T> error(String message) {
-            return new KetQua<>(false, message, null);
-        }
-
-        public boolean isSuccess() { return success; }
-        public String getMessage() { return message; }
-        public T getData() { return data; }
+    private boolean isBlank(String value) {
+        return value == null || value.trim().isEmpty();
     }
+
 }

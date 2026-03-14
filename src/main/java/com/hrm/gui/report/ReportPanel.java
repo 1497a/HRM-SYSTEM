@@ -1,13 +1,11 @@
 package com.hrm.gui.report;
 
 import com.hrm.gui.components.RoundedPanel;
+import com.hrm.bus.LuongBUS;
+import com.hrm.bus.NghiPhepBUS;
+import com.hrm.bus.NhanVienBUS;
 import com.hrm.model.BangLuong;
-import com.hrm.model.PhongBan;
 import com.hrm.model.NhanVien;
-import com.hrm.dao.BangLuongDAO;
-import com.hrm.dao.PhongBanDAO;
-import com.hrm.dao.NghiPhepDAO;
-import com.hrm.dao.NhanVienDAO;
 import com.hrm.util.UIColors;
 import com.hrm.util.UIHelper;
 
@@ -28,16 +26,16 @@ import java.util.List;
  */
 public class ReportPanel extends JPanel {
 
-    private final NhanVienDAO nvRepo;
-    private final BangLuongDAO blRepo;
-    private final PhongBanDAO deptRepo;
+    private final NhanVienBUS nvService;
+    private final LuongBUS luongService;
+    private final NghiPhepBUS leaveService;
 
     private static final NumberFormat MONEY_FORMAT = NumberFormat.getNumberInstance(new Locale("vi", "VN"));
 
     public ReportPanel() {
-        this.nvRepo = NhanVienDAO.getInstance();
-        this.blRepo = BangLuongDAO.getInstance();
-        this.deptRepo = new PhongBanDAO();
+        this.nvService = NhanVienBUS.getInstance();
+        this.luongService = LuongBUS.getInstance();
+        this.leaveService = NghiPhepBUS.getInstance();
 
         setLayout(new BorderLayout());
         setBackground(UIColors.LIGHT_GRAY_BG);
@@ -65,7 +63,7 @@ public class ReportPanel extends JPanel {
         // Load data
         List<NhanVien> allNV = Collections.emptyList();
         try {
-            allNV = nvRepo.findAll();
+            allNV = nvService.getAll();
         } catch (Exception ex) {
             // ignore, show 0s
         }
@@ -149,14 +147,12 @@ public class ReportPanel extends JPanel {
         };
 
         try {
-            NghiPhepDAO leaveRepo = NghiPhepDAO.getInstance();
-            List<NhanVien> allNV = nvRepo.findAll();
-            int currentYear = java.time.LocalDate.now().getYear();
+            List<NhanVien> allNV = nvService.getAll();
 
             for (NhanVien nv : allNV) {
                 try {
                     List<com.hrm.model.SoDungPhep> balances =
-                            leaveRepo.findByMaNVAndNam(nv.getMaNhanVien(), currentYear);
+                            leaveService.getBalances(nv.getMaNhanVien());
                     if (balances.isEmpty()) {
                         model.addRow(new Object[]{
                                 nv.getHoTen() != null ? nv.getHoTen() : nv.getMaNhanVien(),
@@ -212,14 +208,14 @@ public class ReportPanel extends JPanel {
         };
 
         try {
-            List<BangLuong> bangLuongList = blRepo.findAll();
+            List<BangLuong> bangLuongList = luongService.getAll();
             for (BangLuong bl : bangLuongList) {
                 String thangNam = bl.getThang() + "/" + bl.getNam();
                 String trangThai = bl.getTrangThai() != null ? bl.getTrangThai().getDisplayName() : "";
 
                 double tongLuong = 0;
                 try {
-                    var chiTietList = blRepo.findByBangLuong(bl.getMaBL());
+                    var chiTietList = luongService.getChiTiet(bl.getMaBL());
                     tongLuong = chiTietList.stream()
                             .mapToDouble(ct -> ct.getLuongThucNhan())
                             .sum();

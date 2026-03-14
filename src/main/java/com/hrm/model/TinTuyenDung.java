@@ -129,13 +129,7 @@ public class TinTuyenDung {
      * Trả về tên trạng thái bằng tiếng Việt.
      */
     public String getTrangThaiDisplay() {
-        if (trangThai == null) return "";
-        switch (trangThai) {
-            case "dang_tuyen": return "Đang tuyển";
-            case "tam_dung":   return "Tạm dừng";
-            case "da_dong":    return "Đã đóng";
-            default:           return trangThai;
-        }
+        return RecruitmentStatus.displayTin(trangThai);
     }
 
     @Override

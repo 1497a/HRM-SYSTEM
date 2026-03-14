@@ -75,20 +75,20 @@ INSERT INTO NHANVIEN (maNV, loaiHopDong, ngayVaoLam, trangThai, ghiChu) VALUES
 -- 4. THÔNG TIN CÁ NHÂN
 -- =====================================================
 INSERT INTO THONGTINCANHAN (maNV, hoTen, ngaySinh, gioiTinh, cccd, dienThoai, email, diaChi, diaChiThuongTru, queQuan, danToc, tonGiao, tinhTrangHonNhan) VALUES
-('admin', 'Quản trị viên',        NULL,         'khac',NULL,            NULL,         'admin@abctech.vn',         NULL,                               NULL,                               NULL,         NULL,   NULL,        'doc_than'),
-('NV001', 'Nguyen Duc Hung',      '1978-05-12', 'nam', '001078005121', '0901000001', 'hung.nguyen@abctech.vn',    '10 Le Duan, Q1, TP.HCM',           '10 Le Duan, Q1, TP.HCM',           'Ha Noi',     'Kinh', 'Khong',     'da_ket_hon'),
-('NV002', 'Nguyen Thi Thu Huong', '1985-07-25', 'nu',  '079085007251', '0901000002', 'huong.nguyen@abctech.vn',   '22 Ly Tu Trong, Q1, TP.HCM',       '22 Ly Tu Trong, Q1, TP.HCM',       'Nghe An',    'Kinh', 'Phat giao', 'da_ket_hon'),
-('NV003', 'Dang Thi Lan Anh',     '1992-02-18', 'nu',  '079092002181', '0901000003', 'lananh.dang@abctech.vn',    '67 Nguyen Thi Minh Khai, Q3',      '67 Nguyen Thi Minh Khai, Q3',      'Binh Dinh',  'Kinh', 'Khong',     'doc_than'),
-('NV004', 'Hoang Thi Bich Ngoc',  '1984-12-03', 'nu',  '079084012031', '0901000004', 'ngoc.hoang@abctech.vn',     '45 Nam Ky Khoi Nghia, Q3',         '45 Nam Ky Khoi Nghia, Q3',         'Hue',        'Kinh', 'Phat giao', 'da_ket_hon'),
-('NV005', 'Ly Thi Thanh Tam',     '1993-01-29', 'nu',  '079093001291', '0901000005', 'thanhTam.ly@abctech.vn',    '56 Bach Dang, BT, TP.HCM',         '56 Bach Dang, BT, TP.HCM',         'Ben Tre',    'Kinh', 'Khong',     'doc_than'),
-('NV006', 'Nguyen Anh Tuan',      '1983-06-14', 'nam', '079083006141', '0901000006', 'anh.tuan@abctech.vn',       '22 Pasteur, Q1, TP.HCM',           '22 Pasteur, Q1, TP.HCM',           'Ha Noi',     'Kinh', 'Khong',     'da_ket_hon'),
-('NV007', 'Le Minh Hoang',        '1991-12-25', 'nam', '079091012251', '0901000007', 'hoang.le@abctech.vn',       '15 CMT8, Q10, TP.HCM',             '15 CMT8, Q10, TP.HCM',             'Binh Duong', 'Kinh', 'Khong',     'da_ket_hon'),
-('NV008', 'Dinh Quang Son',       '1982-08-30', 'nam', '079082008301', '0901000008', 'son.dinh@abctech.vn',       '10 Nguyen Van Cu, Q5, TP.HCM',     '10 Nguyen Van Cu, Q5, TP.HCM',     'Hai Phong',  'Kinh', 'Khong',     'da_ket_hon'),
-('NV009', 'Nguyen Van Khoa',      '1990-04-05', 'nam', '079090004051', '0901000009', 'khoa.nguyen@abctech.vn',    '26 Truong Dinh, Q3, TP.HCM',       '26 Truong Dinh, Q3, TP.HCM',       'Quang Ngai', 'Kinh', 'Khong',     'da_ket_hon'),
-('NV010', 'Hoang Minh Tri',       '1995-07-01', 'nam', '079095007011', '0901000010', 'tri.hoang@abctech.vn',      '38 Vo Van Tan, Q3, TP.HCM',        '38 Vo Van Tan, Q3, TP.HCM',        'Ha Noi',     'Kinh', 'Khong',     'doc_than'),
-('NV011', 'Vo Thi Cam Tu',        '2001-08-07', 'nu',  '079101008071', '0901000011', 'camtu.vo@abctech.vn',       '25 Dinh Tien Hoang, BT, TP.HCM',   '25 Dinh Tien Hoang, BT, TP.HCM',  'TP.HCM',     'Kinh', 'Khong',     'doc_than'),
-('NV012', 'Le Thi Phuong Linh',   '1986-10-09', 'nu',  '079086010091', '0901000012', 'phuonglinh.le@abctech.vn',  '30 Nguyen Trong Tuyen, PN, TP.HCM','30 Nguyen Trong Tuyen, PN, TP.HCM','TP.HCM',     'Kinh', 'Khong',     'da_ket_hon'),
-('NV013', 'Pham Dinh Khang',      '1993-05-04', 'nam', '079093005041', '0901000013', 'khang.pham@abctech.vn',     '52 Phu Nhuan, PN, TP.HCM',         '52 Phu Nhuan, PN, TP.HCM',         'Binh Phuoc', 'Kinh', 'Khong',     'doc_than');
+('admin', 'Quản trị viên',          NULL,         'khac',NULL,            NULL,         'admin@abctech.vn',         NULL,                                  NULL,                                  NULL,          NULL,   NULL,         'doc_than'),
+('NV001', 'Nguyễn Đức Hùng',      '1978-05-12', 'nam', '001078005121', '0901000001', 'hung.nguyen@abctech.vn',    '10 Lê Duẩn, Q1, TP.HCM',             '10 Lê Duẩn, Q1, TP.HCM',             'Hà Nội',      'Kinh', 'Không',      'da_ket_hon'),
+('NV002', 'Nguyễn Thị Thu Hương', '1985-07-25', 'nu',  '079085007251', '0901000002', 'huong.nguyen@abctech.vn',   '22 Lý Tự Trọng, Q1, TP.HCM',         '22 Lý Tự Trọng, Q1, TP.HCM',         'Nghệ An',     'Kinh', 'Phật giáo',  'da_ket_hon'),
+('NV003', 'Đặng Thị Lan Anh',     '1992-02-18', 'nu',  '079092002181', '0901000003', 'lananh.dang@abctech.vn',    '67 Nguyễn Thị Minh Khai, Q3',        '67 Nguyễn Thị Minh Khai, Q3',        'Bình Định',   'Kinh', 'Không',      'doc_than'),
+('NV004', 'Hoàng Thị Bích Ngọc',  '1984-12-03', 'nu',  '079084012031', '0901000004', 'ngoc.hoang@abctech.vn',     '45 Nam Kỳ Khởi Nghĩa, Q3',           '45 Nam Kỳ Khởi Nghĩa, Q3',           'Huế',         'Kinh', 'Phật giáo',  'da_ket_hon'),
+('NV005', 'Lý Thị Thanh Tâm',     '1993-01-29', 'nu',  '079093001291', '0901000005', 'thanhTam.ly@abctech.vn',    '56 Bạch Đằng, BT, TP.HCM',           '56 Bạch Đằng, BT, TP.HCM',           'Bến Tre',     'Kinh', 'Không',      'doc_than'),
+('NV006', 'Nguyễn Anh Tuấn',      '1983-06-14', 'nam', '079083006141', '0901000006', 'anh.tuan@abctech.vn',       '22 Pasteur, Q1, TP.HCM',             '22 Pasteur, Q1, TP.HCM',             'Hà Nội',      'Kinh', 'Không',      'da_ket_hon'),
+('NV007', 'Lê Minh Hoàng',        '1991-12-25', 'nam', '079091012251', '0901000007', 'hoang.le@abctech.vn',       '15 CMT8, Q10, TP.HCM',               '15 CMT8, Q10, TP.HCM',               'Bình Dương',  'Kinh', 'Không',      'da_ket_hon'),
+('NV008', 'Đinh Quang Sơn',       '1982-08-30', 'nam', '079082008301', '0901000008', 'son.dinh@abctech.vn',       '10 Nguyễn Văn Cừ, Q5, TP.HCM',      '10 Nguyễn Văn Cừ, Q5, TP.HCM',      'Hải Phòng',   'Kinh', 'Không',      'da_ket_hon'),
+('NV009', 'Nguyễn Văn Khoa',      '1990-04-05', 'nam', '079090004051', '0901000009', 'khoa.nguyen@abctech.vn',    '26 Trương Định, Q3, TP.HCM',         '26 Trương Định, Q3, TP.HCM',         'Quảng Ngãi',  'Kinh', 'Không',      'da_ket_hon'),
+('NV010', 'Hoàng Minh Trí',       '1995-07-01', 'nam', '079095007011', '0901000010', 'tri.hoang@abctech.vn',      '38 Võ Văn Tần, Q3, TP.HCM',          '38 Võ Văn Tần, Q3, TP.HCM',          'Hà Nội',      'Kinh', 'Không',      'doc_than'),
+('NV011', 'Võ Thị Cẩm Tú',        '2001-08-07', 'nu',  '079101008071', '0901000011', 'camtu.vo@abctech.vn',       '25 Đinh Tiên Hoàng, BT, TP.HCM',    '25 Đinh Tiên Hoàng, BT, TP.HCM',    'TP.HCM',      'Kinh', 'Không',      'doc_than'),
+('NV012', 'Lê Thị Phương Linh',   '1986-10-09', 'nu',  '079086010091', '0901000012', 'phuonglinh.le@abctech.vn',  '30 Nguyễn Trọng Tuyển, PN, TP.HCM', '30 Nguyễn Trọng Tuyển, PN, TP.HCM', 'TP.HCM',      'Kinh', 'Không',      'da_ket_hon'),
+('NV013', 'Phạm Đình Khang',      '1993-05-04', 'nam', '079093005041', '0901000013', 'khang.pham@abctech.vn',     '52 Phú Nhuận, PN, TP.HCM',           '52 Phú Nhuận, PN, TP.HCM',           'Bình Phước',  'Kinh', 'Không',      'doc_than');
 
 -- =====================================================
 -- 5. BỔ NHIỆM
@@ -473,10 +473,10 @@ INSERT INTO HOPDONGLAODONG (soHopDong, maNV, loaiHopDong, luongCoSo, ngayKy, nga
 -- 8. CA LÀM
 -- =====================================================
 INSERT INTO CALAM (maCaLam, tenCaLam, gioBatDau, gioKetThuc, soGioChuan, choPhepLamThem, moTa, trangThai) VALUES
-('HANH_CHINH', 'Ca hanh chinh', '08:00:00', '17:00:00', 8.00, TRUE,  'Ca lam viec hanh chinh van phong', 'hoatDong'),
-('CA_SANG',    'Ca sáng',       '06:00:00', '14:00:00', 8.00, TRUE,  'Ca sang',                          'hoatDong'),
-('CA_CHIEU',   'Ca chieu',      '14:00:00', '22:00:00', 8.00, TRUE,  'Ca chieu',                         'hoatDong'),
-('CA_DEM',     'Ca dem',        '22:00:00', '06:00:00', 8.00, FALSE, 'Ca dem ky thuat',                  'hoatDong');
+('HANH_CHINH', 'Ca hanh chinh', '08:00:00', '17:00:00', 8.00, TRUE,  'Ca làm việc hành chính văn phòng', 'hoatDong'),
+('CA_SANG',    'Ca sáng',       '06:00:00', '14:00:00', 8.00, TRUE,  'Ca sáng',                          'hoatDong'),
+('CA_CHIEU',   'Ca chiều',      '14:00:00', '22:00:00', 8.00, TRUE,  'Ca chiều',                         'hoatDong'),
+('CA_DEM',     'Ca đêm',        '22:00:00', '06:00:00', 8.00, FALSE, 'Ca đêm kỹ thuật',                  'hoatDong');
 
 -- =====================================================
 -- 9. CHẤM CÔNG - Tháng 1 & 2 / 2026

@@ -1,6 +1,7 @@
 package com.hrm.gui.evaluation;
 
 import com.hrm.bus.DanhGiaBUS;
+import com.hrm.bus.KetQua;
 import com.hrm.model.DotDanhGia;
 import com.hrm.model.TaiKhoan;
 import com.hrm.model.TieuChiDanhGia;
@@ -13,6 +14,7 @@ import javax.swing.border.EmptyBorder;
 import javax.swing.border.TitledBorder;
 import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.table.DefaultTableModel;
+import javax.swing.table.TableRowSorter;
 import java.awt.*;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
@@ -61,6 +63,10 @@ public class EvalCycleListPanel extends JPanel {
         };
 
         cycleTable = new JTable(cycleTableModel);
+        TableRowSorter<DefaultTableModel> sorter = new TableRowSorter<>(cycleTableModel);
+        cycleTable.setRowSorter(sorter);
+        sorter.setComparator(0, java.util.Comparator.comparingInt(a -> (Integer) a));
+        sorter.setSortKeys(java.util.List.of(new javax.swing.RowSorter.SortKey(0, javax.swing.SortOrder.ASCENDING)));
         cycleTable.setRowHeight(28);
         cycleTable.setFont(com.hrm.util.UIFonts.TEXT_NORMAL);
         cycleTable.getTableHeader().setFont(com.hrm.util.UIFonts.BOLD_NORMAL);
@@ -142,6 +148,7 @@ public class EvalCycleListPanel extends JPanel {
         cycleTableModel.setRowCount(0);
         try {
             List<DotDanhGia> cycles = evalService.getAllCycles();
+            cycles.sort(java.util.Comparator.comparingInt(DotDanhGia::getId));
             for (DotDanhGia cycle : cycles) {
                 cycleTableModel.addRow(new Object[]{
                         cycle.getId(),
@@ -164,7 +171,7 @@ public class EvalCycleListPanel extends JPanel {
     private void onCycleSelected() {
         int row = cycleTable.getSelectedRow();
         if (row < 0) return;
-        String status = (String) cycleTableModel.getValueAt(row, 6);
+        String status = (String) cycleTableModel.getValueAt(cycleTable.convertRowIndexToModel(row), 6);
         btnOpenCycle.setEnabled(isAdmin && STATUS_CHUA.equals(status));
         btnCloseCycle.setEnabled(isAdmin && STATUS_DANG.equals(status));
         btnEvaluate.setEnabled(isManager && STATUS_DANG.equals(status));
@@ -286,7 +293,7 @@ public class EvalCycleListPanel extends JPanel {
             LocalDate denNgay = toLocalDate((java.util.Date) spinKT.getValue());
             int kyIdx = cboKy.getSelectedIndex();
 
-            DanhGiaBUS.KetQua<?> kq = evalService.taoDotDanhGia(
+            KetQua<?> kq = evalService.taoDotDanhGia(
                     ten, (int) spinNam.getValue(), kyValues[kyIdx], tuNgay, denNgay, selectedCriteria);
 
             showResult(kq);
@@ -300,8 +307,8 @@ public class EvalCycleListPanel extends JPanel {
     private void openCycle() {
         int row = cycleTable.getSelectedRow();
         if (row < 0) return;
-        int cycleId = (int) cycleTableModel.getValueAt(row, 0);
-        DanhGiaBUS.KetQua<?> result = evalService.openCycle(cycleId);
+        int cycleId = (int) cycleTableModel.getValueAt(cycleTable.convertRowIndexToModel(row), 0);
+        KetQua<?> result = evalService.openCycle(cycleId);
         showResult(result);
         if (result.isSuccess()) loadData();
     }
@@ -314,8 +321,8 @@ public class EvalCycleListPanel extends JPanel {
                 "Xác nhận", JOptionPane.YES_NO_OPTION);
         if (confirm != JOptionPane.YES_OPTION) return;
 
-        int cycleId = (int) cycleTableModel.getValueAt(row, 0);
-        DanhGiaBUS.KetQua<?> result = evalService.closeCycle(cycleId);
+        int cycleId = (int) cycleTableModel.getValueAt(cycleTable.convertRowIndexToModel(row), 0);
+        KetQua<?> result = evalService.closeCycle(cycleId);
         showResult(result);
         if (result.isSuccess()) loadData();
     }
@@ -340,8 +347,8 @@ public class EvalCycleListPanel extends JPanel {
                     "Thông báo", JOptionPane.WARNING_MESSAGE);
             return;
         }
-        int cycleId = (int) cycleTableModel.getValueAt(row, 0);
-        String cycleName = (String) cycleTableModel.getValueAt(row, 1);
+        int cycleId = (int) cycleTableModel.getValueAt(cycleTable.convertRowIndexToModel(row), 0);
+        String cycleName = (String) cycleTableModel.getValueAt(cycleTable.convertRowIndexToModel(row), 1);
 
         EvalDoDialog dialog = new EvalDoDialog((Frame) SwingUtilities.getWindowAncestor(this), cycleId, cycleName);
         dialog.setVisible(true);
@@ -393,7 +400,7 @@ public class EvalCycleListPanel extends JPanel {
         return d.toInstant().atZone(java.time.ZoneId.systemDefault()).toLocalDate();
     }
 
-    private void showResult(DanhGiaBUS.KetQua<?> result) {
+    private void showResult(KetQua<?> result) {
         JOptionPane.showMessageDialog(this,
                 result.getMessage(),
                 result.isSuccess() ? "Thành công" : "Lỗi",

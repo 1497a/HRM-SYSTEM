@@ -2,6 +2,7 @@ package com.hrm.gui.evaluation;
 
 import com.hrm.model.TieuChiDanhGia;
 import com.hrm.bus.DanhGiaBUS;
+import com.hrm.bus.KetQua;
 import com.hrm.util.UIHelper;
 
 import javax.swing.*;
@@ -212,7 +213,7 @@ public class EvalConfigDialog extends JDialog {
 
     private void addCriteria() {
         int w = getWeightValue();
-        DanhGiaBUS.KetQua<?> result = evalService.saveCriteria(
+        KetQua<?> result = evalService.saveCriteria(
                 txtName.getText().trim(), txtDescription.getText().trim(), "", w, w);
         handleResult(result);
     }
@@ -220,12 +221,12 @@ public class EvalConfigDialog extends JDialog {
     private void updateCriteria() {
         if (selectedId < 0) return;
         int w = getWeightValue();
-        DanhGiaBUS.KetQua<?> result = evalService.updateCriteria(
+        KetQua<?> result = evalService.updateCriteria(
                 selectedId, txtName.getText().trim(), txtDescription.getText().trim(), "", w, w);
         handleResult(result);
     }
 
-    private void handleResult(DanhGiaBUS.KetQua<?> result) {
+    private void handleResult(KetQua<?> result) {
         if (result.isSuccess()) {
             loadData();
             JOptionPane.showMessageDialog(this, result.getMessage(), "Thành công", JOptionPane.INFORMATION_MESSAGE);
@@ -245,7 +246,7 @@ public class EvalConfigDialog extends JDialog {
                 JOptionPane.YES_NO_OPTION);
 
         if (confirm == JOptionPane.YES_OPTION) {
-            DanhGiaBUS.KetQua<?> result = evalService.deleteCriteria(selectedId);
+            KetQua<?> result = evalService.deleteCriteria(selectedId);
             if (result.isSuccess()) {
                 loadData();
             } else {

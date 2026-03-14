@@ -3,6 +3,7 @@ package com.hrm.dao;
 import com.hrm.model.TinTuyenDung;
 import com.hrm.model.UngVien;
 import com.hrm.model.YeuCauTuyenDung;
+import com.hrm.model.RecruitmentStatus;
 import com.hrm.util.DatabaseConnection;
 
 import java.sql.*;
@@ -445,10 +446,11 @@ public class TuyenDungDAO {
     public int countConvertedByYeuCau(int maYeuCau) {
         String sql = "SELECT COUNT(*) FROM UNGVIEN uv "
                 + "JOIN TINTUYENDUNG t ON uv.maTin = t.maTin "
-                + "WHERE t.maYeuCau = ? AND uv.trangThai = 'da_chuyen_nhan_vien'";
+                + "WHERE t.maYeuCau = ? AND uv.trangThai = ?";
         try (Connection conn = DatabaseConnection.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setInt(1, maYeuCau);
+            ps.setString(2, RecruitmentStatus.UngVien.DA_CHUYEN_NHAN_VIEN);
             try (ResultSet rs = ps.executeQuery()) {
                 if (rs.next()) return rs.getInt(1);
             }
@@ -458,19 +460,4 @@ public class TuyenDungDAO {
         return 0;
     }
 
-    /**
-     * Liên kết ứng viên trúng tuyển với nhân viên mới.
-     */
-    public void linkToNhanVien(int maUngVien, String maNV) {
-        String sql = "UPDATE UNGVIEN SET maNV = ?, trangThai = 'trung_tuyen' WHERE maUngVien = ?";
-        try (Connection conn = DatabaseConnection.getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql)) {
-            ps.setString(1, maNV);
-            ps.setInt(2, maUngVien);
-            ps.executeUpdate();
-        } catch (SQLException e) {
-            System.err.println("Lỗi linkToNhanVien: " + e.getMessage());
-            e.printStackTrace();
-        }
-    }
 }

@@ -1,6 +1,5 @@
 package com.hrm.gui;
 
-import com.hrm.bus.KetQua;
 import com.hrm.bus.XacThucBUS;
 import com.hrm.gui.admin.DepartmentPanel;
 import com.hrm.gui.admin.PositionPanel;
@@ -8,8 +7,6 @@ import com.hrm.gui.admin.RoleManagementPanel;
 import com.hrm.gui.admin.UserManagementPanel;
 import com.hrm.gui.appointment.AppointmentListPanel;
 import com.hrm.gui.attendance.AttendancePanel;
-import com.hrm.gui.components.PurpleButton;
-import com.hrm.gui.components.RoundedPanel;
 import com.hrm.gui.contract.ContractListPanel;
 import com.hrm.gui.employee.EmployeeListPanel;
 import com.hrm.gui.evaluation.EvalCycleListPanel;
@@ -29,11 +26,7 @@ import javax.swing.border.EmptyBorder;
 import java.awt.*;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
-import java.text.NumberFormat;
-import java.time.LocalDate;
-import java.util.ArrayList;
 import java.util.List;
-import java.util.Locale;
 import java.util.function.Supplier;
 
 public class MainFrame extends JFrame {
@@ -394,249 +387,32 @@ public class MainFrame extends JFrame {
 
     private void showContent(JButton button, String title, Supplier<? extends JComponent> factory) {
         setActiveButton(button);
-        renderContent(createPageShell(title, factory.get()));
-    }
-
-    private JScrollPane createTransparentScroll(JComponent component) {
-        JScrollPane scrollPane = new JScrollPane(component);
-        scrollPane.setBorder(null);
-        scrollPane.setOpaque(false);
-        scrollPane.getViewport().setOpaque(false);
-        return scrollPane;
-    }
-
-    private JLabel createPageTitle(String title) {
-        JLabel label = new JLabel(title);
-        label.setFont(UIFonts.HEADER_H1);
-        label.setForeground(UIColors.TEXT_DARK);
-        return label;
+        try {
+            renderContent(createPageShell(title, factory.get()));
+        } catch (Exception ex) {
+            ex.printStackTrace();
+            JOptionPane.showMessageDialog(
+                    this,
+                    "Khong mo duoc man hinh '" + title + "'.\nChi tiet: " + ex.getMessage(),
+                    "Loi mo man hinh",
+                    JOptionPane.ERROR_MESSAGE
+            );
+            JPanel errorPanel = new JPanel(new BorderLayout());
+            errorPanel.setBackground(UIColors.WHITE);
+            errorPanel.setBorder(new EmptyBorder(20, 20, 20, 20));
+            errorPanel.add(new JLabel("Khong tai duoc man hinh. Vui long xem log de biet chi tiet."), BorderLayout.NORTH);
+            renderContent(createPageShell(title, errorPanel));
+        }
     }
 
     private void showDashboard() {
         setActiveButton(btnDashboard);
-        DataScope scope = authService.getScopeForAction("EMPLOYEE_VIEW");
-        JPanel dashboard = (scope == DataScope.ALL || scope == DataScope.DEPT || scope == DataScope.TEAM)
-                ? buildManagerDashboard(scope)
-                : buildPersonalDashboard();
-        renderContent(dashboard);
-    }
-
-    private JPanel buildManagerDashboard(DataScope scope) {
-        TaiKhoan currentUser = SessionContext.getInstance().getCurrentUser();
-        String maNV = currentUser != null ? currentUser.getNhanVienId() : null;
-
-        JPanel root = new JPanel(new BorderLayout(0, 20));
-        root.setBackground(UIColors.LIGHT_GRAY_BG);
-        root.setBorder(new EmptyBorder(25, 25, 25, 25));
-        root.add(createPageTitle("Tổng quan hệ thống"), BorderLayout.NORTH);
-
-        JPanel body = new JPanel();
-        body.setLayout(new BoxLayout(body, BoxLayout.Y_AXIS));
-        body.setOpaque(false);
-
-        List<JPanel> cards = new ArrayList<>();
-        addManagerStatCards(cards, scope, maNV);
-
-        if (!cards.isEmpty()) {
-            int cols = Math.min(cards.size(), 3);
-            int rows = (int) Math.ceil((double) cards.size() / cols);
-            JPanel grid = new JPanel(new GridLayout(rows, cols, 18, 18));
-            grid.setOpaque(false);
-            for (JPanel card : cards) {
-                grid.add(card);
-            }
-            body.add(grid);
-            body.add(Box.createVerticalStrut(28));
-        }
-
-        root.add(createTransparentScroll(body), BorderLayout.CENTER);
-        return root;
-    }
-
-    private void addManagerStatCards(List<JPanel> cards, DataScope scope, String maNV) {
-        if (authService.getScopeForAction("EMPLOYEE_VIEW") != DataScope.NONE) {
-            try {
-                long activeEmployees = com.hrm.dao.NhanVienDAO.getInstance().findAll().stream()
-                        .filter(nv -> "dang_lam_viec".equals(nv.getTrangThai())).count();
-                cards.add(RoundedPanel.createStatCard("NV đang làm việc", String.valueOf(activeEmployees), UIColors.PRIMARY_PURPLE));
-            } catch (Exception ignored) {
-                cards.add(RoundedPanel.createStatCard("NV đang làm việc", "—", UIColors.PRIMARY_PURPLE));
-            }
-        }
-        if (authService.getScopeForAction("LEAVE_VIEW") != DataScope.NONE) {
-            try {
-                long pending = com.hrm.dao.NghiPhepDAO.getInstance().findChoDuyetByScope(scope, maNV).size();
-                cards.add(RoundedPanel.createStatCard("Đơn nghỉ chờ duyệt", String.valueOf(pending), UIColors.DANGER_RED));
-            } catch (Exception ignored) {
-                cards.add(RoundedPanel.createStatCard("Đơn nghỉ chờ duyệt", "—", UIColors.DANGER_RED));
-            }
-        }
-        if (authService.getScopeForAction("PAYROLL_VIEW") != DataScope.NONE) {
-            try {
-                LocalDate today = LocalDate.now();
-                com.hrm.model.BangLuong payroll = com.hrm.dao.BangLuongDAO.getInstance()
-                        .findByThangNam(today.getMonthValue(), today.getYear());
-                String status = payroll != null ? payroll.getTrangThai().getDisplayName() : "Chưa tạo";
-                cards.add(RoundedPanel.createStatCard("Lương tháng " + today.getMonthValue(), status, UIColors.SUCCESS_GREEN));
-            } catch (Exception ignored) {
-                cards.add(RoundedPanel.createStatCard("Lương tháng này", "—", UIColors.SUCCESS_GREEN));
-            }
-        }
-        if (authService.getScopeForAction("RECRUITMENT_VIEW") != DataScope.NONE) {
-            try {
-                long opening = com.hrm.dao.TuyenDungDAO.getInstance().findAllTin().stream()
-                        .filter(t -> "dang_tuyen".equals(t.getTrangThai())).count();
-                cards.add(RoundedPanel.createStatCard("Tuyển dụng đang mở", String.valueOf(opening), UIColors.WARNING_YELLOW));
-            } catch (Exception ignored) {
-                cards.add(RoundedPanel.createStatCard("Tuyển dụng đang mở", "—", UIColors.WARNING_YELLOW));
-            }
-        }
-    }
-
-    private JPanel buildPersonalDashboard() {
-        TaiKhoan currentUser = SessionContext.getInstance().getCurrentUser();
-        String maNV = currentUser != null ? currentUser.getNhanVienId() : null;
-        int year = LocalDate.now().getYear();
-
-        JPanel root = new JPanel(new BorderLayout(0, 20));
-        root.setBackground(UIColors.LIGHT_GRAY_BG);
-        root.setBorder(new EmptyBorder(25, 25, 25, 25));
-        root.add(createPageTitle("Thông tin của tôi"), BorderLayout.NORTH);
-
-        JPanel body = new JPanel();
-        body.setLayout(new BoxLayout(body, BoxLayout.Y_AXIS));
-        body.setOpaque(false);
-
-        JPanel cardsGrid = new JPanel(new GridLayout(1, 3, 18, 18));
-        cardsGrid.setOpaque(false);
-        addPersonalStatCards(cardsGrid, maNV, year);
-        body.add(cardsGrid);
-        body.add(Box.createVerticalStrut(28));
-
-        root.add(createTransparentScroll(body), BorderLayout.CENTER);
-        return root;
-    }
-
-    private void addPersonalStatCards(JPanel cardsGrid, String maNV, int year) {
-        try {
-            com.hrm.model.SoDungPhep phepNam = com.hrm.dao.NghiPhepDAO.getInstance()
-                    .findByMaNVAndNamAndLoai(maNV, year, "PHEP_NAM");
-            double remaining = phepNam != null ? phepNam.getRemainingDays() : 0;
-            cardsGrid.add(RoundedPanel.createStatCard("Phép năm còn lại", (int) remaining + " ngày", UIColors.PRIMARY_PURPLE));
-        } catch (Exception ignored) {
-            cardsGrid.add(RoundedPanel.createStatCard("Phép năm còn lại", "—", UIColors.PRIMARY_PURPLE));
-        }
-        try {
-            long pending = maNV == null ? 0 : com.hrm.dao.NghiPhepDAO.getInstance().findByMaNV(maNV).stream()
-                    .filter(d -> com.hrm.model.DonXinNghiPhep.TrangThai.CHO_DUYET.equals(d.getTrangThai())).count();
-            cardsGrid.add(RoundedPanel.createStatCard("Đơn đang chờ duyệt", String.valueOf(pending), UIColors.WARNING_YELLOW));
-        } catch (Exception ignored) {
-            cardsGrid.add(RoundedPanel.createStatCard("Đơn đang chờ duyệt", "—", UIColors.WARNING_YELLOW));
-        }
-        try {
-            String luongText = "Chưa có";
-            if (maNV != null) {
-                List<com.hrm.model.BangLuong> payrolls = com.hrm.dao.BangLuongDAO.getInstance().findAll();
-                for (int i = payrolls.size() - 1; i >= 0; i--) {
-                    com.hrm.model.ChiTietLuong detail = com.hrm.dao.BangLuongDAO.getInstance()
-                            .findByBangLuongAndNV(payrolls.get(i).getMaBL(), maNV);
-                    if (detail != null) {
-                        luongText = NumberFormat.getNumberInstance(new Locale("vi", "VN"))
-                                .format((long) detail.getLuongThucNhan()) + " đ";
-                        break;
-                    }
-                }
-            }
-            cardsGrid.add(RoundedPanel.createStatCard("Lương gần nhất", luongText, UIColors.SUCCESS_GREEN));
-        } catch (Exception ignored) {
-            cardsGrid.add(RoundedPanel.createStatCard("Lương gần nhất", "—", UIColors.SUCCESS_GREEN));
-        }
+        renderContent(new DashboardPanel(authService));
     }
 
     private void showSettings() {
         setActiveButton(btnSettings);
-        JPanel panel = new JPanel(new BorderLayout());
-        panel.setBackground(UIColors.LIGHT_GRAY_BG);
-        panel.setBorder(new EmptyBorder(25, 25, 25, 25));
-        panel.add(createPageTitle("Cài đặt tài khoản"), BorderLayout.NORTH);
-
-        RoundedPanel card = RoundedPanel.createFlatCard();
-        card.setLayout(new GridBagLayout());
-        card.setBorder(new EmptyBorder(25, 25, 25, 25));
-
-        GridBagConstraints gbc = new GridBagConstraints();
-        gbc.insets = new Insets(8, 8, 8, 8);
-        gbc.anchor = GridBagConstraints.WEST;
-        gbc.gridx = 0;
-        gbc.gridy = 0;
-        gbc.gridwidth = 2;
-
-        JLabel title = new JLabel("Đổi mật khẩu");
-        title.setFont(UIFonts.HEADER_H3);
-        title.setForeground(UIColors.PRIMARY_PURPLE);
-        card.add(title, gbc);
-
-        gbc.gridwidth = 1;
-        JPasswordField current = new JPasswordField(20);
-        JPasswordField next = new JPasswordField(20);
-        JPasswordField confirm = new JPasswordField(20);
-        addPasswordRow(card, gbc, 1, "Mật khẩu hiện tại:", current);
-        addPasswordRow(card, gbc, 2, "Mật khẩu mới:", next);
-        addPasswordRow(card, gbc, 3, "Xác nhận mật khẩu:", confirm);
-
-        PurpleButton changeButton = new PurpleButton("Đổi mật khẩu");
-        gbc.gridx = 1;
-        gbc.gridy = 4;
-        gbc.insets = new Insets(20, 8, 8, 8);
-        card.add(changeButton, gbc);
-        changeButton.addActionListener(e -> changePassword(current, next, confirm));
-
-        JPanel center = new JPanel(new FlowLayout(FlowLayout.LEFT));
-        center.setOpaque(false);
-        center.setBorder(new EmptyBorder(25, 0, 0, 0));
-        center.add(card);
-        panel.add(center, BorderLayout.CENTER);
-        renderContent(panel);
-    }
-
-    private void addPasswordRow(JPanel panel, GridBagConstraints gbc, int row, String labelText, JPasswordField field) {
-        gbc.gridx = 0;
-        gbc.gridy = row;
-        JLabel label = new JLabel(labelText);
-        label.setFont(UIFonts.TEXT_MEDIUM);
-        panel.add(label, gbc);
-
-        field.setFont(UIFonts.TEXT_MEDIUM);
-        gbc.gridx = 1;
-        panel.add(field, gbc);
-    }
-
-    private void changePassword(JPasswordField current, JPasswordField next, JPasswordField confirm) {
-        String currentPass = new String(current.getPassword());
-        String newPass = new String(next.getPassword());
-        String confirmPass = new String(confirm.getPassword());
-        if (currentPass.isEmpty() || newPass.isEmpty() || confirmPass.isEmpty()) {
-            JOptionPane.showMessageDialog(this, "Vui lòng nhập đầy đủ thông tin", "Lỗi", JOptionPane.WARNING_MESSAGE);
-            return;
-        }
-        if (!newPass.equals(confirmPass)) {
-            JOptionPane.showMessageDialog(this, "Mật khẩu xác nhận không khớp", "Lỗi", JOptionPane.WARNING_MESSAGE);
-            return;
-        }
-        TaiKhoan currentUser = authService.getCurrentUser();
-        if (currentUser == null) {
-            JOptionPane.showMessageDialog(this, "Không tìm thấy người dùng hiện tại", "Lỗi", JOptionPane.ERROR_MESSAGE);
-            return;
-        }
-        KetQua<Void> result = authService.changePassword(currentUser.getId(), currentPass, newPass);
-        if (result.isSuccess()) {
-            JOptionPane.showMessageDialog(this, "Đổi mật khẩu thành công!", "Thông báo", JOptionPane.INFORMATION_MESSAGE);
-            current.setText("");
-            next.setText("");
-            confirm.setText("");
-        } else {
-            JOptionPane.showMessageDialog(this, result.getMessage(), "Lỗi", JOptionPane.ERROR_MESSAGE);
-        }
+        renderContent(new SettingsPanel(authService));
     }
 
     private void showLeaveManagement() { showContent(btnLeave, "Quản lý nghỉ phép", LeaveListPanel::new); }

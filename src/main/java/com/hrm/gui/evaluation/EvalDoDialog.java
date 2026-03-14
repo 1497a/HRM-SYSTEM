@@ -6,6 +6,7 @@ import com.hrm.model.DanhGiaHieuSuat;
 import com.hrm.model.NhanVien;
 import com.hrm.model.TaiKhoan;
 import com.hrm.bus.DanhGiaBUS;
+import com.hrm.bus.KetQua;
 import com.hrm.bus.NhanVienBUS;
 import com.hrm.util.SessionContext;
 import com.hrm.util.UIColors;
@@ -60,7 +61,6 @@ public class EvalDoDialog extends JDialog {
         setLocationRelativeTo(parent);
     }
 
-    // â”€â”€ init â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
     private void initComponents() {
         // Employee combo â€” show hoTen + tenChucVu, store maNV
@@ -193,7 +193,6 @@ public class EvalDoDialog extends JDialog {
         return panel;
     }
 
-    // â”€â”€ layout â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
     private void setupLayout() {
         JPanel main = new JPanel(new BorderLayout(10, 10));
@@ -254,7 +253,6 @@ public class EvalDoDialog extends JDialog {
         updateChucVuLabel();
     }
 
-    // â”€â”€ actions â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
     private void updateChucVuLabel() {
         NhanVienItem item = (NhanVienItem) cboEmployee.getSelectedItem();
@@ -320,7 +318,7 @@ public class EvalDoDialog extends JDialog {
             approverName = currentUser.getHoTen();
         }
 
-        DanhGiaBUS.KetQua<?> result = evalService.submitEvaluation(
+        KetQua<?> result = evalService.submitEvaluation(
                 cycleId,
                 selected.maNV,        // employee maNV (not taiKhoan.id!)
                 selected.hoTen,
