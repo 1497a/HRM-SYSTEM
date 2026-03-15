@@ -18,7 +18,7 @@ import java.util.List;
 class TabBoNhiemPanel extends JPanel {
 
     private static final DateTimeFormatter DATE_FMT = DateTimeFormatter.ofPattern("dd/MM/yyyy");
-    private static final String[] COLS = {"Phong ban", "Chuc vu", "Loai", "Tu ngay", "Den ngay", "Trang thai"};
+    private static final String[] COLS = {"Phòng ban", "Chức vụ", "Loại", "Từ ngày", "Đến ngày", "Trạng thái"};
 
     TabBoNhiemPanel(BoNhiem boNhiemHienTai, BoNhiemBUS boNhiemService, String maNV) {
         setLayout(new BorderLayout(0, 12));
@@ -28,24 +28,24 @@ class TabBoNhiemPanel extends JPanel {
         // Current appointment section
         JPanel currentPanel = new JPanel(new BorderLayout(0, 8));
         currentPanel.setBackground(UIColors.WHITE);
-        currentPanel.add(buildSectionTitle("Bo nhiem hien tai"), BorderLayout.NORTH);
+        currentPanel.add(buildSectionTitle("Bổ nhiệm hiện tại"), BorderLayout.NORTH);
 
         JPanel detailGrid = buildInfoGrid();
         if (boNhiemHienTai != null) {
             String tenPB = boNhiemHienTai.getTenPhongBan() != null ? boNhiemHienTai.getTenPhongBan() : safe(String.valueOf(boNhiemHienTai.getId()));
             String tenCV = boNhiemHienTai.getTenChucVu()   != null ? boNhiemHienTai.getTenChucVu()   : safe(String.valueOf(boNhiemHienTai.getId()));
-            addInfoRow(detailGrid, 0, "Phong ban:",         tenPB);
-            addInfoRow(detailGrid, 1, "Chuc vu:",           tenCV);
-            addInfoRow(detailGrid, 2, "Loai bo nhiem:",     safe(boNhiemHienTai.getLoaiBoNhiemDisplay()));
-            addInfoRow(detailGrid, 3, "Ty le huong luong:", boNhiemHienTai.getTyLeHuongLuong() + "%");
-            addInfoRow(detailGrid, 4, "Tu ngay:",
+            addInfoRow(detailGrid, 0, "Phòng ban:",         tenPB);
+            addInfoRow(detailGrid, 1, "Chức vụ:",           tenCV);
+            addInfoRow(detailGrid, 2, "Loại bổ nhiệm:",     safe(boNhiemHienTai.getLoaiBoNhiemDisplay()));
+            addInfoRow(detailGrid, 3, "Tỷ lệ hưởng lương:", boNhiemHienTai.getTyLeHuongLuong() + "%");
+            addInfoRow(detailGrid, 4, "Từ ngày:",
                     boNhiemHienTai.getTuNgay() != null ? boNhiemHienTai.getTuNgay().format(DATE_FMT) : "");
-            addInfoRow(detailGrid, 5, "Den ngay:",
-                    boNhiemHienTai.getDenNgay() != null ? boNhiemHienTai.getDenNgay().format(DATE_FMT) : "Khong xac dinh");
-            addInfoRow(detailGrid, 6, "Trang thai:",
+            addInfoRow(detailGrid, 5, "Đến ngày:",
+                    boNhiemHienTai.getDenNgay() != null ? boNhiemHienTai.getDenNgay().format(DATE_FMT) : "Không xác định");
+            addInfoRow(detailGrid, 6, "Trạng thái:",
                     buildStatusLabel(boNhiemHienTai.getTrangThai(), boNhiemHienTai.getTrangThaiDisplay()));
         } else {
-            JLabel noData = new JLabel("  Chua co bo nhiem chinh hieu luc.");
+            JLabel noData = new JLabel("  Chưa có bổ nhiệm chính hiệu lực.");
             noData.setFont(new Font("Segoe UI", Font.ITALIC, 13));
             noData.setForeground(UIColors.TEXT_GRAY);
             detailGrid.add(noData, buildGbc(0, 0, 2));
@@ -56,7 +56,7 @@ class TabBoNhiemPanel extends JPanel {
         // Appointment history table
         JPanel historyPanel = new JPanel(new BorderLayout(0, 6));
         historyPanel.setBackground(UIColors.WHITE);
-        historyPanel.add(buildSectionTitle("Lich su bo nhiem"), BorderLayout.NORTH);
+        historyPanel.add(buildSectionTitle("Lịch sử bổ nhiệm"), BorderLayout.NORTH);
 
         DefaultTableModel tableModel = PurpleTable.createNonEditableModel(COLS);
         loadHistory(tableModel, boNhiemService, maNV);
@@ -87,7 +87,7 @@ class TabBoNhiemPanel extends JPanel {
                 model.addRow(new Object[]{
                     tenPB, tenCV, safe(bn.getLoaiBoNhiemDisplay()),
                     bn.getTuNgay() != null ? bn.getTuNgay().format(DATE_FMT) : "",
-                    bn.getDenNgay() != null ? bn.getDenNgay().format(DATE_FMT) : "Khong xac dinh",
+                    bn.getDenNgay() != null ? bn.getDenNgay().format(DATE_FMT) : "Không xác định",
                     safe(bn.getTrangThaiDisplay())
                 });
             }
@@ -183,9 +183,9 @@ class TabBoNhiemPanel extends JPanel {
                 c.setForeground(UIColors.TEXT_DARK);
                 if (col == 5 && value != null) {
                     String v = value.toString();
-                    if (v.contains("Hieu luc") || v.contains("hieu_luc")) c.setForeground(UIColors.SUCCESS_GREEN);
-                    else if (v.contains("Cho duyet") || v.contains("cho_duyet")) c.setForeground(UIColors.WARNING_TEXT_AMBER);
-                    else if (v.contains("Het") || v.contains("Tu choi")) c.setForeground(UIColors.DANGER_RED);
+                    if (v.contains("Hiệu lực") || v.contains("hieu_luc")) c.setForeground(UIColors.SUCCESS_GREEN);
+                    else if (v.contains("Chờ duyệt") || v.contains("cho_duyet")) c.setForeground(UIColors.WARNING_TEXT_AMBER);
+                    else if (v.contains("Đã hết") || v.contains("Từ chối")) c.setForeground(UIColors.DANGER_RED);
                     ((JLabel) c).setFont(com.hrm.util.UIFonts.BOLD_SMALL);
                 }
             }

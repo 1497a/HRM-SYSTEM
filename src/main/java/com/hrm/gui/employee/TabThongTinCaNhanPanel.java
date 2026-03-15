@@ -44,12 +44,12 @@ class TabThongTinCaNhanPanel extends JPanel {
         content.setBorder(BorderFactory.createEmptyBorder(16, 20, 16, 20));
 
         // Section: Thong tin nhan vien
-        content.add(buildSectionTitle("Thong tin nhan vien"));
+        content.add(buildSectionTitle("Thông tin nhân viên"));
         content.add(Box.createVerticalStrut(8));
         JPanel nvPanel = buildInfoGrid();
-        addInfoRow(nvPanel, 0, "Ma nhan vien:", nhanVien != null ? safe(nhanVien.getMaNhanVien()) : "");
-        addInfoRow(nvPanel, 1, "Loai hop dong:", nhanVien != null ? safe(nhanVien.getLoaiHopDongDisplay()) : "");
-        addInfoRow(nvPanel, 2, "Ngay vao lam:",
+        addInfoRow(nvPanel, 0, "Mã nhân viên:", nhanVien != null ? safe(nhanVien.getMaNhanVien()) : "");
+        addInfoRow(nvPanel, 1, "Loại hợp đồng:", nhanVien != null ? safe(nhanVien.getLoaiHopDongDisplay()) : "");
+        addInfoRow(nvPanel, 2, "Ngày vào làm:",
                 nhanVien != null && nhanVien.getNgayVaoLam() != null
                         ? nhanVien.getNgayVaoLam().format(DATE_FMT) : "");
         cboTrangThaiNhanVien = new JComboBox<>(new String[]{"dang_lam_viec", "tam_nghi", "nghi_viec"});
@@ -70,7 +70,7 @@ class TabThongTinCaNhanPanel extends JPanel {
         content.add(Box.createVerticalStrut(16));
 
         // Section: Thong tin ca nhan
-        content.add(buildSectionTitle("Thong tin ca nhan"));
+        content.add(buildSectionTitle("Thông tin cá nhân"));
         content.add(Box.createVerticalStrut(8));
         JPanel ttcnPanel = buildInfoGrid();
         if (ttcn != null) {
@@ -88,23 +88,23 @@ class TabThongTinCaNhanPanel extends JPanel {
             txtFileCV         = createReadOnlyTextField();
             txtKinhNghiem     = createReadOnlyTextArea();
 
-            addInfoRow(ttcnPanel, 0,  "Ho va ten:",            txtHoTen);
-            addInfoRow(ttcnPanel, 1,  "Ngay sinh:",            txtNgaySinh);
-            addInfoRow(ttcnPanel, 2,  "Gioi tinh:",            cboGioiTinh);
+            addInfoRow(ttcnPanel, 0,  "Họ và tên:",            txtHoTen);
+            addInfoRow(ttcnPanel, 1,  "Ngày sinh:",            txtNgaySinh);
+            addInfoRow(ttcnPanel, 2,  "Giới tính:",            cboGioiTinh);
             addInfoRow(ttcnPanel, 3,  "CCCD:",                 txtCCCD);
-            addInfoRow(ttcnPanel, 4,  "So dien thoai:",        txtDienThoai);
+            addInfoRow(ttcnPanel, 4,  "Số điện thoại:",        txtDienThoai);
             addInfoRow(ttcnPanel, 5,  "Email:",                txtEmail);
-            addInfoRow(ttcnPanel, 6,  "Dia chi:",              txtDiaChi);
-            addInfoRow(ttcnPanel, 7,  "Dia chi thuong tru:",   txtDiaChiThuongTru);
-            addInfoRow(ttcnPanel, 8,  "Que quan:",             txtQueQuan);
-            addInfoRow(ttcnPanel, 9,  "Tinh trang hon nhan:",  cboTinhTrangHonNhan);
-            addInfoRow(ttcnPanel, 10, "Trinh do hoc van:",     txtTrinhDoHocVan);
+            addInfoRow(ttcnPanel, 6,  "Địa chỉ:",              txtDiaChi);
+            addInfoRow(ttcnPanel, 7,  "Địa chỉ thường trú:",   txtDiaChiThuongTru);
+            addInfoRow(ttcnPanel, 8,  "Quê quán:",             txtQueQuan);
+            addInfoRow(ttcnPanel, 9,  "Tình trạng hôn nhân:",  cboTinhTrangHonNhan);
+            addInfoRow(ttcnPanel, 10, "Trình độ học vấn:",     txtTrinhDoHocVan);
             addInfoRow(ttcnPanel, 11, "File CV:",              txtFileCV);
-            addInfoRow(ttcnPanel, 12, "Kinh nghiem:",          new JScrollPane(txtKinhNghiem));
+            addInfoRow(ttcnPanel, 12, "Kinh nghiệm:",          new JScrollPane(txtKinhNghiem));
             loadFields();
             setEditMode(false);
         } else {
-            JLabel noData = new JLabel("  Khong co thong tin ca nhan.");
+            JLabel noData = new JLabel("  Không có thông tin cá nhân.");
             noData.setFont(new Font("Segoe UI", Font.ITALIC, 13));
             noData.setForeground(UIColors.TEXT_GRAY);
             ttcnPanel.add(noData, buildGbc(0, 0, 2));
@@ -113,22 +113,22 @@ class TabThongTinCaNhanPanel extends JPanel {
         content.add(Box.createVerticalStrut(16));
 
         // Section: Hop dong lao dong
-        content.add(buildSectionTitle("Hop dong lao dong"));
+        content.add(buildSectionTitle("Hợp đồng lao động"));
         content.add(Box.createVerticalStrut(8));
         JPanel hdPanel = buildInfoGrid();
         if (hopDong != null) {
-            addInfoRow(hdPanel, 0, "So hop dong:",   safe(hopDong.getSoHopDong()));
-            addInfoRow(hdPanel, 1, "Loai hop dong:", safe(hopDong.getLoaiHopDongDisplay()));
-            addInfoRow(hdPanel, 2, "Ngay ky:",
+            addInfoRow(hdPanel, 0, "Số hợp đồng:",   safe(hopDong.getSoHopDong()));
+            addInfoRow(hdPanel, 1, "Loại hợp đồng:", safe(hopDong.getLoaiHopDongDisplay()));
+            addInfoRow(hdPanel, 2, "Ngày ký:",
                     hopDong.getNgayKy() != null ? hopDong.getNgayKy().format(DATE_FMT) : "");
-            addInfoRow(hdPanel, 3, "Hieu luc tu:",
+            addInfoRow(hdPanel, 3, "Hiệu lực từ:",
                     hopDong.getNgayHieuLuc() != null ? hopDong.getNgayHieuLuc().format(DATE_FMT) : "");
-            addInfoRow(hdPanel, 4, "Hieu luc den:",
-                    hopDong.getNgayHetHieuLuc() != null ? hopDong.getNgayHetHieuLuc().format(DATE_FMT) : "Khong xac dinh");
-            addInfoRow(hdPanel, 5, "Trang thai:",
+            addInfoRow(hdPanel, 4, "Hiệu lực đến:",
+                    hopDong.getNgayHetHieuLuc() != null ? hopDong.getNgayHetHieuLuc().format(DATE_FMT) : "Không xác định");
+            addInfoRow(hdPanel, 5, "Trạng thái:",
                     buildStatusLabel(hopDong.getTrangThai(), hopDong.getTrangThaiDisplay()));
         } else {
-            JLabel noHd = new JLabel("  Chua co hop dong hieu luc.");
+            JLabel noHd = new JLabel("  Chưa có hợp đồng hiệu lực.");
             noHd.setFont(new Font("Segoe UI", Font.ITALIC, 13));
             noHd.setForeground(UIColors.TEXT_GRAY);
             hdPanel.add(noHd, buildGbc(0, 0, 2));
@@ -209,21 +209,21 @@ class TabThongTinCaNhanPanel extends JPanel {
     KetQua<ThongTinCaNhan> save() {
         if (ttcn == null) { ttcn = new ThongTinCaNhan(); ttcn.setMaNV(maNV); }
         String hoTen = txtHoTen.getText().trim();
-        if (hoTen.isEmpty()) return KetQua.error("Ho ten khong duoc de trong.");
+        if (hoTen.isEmpty()) return KetQua.error("Họ tên không được để trống.");
 
         String ngaySinhStr = txtNgaySinh.getText().trim();
         LocalDate ngaySinh = null;
         if (!ngaySinhStr.isEmpty()) {
             try { ngaySinh = LocalDate.parse(ngaySinhStr, DATE_FMT); }
-            catch (DateTimeParseException e) { return KetQua.error("Ngay sinh khong hop le. Dinh dang dd/MM/yyyy."); }
-            if (ngaySinh.isAfter(LocalDate.now())) return KetQua.error("Ngay sinh khong the o tuong lai.");
+            catch (DateTimeParseException e) { return KetQua.error("Ngày sinh không hợp lệ. Định dạng dd/MM/yyyy."); }
+            if (ngaySinh.isAfter(LocalDate.now())) return KetQua.error("Ngày sinh không thể ở tương lai.");
         }
         String email = txtEmail.getText().trim();
         if (!email.isEmpty() && !email.matches("^[A-Za-z0-9+_.-]+@[A-Za-z0-9.-]+$"))
-            return KetQua.error("Email khong hop le.");
+            return KetQua.error("Email không hợp lệ.");
         String sdt = txtDienThoai.getText().trim();
         if (!sdt.isEmpty() && !sdt.matches("^\\d{9,11}$"))
-            return KetQua.error("So dien thoai khong hop le.");
+            return KetQua.error("Số điện thoại không hợp lệ.");
 
         ttcn.setHoTen(hoTen);
         ttcn.setNgaySinh(ngaySinh);

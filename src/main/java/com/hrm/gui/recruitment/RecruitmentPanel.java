@@ -16,9 +16,9 @@ public class RecruitmentPanel extends JPanel {
         JTabbedPane tabs = new JTabbedPane();
         tabs.setFont(com.hrm.util.UIFonts.TEXT_MEDIUM);
         tabs.setBackground(UIColors.WHITE);
-        tabs.addTab("Yeu cau tuyen dung", new TabYeuCauPanel(service));
-        tabs.addTab("Tin tuyen dung",     new TabTinPanel(service));
-        tabs.addTab("Ung vien",           new TabUngVienPanel(service));
+        tabs.addTab("Yêu cầu tuyển dụng", new TabYeuCauPanel(service));
+        tabs.addTab("Tin tuyển dụng",     new TabTinPanel(service));
+        tabs.addTab("Ứng viên",           new TabUngVienPanel(service));
         add(tabs, BorderLayout.CENTER);
     }
 }

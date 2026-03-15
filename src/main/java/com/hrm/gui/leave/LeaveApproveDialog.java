@@ -30,7 +30,7 @@ public class LeaveApproveDialog extends JDialog {
     private static final DateTimeFormatter DATE_FORMAT = DateTimeFormatter.ofPattern("dd/MM/yyyy");
 
     public LeaveApproveDialog(Frame parent, int requestId) {
-        super(parent, "Duyet Don Nghi Phep", true);
+        super(parent, "Duyệt đơn nghỉ phép", true);
         this.leaveService = NghiPhepBUS.getInstance();
         this.currentUser = SessionContext.getInstance().getCurrentUser();
         this.requestId = requestId;
@@ -38,8 +38,8 @@ public class LeaveApproveDialog extends JDialog {
 
         if (request == null) {
             JOptionPane.showMessageDialog(parent,
-                    "Khong tim thay don nghi phep",
-                    "Loi",
+                    "Không tìm thấy đơn nghỉ phép: " + requestId,
+                    "Lỗi",
                     JOptionPane.ERROR_MESSAGE);
             dispose();
             return;
@@ -59,13 +59,13 @@ public class LeaveApproveDialog extends JDialog {
         txtNote.setLineWrap(true);
         txtNote.setWrapStyleWord(true);
 
-        btnApprove = UIHelper.createSuccessButton("Duyet");
+        btnApprove = UIHelper.createSuccessButton("Duyệt");
         btnApprove.setPreferredSize(new Dimension(100, 35));
 
-        btnReject = UIHelper.createDangerButton("Tu choi");
+        btnReject = UIHelper.createDangerButton("Từ chối");
         btnReject.setPreferredSize(new Dimension(100, 35));
 
-        btnCancel = UIHelper.createDefaultButton("Dong");
+        btnCancel = UIHelper.createDefaultButton("Đóng");
         btnCancel.setPreferredSize(new Dimension(100, 35));
     }
 
@@ -75,27 +75,27 @@ public class LeaveApproveDialog extends JDialog {
 
         // Request info panel
         JPanel infoPanel = new JPanel(new GridLayout(0, 2, 10, 8));
-        infoPanel.setBorder(new TitledBorder("Thong tin don nghi phep"));
+        infoPanel.setBorder(new TitledBorder("Thông tin đơn nghỉ phép"));
 
-        infoPanel.add(new JLabel("Ma don:"));
+        infoPanel.add(new JLabel("Mã đơn:"));
         infoPanel.add(createValueLabel("#" + request.getId()));
 
-        infoPanel.add(new JLabel("Nhan vien:"));
+        infoPanel.add(new JLabel("Nhân viên:"));
         infoPanel.add(createValueLabel(request.getEmployeeName()));
 
-        infoPanel.add(new JLabel("Loai phep:"));
+        infoPanel.add(new JLabel("Loại phép:"));
         infoPanel.add(createValueLabel(request.getLeaveTypeName()));
 
-        infoPanel.add(new JLabel("Tu ngay:"));
+        infoPanel.add(new JLabel("Từ ngày:"));
         infoPanel.add(createValueLabel(request.getStartDate().format(DATE_FORMAT)));
 
-        infoPanel.add(new JLabel("Den ngay:"));
+        infoPanel.add(new JLabel("Đến ngày:"));
         infoPanel.add(createValueLabel(request.getEndDate().format(DATE_FORMAT)));
 
-        infoPanel.add(new JLabel("So ngay:"));
-        infoPanel.add(createValueLabel(request.getTotalDays() + " ngay"));
+        infoPanel.add(new JLabel("Số ngày:"));
+        infoPanel.add(createValueLabel(request.getTotalDays() + " ngày"));
 
-        infoPanel.add(new JLabel("Trang thai:"));
+        infoPanel.add(new JLabel("Trang thái:"));
         JLabel lblStatus = createValueLabel(request.getTrangThai().toString());
         if (request.getTrangThai() == DonXinNghiPhep.TrangThai.CHO_DUYET) {
             lblStatus.setForeground(new Color(230, 126, 34));
@@ -104,7 +104,7 @@ public class LeaveApproveDialog extends JDialog {
 
         // Reason panel
         JPanel reasonPanel = new JPanel(new BorderLayout(5, 5));
-        reasonPanel.setBorder(new TitledBorder("Ly do nghi phep"));
+        reasonPanel.setBorder(new TitledBorder("Lý do nghỉ phép"));
         JTextArea txtReason = new JTextArea(request.getReason());
         txtReason.setEditable(false);
         txtReason.setLineWrap(true);
@@ -114,7 +114,7 @@ public class LeaveApproveDialog extends JDialog {
 
         // Note panel
         JPanel notePanel = new JPanel(new BorderLayout(5, 5));
-        notePanel.setBorder(new TitledBorder("Ghi chu cua nguoi duyet"));
+        notePanel.setBorder(new TitledBorder("Ghi chú của người duyệt"));
         notePanel.add(new JScrollPane(txtNote), BorderLayout.CENTER);
 
         // Center panel
@@ -155,17 +155,17 @@ public class LeaveApproveDialog extends JDialog {
 
         if (!approve && note.isEmpty()) {
             JOptionPane.showMessageDialog(this,
-                    "Vui long nhap ly do tu choi",
-                    "Thong bao",
+                    "Vui lòng nhập lý do từ chối.",
+                    "Thông báo",
                     JOptionPane.WARNING_MESSAGE);
             txtNote.requestFocus();
             return;
         }
 
-        String action = approve ? "duyet" : "tu choi";
+        String action = approve ? "Duyệt" : "Từ chối";
         int confirm = JOptionPane.showConfirmDialog(this,
-                "Ban co chac muon " + action + " don nghi phep nay?",
-                "Xac nhan",
+                "Bạn có chắc muốn " + action + " đơn nghỉ phép này?",
+                "Xác nhận",
                 JOptionPane.YES_NO_OPTION);
 
         if (confirm != JOptionPane.YES_OPTION) {
@@ -189,13 +189,13 @@ public class LeaveApproveDialog extends JDialog {
         if (result.isSuccess()) {
             JOptionPane.showMessageDialog(this,
                     result.getMessage(),
-                    "Thanh cong",
+                    "Thành công",
                     JOptionPane.INFORMATION_MESSAGE);
             dispose();
         } else {
             JOptionPane.showMessageDialog(this,
                     result.getMessage(),
-                    "Loi",
+                    "Lỗi",
                     JOptionPane.ERROR_MESSAGE);
         }
     }

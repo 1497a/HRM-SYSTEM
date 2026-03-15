@@ -32,7 +32,7 @@ public class LeaveCreateDialog extends JDialog {
     private boolean successful = false;
 
     public LeaveCreateDialog(Frame parent) {
-        super(parent, "Tao Don Nghi Phep", true);
+        super(parent, "Tạo Đơn Nghỉ Phép", true);
         this.leaveService = NghiPhepBUS.getInstance();
         this.currentUser = SessionContext.getInstance().getCurrentUser();
 
@@ -62,7 +62,7 @@ public class LeaveCreateDialog extends JDialog {
         spnEndDate.setEditor(new JSpinner.DateEditor(spnEndDate, "dd/MM/yyyy"));
 
         // Total days label
-        lblTotalDays = new JLabel("0 ngay lam viec");
+        lblTotalDays = new JLabel("0 ngày làm việc");
         lblTotalDays.setFont(com.hrm.util.UIFonts.BOLD_MEDIUM);
         lblTotalDays.setForeground(new Color(0, 102, 153));
 
@@ -72,8 +72,8 @@ public class LeaveCreateDialog extends JDialog {
         txtReason.setWrapStyleWord(true);
 
         // Buttons
-        btnSubmit = UIHelper.createSuccessButton("Gui don");
-        btnCancel = UIHelper.createDefaultButton("Huy");
+        btnSubmit = UIHelper.createSuccessButton("Gửi đơn");
+        btnCancel = UIHelper.createDefaultButton("Hủy");
     }
 
     private void setupLayout() {
@@ -91,7 +91,7 @@ public class LeaveCreateDialog extends JDialog {
 
         // Employee info
         gbc.gridx = 0; gbc.gridy = row;
-        formPanel.add(new JLabel("Nhan vien:"), gbc);
+        formPanel.add(new JLabel("Nhân viên:"), gbc);
         gbc.gridx = 1;
         JLabel lblEmployee = new JLabel(currentUser.getHoTen());
         lblEmployee.setFont(com.hrm.util.UIFonts.BOLD_SMALL);
@@ -100,28 +100,28 @@ public class LeaveCreateDialog extends JDialog {
         // Leave type
         row++;
         gbc.gridx = 0; gbc.gridy = row;
-        formPanel.add(new JLabel("Loai phep:"), gbc);
+        formPanel.add(new JLabel("Loại phép:"), gbc);
         gbc.gridx = 1;
         formPanel.add(cboLeaveType, gbc);
 
         // Start date
         row++;
         gbc.gridx = 0; gbc.gridy = row;
-        formPanel.add(new JLabel("Tu ngay:"), gbc);
+        formPanel.add(new JLabel("Từ ngày:"), gbc);
         gbc.gridx = 1;
         formPanel.add(spnStartDate, gbc);
 
         // End date
         row++;
         gbc.gridx = 0; gbc.gridy = row;
-        formPanel.add(new JLabel("Den ngay:"), gbc);
+        formPanel.add(new JLabel("Đến ngày:"), gbc);
         gbc.gridx = 1;
         formPanel.add(spnEndDate, gbc);
 
         // Total days
         row++;
         gbc.gridx = 0; gbc.gridy = row;
-        formPanel.add(new JLabel("Tong so ngay:"), gbc);
+        formPanel.add(new JLabel("Tổng số ngày:"), gbc);
         gbc.gridx = 1;
         formPanel.add(lblTotalDays, gbc);
 
@@ -129,7 +129,7 @@ public class LeaveCreateDialog extends JDialog {
         row++;
         gbc.gridx = 0; gbc.gridy = row;
         gbc.anchor = GridBagConstraints.NORTHWEST;
-        formPanel.add(new JLabel("Ly do:"), gbc);
+        formPanel.add(new JLabel("Lý do:"), gbc);
         gbc.gridx = 1;
         gbc.fill = GridBagConstraints.BOTH;
         gbc.weightx = 1.0;
@@ -166,7 +166,7 @@ public class LeaveCreateDialog extends JDialog {
         LocalDate end = endDate.toInstant().atZone(ZoneId.systemDefault()).toLocalDate();
 
         int days = leaveService.calculateBusinessDays(start, end);
-        lblTotalDays.setText(days + " ngay lam viec");
+        lblTotalDays.setText(days + " ngày làm việc");
     }
 
     private void submitRequest() {
@@ -177,8 +177,8 @@ public class LeaveCreateDialog extends JDialog {
 
         if (reason.isEmpty()) {
             JOptionPane.showMessageDialog(this,
-                    "Vui long nhap ly do nghi phep",
-                    "Loi",
+                    "Vui lòng nhập lý do nghỉ phép",
+                    "Lỗi",
                     JOptionPane.ERROR_MESSAGE);
             txtReason.requestFocus();
             return;
@@ -198,14 +198,14 @@ public class LeaveCreateDialog extends JDialog {
         if (result.isSuccess()) {
             JOptionPane.showMessageDialog(this,
                     result.getMessage(),
-                    "Thanh cong",
+                    "Thành công",
                     JOptionPane.INFORMATION_MESSAGE);
             successful = true;
             dispose();
         } else {
             JOptionPane.showMessageDialog(this,
                     result.getMessage(),
-                    "Loi",
+                    "Lỗi",
                     JOptionPane.ERROR_MESSAGE);
         }
     }

@@ -89,10 +89,10 @@ public class PositionPanel extends JPanel {
 
         add(new JScrollPane(table), BorderLayout.CENTER);
 
-        btnThem = UIHelper.createPrimaryButton("+ Them");
+        btnThem = UIHelper.createPrimaryButton("+ Thêm");
         JPanel btnPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
         btnPanel.add(btnThem);
-        JButton btnLamMoi = new JButton("Lam moi");
+        JButton btnLamMoi = new JButton("Làm mới");
         btnLamMoi.addActionListener(e -> refreshTable());
         btnPanel.add(btnLamMoi);
         add(btnPanel, BorderLayout.SOUTH);
@@ -175,12 +175,12 @@ public class PositionPanel extends JPanel {
         txtMoTa.setLineWrap(true);
 
         Object[] fields = {
-                "Ma chuc vu (*):", txtMa,
-                "Ten chuc vu (*):", txtTen,
-                "Cap bac (1=cao nhat):", txtCapBac,
-                "He so luong (*):", txtHeSo,
-                "Phu cap (VND):", txtPhuCap,
-                "Mo ta:", new JScrollPane(txtMoTa)
+                "Mã chức vụ (*):", txtMa,
+                "Tên chức vụ (*):", txtTen,
+                "Cấp bậc (1=cao nhất):", txtCapBac,
+                "Hệ số lương (*):", txtHeSo,
+                "Phụ cấp (VND):", txtPhuCap,
+                "Mô tả:", new JScrollPane(txtMoTa)
         };
 
         int ok = JOptionPane.showConfirmDialog(this, fields, "Thêm chức vụ mới", JOptionPane.OK_CANCEL_OPTION);
@@ -263,7 +263,7 @@ public class PositionPanel extends JPanel {
         gbc.anchor = GridBagConstraints.WEST;
 
         String[] labels = {
-                "Mã chức vụ:", "ên chức vụ (*):", "ấp bậc:", "Hệ số lương (*):",
+                "Mã chức vụ:", "Tên chức vụ (*):", "Cấp bậc:", "Hệ số lương (*):",
                 "Phụ cấp (VND):", "Mô tả:", "Trạng thái:"
         };
         JComponent[] flds = {txtMa, txtTen, txtCapBac, txtHeSo, txtPhuCap, new JScrollPane(txtMoTa), cboTrangThai};
@@ -286,7 +286,7 @@ public class PositionPanel extends JPanel {
         }
 
         JPanel btnPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT, 8, 8));
-        JButton btnHuy = UIHelper.createDefaultButton("Huy");
+        JButton btnHuy = UIHelper.createDefaultButton("Hủy");
         btnHuy.addActionListener(e -> dialog.dispose());
 
         JButton btnLichSuBtn = UIHelper.createDefaultButton("Xem lịch sử hệ số");
@@ -295,7 +295,7 @@ public class PositionPanel extends JPanel {
         btnPanel.add(btnHuy);
 
         if (canEdit) {
-            JButton btnLuu = UIHelper.createSuccessButton("Luu");
+            JButton btnLuu = UIHelper.createSuccessButton("Lưu");
             btnLuu.addActionListener(e -> {
                 try {
                     int capBac = Integer.parseInt(txtCapBac.getText().trim());

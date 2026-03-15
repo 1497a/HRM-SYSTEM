@@ -40,7 +40,7 @@ public class HopThoaiTaoUngVien extends JDialog {
     private static final DateTimeFormatter DATE_FMT = DateTimeFormatter.ofPattern("dd/MM/yyyy");
 
     public HopThoaiTaoUngVien(Window owner, TuyenDungBUS tuyenDungBUS) {
-        super(owner, "Tao ung vien moi", ModalityType.APPLICATION_MODAL);
+        super(owner, "Tạo ứng viên mới", ModalityType.APPLICATION_MODAL);
         this.tuyenDungBUS = tuyenDungBUS;
         initUI();
         pack();
@@ -67,7 +67,7 @@ public class HopThoaiTaoUngVien extends JDialog {
 
         cboTin = new JComboBox<>();
         TinTuyenDung placeholder = new TinTuyenDung();
-        placeholder.setTieuDe("-- Chon tin tuyen dung --");
+        placeholder.setTieuDe("-- Chọn tin tuyển dụng --");
         cboTin.addItem(placeholder);
         for (TinTuyenDung t : dsTin) cboTin.addItem(t);
         cboTin.setRenderer((list, value, index, sel, focus) ->
@@ -77,15 +77,15 @@ public class HopThoaiTaoUngVien extends JDialog {
         txtEmail        = field(25);
         txtDienThoai    = field(15);
         txtNgaySinh     = field(12);
-        txtNgaySinh.setToolTipText("Dinh dang: dd/MM/yyyy");
+        txtNgaySinh.setToolTipText("Định dạng: dd/MM/yyyy");
 
-        cboGioiTinh = new JComboBox<>(new String[]{"nam", "nu", "khac"});
+        cboGioiTinh = new JComboBox<>(new String[]{"nam", "nữ", "khác"});
         cboGioiTinh.setFont(com.hrm.util.UIFonts.TEXT_NORMAL);
 
         txtDiaChi = field(30);
 
         cboTrinhDo = new JComboBox<>(new String[]{
-            "Trung hoc pho thong", "Trung cap", "Cao dang", "Dai hoc", "Thac si", "Tien si", "Khac"
+            "Trung học", "Trung cấp", "Cao đẳng", "Đại học", "Thạc sĩ", "Tiến sĩ", "Khác"
         });
         cboTrinhDo.setFont(com.hrm.util.UIFonts.TEXT_NORMAL);
 
@@ -99,17 +99,17 @@ public class HopThoaiTaoUngVien extends JDialog {
         GridBagConstraints fld = fieldGBC();
 
         int row = 0;
-        addRow(p, row++, "Tin tuyen dung (*):", cboTin,              lbl, fld);
-        addRow(p, row++, "Ho ten (*):",         txtHoTen,            lbl, fld);
+        addRow(p, row++, "Tin tuyển dụng (*):", cboTin,              lbl, fld);
+        addRow(p, row++, "Họ tên (*):",         txtHoTen,            lbl, fld);
         addRow(p, row++, "Email:",               txtEmail,            lbl, fld);
-        addRow(p, row++, "Dien thoai:",          txtDienThoai,        lbl, fld);
-        addRow(p, row++, "Ngay sinh (dd/MM/yyyy):", txtNgaySinh,      lbl, fld);
-        addRow(p, row++, "Gioi tinh:",           cboGioiTinh,         lbl, fld);
-        addRow(p, row++, "Dia chi:",             txtDiaChi,           lbl, fld);
-        addRow(p, row++, "Trinh do hoc van:",    cboTrinhDo,          lbl, fld);
-        addRow(p, row++, "Kinh nghiem:",         new JScrollPane(txtKinhNghiem), lbl, fld);
-        addRow(p, row++, "Nguon ung tuyen:",     txtNguonUngTuyen,    lbl, fld);
-        addRow(p, row++, "Nhan xet ban dau:",    new JScrollPane(txtNhanXet),    lbl, fld);
+        addRow(p, row++, "Điện thoại:",          txtDienThoai,        lbl, fld);
+        addRow(p, row++, "Ngày sinh (dd/MM/yyyy):", txtNgaySinh,      lbl, fld);
+        addRow(p, row++, "Giới tính:",           cboGioiTinh,         lbl, fld);
+        addRow(p, row++, "Địa chỉ:",             txtDiaChi,           lbl, fld);
+        addRow(p, row++, "Trình độ học vấn:",    cboTrinhDo,          lbl, fld);
+        addRow(p, row++, "Kinh nghiệm:",         new JScrollPane(txtKinhNghiem), lbl, fld);
+        addRow(p, row++, "Nguồn ứng tuyển:",     txtNguonUngTuyen,    lbl, fld);
+        addRow(p, row++, "Nhận xét ban đầu:",    new JScrollPane(txtNhanXet),    lbl, fld);
 
         return p;
     }
@@ -118,8 +118,8 @@ public class HopThoaiTaoUngVien extends JDialog {
         JPanel panel = new JPanel(new FlowLayout(FlowLayout.RIGHT, 8, 4));
         panel.setBackground(UIColors.WHITE);
 
-        JButton btnLuu   = UIHelper.createSuccessButton("Luu");
-        JButton btnHuy   = UIHelper.createDefaultButton("Huy");
+        JButton btnLuu   = UIHelper.createSuccessButton("Lưu");
+        JButton btnHuy   = UIHelper.createDefaultButton("Hủy");
 
         btnLuu.addActionListener(e -> luu());
         btnHuy.addActionListener(e -> dispose());
@@ -132,13 +132,13 @@ public class HopThoaiTaoUngVien extends JDialog {
     private void luu() {
         String hoTen = txtHoTen.getText().trim();
         if (hoTen.isEmpty()) {
-            JOptionPane.showMessageDialog(this, "Vui long nhap ho ten.", "Loi", JOptionPane.WARNING_MESSAGE);
+            JOptionPane.showMessageDialog(this, "vui lòng nhập họ tên.", "Lỗi", JOptionPane.WARNING_MESSAGE);
             return;
         }
 
         TinTuyenDung tin = (TinTuyenDung) cboTin.getSelectedItem();
         if (tin == null || tin.getMaTin() == 0) {
-            JOptionPane.showMessageDialog(this, "Vui long chon tin tuyen dung.", "Loi", JOptionPane.WARNING_MESSAGE);
+            JOptionPane.showMessageDialog(this, "Vui long chon tin tuyen dung.", "Lỗi", JOptionPane.WARNING_MESSAGE);
             return;
         }
 
@@ -148,12 +148,12 @@ public class HopThoaiTaoUngVien extends JDialog {
             try {
                 ngaySinh = LocalDate.parse(nsStr, DATE_FMT);
             } catch (DateTimeParseException ex) {
-                JOptionPane.showMessageDialog(this, "Ngay sinh khong hop le. Dinh dang: dd/MM/yyyy", "Loi", JOptionPane.WARNING_MESSAGE);
+                JOptionPane.showMessageDialog(this, "Ngay sinh khong hop le. Dinh dang: dd/MM/yyyy", "Lỗi", JOptionPane.WARNING_MESSAGE);
                 return;
             }
             String dobErr = ValidationUtils.validateBirthDate(ngaySinh);
             if (dobErr != null) {
-                JOptionPane.showMessageDialog(this, dobErr, "Loi", JOptionPane.WARNING_MESSAGE);
+                JOptionPane.showMessageDialog(this, dobErr, "Lỗi", JOptionPane.WARNING_MESSAGE);
                 return;
             }
         }
@@ -161,12 +161,12 @@ public class HopThoaiTaoUngVien extends JDialog {
         // Validate email and phone
         String emailErr = ValidationUtils.validateEmail(txtEmail.getText().trim());
         if (emailErr != null) {
-            JOptionPane.showMessageDialog(this, emailErr, "Loi", JOptionPane.WARNING_MESSAGE);
+            JOptionPane.showMessageDialog(this, emailErr, "Lỗi", JOptionPane.WARNING_MESSAGE);
             return;
         }
         String phoneErr = ValidationUtils.validatePhone(txtDienThoai.getText().trim());
         if (phoneErr != null) {
-            JOptionPane.showMessageDialog(this, phoneErr, "Loi", JOptionPane.WARNING_MESSAGE);
+            JOptionPane.showMessageDialog(this, phoneErr, "Lỗi", JOptionPane.WARNING_MESSAGE);
             return;
         }
 
@@ -187,11 +187,11 @@ public class HopThoaiTaoUngVien extends JDialog {
 
         KetQua<?> kq = tuyenDungBUS.tiepNhanUngVien(uv);
         if (kq.isSuccess()) {
-            JOptionPane.showMessageDialog(this, "Da tao ung vien thanh cong!", "Thanh cong", JOptionPane.INFORMATION_MESSAGE);
+            JOptionPane.showMessageDialog(this, "Đã tạo ứng viên thành công!", "Thành công", JOptionPane.INFORMATION_MESSAGE);
             thanhCong = true;
             dispose();
         } else {
-            JOptionPane.showMessageDialog(this, kq.getMessage(), "Loi", JOptionPane.ERROR_MESSAGE);
+            JOptionPane.showMessageDialog(this, kq.getMessage(), "Lỗi", JOptionPane.ERROR_MESSAGE);
         }
     }
 

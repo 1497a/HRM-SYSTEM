@@ -4,7 +4,6 @@ import com.hrm.model.ThongTinCaNhan;
 import com.hrm.util.DatabaseConnection;
 
 import java.sql.*;
-import java.time.LocalDate;
 
 /**
  * Repository cho bảng THONGTINCANHAN.

@@ -42,7 +42,7 @@ public class EmployeeDetailPanel extends JDialog {
     public boolean isDataChanged() { return dataChanged; }
 
     public EmployeeDetailPanel(Frame parent, String maNV) {
-        super(parent, "Ho so nhan vien", true);
+        super(parent, "Hồ sơ nhân viên", true);
         this.maNV = maNV;
         loadData();
         buildUI();
@@ -60,9 +60,9 @@ public class EmployeeDetailPanel extends JDialog {
     }
 
     private void buildUI() {
-        String title = "Ho so nhan vien";
+        String title = "Hồ sơ nhân viên";
         if (nhanVien != null && nhanVien.getHoTen() != null && !nhanVien.getHoTen().isEmpty())
-            title = "Ho so: " + nhanVien.getHoTen();
+            title = "Hồ sơ: " + nhanVien.getHoTen();
         setTitle(title);
 
         JPanel root = new JPanel(new BorderLayout());
@@ -74,8 +74,8 @@ public class EmployeeDetailPanel extends JDialog {
         JTabbedPane tabs = new JTabbedPane(JTabbedPane.TOP);
         tabs.setFont(com.hrm.util.UIFonts.BOLD_NORMAL);
         tabs.setBackground(UIColors.LIGHT_GRAY_BG);
-        tabs.addTab("Thong tin ca nhan", personalTab);
-        tabs.addTab("Bo nhiem hien tai", new TabBoNhiemPanel(boNhiemHienTai, boNhiemService, maNV));
+        tabs.addTab("Thông tin cá nhân", personalTab);
+        tabs.addTab("Bổ nhiệm hiện tại", new TabBoNhiemPanel(boNhiemHienTai, boNhiemService, maNV));
         tabs.addChangeListener(e -> updateButtons(tabs));
 
         root.add(tabs, BorderLayout.CENTER);
@@ -89,7 +89,7 @@ public class EmployeeDetailPanel extends JDialog {
         header.setBackground(UIColors.PRIMARY_PURPLE);
         header.setBorder(BorderFactory.createEmptyBorder(14, 20, 14, 20));
 
-        String name = "(Khong ro ten)";
+        String name = "(Không rõ tên)";
         String code = "#" + maNV;
         if (ttcn != null && ttcn.getHoTen() != null)       name = ttcn.getHoTen();
         else if (nhanVien != null && nhanVien.getHoTen() != null) name = nhanVien.getHoTen();
@@ -129,17 +129,17 @@ public class EmployeeDetailPanel extends JDialog {
         JPanel right = new JPanel(new FlowLayout(FlowLayout.RIGHT, 8, 10));
         right.setOpaque(false);
 
-        btnSuaThongTin = new JButton("Sua thong tin");
+        btnSuaThongTin = new JButton("Sửa thông tin");
         styleButton(btnSuaThongTin, UIColors.PRIMARY_PURPLE);
         btnSuaThongTin.setPreferredSize(new Dimension(130, 34));
         btnSuaThongTin.addActionListener(e -> onSuaThongTin());
 
-        btnDoiTrangThai = new JButton("Doi trang thai");
+        btnDoiTrangThai = new JButton("Đổi trạng thái");
         styleButton(btnDoiTrangThai, UIColors.WARNING_TEXT_AMBER);
         btnDoiTrangThai.setPreferredSize(new Dimension(145, 34));
         btnDoiTrangThai.addActionListener(e -> onDoiTrangThai());
 
-        JButton btnClose = new JButton("Dong");
+        JButton btnClose = new JButton("Đóng");
         btnClose.setFont(com.hrm.util.UIFonts.BOLD_NORMAL);
         btnClose.setFocusPainted(false);
         btnClose.setPreferredSize(new Dimension(90, 34));
@@ -163,30 +163,30 @@ public class EmployeeDetailPanel extends JDialog {
 
     private void onSuaThongTin() {
         if (statusEditMode) {
-            JOptionPane.showMessageDialog(this, "Dang o che do doi trang thai. Vui long luu truoc.",
-                    "Thong bao", JOptionPane.WARNING_MESSAGE);
+            JOptionPane.showMessageDialog(this, "Đang ở chế độ đổi trạng thái, vui lòng lưu trước.",
+                    "Thông báo", JOptionPane.WARNING_MESSAGE);
             return;
         }
         if (!personalEditMode) {
             personalEditMode = true;
             personalTab.setEditMode(true);
-            btnSuaThongTin.setText("Luu");
+            btnSuaThongTin.setText("Lưu thông tin");
             return;
         }
         if (!personalTab.hasChanges()) {
             personalEditMode = false;
             personalTab.setEditMode(false);
-            btnSuaThongTin.setText("Sua thong tin");
+            btnSuaThongTin.setText("Sửa thông tin");
             return;
         }
         KetQua<ThongTinCaNhan> result = personalTab.save();
         if (!result.isSuccess()) {
-            JOptionPane.showMessageDialog(this, result.getMessage(), "Loi", JOptionPane.ERROR_MESSAGE);
+            JOptionPane.showMessageDialog(this, result.getMessage(), "Lỗi", JOptionPane.ERROR_MESSAGE);
             return;
         }
         dataChanged = true;
         personalEditMode = false;
-        btnSuaThongTin.setText("Sua thong tin");
+        btnSuaThongTin.setText("Sửa thông tin");
         loadData();
         buildUI();
         revalidate();
@@ -196,14 +196,14 @@ public class EmployeeDetailPanel extends JDialog {
     private void onDoiTrangThai() {
         if (nhanVien == null) return;
         if (personalEditMode) {
-            JOptionPane.showMessageDialog(this, "Dang o che do sua thong tin. Vui long luu truoc.",
-                    "Thong bao", JOptionPane.WARNING_MESSAGE);
+            JOptionPane.showMessageDialog(this, "Đang ở chế độ sửa thông tin. Vui lòng lưu trước.",
+                    "Thông báo", JOptionPane.WARNING_MESSAGE);
             return;
         }
         if (!statusEditMode) {
             statusEditMode = true;
             personalTab.setStatusEditMode(true);
-            btnDoiTrangThai.setText("Luu trang thai");
+            btnDoiTrangThai.setText("Lưu trạng thái");
             revalidate();
             repaint();
             return;
@@ -212,18 +212,18 @@ public class EmployeeDetailPanel extends JDialog {
         if (trangThaiMoi != null && trangThaiMoi.equals(nhanVien.getTrangThai())) {
             statusEditMode = false;
             personalTab.setStatusEditMode(false);
-            btnDoiTrangThai.setText("Doi trang thai");
+            btnDoiTrangThai.setText("Đổi trạng thái");
             return;
         }
         KetQua<NhanVien> result = nvService.capNhatTrangThai(nhanVien.getMaNhanVien(), trangThaiMoi, "");
         if (!result.isSuccess()) {
-            JOptionPane.showMessageDialog(this, result.getMessage(), "Loi", JOptionPane.ERROR_MESSAGE);
+            JOptionPane.showMessageDialog(this, result.getMessage(), "Lỗi", JOptionPane.ERROR_MESSAGE);
             return;
         }
         dataChanged = true;
         statusEditMode = false;
         personalTab.setStatusEditMode(false);
-        btnDoiTrangThai.setText("Doi trang thai");
+        btnDoiTrangThai.setText("Đổi trạng thái");
         loadData();
         buildUI();
         revalidate();

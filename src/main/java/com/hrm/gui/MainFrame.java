@@ -90,7 +90,7 @@ public class MainFrame extends JFrame {
 
         btnDashboard = createMenuButton("Trang chủ");
         btnEmployees = createMenuButton("Hồ sơ nhân viên");
-        btnOrganization = createMenuButton("Cơ cấu tổ chức");
+        btnOrganization = createMenuButton("Phòng ban & Chức vụ");
         btnAppointments = createMenuButton("Bổ nhiệm");
         btnRecruitment = createMenuButton("Tuyển dụng");
         btnAttendance = createMenuButton("Chấm công");
@@ -421,7 +421,7 @@ public class MainFrame extends JFrame {
     private void showUserManagement() { showContent(btnUsers, "Quản lý tài khoản", UserManagementPanel::new); }
     private void showRoleManagement() { showContent(btnRoles, "Quản lý vai trò", RoleManagementPanel::new); }
     private void showEmployeeManagement() { showContent(btnEmployees, "Hồ sơ nhân viên", EmployeeListPanel::new); }
-    private void showAppointmentManagement() { showContent(btnAppointments, "Bổ nhiệm & Phân công", AppointmentListPanel::new); }
+    private void showAppointmentManagement() { showContent(btnAppointments, "Bổ nhiệm", AppointmentListPanel::new); }
     private void showContractManagement() { showContent(btnContracts, "Hợp đồng lao động", ContractListPanel::new); }
     private void showSalaryManagement() { showContent(btnPayroll, "Tính lương", SalaryListPanel::new); }
     private void showNotifications() { showContent(btnNotifications, "Thông báo", NotificationPanel::new); }
@@ -435,7 +435,7 @@ public class MainFrame extends JFrame {
         tabs.setBackground(UIColors.WHITE);
         tabs.addTab("Phòng ban", new DepartmentPanel());
         tabs.addTab("Chức vụ", new PositionPanel());
-        renderContent(createPageShell("Quản lý Tổ chức & Chức vụ", tabs));
+        renderContent(createPageShell("Phòng ban & Chức vụ", tabs));
     }
 
     private void logout() {

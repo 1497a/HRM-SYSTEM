@@ -60,13 +60,13 @@ public class LeaveListPanel extends JPanel {
         setBorder(new EmptyBorder(15, 15, 15, 15));
 
         // Status combo
-        cboStatus = new JComboBox<>(new String[]{"Tat ca", "Cho duyet", "Da duyet", "Tu choi"});
+        cboStatus = new JComboBox<>(new String[]{"Tất cả", "Cho duyệt", "Đã duyệt", "Từ chối"});
         cboStatus.addActionListener(e -> applyFilter());
 
         // Nhan vien combo (only for manager/hr/director)
         cboNhanVien = new JComboBox<>();
         if (isManager) {
-            cboNhanVien.addItem("Tat ca");
+            cboNhanVien.addItem("Tất cả");
             String currentMaNV = currentUser.getNhanVienId();
             List<NhanVien> dsNV = com.hrm.bus.NhanVienBUS.getInstance().getAllByActionScope("LEAVE_VIEW", currentMaNV);
             for (NhanVien nv : dsNV) {
@@ -90,16 +90,16 @@ public class LeaveListPanel extends JPanel {
         }
 
         // Buttons
-        btnCreate = UIHelper.createSuccessButton("Tao don moi");
+        btnCreate = UIHelper.createSuccessButton("Tạo đơn mới");
         btnCreate.addActionListener(e -> createRequest());
 
-        btnApprove = UIHelper.createPrimaryButton("Xu ly don");
+        btnApprove = UIHelper.createPrimaryButton("Xử lý đơn");
         btnApprove.setEnabled(canApprove);
         btnApprove.addActionListener(e -> approveRequest());
 
         // Table
-        String[] columns = {"ID", "Nhan vien", "Loai phep", "Tu ngay", "Den ngay",
-                "So ngay", "Ly do", "Trang thai", "Nguoi duyet"};
+        String[] columns = {"ID", "Nhân viên", "Loại phép", "Từ ngày", "Đến ngày",
+                "Số ngày", "Lý do", "Trạng thái", "Người duyệt"};
         tableModel = new DefaultTableModel(columns, 0) {
             @Override
             public boolean isCellEditable(int row, int column) {
@@ -161,7 +161,7 @@ public class LeaveListPanel extends JPanel {
 
         // Balance Panel
         balancePanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 20, 5));
-        balancePanel.setBorder(new TitledBorder("So ngay phep con lai"));
+        balancePanel.setBorder(new TitledBorder("Số ngày phép còn lại"));
     }
 
     private void setupLayout() {
@@ -171,14 +171,14 @@ public class LeaveListPanel extends JPanel {
 
         JPanel filterPanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 10, 0));
         if (isManager) {
-            filterPanel.add(new JLabel("Nhan vien:"));
+            filterPanel.add(new JLabel("Nhân viên:"));
             filterPanel.add(cboNhanVien);
         }
-        filterPanel.add(new JLabel("Trang thai:"));
+        filterPanel.add(new JLabel("Trạng thái:"));
         filterPanel.add(cboStatus);
 
         JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT, 10, 0));
-        JButton btnLamMoi = new JButton("Lam moi");
+        JButton btnLamMoi = new JButton("Làm mới");
         btnLamMoi.addActionListener(e -> loadData());
         buttonPanel.add(btnLamMoi);
         buttonPanel.add(btnCreate);
@@ -192,7 +192,7 @@ public class LeaveListPanel extends JPanel {
 
         // Center panel - table
         JScrollPane scrollPane = new JScrollPane(table);
-        scrollPane.setBorder(new TitledBorder("Danh sach don nghi phep"));
+        scrollPane.setBorder(new TitledBorder("Danh sách đơn nghỉ phép"));
 
         add(topPanel, BorderLayout.NORTH);
         add(scrollPane, BorderLayout.CENTER);
@@ -262,11 +262,11 @@ public class LeaveListPanel extends JPanel {
     private void createRequest() {
         if (currentUser.getNhanVienId() == null) {
             String message = currentUser.coVaiTro("ADMIN")
-                    ? "Tai khoan admin khong can tao yeu cau nghi phep."
-                    : "Tai khoan cua ban chua gan ma nhan vien nen khong the tao don nghi phep.";
+                    ? "Tài khoản admin không cần tạo yêu cầu nghỉ phép."
+                   : "Tài khoản của bạn chưa gắn mã nhân viên nên không thể tạo đơn nghỉ phép.";
             JOptionPane.showMessageDialog(this,
                     message,
-                    "Thong bao",
+                    "Thông báo",
                     JOptionPane.INFORMATION_MESSAGE);
             return;
         }
@@ -283,8 +283,8 @@ public class LeaveListPanel extends JPanel {
         int selectedRow = table.getSelectedRow();
         if (selectedRow < 0) {
             JOptionPane.showMessageDialog(this,
-                    "Vui long chon don can duyet",
-                    "Thong bao",
+                    "Vui lòng chọn đơn cần duyệt",
+                    "Thông báo",
                     JOptionPane.WARNING_MESSAGE);
             return;
         }
@@ -295,8 +295,8 @@ public class LeaveListPanel extends JPanel {
 
         if (!DonXinNghiPhep.TrangThai.CHO_DUYET.getTenHienThi().equals(status)) {
             JOptionPane.showMessageDialog(this,
-                    "Chi co the duyet don dang cho duyet",
-                    "Thong bao",
+                    "Chỉ có thể duyệt đơn đang chờ duyệt",
+                    "Thông báo",
                     JOptionPane.WARNING_MESSAGE);
             return;
         }

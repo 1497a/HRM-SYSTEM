@@ -218,14 +218,14 @@ public class UserFormDialog extends JDialog {
             formPanel.add(txtPassword, gbc);
             row++;
             gbc.gridx = 1; gbc.gridy = row;
-            JLabel pwHint = new JLabel("(De trong neu khong muon doi mat khau)");
+            JLabel pwHint = new JLabel("(Để trống nếu không muốn thay đổi mật khẩu)");
             pwHint.setFont(new Font("Segoe UI", Font.ITALIC, 11));
             pwHint.setForeground(com.hrm.util.UIColors.TEXT_GRAY);
             formPanel.add(pwHint, gbc);
             row++;
 
             gbc.gridx = 0; gbc.gridy = row; gbc.fill = GridBagConstraints.NONE; gbc.weightx = 0;
-            formPanel.add(new JLabel("Ho ten:"), gbc);
+            formPanel.add(new JLabel("Họ tên:"), gbc);
             gbc.gridx = 1; gbc.fill = GridBagConstraints.HORIZONTAL;
             formPanel.add(txtFullName, gbc);
             row++;
@@ -240,7 +240,7 @@ public class UserFormDialog extends JDialog {
         // Roles
         gbc.gridx = 0; gbc.gridy = row; gbc.fill = GridBagConstraints.NONE; gbc.weightx = 0;
         gbc.anchor = GridBagConstraints.NORTHWEST;
-        formPanel.add(new JLabel("Vai tro:"), gbc);
+        formPanel.add(new JLabel("Vai trò:"), gbc);
         gbc.gridx = 1; gbc.fill = GridBagConstraints.HORIZONTAL;
         JScrollPane rolesScroll = new JScrollPane(rolesPanel);
         rolesScroll.setPreferredSize(new Dimension(250, 110));
@@ -252,7 +252,7 @@ public class UserFormDialog extends JDialog {
         if (editingUser != null) {
             gbc.gridx = 0; gbc.gridy = row; gbc.fill = GridBagConstraints.NONE; gbc.weightx = 0;
             gbc.anchor = GridBagConstraints.WEST;
-            formPanel.add(new JLabel("Trang thai:"), gbc);
+            formPanel.add(new JLabel("Trạng thái:"), gbc);
             gbc.gridx = 1;
             JPanel statusPanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 10, 0));
             statusPanel.add(rdoHoatDong);
@@ -261,9 +261,9 @@ public class UserFormDialog extends JDialog {
         }
 
         JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT));
-        JButton btnSave = UIHelper.createSuccessButton("Luu");
+        JButton btnSave = UIHelper.createSuccessButton("Lưu");
         btnSave.addActionListener(e -> save());
-        JButton btnCancel = UIHelper.createDefaultButton("Huy");
+        JButton btnCancel = UIHelper.createDefaultButton("Hủy");
         btnCancel.addActionListener(e -> dispose());
         buttonPanel.add(btnSave);
         buttonPanel.add(btnCancel);
@@ -287,7 +287,7 @@ public class UserFormDialog extends JDialog {
                 txtMaNV.setText(editingUser.getNhanVienId());
             }
         } else {
-            txtMaNV.setText("(Chua lien ket nhan vien)");
+            txtMaNV.setText("(Chưa liên kết nhân viên)");
         }
 
         if (editingUser.isBiKhoa()) {
@@ -334,18 +334,18 @@ public class UserFormDialog extends JDialog {
         ButtonModel selectedModel = roleGroup.getSelection();
         if (selectedModel != null) selectedRoleCode = selectedModel.getActionCommand();
         if (selectedRoleCode == null || selectedRoleCode.isEmpty()) {
-            JOptionPane.showMessageDialog(this, "Vui long chon vai tro", "Loi", JOptionPane.ERROR_MESSAGE);
+            JOptionPane.showMessageDialog(this, "Vui lòng chọn vai trò", "Lỗi", JOptionPane.ERROR_MESSAGE);
             return;
         }
 
         if (editingUser == null) {
             NhanVien selectedNV = (NhanVien) cboNhanVien.getSelectedItem();
             if (selectedNV == null) {
-                JOptionPane.showMessageDialog(this, "Vui long chon nhan vien", "Loi", JOptionPane.ERROR_MESSAGE);
+                JOptionPane.showMessageDialog(this, "Vui lòng chọn nhân viên", "Lỗi", JOptionPane.ERROR_MESSAGE);
                 return;
             }
             if (password.isEmpty()) {
-                JOptionPane.showMessageDialog(this, "Vui long nhap mat khau", "Loi", JOptionPane.ERROR_MESSAGE);
+                JOptionPane.showMessageDialog(this, "Vui lòng nhập mật khẩu", "Lỗi", JOptionPane.ERROR_MESSAGE);
                 return;
             }
 
@@ -358,25 +358,25 @@ public class UserFormDialog extends JDialog {
 
             KetQua<Integer> result = authService.createUser(username, password, selectedNV.getMaNhanVien(), selectedRoleCode, email);
             if (!result.isSuccess()) {
-                JOptionPane.showMessageDialog(this, result.getMessage(), "Loi", JOptionPane.ERROR_MESSAGE);
+                JOptionPane.showMessageDialog(this, result.getMessage(), "Lỗi", JOptionPane.ERROR_MESSAGE);
                 return;
             }
             successful = true;
             JOptionPane.showMessageDialog(this,
-                    "Da tao tai khoan thanh cong!\nTen dang nhap: " + username + "\nMat khau: " + password,
-                    "Thong bao", JOptionPane.INFORMATION_MESSAGE);
+                    "Đã tạo tài khoản thành công!\nên đăng nhập: " + username + "\nật khẩu: " + password,
+                    "Thông báo", JOptionPane.INFORMATION_MESSAGE);
             dispose();
 
         } else {
             String fullName = txtFullName.getText().trim();
             String email = txtEmail.getText().trim();
             if (fullName.isEmpty()) {
-                JOptionPane.showMessageDialog(this, "Vui long nhap ho ten", "Loi", JOptionPane.ERROR_MESSAGE);
+                JOptionPane.showMessageDialog(this, "Vui lòng nhập họ tên", "Lỗi", JOptionPane.ERROR_MESSAGE);
                 return;
             }
             String emailErr = ValidationUtils.validateEmail(email);
             if (emailErr != null) {
-                JOptionPane.showMessageDialog(this, emailErr, "Loi", JOptionPane.WARNING_MESSAGE);
+                JOptionPane.showMessageDialog(this, emailErr, "Lỗi", JOptionPane.WARNING_MESSAGE);
                 return;
             }
 
@@ -407,7 +407,7 @@ public class UserFormDialog extends JDialog {
                 authService.resetPassword(editingUser.getId(), password);
             }
 
-            JOptionPane.showMessageDialog(this, "Da cap nhat tai khoan thanh cong!", "Thong bao", JOptionPane.INFORMATION_MESSAGE);
+            JOptionPane.showMessageDialog(this, "Đã cập nhật tài khoản thành công!", "Thông báo", JOptionPane.INFORMATION_MESSAGE);
             successful = true;
             dispose();
         }

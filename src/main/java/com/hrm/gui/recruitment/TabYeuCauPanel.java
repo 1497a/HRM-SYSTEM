@@ -56,7 +56,7 @@ class TabYeuCauPanel extends JPanel {
         JComboBox<String> cboTrangThai = new JComboBox<>(
                 new String[]{"Tất cả", "Chờ duyệt", "Đã duyệt", "Từ chối", "Đã tuyển đủ"});
 
-        JButton btnLamMoi = new JButton("Lam moi");
+        JButton btnLamMoi = new JButton("Làm mới");
         btnLamMoi.addActionListener(e -> load());
 
         toolbar.add(btnTao);

@@ -8,9 +8,7 @@ import com.hrm.util.DatabaseConnection;
 
 import java.sql.*;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 /**
  * Repository JDBC cho bảng TAIKHOAN, VAITRO, QUYEN, VAITRO_QUYEN, TAIKHOAN_QUYEN.

@@ -52,7 +52,7 @@ public class PhongBanBUS {
         String maCha = normalizeOptional(phongBanCha);
         PhongBan dept = new PhongBan(maPhongBan.trim(), tenPhongBan.trim(), maCha, TRANG_THAI_HOAT_DONG);
         repository.save(dept);
-        return KetQua.success(null, "ThÃªm phÃ²ng ban thÃ nh cÃ´ng.");
+        return KetQua.success(null, "Thêm phòng ban thành công.");
     }
 
     public KetQua<Void> updateDepartment(String maPhongBan, String tenMoi, String phongBanChaMoi) {
@@ -81,7 +81,7 @@ public class PhongBanBUS {
         dept.setTenPhongBan(tenMoi.trim());
         dept.setPhongBanChaId(maCha);
         repository.update(dept);
-        return KetQua.success(null, "Cáº­p nháº­t phÃ²ng ban thÃ nh cÃ´ng.");
+        return KetQua.success(null, "Cập nhật phòng ban thành công.");
     }
 
     public KetQua<Void> deactivateDepartment(String maPhongBan) {
@@ -103,7 +103,7 @@ public class PhongBanBUS {
 
         dept.setTrangThai(TRANG_THAI_NGUNG_HOAT_DONG);
         repository.update(dept);
-        return KetQua.success(null, "ÄÃ£ ngá»«ng hoáº¡t Ä‘á»™ng phÃ²ng ban.");
+        return KetQua.success(null, "Đã ngừng hoạt động phòng ban.");
     }
 
     /**
@@ -125,7 +125,7 @@ public class PhongBanBUS {
 
         dept.setTrangThai(TRANG_THAI_HOAT_DONG);
         repository.update(dept);
-        return KetQua.success(null, "ÄÃ£ kÃ­ch hoáº¡t láº¡i phÃ²ng ban.");
+        return KetQua.success(null, "Đã kích hoạt lại phòng ban.");
     }
 
     private boolean isActiveStatus(String status) {
