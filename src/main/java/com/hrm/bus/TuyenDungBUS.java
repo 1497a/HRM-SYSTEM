@@ -158,6 +158,19 @@ public class TuyenDungBUS {
             return KetQua.error("Vui lòng chọn tin tuyển dụng liên kết.");
         }
 
+        TinTuyenDung tin = recruitmentRepo.findTinById(uv.getMaTin());
+        if (tin != null) {
+            YeuCauTuyenDung yc = recruitmentRepo.findYeuCauById(tin.getMaYeuCau());
+            if (yc != null) {
+                if (RecruitmentStatus.YeuCau.DA_TUYEN_DU.equals(yc.getTrangThai())) {
+                    return KetQua.error("Yeu cau tuyen dung da tuyen du so luong, khong the tiep nhan them ung vien.");
+                }
+                if (yc.getHanTuyenDung() != null && LocalDate.now().isAfter(yc.getHanTuyenDung())) {
+                    return KetQua.error("Da qua han tuyen dung (" + yc.getHanTuyenDung() + "), khong the tiep nhan them ung vien.");
+                }
+            }
+        }
+
         uv.setTrangThai(RecruitmentStatus.UngVien.MOI);
         uv.setNgayTao(LocalDate.now());
 
@@ -251,6 +264,13 @@ public class TuyenDungBUS {
         }
         if (!RecruitmentStatus.UngVien.TRUNG_TUYEN.equals(uv.getTrangThai())) {
             return KetQua.error("Chỉ có thể chuyển ứng viên trạng thái 'Trúng tuyển' thành nhân viên.");
+        }
+        TinTuyenDung tinConv = recruitmentRepo.findTinById(uv.getMaTin());
+        if (tinConv != null) {
+            YeuCauTuyenDung ycConv = recruitmentRepo.findYeuCauById(tinConv.getMaYeuCau());
+            if (ycConv != null && RecruitmentStatus.YeuCau.DA_TUYEN_DU.equals(ycConv.getTrangThai())) {
+                return KetQua.error("Yeu cau tuyen dung da tuyen du so luong, khong the chuyen them nhan vien.");
+            }
         }
         return KetQua.success(uv, "OK");
     }

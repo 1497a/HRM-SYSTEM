@@ -87,6 +87,9 @@ public class DepartmentPanel extends JPanel {
         btnThem = UIHelper.createPrimaryButton("+ Thêm");
         JPanel btnPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
         btnPanel.add(btnThem);
+        JButton btnLamMoi = new JButton("Lam moi");
+        btnLamMoi.addActionListener(e -> refreshTable());
+        btnPanel.add(btnLamMoi);
         add(btnPanel, BorderLayout.SOUTH);
 
         setupPermissions();

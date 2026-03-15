@@ -78,9 +78,14 @@ public class BoNhiemBUS {
                         "Nhân viên đã có bổ nhiệm chính hiệu lực trong khoảng thời gian này. "
                         + "Hãy kết thúc bổ nhiệm cũ trước.");
             }
-            // Không chặn tạo bổ nhiệm khi chức vụ đã có người giữ —
-            // phê duyệt sẽ tự động kết thúc bổ nhiệm cũ (nếu là chức vụ độc nhất như TPhòng).
-            // Đây cho phép tuyển nhiều nhân viên cùng chức vụ trong một phòng ban bình thường.
+            // Chặn tạo bổ nhiệm mới nếu chức vụ lãnh đạo (capBac <= 3: GD/TP/TT) đã có người giữ
+            ChucVu cv = chucVuRepo.findById(bn.getChucVuId());
+            if (cv != null && cv.getCapBac() <= 3) {
+                if (boNhiemRepo.hasActiveChinhForChucVuInDept(bn.getPhongBanId(), bn.getChucVuId(), 0)) {
+                    String tenCV = cv.getTenChucVu() != null ? cv.getTenChucVu() : bn.getChucVuId();
+                    return KetQua.error("Chuc vu " + tenCV + " da co nguoi dang giu trong phong ban nay. Ket thuc bo nhiem cu truoc khi tao moi.");
+                }
+            }
         }
 
         // Thiết lập trạng thái chờ duyệt

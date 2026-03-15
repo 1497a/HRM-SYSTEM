@@ -162,8 +162,11 @@ public class ContractListPanel extends JPanel {
         btnTao = new PurpleButton("+ Tạo hợp đồng");
         btnThanhLy = PurpleButton.warning("Thanh lý");
         btnThanhLy.setToolTipText("Thanh lý: Hai bên thỏa thuận chấm dứt hợp đồng trước thời hạn. Hợp đồng vẫn được lưu với trạng thái 'Thanh lý'.");
+        JButton btnLamMoi = new JButton("Lam moi");
+        btnLamMoi.addActionListener(e -> loadData());
         panel.add(btnTao);
         panel.add(btnThanhLy);
+        panel.add(btnLamMoi);
 
         // Ghi chú giải thích các trạng thái
         JLabel lblNote = new JLabel(

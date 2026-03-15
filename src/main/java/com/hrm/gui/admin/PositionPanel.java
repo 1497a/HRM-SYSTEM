@@ -92,6 +92,9 @@ public class PositionPanel extends JPanel {
         btnThem = UIHelper.createPrimaryButton("+ Them");
         JPanel btnPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
         btnPanel.add(btnThem);
+        JButton btnLamMoi = new JButton("Lam moi");
+        btnLamMoi.addActionListener(e -> refreshTable());
+        btnPanel.add(btnLamMoi);
         add(btnPanel, BorderLayout.SOUTH);
 
         setupPermissions();
@@ -180,7 +183,7 @@ public class PositionPanel extends JPanel {
                 "Mo ta:", new JScrollPane(txtMoTa)
         };
 
-        int ok = JOptionPane.showConfirmDialog(this, fields, "Them chuc vu moi", JOptionPane.OK_CANCEL_OPTION);
+        int ok = JOptionPane.showConfirmDialog(this, fields, "Thêm chức vụ mới", JOptionPane.OK_CANCEL_OPTION);
         if (ok != JOptionPane.OK_OPTION) {
             return;
         }
@@ -188,14 +191,14 @@ public class PositionPanel extends JPanel {
         try {
             String maChucVu = txtMa.getText().trim();
             if (maChucVu.isEmpty()) {
-                JOptionPane.showMessageDialog(this, "Ma chuc vu khong duoc de trong.", "Loi nhap lieu", JOptionPane.ERROR_MESSAGE);
+                JOptionPane.showMessageDialog(this, "Mã chức vụ không được để trống.", "Lỗi nhập liệu", JOptionPane.ERROR_MESSAGE);
                 return;
             }
 
             if (service.existsActiveByCode(maChucVu)) {
                 JOptionPane.showMessageDialog(this,
-                        "Ma chuc vu '" + maChucVu + "' da ton tai va dang hoat dong. Vui long dung ma khac.",
-                        "Trung ma chuc vu", JOptionPane.ERROR_MESSAGE);
+                        "Mã chức vụ '" + maChucVu + "' đã tồn tại và đang hoạt động. Vui lòng dùng mã khác.",
+                        "Trùng mã chức vụ", JOptionPane.ERROR_MESSAGE);
                 return;
             }
 
@@ -213,7 +216,7 @@ public class PositionPanel extends JPanel {
             refreshTable();
             DialogUtil.showSuccess(this, kq.getMessage());
         } catch (NumberFormatException ex) {
-            JOptionPane.showMessageDialog(this, "Cap bac, he so, phu cap phai la so hop le.", "Loi nhap lieu",
+            JOptionPane.showMessageDialog(this, "Cấp bậc, hệ số, phụ cấp phải là số hợp lệ.", "Lỗi nhập liệu",
                     JOptionPane.ERROR_MESSAGE);
         }
     }
@@ -230,7 +233,7 @@ public class PositionPanel extends JPanel {
         boolean canEdit = SessionContext.getInstance().coQuyen("POSITION_MANAGE");
 
         Frame frame = (Frame) SwingUtilities.getWindowAncestor(this);
-        JDialog dialog = new JDialog(frame, "Chi tiet chuc vu - " + pos.getTenChucVu(), true);
+        JDialog dialog = new JDialog(frame, "Chi tiết chức vụ - " + pos.getTenChucVu(), true);
 
         JTextField txtMa = new JTextField(pos.getId());
         txtMa.setEnabled(false);
@@ -260,8 +263,8 @@ public class PositionPanel extends JPanel {
         gbc.anchor = GridBagConstraints.WEST;
 
         String[] labels = {
-                "Ma chuc vu:", "Ten chuc vu (*):", "Cap bac:", "He so luong (*):",
-                "Phu cap (VND):", "Mo ta:", "Trang thai:"
+                "Mã chức vụ:", "ên chức vụ (*):", "ấp bậc:", "Hệ số lương (*):",
+                "Phụ cấp (VND):", "Mô tả:", "Trạng thái:"
         };
         JComponent[] flds = {txtMa, txtTen, txtCapBac, txtHeSo, txtPhuCap, new JScrollPane(txtMoTa), cboTrangThai};
 
@@ -286,7 +289,7 @@ public class PositionPanel extends JPanel {
         JButton btnHuy = UIHelper.createDefaultButton("Huy");
         btnHuy.addActionListener(e -> dialog.dispose());
 
-        JButton btnLichSuBtn = UIHelper.createDefaultButton("Xem lich su he so");
+        JButton btnLichSuBtn = UIHelper.createDefaultButton("Xem lịch sử hệ số");
         btnLichSuBtn.addActionListener(e -> showHistoryDialog());
         btnPanel.add(btnLichSuBtn);
         btnPanel.add(btnHuy);
@@ -328,11 +331,11 @@ public class PositionPanel extends JPanel {
 
                     refreshTable();
                     dialog.dispose();
-                    DialogUtil.showSuccess(PositionPanel.this, "Cap nhat chuc vu thanh cong!");
+                    DialogUtil.showSuccess(PositionPanel.this, "Cập nhật chức vụ thành công!");
                 } catch (NumberFormatException ex) {
                     JOptionPane.showMessageDialog(dialog,
-                            "Cap bac, he so, phu cap phai la so hop le.",
-                            "Loi nhap lieu",
+                            "Cấp bậc, hệ số, phụ cấp phải là số hợp lệ.",
+                            "Lỗi nhập liệu",
                             JOptionPane.ERROR_MESSAGE);
                 }
             });
@@ -352,7 +355,7 @@ public class PositionPanel extends JPanel {
     private void showHistoryDialog() {
         int row = table.getSelectedRow();
         if (row == -1) {
-            JOptionPane.showMessageDialog(this, "Vui long chon mot chuc vu de xem lich su.");
+            JOptionPane.showMessageDialog(this, "Vui lòng chọn một chức vụ để xem lịch sử.");
             return;
         }
 
@@ -363,7 +366,7 @@ public class PositionPanel extends JPanel {
         List<LichSuHeSoLuong> danhSach = service.getHistoryByMaChucVu(ma);
 
         DefaultTableModel histModel = new DefaultTableModel(
-                new Object[]{"Ngay thay doi", "He so cu", "He so moi", "Phu cap cu (VND)", "Phu cap moi (VND)", "Nguoi thay doi"},
+                new Object[]{"Ngày thay đổi", "Hệ số cũ", "Hệ số mới", "Phụ cấp cũ (VND)", "Phụ cấp mới (VND)", "Người thay đổi"},
                 0
         ) {
             @Override
@@ -389,16 +392,16 @@ public class PositionPanel extends JPanel {
         scroll.setPreferredSize(new Dimension(640, 200));
 
         JDialog dialog = new JDialog((Frame) SwingUtilities.getWindowAncestor(this),
-                "Lich su he so luong - " + ten + " (" + ma + ")", true);
+                "Lịch sử hệ số lương - " + ten + " (" + ma + ")", true);
         dialog.setLayout(new BorderLayout());
 
         if (danhSach.isEmpty()) {
-            dialog.add(new JLabel("  Chua co lich su thay doi nao.", SwingConstants.CENTER), BorderLayout.CENTER);
+            dialog.add(new JLabel("  Chưa có lịch sử thay đổi nào.", SwingConstants.CENTER), BorderLayout.CENTER);
         } else {
             dialog.add(scroll, BorderLayout.CENTER);
         }
 
-        JButton btnDong = new JButton("Dong");
+        JButton btnDong = new JButton("Đóng");
         btnDong.addActionListener(e -> dialog.dispose());
         JPanel footer = new JPanel();
         footer.add(btnDong);

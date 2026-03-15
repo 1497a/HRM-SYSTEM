@@ -136,6 +136,9 @@ public class EvalCycleListPanel extends JPanel {
         }
         if (isManager) topPanel.add(btnEvaluate);
         topPanel.add(btnViewDetail);
+        JButton btnLamMoi = new JButton("Lam moi");
+        btnLamMoi.addActionListener(e -> loadData());
+        topPanel.add(btnLamMoi);
 
         JScrollPane cycleScroll = new JScrollPane(cycleTable);
         cycleScroll.setBorder(new TitledBorder("Các đợt đánh giá (nhấp đúp để xem kết quả)"));

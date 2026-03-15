@@ -163,6 +163,10 @@ public class EmployeeListPanel extends JPanel {
 
         panel.add(btnThem);
 
+        JButton btnLamMoi = new JButton("Lam moi");
+        btnLamMoi.addActionListener(e -> refreshTable());
+        panel.add(btnLamMoi);
+
         return panel;
     }
 

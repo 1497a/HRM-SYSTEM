@@ -38,3 +38,14 @@ nul
 
 *.py
 *.txt
+
+*.rar
+*.zip
+*.7z
+*.tar
+*.gz
+*.pdf
+*.doc
+*.docx
+*.xls
+*.xlsx

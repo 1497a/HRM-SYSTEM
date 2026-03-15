@@ -178,6 +178,9 @@ public class LeaveListPanel extends JPanel {
         filterPanel.add(cboStatus);
 
         JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT, 10, 0));
+        JButton btnLamMoi = new JButton("Lam moi");
+        btnLamMoi.addActionListener(e -> loadData());
+        buttonPanel.add(btnLamMoi);
         buttonPanel.add(btnCreate);
         if (canApprove) {
             buttonPanel.add(btnApprove);

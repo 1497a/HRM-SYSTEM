@@ -185,6 +185,9 @@ public class EvalResultPanel extends JPanel {
         }
         topPanel.add(new JLabel("Kỳ đánh giá:"));
         topPanel.add(cboKyDanhGia);
+        JButton btnLamMoi = new JButton("Lam moi");
+        btnLamMoi.addActionListener(e -> loadData());
+        topPanel.add(btnLamMoi);
 
         JSplitPane splitPane = new JSplitPane(JSplitPane.VERTICAL_SPLIT);
         splitPane.setDividerLocation(250);

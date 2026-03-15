@@ -213,7 +213,10 @@ INSERT INTO VAITRO_QUYEN (maVaiTro, maQuyen, phamVi) VALUES
 -- -----------------------------------------------
 INSERT INTO VAITRO_QUYEN (maVaiTro, maQuyen, phamVi) VALUES
 ('QUAN_LY', 'EMPLOYEE_VIEW',         'DEPT'),
+('QUAN_LY', 'APPOINTMENT_VIEW',      'SELF'),   -- xem bo nhiem ban than
 ('QUAN_LY', 'ATTENDANCE_VIEW',       'DEPT'),
+('QUAN_LY', 'CONTRACT_VIEW',         'SELF'),   -- xem hop dong ban than
+('QUAN_LY', 'PAYROLL_VIEW',          'SELF'),   -- xem luong ban than
 ('QUAN_LY', 'LEAVE_VIEW',            'DEPT'),
 ('QUAN_LY', 'LEAVE_CREATE',          'SELF'),
 ('QUAN_LY', 'LEAVE_APPROVE',         'DEPT'),

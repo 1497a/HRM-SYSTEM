@@ -152,6 +152,9 @@ public class UserManagementPanel extends JPanel {
 
         JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT, 10, 0));
         buttonPanel.setOpaque(false);
+        JButton btnLamMoi = new JButton("Lam moi");
+        btnLamMoi.addActionListener(e -> loadData());
+        buttonPanel.add(btnLamMoi);
         if (sessionContext.coQuyen("USER_CREATE")) {
             buttonPanel.add(btnCreate);
         }

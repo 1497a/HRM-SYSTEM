@@ -56,11 +56,15 @@ class TabYeuCauPanel extends JPanel {
         JComboBox<String> cboTrangThai = new JComboBox<>(
                 new String[]{"Tất cả", "Chờ duyệt", "Đã duyệt", "Từ chối", "Đã tuyển đủ"});
 
+        JButton btnLamMoi = new JButton("Lam moi");
+        btnLamMoi.addActionListener(e -> load());
+
         toolbar.add(btnTao);
         toolbar.add(btnPheDuyet);
         toolbar.add(btnTuChoi);
         toolbar.add(new JLabel("Trạng thái:"));
         toolbar.add(cboTrangThai);
+        toolbar.add(btnLamMoi);
 
         String[] cols = {"Mã YC", "Vị trí", "Phòng ban", "Số lượng", "Hạn tuyển dụng", "Trạng thái"};
         model = new DefaultTableModel(cols, 0) {
