@@ -42,7 +42,6 @@ public class ThongBaoDAO {
         if (ngayDoc != null) {
             tb.setNgayDoc(ngayDoc.toLocalDateTime());
         }
-        tb.setLinkLienQuan(rs.getString("linkLienQuan"));
         Timestamp ngayTao = rs.getTimestamp("ngayTao");
         if (ngayTao != null) {
             tb.setNgayTao(ngayTao.toLocalDateTime());
@@ -50,25 +49,33 @@ public class ThongBaoDAO {
         return tb;
     }
 
+    private String buildInsertSql() {
+        return "INSERT INTO THONGBAO (tieuDe, noiDung, loaiThongBao, maTaiKhoanGui, "
+                + "maTaiKhoanNhan, daDoc, ngayTao) "
+                + "VALUES (?, ?, ?, ?, ?, FALSE, NOW())";
+    }
+
+    private void bindInsertStatement(PreparedStatement ps, ThongBao tb) throws SQLException {
+        ps.setString(1, tb.getTieuDe());
+        ps.setString(2, tb.getNoiDung());
+        ps.setString(3, tb.getLoaiThongBao());
+        if (tb.getMaTaiKhoanGui() == 0) {
+            ps.setNull(4, Types.INTEGER);
+        } else {
+            ps.setInt(4, tb.getMaTaiKhoanGui());
+        }
+        ps.setInt(5, tb.getMaTaiKhoanNhan());
+    }
+
     /**
      * Chèn thông báo mới, trả về ID được sinh ra.
      */
     public int insert(ThongBao tb) {
-        String sql = "INSERT INTO THONGBAO (tieuDe, noiDung, loaiThongBao, maTaiKhoanGui, "
-                + "maTaiKhoanNhan, daDoc, linkLienQuan, ngayTao) "
-                + "VALUES (?, ?, ?, ?, ?, FALSE, ?, NOW())";
         try (Connection conn = DatabaseConnection.getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
-            ps.setString(1, tb.getTieuDe());
-            ps.setString(2, tb.getNoiDung());
-            ps.setString(3, tb.getLoaiThongBao());
-            if (tb.getMaTaiKhoanGui() == 0) {
-                ps.setNull(4, Types.INTEGER);
-            } else {
-                ps.setInt(4, tb.getMaTaiKhoanGui());
-            }
-            ps.setInt(5, tb.getMaTaiKhoanNhan());
-            ps.setString(6, tb.getLinkLienQuan());
+             PreparedStatement ps = conn.prepareStatement(
+                     buildInsertSql(),
+                     Statement.RETURN_GENERATED_KEYS)) {
+            bindInsertStatement(ps, tb);
             ps.executeUpdate();
             try (ResultSet keys = ps.getGeneratedKeys()) {
                 if (keys.next()) {
@@ -87,24 +94,12 @@ public class ThongBaoDAO {
      */
     public void insertBulk(List<ThongBao> list) {
         if (list == null || list.isEmpty()) return;
-        String sql = "INSERT INTO THONGBAO (tieuDe, noiDung, loaiThongBao, maTaiKhoanGui, "
-                + "maTaiKhoanNhan, daDoc, linkLienQuan, ngayTao) "
-                + "VALUES (?, ?, ?, ?, ?, FALSE, ?, NOW())";
         try (Connection conn = DatabaseConnection.getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql)) {
+             PreparedStatement ps = conn.prepareStatement(buildInsertSql())) {
             conn.setAutoCommit(false);
             try {
                 for (ThongBao tb : list) {
-                    ps.setString(1, tb.getTieuDe());
-                    ps.setString(2, tb.getNoiDung());
-                    ps.setString(3, tb.getLoaiThongBao());
-                    if (tb.getMaTaiKhoanGui() == 0) {
-                        ps.setNull(4, Types.INTEGER);
-                    } else {
-                        ps.setInt(4, tb.getMaTaiKhoanGui());
-                    }
-                    ps.setInt(5, tb.getMaTaiKhoanNhan());
-                    ps.setString(6, tb.getLinkLienQuan());
+                    bindInsertStatement(ps, tb);
                     ps.addBatch();
                 }
                 ps.executeBatch();

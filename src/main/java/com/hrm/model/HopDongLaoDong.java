@@ -20,7 +20,7 @@ public class HopDongLaoDong {
     private LocalDate ngayHetHieuLuc;     // Ngày hết hiệu lực (null nếu không xác định thời hạn)
     private String fileDinhKem;           // Đường dẫn file hợp đồng (PDF, ảnh, ...)
     private String noiDung;               // Nội dung hợp đồng (tóm tắt hoặc full text)
-    private String trangThai;             // "hieu_luc", "sap_het_han", "het_han", "thanh_ly", "huy"
+    private String trangThai;             // "cho_duyet", "hieu_luc", "het_han", "thanh_ly", "huy"
     private LocalDate ngayThanhLy;        // Ngày thanh lý (nếu có)
     private String lyDoThanhLy;           // Lý do thanh lý/hủy
     private String ghiChu;                // Ghi chú bổ sung
@@ -29,7 +29,7 @@ public class HopDongLaoDong {
     private transient String tenNV;
 
     public HopDongLaoDong() {
-        this.trangThai = "hieu_luc";
+        this.trangThai = "cho_duyet";
     }
 
     // Constructor đầy đủ
@@ -195,6 +195,7 @@ public class HopDongLaoDong {
     public String getTrangThaiDisplay() {
         if (trangThai == null) return "Không xác định";
         return switch (trangThai) {
+            case "cho_duyet"    -> "Chờ phê duyệt";
             case "hieu_luc"     -> "Hiệu lực";
             case "sap_het_han"  -> "Sắp hết hạn";
             case "het_han"      -> "Hết hạn";

@@ -404,16 +404,19 @@ public class TaiKhoanDAO {
 
     public List<Quyen> findAllPermissions() {
         List<Quyen> list = new ArrayList<>();
-        String sql = "SELECT maQuyen, tenQuyen, nhomQuyen FROM QUYEN ORDER BY nhomQuyen, maQuyen";
+        String sql = "SELECT maQuyen, tenQuyen, nhomQuyen, moTa, coPhamVi FROM QUYEN ORDER BY nhomQuyen, maQuyen";
         try (Connection conn = DatabaseConnection.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql);
              ResultSet rs = ps.executeQuery()) {
             while (rs.next()) {
-                list.add(new Quyen(
+                Quyen q = new Quyen(
                         rs.getString("maQuyen"),
                         rs.getString("tenQuyen"),
                         rs.getString("nhomQuyen")
-                ));
+                );
+                q.setMoTa(rs.getString("moTa"));
+                q.setCoPhamVi(rs.getBoolean("coPhamVi"));
+                list.add(q);
             }
         } catch (SQLException e) {
             System.err.println("Lỗi findAllPermissions: " + e.getMessage());
@@ -426,7 +429,7 @@ public class TaiKhoanDAO {
         if (maVaiTro == null || maVaiTro.trim().isEmpty()) return new ArrayList<>();
 
         List<Quyen> list = new ArrayList<>();
-        String sql = "SELECT q.maQuyen, q.tenQuyen, q.nhomQuyen, vq.phamVi "
+        String sql = "SELECT q.maQuyen, q.tenQuyen, q.nhomQuyen, q.moTa, q.coPhamVi, vq.phamVi "
                    + "FROM QUYEN q JOIN VAITRO_QUYEN vq ON q.maQuyen = vq.maQuyen "
                    + "WHERE vq.maVaiTro = ? ORDER BY q.nhomQuyen, q.maQuyen";
         try (Connection conn = DatabaseConnection.getConnection();
@@ -439,6 +442,8 @@ public class TaiKhoanDAO {
                             rs.getString("tenQuyen"),
                             rs.getString("nhomQuyen")
                     );
+                    q.setMoTa(rs.getString("moTa"));
+                    q.setCoPhamVi(rs.getBoolean("coPhamVi"));
                     String pv = rs.getString("phamVi");
                     if (pv != null) {
                         try { q.setPhamVi(DataScope.valueOf(pv)); } catch (IllegalArgumentException ignored) {}
@@ -453,11 +458,11 @@ public class TaiKhoanDAO {
         return list;
     }
 
-    public void setRolePermissions(String maVaiTro, List<String> permissionCodes) {
+    public void setRolePermissions(String maVaiTro, List<Quyen> permissions) {
         if (maVaiTro == null || maVaiTro.trim().isEmpty()) return;
 
         String deleteSql = "DELETE FROM VAITRO_QUYEN WHERE maVaiTro = ?";
-        String insertSql = "INSERT INTO VAITRO_QUYEN (maVaiTro, maQuyen, phamVi) VALUES (?, ?, 'SELF')";
+        String insertSql = "INSERT INTO VAITRO_QUYEN (maVaiTro, maQuyen, phamVi) VALUES (?, ?, ?)";
 
         try (Connection conn = DatabaseConnection.getConnection()) {
             conn.setAutoCommit(false);
@@ -468,14 +473,20 @@ public class TaiKhoanDAO {
                     ps.executeUpdate();
                 }
                 // Thêm quyền mới
-                if (permissionCodes != null && !permissionCodes.isEmpty()) {
+                if (permissions != null && !permissions.isEmpty()) {
                     try (PreparedStatement ps = conn.prepareStatement(insertSql)) {
-                        for (String maQuyen : permissionCodes) {
-                            if (maQuyen != null && !maQuyen.trim().isEmpty()) {
-                                ps.setString(1, maVaiTro.trim());
-                                ps.setString(2, maQuyen.trim());
-                                ps.addBatch();
+                        for (Quyen permission : permissions) {
+                            if (permission == null || permission.getId() == null || permission.getId().trim().isEmpty()) {
+                                continue;
                             }
+                            DataScope scope = permission.getPhamVi();
+                            if (scope == null || scope == DataScope.NONE) {
+                                continue;
+                            }
+                                ps.setString(1, maVaiTro.trim());
+                                ps.setString(2, permission.getId().trim());
+                                ps.setString(3, scope.name());
+                                ps.addBatch();
                         }
                         ps.executeBatch();
                     }

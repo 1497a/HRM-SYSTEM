@@ -223,7 +223,7 @@ public class AppointmentFormDialog extends JDialog {
     }
 
     private void loadQuanLy() {
-        cboQuanLy.addItem("(Khong co)");
+        cboQuanLy.addItem("(Không có)");
         List<NhanVien> list = NhanVienBUS.getInstance().getDangLamViec();
         for (NhanVien nv : list) {
             cboQuanLy.addItem(nv);
@@ -307,7 +307,7 @@ public class AppointmentFormDialog extends JDialog {
 
         // Chỉ hiển thị người duyệt / ngày duyệt nếu có boNhiemHienThi
         if (boNhiemHienThi != null) {
-            addFormRow(formPanel, gbc, 11, "Ngay ket thuc", txtDenNgay);
+            addFormRow(formPanel, gbc, 11, "Ngày kết thúc", txtDenNgay);
             addFormRow(formPanel, gbc, 9, "Người duyệt", txtNguoiDuyet);
             addFormRow(formPanel, gbc, 10, "Ngày duyệt", txtNgayDuyet);
         }
@@ -416,7 +416,7 @@ public class AppointmentFormDialog extends JDialog {
             java.time.format.DateTimeFormatter ngayFormatter = java.time.format.DateTimeFormatter.ofPattern("dd/MM/yyyy");
             txtDenNgay.setText(bn.getDenNgay().format(ngayFormatter));
         } else {
-            txtDenNgay.setText("Khong thoi han");
+            txtDenNgay.setText("Không thời hạn");
         }
 
         // Cấp trên trực tiếp

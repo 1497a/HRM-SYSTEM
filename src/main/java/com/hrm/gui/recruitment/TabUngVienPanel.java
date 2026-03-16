@@ -1,8 +1,6 @@
 package com.hrm.gui.recruitment;
 
-import com.hrm.bus.KetQua;
 import com.hrm.bus.TuyenDungBUS;
-import com.hrm.model.RecruitmentStatus;
 import com.hrm.model.UngVien;
 import com.hrm.util.SessionContext;
 import com.hrm.util.UIColors;
@@ -24,19 +22,11 @@ import static javax.swing.SortOrder.ASCENDING;
 class TabUngVienPanel extends JPanel {
 
     private static final DateTimeFormatter DATE_FMT = DateTimeFormatter.ofPattern("dd/MM/yyyy");
-    private static final String[] TRANG_THAI_CODES = {
-            RecruitmentStatus.UngVien.MOI,
-            RecruitmentStatus.UngVien.DANG_PHONG_VAN,
-            RecruitmentStatus.UngVien.TRUNG_TUYEN,
-            RecruitmentStatus.UngVien.TU_CHOI
-    };
 
     private final TuyenDungBUS service;
     private JTable tbl;
     private DefaultTableModel model;
     private JButton btnTaoUV;
-    private JButton btnChuyenTrangThai;
-    private JButton btnChuyenNV;
 
     TabUngVienPanel(TuyenDungBUS service) {
         this.service = service;
@@ -48,13 +38,11 @@ class TabUngVienPanel extends JPanel {
         toolbar.setOpaque(false);
 
         btnTaoUV = UIHelper.createPrimaryButton("+ Tạo ứng viên");
-        btnChuyenTrangThai = UIHelper.createPrimaryButton("Chuyển trạng thái");
-        btnChuyenNV = UIHelper.createSuccessButton("Chuyển thành NV");
+        JButton btnXemChiTiet = UIHelper.createDefaultButton("Xem chi tiết");
         JButton btnLamMoi = UIHelper.createDefaultButton("Làm mới");
 
         btnTaoUV.addActionListener(e -> taoUngVien());
-        btnChuyenTrangThai.addActionListener(e -> chuyenTrangThai());
-        btnChuyenNV.addActionListener(e -> chuyenThanhNV());
+        btnXemChiTiet.addActionListener(e -> xemChiTiet());
         btnLamMoi.addActionListener(e -> load());
 
         JComboBox<String> cboTrangThai = new JComboBox<>(new String[]{
@@ -62,8 +50,7 @@ class TabUngVienPanel extends JPanel {
         });
 
         toolbar.add(btnTaoUV);
-        toolbar.add(btnChuyenTrangThai);
-        toolbar.add(btnChuyenNV);
+        toolbar.add(btnXemChiTiet);
         toolbar.add(btnLamMoi);
         toolbar.add(new JLabel("Trạng thái:"));
         toolbar.add(cboTrangThai);
@@ -71,9 +58,7 @@ class TabUngVienPanel extends JPanel {
         String[] cols = {"Mã UV", "Họ tên", "Email", "Điện thoại", "Vị trí", "Ngày nộp", "Trạng thái"};
         model = new DefaultTableModel(cols, 0) {
             @Override
-            public boolean isCellEditable(int r, int c) {
-                return false;
-            }
+            public boolean isCellEditable(int r, int c) { return false; }
 
             @Override
             public Class<?> getColumnClass(int col) {
@@ -82,14 +67,12 @@ class TabUngVienPanel extends JPanel {
         };
 
         tbl = TabUtils.buildTable(model);
-        TabUtils.applyColWidths(tbl, new int[]{70, 180, 220, 130, 220, 110, 140});
+        TabUtils.applyColWidths(tbl, new int[]{70, 180, 220, 130, 250, 110, 140});
         tbl.getColumnModel().getColumn(6).setCellRenderer(new RecruitmentStatusRenderer());
 
         TableRowSorter<DefaultTableModel> sorter = new TableRowSorter<>(model);
         tbl.setRowSorter(sorter);
-        for (int i = 0; i < model.getColumnCount(); i++) {
-            sorter.setSortable(i, false);
-        }
+        for (int i = 0; i < model.getColumnCount(); i++) sorter.setSortable(i, false);
         sorter.setSortable(0, true);
         sorter.setSortable(1, true);
         sorter.setSortable(4, true);
@@ -100,16 +83,21 @@ class TabUngVienPanel extends JPanel {
         sorter.setSortKeys(List.of(new SortKey(0, ASCENDING)));
         UIHelper.attachStatusFilter(sorter, cboTrangThai, 6);
 
+        // Mở chi tiết khi double-click
+        tbl.addMouseListener(new java.awt.event.MouseAdapter() {
+            @Override
+            public void mouseClicked(java.awt.event.MouseEvent e) {
+                if (e.getClickCount() == 2) xemChiTiet();
+            }
+        });
+
         JScrollPane scroll = new JScrollPane(tbl);
         scroll.setBorder(new TitledBorder("Danh sách ứng viên"));
 
         add(toolbar, BorderLayout.NORTH);
         add(scroll, BorderLayout.CENTER);
 
-        boolean canManage = SessionContext.getInstance().coQuyen("RECRUITMENT_MANAGE");
-        btnTaoUV.setVisible(canManage);
-        btnChuyenTrangThai.setVisible(canManage);
-        btnChuyenNV.setVisible(canManage);
+        btnTaoUV.setVisible(SessionContext.getInstance().coQuyen("RECRUITMENT_MANAGE"));
 
         load();
     }
@@ -119,8 +107,12 @@ class TabUngVienPanel extends JPanel {
         try {
             for (UngVien uv : service.getAllUngVien()) {
                 String nop = uv.getNgayTao() != null ? uv.getNgayTao().format(DATE_FMT) : "";
-                String viTri = uv.getTenTin() != null && !uv.getTenTin().isBlank()
-                        ? uv.getTenTin() : "[Chưa có tin]";
+                String pb = uv.getTenPhongBan();
+                String cv = uv.getTenChucVu();
+                String viTri = (pb != null && !pb.isBlank() ? pb : "") +
+                        (pb != null && !pb.isBlank() && cv != null && !cv.isBlank() ? " - " : "") +
+                        (cv != null && !cv.isBlank() ? cv : "");
+                if (viTri.isBlank()) viTri = "[Chưa xác định]";
                 model.addRow(new Object[]{
                         uv.getMaUngVien(),
                         uv.getHoTen(),
@@ -139,71 +131,19 @@ class TabUngVienPanel extends JPanel {
     private void taoUngVien() {
         HopThoaiTaoUngVien dialog = new HopThoaiTaoUngVien(SwingUtilities.getWindowAncestor(this), service);
         dialog.setVisible(true);
-        if (dialog.isThanhCong()) {
-            load();
-        }
+        if (dialog.isThanhCong()) load();
     }
 
-    private void chuyenTrangThai() {
+    private void xemChiTiet() {
         int viewRow = tbl.getSelectedRow();
         if (viewRow < 0) {
             JOptionPane.showMessageDialog(this, "Vui lòng chọn ứng viên.", "Thông báo", JOptionPane.WARNING_MESSAGE);
             return;
         }
         int maUV = (Integer) model.getValueAt(tbl.convertRowIndexToModel(viewRow), 0);
-
-        String[] labels = {"Mới", "Đang phỏng vấn", "Trúng tuyển", "Từ chối"};
-        JComboBox<String> cbo = new JComboBox<>(labels);
-        cbo.setFont(com.hrm.util.UIFonts.TEXT_MEDIUM);
-
-        if (JOptionPane.showConfirmDialog(this, new Object[]{"Trạng thái mới:", cbo},
-                "Chuyển trạng thái ứng viên", JOptionPane.OK_CANCEL_OPTION) != JOptionPane.OK_OPTION) {
-            return;
-        }
-
-        try {
-            KetQua<?> r = service.capNhatTrangThaiUV(maUV, TRANG_THAI_CODES[cbo.getSelectedIndex()]);
-            if (r.isSuccess()) {
-                JOptionPane.showMessageDialog(this, "Đã cập nhật trạng thái.", "Thành công", JOptionPane.INFORMATION_MESSAGE);
-                load();
-            } else {
-                TabUtils.showError(this, r.getMessage());
-            }
-        } catch (Exception ex) {
-            TabUtils.showError(this, "Lỗi cập nhật trạng thái: " + ex.getMessage());
-        }
-    }
-
-    private void chuyenThanhNV() {
-        int viewRow = tbl.getSelectedRow();
-        if (viewRow < 0) {
-            JOptionPane.showMessageDialog(this, "Vui lòng chọn ứng viên.", "Thông báo", JOptionPane.WARNING_MESSAGE);
-            return;
-        }
-        int maUV = (Integer) model.getValueAt(tbl.convertRowIndexToModel(viewRow), 0);
-
-        KetQua<String> preview = service.taoThongDiepXacNhanChuyenUVThanhNV(maUV);
-        if (!preview.isSuccess()) {
-            TabUtils.showError(this, preview.getMessage());
-            return;
-        }
-
-        if (JOptionPane.showConfirmDialog(this, preview.getData(), "Xác nhận chuyển thành nhân viên",
-                JOptionPane.YES_NO_OPTION, JOptionPane.QUESTION_MESSAGE) != JOptionPane.YES_OPTION) {
-            return;
-        }
-
-        try {
-            KetQua<?> r = service.chuyenUVThanhNV(maUV);
-            if (r.isSuccess()) {
-                JOptionPane.showMessageDialog(this, "Đã chuyển thành nhân viên thành công!\n" + r.getMessage(),
-                        "Thành công", JOptionPane.INFORMATION_MESSAGE);
-                load();
-            } else {
-                TabUtils.showError(this, r.getMessage());
-            }
-        } catch (Exception ex) {
-            TabUtils.showError(this, "Lỗi chuyển thành nhân viên: " + ex.getMessage());
-        }
+        HopThoaiChiTietUngVien dialog = new HopThoaiChiTietUngVien(
+                SwingUtilities.getWindowAncestor(this), service, maUV);
+        dialog.setVisible(true);
+        if (dialog.isDaThayDoi()) load();
     }
 }

@@ -138,7 +138,7 @@ public class HopThoaiTaoUngVien extends JDialog {
 
         TinTuyenDung tin = (TinTuyenDung) cboTin.getSelectedItem();
         if (tin == null || tin.getMaTin() == 0) {
-            JOptionPane.showMessageDialog(this, "Vui long chon tin tuyen dung.", "Lỗi", JOptionPane.WARNING_MESSAGE);
+            JOptionPane.showMessageDialog(this, "Vui lòng chọn tin tuyển dụng.", "Lỗi", JOptionPane.WARNING_MESSAGE);
             return;
         }
 
@@ -148,7 +148,7 @@ public class HopThoaiTaoUngVien extends JDialog {
             try {
                 ngaySinh = LocalDate.parse(nsStr, DATE_FMT);
             } catch (DateTimeParseException ex) {
-                JOptionPane.showMessageDialog(this, "Ngay sinh khong hop le. Dinh dang: dd/MM/yyyy", "Lỗi", JOptionPane.WARNING_MESSAGE);
+                JOptionPane.showMessageDialog(this, "Ngày sinh không hợp lệ. Định dạng: dd/MM/yyyy", "Lỗi", JOptionPane.WARNING_MESSAGE);
                 return;
             }
             String dobErr = ValidationUtils.validateBirthDate(ngaySinh);

@@ -502,6 +502,49 @@ public class BoNhiemDAO {
         }
     }
 
+    /**
+     * Tìm maNV của tất cả cấp dưới trực tiếp đang có bổ nhiệm hiệu lực
+     * (dùng khi kết thúc bổ nhiệm của quản lý để cascade maQuanLy lên cấp trên).
+     */
+    public List<String> findActiveSubordinateNVIds(String maNV) {
+        String sql = "SELECT DISTINCT maNV FROM BONHIEM WHERE maQuanLy=? AND trangThai='hieu_luc'";
+        List<String> result = new java.util.ArrayList<>();
+        try (Connection conn = DatabaseConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setString(1, maNV);
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) result.add(rs.getString("maNV"));
+            }
+        } catch (SQLException e) {
+            throw new RuntimeException("Lỗi tìm cấp dưới trực tiếp: " + e.getMessage(), e);
+        }
+        return result;
+    }
+
+    /**
+     * Cập nhật maQuanLy cho danh sách nhân viên (cascade khi quản lý kết thúc bổ nhiệm).
+     * newMaQuanLy = null nếu người vừa kết thúc là CEO (không còn cấp trên nào).
+     */
+    public void updateManagerForNVList(List<String> maNVList, String newMaQuanLy) {
+        if (maNVList == null || maNVList.isEmpty()) return;
+        String placeholders = String.join(",", java.util.Collections.nCopies(maNVList.size(), "?"));
+        String sql = "UPDATE BONHIEM SET maQuanLy=? WHERE maNV IN (" + placeholders + ") AND trangThai='hieu_luc'";
+        try (Connection conn = DatabaseConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            if (newMaQuanLy != null && !newMaQuanLy.isEmpty()) {
+                ps.setString(1, newMaQuanLy);
+            } else {
+                ps.setNull(1, Types.VARCHAR);
+            }
+            for (int i = 0; i < maNVList.size(); i++) {
+                ps.setString(2 + i, maNVList.get(i));
+            }
+            ps.executeUpdate();
+        } catch (SQLException e) {
+            throw new RuntimeException("Lỗi cập nhật cấp trên cho cấp dưới: " + e.getMessage(), e);
+        }
+    }
+
     // ============================
     // Private helper: build SELECT with JOINs
     // ============================

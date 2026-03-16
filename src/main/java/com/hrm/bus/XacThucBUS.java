@@ -332,7 +332,7 @@ public class XacThucBUS {
         return taiKhoanRepo.findAllPermissions();
     }
 
-    public KetQua<Void> setRolePermissions(String maVaiTro, List<String> permissionCodes) {
+    public KetQua<Void> setRolePermissions(String maVaiTro, List<Quyen> permissions) {
         if (isBlank(maVaiTro)) {
             return KetQua.error("Mã vai trò không hợp lệ.");
         }
@@ -340,12 +340,12 @@ public class XacThucBUS {
         if (ROLE_ADMIN.equalsIgnoreCase(normalizedRoleCode)) {
             return KetQua.error("Không thể chỉnh quyền vai trò ADMIN. ADMIN luôn toàn quyền.");
         }
-        if (permissionCodes == null) {
+        if (permissions == null) {
             return KetQua.error("Danh sách quyền không hợp lệ.");
         }
 
         try {
-            taiKhoanRepo.setRolePermissions(normalizedRoleCode, permissionCodes);
+            taiKhoanRepo.setRolePermissions(normalizedRoleCode, permissions);
             return KetQua.success(null, "Cập nhật quyền cho vai trò thành công.");
         } catch (Exception e) {
             System.err.println("Lỗi setRolePermissions: " + e.getMessage());
@@ -374,7 +374,7 @@ public class XacThucBUS {
     /**
      * Tạo vai trò kèm quyền (tùy chọn).
      */
-    public KetQua<Void> createRoleWithPermissions(String maVaiTro, String tenVaiTro, List<String> permissions) {
+    public KetQua<Void> createRoleWithPermissions(String maVaiTro, String tenVaiTro, List<Quyen> permissions) {
         KetQua<Void> createResult = createRole(maVaiTro, tenVaiTro, null);
         if (!createResult.isSuccess()) return createResult;
 

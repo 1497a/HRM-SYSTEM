@@ -374,8 +374,11 @@ public class TuyenDungDAO {
      */
     public List<UngVien> findAllUngVien() {
         List<UngVien> list = new ArrayList<>();
-        String sql = "SELECT uv.*, t.tieuDe AS tenTin FROM UNGVIEN uv "
+        String sql = "SELECT uv.*, t.tieuDe AS tenTin, cv.tenChucVu, pb.tenPhongBan FROM UNGVIEN uv "
                 + "LEFT JOIN TINTUYENDUNG t ON uv.maTin = t.maTin "
+                + "LEFT JOIN YEUCAUTUYENDUNG yc ON t.maYeuCau = yc.maYeuCau "
+                + "LEFT JOIN CHUCVU cv ON yc.maChucVu = cv.maChucVu "
+                + "LEFT JOIN PHONGBAN pb ON yc.maPhongBan = pb.maPhongBan "
                 + "ORDER BY uv.maUngVien DESC";
         try (Connection conn = DatabaseConnection.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql);
@@ -383,6 +386,8 @@ public class TuyenDungDAO {
             while (rs.next()) {
                 UngVien uv = mapUngVien(rs);
                 uv.setTenTin(rs.getString("tenTin"));
+                uv.setTenChucVu(rs.getString("tenChucVu"));
+                uv.setTenPhongBan(rs.getString("tenPhongBan"));
                 list.add(uv);
             }
         } catch (SQLException e) {
@@ -397,8 +402,11 @@ public class TuyenDungDAO {
      */
     public List<UngVien> findByMaTin(int maTin) {
         List<UngVien> list = new ArrayList<>();
-        String sql = "SELECT uv.*, t.tieuDe AS tenTin FROM UNGVIEN uv "
+        String sql = "SELECT uv.*, t.tieuDe AS tenTin, cv.tenChucVu, pb.tenPhongBan FROM UNGVIEN uv "
                 + "LEFT JOIN TINTUYENDUNG t ON uv.maTin = t.maTin "
+                + "LEFT JOIN YEUCAUTUYENDUNG yc ON t.maYeuCau = yc.maYeuCau "
+                + "LEFT JOIN CHUCVU cv ON yc.maChucVu = cv.maChucVu "
+                + "LEFT JOIN PHONGBAN pb ON yc.maPhongBan = pb.maPhongBan "
                 + "WHERE uv.maTin = ? ORDER BY uv.maUngVien DESC";
         try (Connection conn = DatabaseConnection.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
@@ -407,6 +415,8 @@ public class TuyenDungDAO {
                 while (rs.next()) {
                     UngVien uv = mapUngVien(rs);
                     uv.setTenTin(rs.getString("tenTin"));
+                    uv.setTenChucVu(rs.getString("tenChucVu"));
+                    uv.setTenPhongBan(rs.getString("tenPhongBan"));
                     list.add(uv);
                 }
             }
@@ -421,8 +431,11 @@ public class TuyenDungDAO {
      * Tìm ứng viên theo ID.
      */
     public UngVien findById(int maUngVien) {
-        String sql = "SELECT uv.*, t.tieuDe AS tenTin FROM UNGVIEN uv "
+        String sql = "SELECT uv.*, t.tieuDe AS tenTin, cv.tenChucVu, pb.tenPhongBan FROM UNGVIEN uv "
                 + "LEFT JOIN TINTUYENDUNG t ON uv.maTin = t.maTin "
+                + "LEFT JOIN YEUCAUTUYENDUNG yc ON t.maYeuCau = yc.maYeuCau "
+                + "LEFT JOIN CHUCVU cv ON yc.maChucVu = cv.maChucVu "
+                + "LEFT JOIN PHONGBAN pb ON yc.maPhongBan = pb.maPhongBan "
                 + "WHERE uv.maUngVien = ?";
         try (Connection conn = DatabaseConnection.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
@@ -431,6 +444,8 @@ public class TuyenDungDAO {
                 if (rs.next()) {
                     UngVien uv = mapUngVien(rs);
                     uv.setTenTin(rs.getString("tenTin"));
+                    uv.setTenChucVu(rs.getString("tenChucVu"));
+                    uv.setTenPhongBan(rs.getString("tenPhongBan"));
                     return uv;
                 }
             }

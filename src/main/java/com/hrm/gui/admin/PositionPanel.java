@@ -3,7 +3,6 @@ package com.hrm.gui.admin;
 import com.hrm.bus.ChucVuBUS;
 import com.hrm.bus.KetQua;
 import com.hrm.model.ChucVu;
-import com.hrm.model.LichSuHeSoLuong;
 import com.hrm.util.DialogUtil;
 import com.hrm.util.SessionContext;
 import com.hrm.util.UIHelper;
@@ -14,7 +13,6 @@ import javax.swing.table.TableRowSorter;
 import java.awt.*;
 import java.text.Normalizer;
 import java.text.NumberFormat;
-import java.util.List;
 import java.util.Locale;
 
 public class PositionPanel extends JPanel {
@@ -24,11 +22,11 @@ public class PositionPanel extends JPanel {
     private static final String STATUS_INACTIVE = "Ngừng hoạt động";
 
     private final ChucVuBUS service = new ChucVuBUS();
+    private final NumberFormat moneyFmt = NumberFormat.getNumberInstance(new Locale("vi", "VN"));
+
     private JTable table;
     private DefaultTableModel tableModel;
     private TableRowSorter<DefaultTableModel> sorter;
-    private NumberFormat moneyFmt = NumberFormat.getNumberInstance(new Locale("vi", "VN"));
-
     private JTextField txtSearch;
     private JComboBox<String> cboFilter;
     private JButton btnThem;
@@ -44,18 +42,16 @@ public class PositionPanel extends JPanel {
         title.setBorder(BorderFactory.createEmptyBorder(0, 0, 10, 0));
         topPanel.add(title, BorderLayout.NORTH);
 
-        // Gợi ý tìm kiếm
         JLabel lblHint = new JLabel("Tìm theo: Mã / Tên chức vụ / Trạng thái");
         lblHint.setFont(new Font("Arial", Font.ITALIC, 11));
         topPanel.add(lblHint, BorderLayout.SOUTH);
 
         JPanel searchFilterPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
-
         JLabel lblSearch = new JLabel("Tìm kiếm:");
         txtSearch = new JTextField(20);
         txtSearch.setToolTipText("Nhập mã hoặc tên chức vụ để tìm kiếm");
 
-        JLabel lblFilter = new JLabel("    Trang thai:");
+        JLabel lblFilter = new JLabel("    Trạng thái:");
         cboFilter = new JComboBox<>(new String[]{STATUS_ALL, STATUS_ACTIVE, STATUS_INACTIVE});
 
         searchFilterPanel.add(lblSearch);
@@ -67,7 +63,8 @@ public class PositionPanel extends JPanel {
         add(topPanel, BorderLayout.NORTH);
 
         tableModel = new DefaultTableModel(
-                new Object[] { "Mã CV", "Tên chức vụ", "Cấp bậc", "Hệ số lương", "Phụ cấp (VND)", "Trạng thái" }, 0) {
+                new Object[]{"Mã CV", "Tên chức vụ", "Cấp bậc", "Phụ cấp (VND)", "Trạng thái"}, 0) {
+            @Override
             public boolean isCellEditable(int row, int col) {
                 return false;
             }
@@ -76,17 +73,14 @@ public class PositionPanel extends JPanel {
         table = new JTable(tableModel);
         table.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
         table.setRowHeight(24);
-
         table.getColumnModel().getColumn(0).setPreferredWidth(70);
         table.getColumnModel().getColumn(1).setPreferredWidth(160);
         table.getColumnModel().getColumn(2).setPreferredWidth(70);
-        table.getColumnModel().getColumn(3).setPreferredWidth(90);
-        table.getColumnModel().getColumn(4).setPreferredWidth(110);
-        table.getColumnModel().getColumn(5).setPreferredWidth(90);
+        table.getColumnModel().getColumn(3).setPreferredWidth(110);
+        table.getColumnModel().getColumn(4).setPreferredWidth(90);
 
         sorter = new TableRowSorter<>(tableModel);
         table.setRowSorter(sorter);
-
         add(new JScrollPane(table), BorderLayout.CENTER);
 
         btnThem = UIHelper.createPrimaryButton("+ Thêm");
@@ -101,6 +95,7 @@ public class PositionPanel extends JPanel {
 
         btnThem.addActionListener(e -> showAddDialog());
         txtSearch.addKeyListener(new java.awt.event.KeyAdapter() {
+            @Override
             public void keyReleased(java.awt.event.KeyEvent e) {
                 applyFilter();
             }
@@ -108,6 +103,7 @@ public class PositionPanel extends JPanel {
         cboFilter.addActionListener(e -> applyFilter());
 
         table.addMouseListener(new java.awt.event.MouseAdapter() {
+            @Override
             public void mouseClicked(java.awt.event.MouseEvent e) {
                 if (e.getClickCount() == 2) {
                     showDetailDialog();
@@ -127,20 +123,19 @@ public class PositionPanel extends JPanel {
         int statusFilterIndex = cboFilter.getSelectedIndex();
 
         RowFilter<DefaultTableModel, Object> rf = new RowFilter<DefaultTableModel, Object>() {
+            @Override
             public boolean include(Entry<? extends DefaultTableModel, ? extends Object> entry) {
                 String ma = entry.getStringValue(0).toLowerCase();
                 String tenChucVu = entry.getStringValue(1).toLowerCase();
                 boolean matchSearch = searchText.isEmpty() || ma.contains(searchText) || tenChucVu.contains(searchText);
 
-                String trangThai = normalizeTrangThai(entry.getStringValue(5));
+                String trangThai = normalizeTrangThai(entry.getStringValue(4));
                 boolean matchStatus = true;
-
                 if (statusFilterIndex == 1) {
                     matchStatus = "hoatdong".equals(trangThai);
                 } else if (statusFilterIndex == 2) {
                     matchStatus = "ngunghoatdong".equals(trangThai) || "ngung".equals(trangThai);
                 }
-
                 return matchSearch && matchStatus;
             }
         };
@@ -154,8 +149,7 @@ public class PositionPanel extends JPanel {
             tableModel.addRow(new Object[]{
                     p.getId(),
                     p.getTenChucVu(),
-                    "Cap " + p.getCapBac(),
-                    p.getHeSoLuong() + "x",
+                    "Cấp " + p.getCapBac(),
                     moneyFmt.format(p.getPhuCapChucVu()),
                     toTrangThaiDisplay(p.getTrangThai())
             });
@@ -169,7 +163,6 @@ public class PositionPanel extends JPanel {
         JTextField txtMa = new JTextField();
         JTextField txtTen = new JTextField();
         JTextField txtCapBac = new JTextField("1");
-        JTextField txtHeSo = new JTextField("1.0");
         JTextField txtPhuCap = new JTextField("0");
         JTextArea txtMoTa = new JTextArea(3, 20);
         txtMoTa.setLineWrap(true);
@@ -177,8 +170,7 @@ public class PositionPanel extends JPanel {
         Object[] fields = {
                 "Mã chức vụ (*):", txtMa,
                 "Tên chức vụ (*):", txtTen,
-                "Cấp bậc (1=cao nhất):", txtCapBac,
-                "Hệ số lương (*):", txtHeSo,
+                "Cấp bậc (1 = cao nhất):", txtCapBac,
                 "Phụ cấp (VND):", txtPhuCap,
                 "Mô tả:", new JScrollPane(txtMoTa)
         };
@@ -203,11 +195,15 @@ public class PositionPanel extends JPanel {
             }
 
             int capBac = Integer.parseInt(txtCapBac.getText().trim());
-            double heSo = Double.parseDouble(txtHeSo.getText().trim());
             double phuCap = Double.parseDouble(txtPhuCap.getText().trim());
 
-            KetQua<Void> kq = service.addPosition(maChucVu, txtTen.getText().trim(), capBac, heSo, phuCap,
-                    txtMoTa.getText().trim());
+            KetQua<Void> kq = service.addPosition(
+                    maChucVu,
+                    txtTen.getText().trim(),
+                    capBac,
+                    phuCap,
+                    txtMoTa.getText().trim()
+            );
             if (!kq.isSuccess()) {
                 DialogUtil.showError(this, kq.getMessage());
                 return;
@@ -216,22 +212,25 @@ public class PositionPanel extends JPanel {
             refreshTable();
             DialogUtil.showSuccess(this, kq.getMessage());
         } catch (NumberFormatException ex) {
-            JOptionPane.showMessageDialog(this, "Cấp bậc, hệ số, phụ cấp phải là số hợp lệ.", "Lỗi nhập liệu",
+            JOptionPane.showMessageDialog(this, "Cấp bậc và phụ cấp phải là số hợp lệ.", "Lỗi nhập liệu",
                     JOptionPane.ERROR_MESSAGE);
         }
     }
 
     private void showDetailDialog() {
         int row = table.getSelectedRow();
-        if (row == -1) return;
+        if (row == -1) {
+            return;
+        }
 
         int modelRow = table.convertRowIndexToModel(row);
         String ma = (String) tableModel.getValueAt(modelRow, 0);
         ChucVu pos = service.getById(ma);
-        if (pos == null) return;
+        if (pos == null) {
+            return;
+        }
 
         boolean canEdit = SessionContext.getInstance().coQuyen("POSITION_MANAGE");
-
         Frame frame = (Frame) SwingUtilities.getWindowAncestor(this);
         JDialog dialog = new JDialog(frame, "Chi tiết chức vụ - " + pos.getTenChucVu(), true);
 
@@ -239,7 +238,6 @@ public class PositionPanel extends JPanel {
         txtMa.setEnabled(false);
         JTextField txtTen = new JTextField(pos.getTenChucVu());
         JTextField txtCapBac = new JTextField(String.valueOf(pos.getCapBac()));
-        JTextField txtHeSo = new JTextField(String.valueOf(pos.getHeSoLuong()));
         JTextField txtPhuCap = new JTextField(String.valueOf(pos.getPhuCapChucVu()));
         JTextArea txtMoTa = new JTextArea(pos.getMoTa() != null ? pos.getMoTa() : "", 3, 20);
         txtMoTa.setLineWrap(true);
@@ -248,7 +246,7 @@ public class PositionPanel extends JPanel {
         cboTrangThai.setSelectedItem(toTrangThaiDisplay(pos.getTrangThai()));
         cboTrangThai.setEnabled(canEdit);
 
-        for (JComponent c : new JComponent[]{txtTen, txtCapBac, txtHeSo, txtPhuCap, txtMoTa}) {
+        for (JComponent c : new JComponent[]{txtTen, txtCapBac, txtPhuCap, txtMoTa}) {
             if (c instanceof JTextField) {
                 ((JTextField) c).setEditable(canEdit);
             } else {
@@ -263,17 +261,15 @@ public class PositionPanel extends JPanel {
         gbc.anchor = GridBagConstraints.WEST;
 
         String[] labels = {
-                "Mã chức vụ:", "Tên chức vụ (*):", "Cấp bậc:", "Hệ số lương (*):",
-                "Phụ cấp (VND):", "Mô tả:", "Trạng thái:"
+                "Mã chức vụ:", "Tên chức vụ (*):", "Cấp bậc:", "Phụ cấp (VND):", "Mô tả:", "Trạng thái:"
         };
-        JComponent[] flds = {txtMa, txtTen, txtCapBac, txtHeSo, txtPhuCap, new JScrollPane(txtMoTa), cboTrangThai};
+        JComponent[] fields = {txtMa, txtTen, txtCapBac, txtPhuCap, new JScrollPane(txtMoTa), cboTrangThai};
 
         for (int i = 0; i < labels.length; i++) {
             gbc.gridx = 0;
             gbc.gridy = i;
             gbc.fill = GridBagConstraints.NONE;
             gbc.weightx = 0;
-
             JLabel lbl = new JLabel(labels[i]);
             lbl.setFont(com.hrm.util.UIFonts.TEXT_NORMAL);
             form.add(lbl, gbc);
@@ -281,17 +277,13 @@ public class PositionPanel extends JPanel {
             gbc.gridx = 1;
             gbc.fill = GridBagConstraints.HORIZONTAL;
             gbc.weightx = 1.0;
-            flds[i].setPreferredSize(new Dimension(210, i == 5 ? 60 : 28));
-            form.add(flds[i], gbc);
+            fields[i].setPreferredSize(new Dimension(210, i == 4 ? 60 : 28));
+            form.add(fields[i], gbc);
         }
 
         JPanel btnPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT, 8, 8));
         JButton btnHuy = UIHelper.createDefaultButton("Hủy");
         btnHuy.addActionListener(e -> dialog.dispose());
-
-        JButton btnLichSuBtn = UIHelper.createDefaultButton("Xem lịch sử hệ số");
-        btnLichSuBtn.addActionListener(e -> showHistoryDialog());
-        btnPanel.add(btnLichSuBtn);
         btnPanel.add(btnHuy);
 
         if (canEdit) {
@@ -299,14 +291,12 @@ public class PositionPanel extends JPanel {
             btnLuu.addActionListener(e -> {
                 try {
                     int capBac = Integer.parseInt(txtCapBac.getText().trim());
-                    double heSo = Double.parseDouble(txtHeSo.getText().trim());
                     double phuCap = Double.parseDouble(txtPhuCap.getText().trim());
 
                     KetQua<Void> kqCapNhat = service.updatePosition(
                             ma,
                             txtTen.getText().trim(),
                             capBac,
-                            heSo,
                             phuCap,
                             txtMoTa.getText().trim()
                     );
@@ -334,7 +324,7 @@ public class PositionPanel extends JPanel {
                     DialogUtil.showSuccess(PositionPanel.this, "Cập nhật chức vụ thành công!");
                 } catch (NumberFormatException ex) {
                     JOptionPane.showMessageDialog(dialog,
-                            "Cấp bậc, hệ số, phụ cấp phải là số hợp lệ.",
+                            "Cấp bậc và phụ cấp phải là số hợp lệ.",
                             "Lỗi nhập liệu",
                             JOptionPane.ERROR_MESSAGE);
                 }
@@ -352,82 +342,32 @@ public class PositionPanel extends JPanel {
         dialog.setVisible(true);
     }
 
-    private void showHistoryDialog() {
-        int row = table.getSelectedRow();
-        if (row == -1) {
-            JOptionPane.showMessageDialog(this, "Vui lòng chọn một chức vụ để xem lịch sử.");
-            return;
-        }
-
-        int modelRow = table.convertRowIndexToModel(row);
-        String ma = (String) tableModel.getValueAt(modelRow, 0);
-        String ten = (String) tableModel.getValueAt(modelRow, 1);
-
-        List<LichSuHeSoLuong> danhSach = service.getHistoryByMaChucVu(ma);
-
-        DefaultTableModel histModel = new DefaultTableModel(
-                new Object[]{"Ngày thay đổi", "Hệ số cũ", "Hệ số mới", "Phụ cấp cũ (VND)", "Phụ cấp mới (VND)", "Người thay đổi"},
-                0
-        ) {
-            @Override
-            public boolean isCellEditable(int r, int c) {
-                return false;
-            }
-        };
-
-        for (LichSuHeSoLuong h : danhSach) {
-            histModel.addRow(new Object[]{
-                    h.getNgayThayDoi(),
-                    h.getHeSoLuongCu() + "x",
-                    h.getHeSoLuongMoi() + "x",
-                    moneyFmt.format(h.getPhuCapCu()),
-                    moneyFmt.format(h.getPhuCapMoi()),
-                    h.getNguoiThayDoi()
-            });
-        }
-
-        JTable histTable = new JTable(histModel);
-        histTable.setRowHeight(24);
-        JScrollPane scroll = new JScrollPane(histTable);
-        scroll.setPreferredSize(new Dimension(640, 200));
-
-        JDialog dialog = new JDialog((Frame) SwingUtilities.getWindowAncestor(this),
-                "Lịch sử hệ số lương - " + ten + " (" + ma + ")", true);
-        dialog.setLayout(new BorderLayout());
-
-        if (danhSach.isEmpty()) {
-            dialog.add(new JLabel("  Chưa có lịch sử thay đổi nào.", SwingConstants.CENTER), BorderLayout.CENTER);
-        } else {
-            dialog.add(scroll, BorderLayout.CENTER);
-        }
-
-        JButton btnDong = new JButton("Đóng");
-        btnDong.addActionListener(e -> dialog.dispose());
-        JPanel footer = new JPanel();
-        footer.add(btnDong);
-        dialog.add(footer, BorderLayout.SOUTH);
-
-        dialog.pack();
-        dialog.setLocationRelativeTo(this);
-        dialog.setVisible(true);
-    }
-
     private String toTrangThaiDisplay(String raw) {
         String normalized = normalizeTrangThai(raw);
-        if ("hoatdong".equals(normalized)) return STATUS_ACTIVE;
-        if ("ngunghoatdong".equals(normalized) || "ngung".equals(normalized)) return STATUS_INACTIVE;
+        if ("hoatdong".equals(normalized)) {
+            return STATUS_ACTIVE;
+        }
+        if ("ngunghoatdong".equals(normalized) || "ngung".equals(normalized)) {
+            return STATUS_INACTIVE;
+        }
         return raw == null ? "" : raw;
     }
 
     private String toTrangThaiRaw(String display) {
         String normalized = normalizeTrangThai(display);
-        if ("hoatdong".equals(normalized)) return "hoat_dong";
-        if ("ngunghoatdong".equals(normalized) || "ngung".equals(normalized)) return "ngung";
+        if ("hoatdong".equals(normalized)) {
+            return "hoat_dong";
+        }
+        if ("ngunghoatdong".equals(normalized) || "ngung".equals(normalized)) {
+            return "ngung";
+        }
         return display == null ? "" : display;
     }
 
     private String normalizeTrangThai(String value) {
-        if (value == null) return "";
+        if (value == null) {
+            return "";
+        }
         String v = Normalizer.normalize(value, Normalizer.Form.NFD)
                 .replaceAll("\\p{M}+", "")
                 .replace('đ', 'd')

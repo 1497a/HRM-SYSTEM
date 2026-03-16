@@ -157,6 +157,24 @@ public class HopDongDAO {
         return null;
     }
 
+    public HopDongLaoDong findChoDuyet(String maNV) {
+        String sql = buildJoinQuery("WHERE h.maNV = ? AND h.trangThai = 'cho_duyet'", "LIMIT 1");
+        try (Connection conn = DatabaseConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setString(1, maNV);
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    HopDongLaoDong hd = mapRow(rs);
+                    hd.setTenNV(rs.getString("hoTen"));
+                    return hd;
+                }
+            }
+        } catch (SQLException e) {
+            throw new RuntimeException("Lỗi tải hợp đồng chờ duyệt: " + e.getMessage(), e);
+        }
+        return null;
+    }
+
     // ============================
     // findSapHetHan - contracts expiring in N days, with tenNV
     // ============================

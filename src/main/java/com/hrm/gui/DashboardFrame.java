@@ -274,7 +274,7 @@ public class DashboardFrame extends JFrame {
         mnuUserManage.setEnabled(auth.coQuyen("USER_VIEW"));
         mnuRoleManage.setEnabled(auth.coQuyen("ROLE_VIEW"));
         mnuReports.setEnabled(auth.coQuyen("REPORT_VIEW"));
-        mnuSettings.setEnabled(auth.coQuyen("SETTINGS_VIEW"));
+        mnuSettings.setEnabled(auth.coQuyen("CHANGE_PASSWORD"));
 
         updateStatus();
     }

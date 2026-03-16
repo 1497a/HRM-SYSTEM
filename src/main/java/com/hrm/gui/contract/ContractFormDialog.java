@@ -40,6 +40,8 @@ public class ContractFormDialog extends JDialog {
 
     // Buttons
     private PurpleButton btnLuu;
+    private PurpleButton btnPheDuyet;
+    private PurpleButton btnThanhLy;
     private JButton btnHuy;
 
     /**
@@ -74,7 +76,7 @@ public class ContractFormDialog extends JDialog {
 
     private void initComponents() {
         // Số hợp đồng - tự động tạo
-        lblSoHopDong = new JLabel("(Tu dong tao khi luu)");
+        lblSoHopDong = new JLabel("(Tự động tạo khi lưu)");
         lblSoHopDong.setFont(new Font("Segoe UI", Font.ITALIC, 13));
         lblSoHopDong.setForeground(com.hrm.util.UIColors.TEXT_GRAY);
 
@@ -162,12 +164,20 @@ public class ContractFormDialog extends JDialog {
 
         // Buttons
         btnLuu = new PurpleButton("Lưu");
+        btnPheDuyet = new PurpleButton("Phê duyệt");
+        btnThanhLy = PurpleButton.warning("Thanh lý");
         btnHuy = new JButton("Hủy");
         btnHuy.setFont(com.hrm.util.UIFonts.TEXT_MEDIUM);
         btnHuy.setCursor(new Cursor(Cursor.HAND_CURSOR));
 
         btnLuu.addActionListener(e -> luuHopDong());
         btnHuy.addActionListener(e -> dispose());
+        btnPheDuyet.addActionListener(e -> pheDuyetHopDong());
+        btnThanhLy.addActionListener(e -> thanhLyHopDong());
+
+        // Ẩn mặc định, setReadOnly() sẽ bật nếu đủ điều kiện
+        btnPheDuyet.setVisible(false);
+        btnThanhLy.setVisible(false);
     }
 
     private void onLoaiHopDongChanged() {
@@ -266,6 +276,8 @@ public class ContractFormDialog extends JDialog {
         JPanel btnPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT, 8, 0));
         btnPanel.setOpaque(false);
         btnPanel.setBorder(new EmptyBorder(8, 0, 0, 0));
+        btnPanel.add(btnThanhLy);
+        btnPanel.add(btnPheDuyet);
         btnPanel.add(btnHuy);
         btnPanel.add(btnLuu);
 
@@ -347,6 +359,48 @@ public class ContractFormDialog extends JDialog {
         txtGhiChu.setEditable(false);
         btnLuu.setVisible(false);
         setTitle("Chi Tiết Hợp Đồng");
+
+        com.hrm.util.SessionContext sc = com.hrm.util.SessionContext.getInstance();
+        String trangThai = hopDongHienThi.getTrangThai();
+        btnPheDuyet.setVisible(sc.coQuyen("CONTRACT_APPROVE") && "cho_duyet".equals(trangThai));
+        btnThanhLy.setVisible(sc.coQuyen("CONTRACT_MANAGE")
+                && ("hieu_luc".equals(trangThai) || "het_hieu_luc".equals(trangThai)));
+    }
+
+    private void pheDuyetHopDong() {
+        int confirm = JOptionPane.showConfirmDialog(this,
+                "Phê duyệt hợp đồng số '" + hopDongHienThi.getSoHopDong() + "'?\nHợp đồng sẽ có hiệu lực ngay.",
+                "Xác nhận phê duyệt", JOptionPane.YES_NO_OPTION);
+        if (confirm != JOptionPane.YES_OPTION) return;
+
+        KetQua<Void> result = HopDongBUS.getInstance().pheDuyetHopDong(hopDongHienThi.getMaHopDong());
+        if (result.isSuccess()) {
+            JOptionPane.showMessageDialog(this, result.getMessage(), "Thành công", JOptionPane.INFORMATION_MESSAGE);
+            saved = true;
+            dispose();
+        } else {
+            JOptionPane.showMessageDialog(this, result.getMessage(), "Lỗi", JOptionPane.ERROR_MESSAGE);
+        }
+    }
+
+    private void thanhLyHopDong() {
+        String confirmMsg = "Xác nhận thanh lý hợp đồng số '" + hopDongHienThi.getSoHopDong() + "'?";
+        if (HopDongBUS.getInstance().isHopDongHetHan(hopDongHienThi.getMaHopDong())) {
+            confirmMsg = "Hợp đồng nay ĐÃ HẾT HẠN. ạn có muốn thanh lý không?\n"
+                    + "Số HD: " + hopDongHienThi.getSoHopDong() + "\n"
+                    + "ưu ý: Các bổ nhiệm hiệu lực sẽ bị kết thúc.";
+        }
+        int confirm = JOptionPane.showConfirmDialog(this, confirmMsg, "Xác nhận thanh lý", JOptionPane.YES_NO_OPTION);
+        if (confirm != JOptionPane.YES_OPTION) return;
+
+        KetQua<Void> result = HopDongBUS.getInstance().thanhLyHopDong(hopDongHienThi.getMaHopDong());
+        if (result.isSuccess()) {
+            JOptionPane.showMessageDialog(this, result.getMessage(), "Thành công", JOptionPane.INFORMATION_MESSAGE);
+            saved = true;
+            dispose();
+        } else {
+            JOptionPane.showMessageDialog(this, result.getMessage(), "Lỗi", JOptionPane.ERROR_MESSAGE);
+        }
     }
 
     // ============================

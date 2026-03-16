@@ -2,6 +2,7 @@ package com.hrm.bus;
 
 import com.hrm.dao.TuyenDungDAO;
 import com.hrm.model.BoNhiem;
+import com.hrm.model.HopDongLaoDong;
 import com.hrm.model.NhanVien;
 import com.hrm.model.RecruitmentStatus;
 import com.hrm.model.TaiKhoan;
@@ -147,6 +148,10 @@ public class TuyenDungBUS {
         return recruitmentRepo.findAllUngVien();
     }
 
+    public UngVien getUngVienById(int maUngVien) {
+        return recruitmentRepo.findById(maUngVien);
+    }
+
     public KetQua<UngVien> tiepNhanUngVien(UngVien uv) {
         if (isBlank(uv.getHoTen())) {
             return KetQua.error("Họ tên ứng viên không được để trống.");
@@ -163,10 +168,10 @@ public class TuyenDungBUS {
             YeuCauTuyenDung yc = recruitmentRepo.findYeuCauById(tin.getMaYeuCau());
             if (yc != null) {
                 if (RecruitmentStatus.YeuCau.DA_TUYEN_DU.equals(yc.getTrangThai())) {
-                    return KetQua.error("Yeu cau tuyen dung da tuyen du so luong, khong the tiep nhan them ung vien.");
+                    return KetQua.error("Yêu cầu tuyển dụng đã tuyển đủ số lượng, không thể tiếp nhận thêm ứng viên.");
                 }
                 if (yc.getHanTuyenDung() != null && LocalDate.now().isAfter(yc.getHanTuyenDung())) {
-                    return KetQua.error("Da qua han tuyen dung (" + yc.getHanTuyenDung() + "), khong the tiep nhan them ung vien.");
+                    return KetQua.error("Đã quá hạn tuyển dụng (" + yc.getHanTuyenDung() + "), không thể tiếp nhận thêm ứng viên.");
                 }
             }
         }
@@ -193,10 +198,10 @@ public class TuyenDungBUS {
 
         UngVien uv = recruitmentRepo.findById(maUV);
         if (uv == null) {
-            return KetQua.error("Khong tim thay ung vien #" + maUV);
+            return KetQua.error("Không tìm thấy ứng viên #" + maUV);
         }
         if (daChuyenThanhNhanVien(uv)) {
-            return KetQua.error("Ung vien da duoc chuyen thanh nhan vien, khong the cap nhat trang thai.");
+            return KetQua.error("Ứng viên đã được chuyển thành nhân viên, không thể cập nhật trạng thái.");
         }
 
         // Kiem tra han muc khi danh dau "trung_tuyen"
@@ -207,8 +212,8 @@ public class TuyenDungBUS {
                 if (yc != null) {
                     int daTrungTuyen = recruitmentRepo.countTrungTuyenByYeuCau(tin.getMaYeuCau());
                     if (daTrungTuyen >= yc.getSoLuong()) {
-                        return KetQua.error("Da du so luong trung tuyen (" + yc.getSoLuong()
-                                + "). Khong the danh dau them ung vien trung tuyen.");
+                        return KetQua.error("Đã đủ số lượng trúng tuyển (" + yc.getSoLuong()
+                                + "). Không thể đánh dấu thêm ứng viên trúng tuyển.");
                     }
                 }
             }
@@ -217,9 +222,9 @@ public class TuyenDungBUS {
         uv.setTrangThai(trangThai);
         try {
             recruitmentRepo.updateUngVien(uv);
-            return KetQua.success(null, "Cap nhat trang thai ung vien thanh cong.");
+            return KetQua.success(null, "Cập nhật trạng thái ứng viên thành công.");
         } catch (Exception e) {
-            return KetQua.error("Loi cap nhat trang thai ung vien: " + e.getMessage());
+            return KetQua.error("Lỗi cập nhật trạng thái ứng viên: " + e.getMessage());
         }
     }
 
@@ -257,14 +262,14 @@ public class TuyenDungBUS {
             String maNV = ketQuaNV.getData().getMaNhanVien();
             TransferContext context = loadTransferContext(uv);
             String boNhiemNote = tuDongBoNhiemNeuCoThe(uv, context, maNV);
+            String hopDongNote = tuDongTaoHopDong(maNV, context);
 
             capNhatUngVienDaChuyen(uv, maNV);
             capNhatTrangThaiYeuCauNeuDuSoLuong(context.tin);
 
             String thongTinTK = taoThongTinTaiKhoan(maNV);
             return KetQua.success(null,
-                    "Chuyển ứng viên thành nhân viên thành công.\nMã NV: " + maNV + boNhiemNote + thongTinTK
-                    + "\n\n⚠ Luu y: Can tao hop dong lao dong cho nhan vien nay trong module Hop dong.");
+                    "Chuyển ứng viên thành nhân viên thành công.\nMã NV: " + maNV + boNhiemNote + hopDongNote + thongTinTK);
         } catch (Exception e) {
             return KetQua.error("Lỗi chuyển ứng viên thành nhân viên: " + e.getMessage());
         }
@@ -285,7 +290,7 @@ public class TuyenDungBUS {
         if (tinConv != null) {
             YeuCauTuyenDung ycConv = recruitmentRepo.findYeuCauById(tinConv.getMaYeuCau());
             if (ycConv != null && RecruitmentStatus.YeuCau.DA_TUYEN_DU.equals(ycConv.getTrangThai())) {
-                return KetQua.error("Yeu cau tuyen dung da tuyen du so luong, khong the chuyen them nhan vien.");
+                return KetQua.error("Yêu cầu tuyển dụng đã tuyển đủ số lượng, không thể chuyển thêm nhân viên.");
             }
         }
         return KetQua.success(uv, "OK");
@@ -334,12 +339,45 @@ public class TuyenDungBUS {
             return " | Bổ nhiệm thất bại (cần tạo thủ công): " + kqBoNhiem.getMessage();
         }
 
-        KetQua<BoNhiem> kqPheDuyet = BoNhiemBUS.getInstance()
-                .pheDuyetBoNhiem(kqBoNhiem.getData().getMaBoNhiem(), getCurrentUserNhanVienId());
-        if (kqPheDuyet.isSuccess()) {
-            return " | Bổ nhiệm đã được tạo và phê duyệt";
+        return " | Bổ nhiệm đã tạo, đang chờ phê duyệt";
+    }
+
+    private String tuDongTaoHopDong(String maNV, TransferContext context) {
+        long luong = 0;
+        String ghiChu = "Tự động tạo khi chuyển ứng viên thành nhân viên.";
+        if (context.tin != null && !isBlank(context.tin.getMucLuong())) {
+            luong = parseMucLuong(context.tin.getMucLuong());
+            if (luong > 0) {
+                ghiChu += " Mức lương từ tin tuyển dụng: " + context.tin.getMucLuong();
+            }
+        } else if (context.yeuCau != null && !isBlank(context.yeuCau.getMucLuongDuKien())) {
+            luong = parseMucLuong(context.yeuCau.getMucLuongDuKien());
+            if (luong > 0) {
+                ghiChu += " Mức lương dự kiến: " + context.yeuCau.getMucLuongDuKien();
+            }
         }
-        return " | Bổ nhiệm tạo nhưng chưa phê duyệt: " + kqPheDuyet.getMessage();
+
+        KetQua<HopDongLaoDong> kq = HopDongBUS.getInstance().taoHopDongSystem(maNV, luong, ghiChu);
+        if (kq.isSuccess()) {
+            return " | Hợp đồng thử việc đã tạo (chờ phê duyệt)"
+                    + (luong > 0 ? ", luong: " + String.format("%,.0f", (double) luong) : ", lương: cần cập nhật");
+        }
+        return " | Tạo hợp đồng thất bại: " + kq.getMessage();
+    }
+
+    /** Trích số đầu tiên từ chuỗi mô tả mức lương. Nếu < 100_000 thì nhân triệu. */
+    private long parseMucLuong(String mucLuong) {
+        if (isBlank(mucLuong)) return 0;
+        java.util.regex.Matcher m = java.util.regex.Pattern.compile("[0-9]+([.,][0-9]+)?").matcher(mucLuong);
+        if (!m.find()) return 0;
+        try {
+            String raw = m.group().replace(",", "").replace(".", "");
+            long val = Long.parseLong(raw);
+            // Nếu < 100_000 thì đơn vị là triệu đồng
+            return val < 100_000 ? val * 1_000_000L : val;
+        } catch (NumberFormatException e) {
+            return 0;
+        }
     }
 
     private void capNhatUngVienDaChuyen(UngVien uv, String maNV) {
@@ -411,13 +449,6 @@ public class TuyenDungBUS {
                 ? SessionContext.getInstance().getCurrentUser().getId() : 0;
     }
 
-    private String getCurrentUserNhanVienId() {
-        if (SessionContext.getInstance().getCurrentUser() == null) {
-            return "admin";
-        }
-        String nvId = SessionContext.getInstance().getCurrentUser().getNhanVienId();
-        return isBlank(nvId) ? "admin" : nvId;
-    }
 
     private boolean daChuyenThanhNhanVien(UngVien uv) {
         return uv.getMaNV() != null && !uv.getMaNV().trim().isEmpty();

@@ -118,23 +118,23 @@ public class StatusBadge extends JLabel {
      * Factory methods for common statuses (Vietnamese)
      */
     public static StatusBadge approved() {
-        return new StatusBadge("Da duyet", BadgeType.SUCCESS);
+        return new StatusBadge("Đã duyệt", BadgeType.SUCCESS);
     }
 
     public static StatusBadge pending() {
-        return new StatusBadge("Cho duyet", BadgeType.WARNING);
+        return new StatusBadge("Chờ duyệt", BadgeType.WARNING);
     }
 
     public static StatusBadge rejected() {
-        return new StatusBadge("Tu choi", BadgeType.DANGER);
+        return new StatusBadge("Từ chối", BadgeType.DANGER);
     }
 
     public static StatusBadge active() {
-        return new StatusBadge("Hoat dong", BadgeType.SUCCESS);
+        return new StatusBadge("Hoạt động", BadgeType.SUCCESS);
     }
 
     public static StatusBadge inactive() {
-        return new StatusBadge("Ngung hoat dong", BadgeType.DANGER);
+        return new StatusBadge("Ngừng hoạt động", BadgeType.DANGER);
     }
 
     public static StatusBadge locked() {

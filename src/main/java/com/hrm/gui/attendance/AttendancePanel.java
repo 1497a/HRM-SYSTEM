@@ -14,11 +14,14 @@ import javax.swing.table.DefaultTableModel;
 import javax.swing.table.JTableHeader;
 import javax.swing.table.TableCellRenderer;
 import javax.swing.table.DefaultTableCellRenderer;
+import javax.swing.table.TableRowSorter;
 import java.awt.*;
 import java.text.NumberFormat;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Locale;
 
@@ -27,11 +30,14 @@ public class AttendancePanel extends JPanel {
     private final ChamCongBUS svc;
     private final LuongBUS luongSvc;
     private final TaiKhoan currentUser;
-    private final boolean canManage;   // ATTENDANCE_MANAGE
-    private final boolean canManageAll;  // ATTENDANCE_MANAGE scope=ALL
+    private final boolean canManage;         // ATTENDANCE_MANAGE
+    private final boolean canManageAllowance; // ALLOWANCE_MANAGE
     private final boolean canViewTeam; // ATTENDANCE_VIEW with TEAM/DEPT/ALL scope
+    private final boolean canCheckInSelf;
+    private final boolean canRequestOTSelf;
+    private final boolean canApproveOT;
     private final DataScope attendanceScope;
-    private final DataScope attendanceManageScope;
+    private final DataScope overtimeApproveScope;
     private String maNVCaNhan = null;
     private final NumberFormat moneyFmt;
 
@@ -39,7 +45,7 @@ public class AttendancePanel extends JPanel {
 
     // Tab 1
     private JTable tableChamCong; private DefaultTableModel modelCC;
-    private JComboBox<String> cboThang, cboNam;
+    private JComboBox<String> cboThang, cboNam, cboMaNVFilter, cboTrangThaiFilter;
     private JPanel statsPanel;
     // Tab 2
     private JTable tableCaLam; private DefaultTableModel modelCaLam;
@@ -70,7 +76,7 @@ public class AttendancePanel extends JPanel {
     private JComboBox<String> cboThangCN, cboNamCN;
     private JPanel statsPanelCN;
     private javax.swing.Timer clockTimer;
-    // Fields for search-based check-in/out (any employee)
+    // Fields for personal attendance
     private String maNVTimKiem = null;
     private JTextField txtMaNVCN;
     private JPanel infoPanelCN;
@@ -87,14 +93,20 @@ public class AttendancePanel extends JPanel {
         currentUser = SessionContext.getInstance().getCurrentUser();
         SessionContext sc = SessionContext.getInstance();
         attendanceScope = XacThucBUS.getInstance().getScopeForAction("ATTENDANCE_VIEW");
-        canManage   = sc.hasPermission("ATTENDANCE_MANAGE");
-        attendanceManageScope = canManage
-            ? XacThucBUS.getInstance().getScopeForAction("ATTENDANCE_MANAGE")
+        canManage         = sc.hasPermission("ATTENDANCE_MANAGE");
+        canManageAllowance = sc.hasPermission("ALLOWANCE_MANAGE");
+        overtimeApproveScope = sc.hasPermission("OVERTIME_APPROVE")
+            ? XacThucBUS.getInstance().getScopeForAction("OVERTIME_APPROVE")
             : DataScope.NONE;
-        canManageAll = canManage && (attendanceManageScope == DataScope.ALL);
         canViewTeam = attendanceScope == DataScope.ALL
                    || attendanceScope == DataScope.DEPT
                    || attendanceScope == DataScope.TEAM;
+        canCheckInSelf = sc.hasPermission("ATTENDANCE_CHECKIN");
+        canRequestOTSelf = sc.hasPermission("OVERTIME_REQUEST");
+        canApproveOT = sc.hasPermission("OVERTIME_APPROVE")
+            && (overtimeApproveScope == DataScope.ALL
+            || overtimeApproveScope == DataScope.DEPT
+            || overtimeApproveScope == DataScope.TEAM);
         if (currentUser != null) {
             maNVCaNhan = svc.getMaNVByTaiKhoan(currentUser.getId());
         }
@@ -109,25 +121,29 @@ public class AttendancePanel extends JPanel {
         tabbedPane.setBackground(UIColors.WHITE);
         if (canManage) {
             tabbedPane.addTab("Tổng hợp chấm công", tabTongHop());
-            if (canManageAll) tabbedPane.addTab("Quản lý ca làm", tabCaLam());
-            tabbedPane.addTab("Duyệt đơn OT", tabDuyetOT());
-            if (canManageAll) tabbedPane.addTab("Phụ cấp & Khấu trừ", tabPhuCap());
-            tabbedPane.addTab("Bảng lương", tabBangLuong());
-            if (maNVCaNhan != null) {
+            tabbedPane.addTab("Quản lý ca làm", tabCaLam());
+            if (canApproveOT) tabbedPane.addTab("Duyệt đơn OT", tabDuyetOT());
+            if (canManageAllowance) tabbedPane.addTab("Phụ cấp & Khấu trừ", tabPhuCap());
+            if (maNVCaNhan != null && canCheckInSelf) {
                 tabbedPane.addTab("Chấm công cá nhân", tabCaNhan());
+            }
+            if (maNVCaNhan != null && canRequestOTSelf) {
                 tabbedPane.addTab("Đăng ký OT", tabDangKyOT());
             }
         } else if (canViewTeam) {
-            if (maNVCaNhan != null) tabbedPane.addTab("Chấm công cá nhân", tabCaNhan());
+            if (maNVCaNhan != null && canCheckInSelf) tabbedPane.addTab("Chấm công cá nhân", tabCaNhan());
             tabbedPane.addTab("Tổng hợp chấm công", tabTongHopReadOnly());
-            tabbedPane.addTab("Duyệt đơn OT", tabDuyetOT());
-            if (maNVCaNhan != null) tabbedPane.addTab("Đăng ký OT", tabDangKyOT());
+            if (canManageAllowance) tabbedPane.addTab("Phụ cấp & Khấu trừ", tabPhuCap());
+            if (canApproveOT) tabbedPane.addTab("Duyệt đơn OT", tabDuyetOT());
+            if (maNVCaNhan != null && canRequestOTSelf) tabbedPane.addTab("Đăng ký OT", tabDangKyOT());
         } else {
-            // ATTENDANCE_VIEW_SELF hoac employee thuong
-            if (maNVCaNhan != null) {
+            if (maNVCaNhan != null && canCheckInSelf) {
                 tabbedPane.addTab("Chấm công cá nhân", tabCaNhan());
+            }
+            if (maNVCaNhan != null && canRequestOTSelf) {
                 tabbedPane.addTab("Đăng ký OT", tabDangKyOT());
-            } else {
+            }
+            if (tabbedPane.getTabCount() == 0) {
                 JPanel p = new JPanel(new GridBagLayout()); p.setBackground(UIColors.WHITE);
                 JLabel l = new JLabel("Tài khoản của bạn chưa được liên kết với nhân viên nào. Vui lòng liên hệ quản trị để được hỗ trợ.");
                 l.setFont(com.hrm.util.UIFonts.TEXT_MEDIUM); l.setForeground(UIColors.TEXT_GRAY);
@@ -149,6 +165,7 @@ public class AttendancePanel extends JPanel {
         JButton bL=btn("Lọc dữ liệu",UIColors.PRIMARY_PURPLE); bL.addActionListener(e->loadCC()); tb.add(bL);
         tb.add(Box.createHorizontalStrut(20));
         JButton bT=btn("+ Thêm thủ công",UIColors.SUCCESS_GREEN); bT.addActionListener(e->dlgThemCC()); tb.add(bT);
+        initTongHopFilters(tb);
         p.add(tb,BorderLayout.NORTH);
         String[]cols={"Mã NV","Họ tên","Ngày","Ca làm","Giờ vào","Giờ ra","Số giờ","OT","Trạng thái"};
         modelCC=mdl(cols); tableChamCong=tbl(modelCC);
@@ -164,7 +181,7 @@ public class AttendancePanel extends JPanel {
         modelCC.setRowCount(0);
         int th = Integer.parseInt((String) cboThang.getSelectedItem());
         int nm = Integer.parseInt((String) cboNam.getSelectedItem());
-        List<ChamCong> ds = canManageAll
+        List<ChamCong> ds = canManage
             ? svc.getChamCongTatCaTheoThang(th, nm)
             : svc.getChamCongTatCaTheoThangByScope(th, nm, maNVCaNhan);
         DateTimeFormatter fN = DateTimeFormatter.ofPattern("dd/MM");
@@ -193,6 +210,8 @@ public class AttendancePanel extends JPanel {
         statsPanel.add(lbl("Đi muộn:", String.valueOf(dm), UIColors.DANGER_RED));
         statsPanel.add(lbl("Vắng:", String.valueOf(vm), com.hrm.util.UIColors.TEXT_GRAY));
         statsPanel.revalidate(); statsPanel.repaint();
+        refreshTongHopFilterOptionsFromTable();
+        applyCCRowFilter();
     }
 
     private void dlgThemCC() {
@@ -237,7 +256,7 @@ public class AttendancePanel extends JPanel {
         btnTim.addActionListener(e -> {
             String ma = txtMaNV.getText().trim();
             if (ma.isEmpty()) { JOptionPane.showMessageDialog(d, "Vui lòng nhập mã nhân viên."); return; }
-                var info = svc.findNhanVienByMa(ma);
+                var info = svc.findNhanVienByMaForManualAttendance(ma);
             if (info == null) {
                 infoPanel.setVisible(false); maNVRef[0] = null;
                 JOptionPane.showMessageDialog(d, "Không tìm thấy nhân viên: " + ma, "Lỗi", JOptionPane.ERROR_MESSAGE);
@@ -451,9 +470,9 @@ public class AttendancePanel extends JPanel {
     private void loadOT() {
         modelOT.setRowCount(0);
         DateTimeFormatter f = DateTimeFormatter.ofPattern("dd/MM/yyyy");
-        List<DangKyLamThem> dsOT = canManageAll
+        List<DangKyLamThem> dsOT = canManage
             ? svc.getDonLamThemTatCa()
-            : svc.getDonLamThemTatCaByScope(maNVCaNhan);
+            : svc.getDonLamThemTatCaByApproveScope(maNVCaNhan);
         for (DangKyLamThem don : dsOT) {
             String maNhanVien = svc.getMaNhanVienById(don.getMaNV());
             String tenNV = don.getEmployeeName() != null ? don.getEmployeeName() : maNhanVien;
@@ -473,6 +492,7 @@ public class AttendancePanel extends JPanel {
     private void duyetOT() {
         int row=tableDonOT.getSelectedRow();
         if(row<0){JOptionPane.showMessageDialog(this,"Chọn đơn."); return;}
+        if(!canApproveOT){JOptionPane.showMessageDialog(this,"Bạn không có quyền duyệt đơn OT."); return;}
         int maDK=(int)modelOT.getValueAt(row,0);
         String tt=(String)modelOT.getValueAt(row,6);
         if (!DangKyLamThem.TrangThai.CHO_DUYET.getDisplayName().equals(tt)) {
@@ -491,6 +511,7 @@ public class AttendancePanel extends JPanel {
     private void tuChoiOT() {
         int row=tableDonOT.getSelectedRow();
         if(row<0){JOptionPane.showMessageDialog(this,"Chọn đơn."); return;}
+        if(!canApproveOT){JOptionPane.showMessageDialog(this,"Bạn không có quyền duyệt đơn OT."); return;}
         int maDK=(int)modelOT.getValueAt(row,0); String tt=(String)modelOT.getValueAt(row,6);
         if (!DangKyLamThem.TrangThai.CHO_DUYET.getDisplayName().equals(tt)) {
             JOptionPane.showMessageDialog(this, "Đơn đã xử lý."); return;
@@ -507,6 +528,7 @@ public class AttendancePanel extends JPanel {
     private void chinhHeSo() {
         int row=tableDonOT.getSelectedRow();
         if(row<0){JOptionPane.showMessageDialog(this,"Chọn đơn."); return;}
+        if(!canApproveOT){JOptionPane.showMessageDialog(this,"Bạn không có quyền chỉnh hệ số OT."); return;}
         int maDK=(int)modelOT.getValueAt(row,0);
         String input=JOptionPane.showInputDialog(this,"Nhập hệ số mới (vd: 1.5):","Chỉnh hệ số",JOptionPane.QUESTION_MESSAGE);
         if(input==null||input.trim().isEmpty())return;
@@ -551,6 +573,8 @@ public class AttendancePanel extends JPanel {
         tb.add(bExport);
         JButton bCol = btn("Tùy chỉnh cột", new Color(120, 100, 180)); tb.add(bCol);
 
+        initTongHopFilters(tb);
+        initTongHopFilters(tb);
         p.add(tb, BorderLayout.NORTH);
 
         String[] cols = {"Mã NV", "Họ tên", "Lương chính", "Ngày công",
@@ -946,13 +970,10 @@ public class AttendancePanel extends JPanel {
         clockRow.add(lblTime); topPanel.add(clockRow);
 
         // Tim kiem nhan vien
-        txtMaNVCN = new JTextField(12);
-        txtMaNVCN.setFont(com.hrm.util.UIFonts.TEXT_NORMAL);
-        txtMaNVCN.setToolTipText("Nhập mã nhân viên (VD: NV001)");
-        JButton btnTim = btn("Tìm", UIColors.PRIMARY_PURPLE);
-        btnTim.setPreferredSize(new Dimension(70, 30));
         JPanel searchRow = new JPanel(new FlowLayout(FlowLayout.LEFT, 10, 5)); searchRow.setOpaque(false);
-        searchRow.add(new JLabel("Mã nhân viên:")); searchRow.add(txtMaNVCN); searchRow.add(btnTim);
+        JLabel lblMaNhanVienValue = new JLabel(maNVCaNhan != null ? maNVCaNhan : "(Chưa có)");
+        lblMaNhanVienValue.setFont(com.hrm.util.UIFonts.BOLD_NORMAL);
+        searchRow.add(new JLabel("Mã nhân viên:")); searchRow.add(lblMaNhanVienValue);
         topPanel.add(searchRow);
 
         // Panel thong tin nhan vien
@@ -988,14 +1009,16 @@ public class AttendancePanel extends JPanel {
         chkOT.setToolTipText("Chỉ có thể chọn khi bạn có đơn OT đã được duyệt cho hôm nay");
 
         btnCheckInCN.addActionListener(e -> {
-            KetQua<ChamCong> res = svc.checkInAuto(maNVTimKiem, chkOT.isSelected());
+                JOptionPane.showMessageDialog(this, "Chỉ có thể check-in cho chính bạn.", "Thông báo", JOptionPane.WARNING_MESSAGE);
+            KetQua<ChamCong> res = svc.checkInAuto(maNVCaNhan, chkOT.isSelected());
             JOptionPane.showMessageDialog(this, res.getMessage(),
                 res.isSuccess() ? "Thành công" : "Lỗi",
                 res.isSuccess() ? JOptionPane.INFORMATION_MESSAGE : JOptionPane.ERROR_MESSAGE);
             refreshCaNhan(chkOT); loadLichSuCaNhan();
         });
         btnCheckOutCN.addActionListener(e -> {
-            KetQua<ChamCong> res = svc.checkOut(maNVTimKiem);
+                JOptionPane.showMessageDialog(this, "Chỉ có thể check-out cho chính bạn.", "Thông báo", JOptionPane.WARNING_MESSAGE);
+            KetQua<ChamCong> res = svc.checkOut(maNVCaNhan);
             JOptionPane.showMessageDialog(this, res.getMessage(),
                 res.isSuccess() ? "Thành công" : "Lỗi",
                 res.isSuccess() ? JOptionPane.INFORMATION_MESSAGE : JOptionPane.ERROR_MESSAGE);
@@ -1018,29 +1041,6 @@ public class AttendancePanel extends JPanel {
         chamCongStatusPanelCN.setVisible(false);
         topPanel.add(chamCongStatusPanelCN);
 
-        btnTim.addActionListener(e -> {
-            String ma = txtMaNVCN.getText().trim();
-            if (ma.isEmpty()) { JOptionPane.showMessageDialog(this, "Vui lòng nhập mã nhân viên.", "Thông báo", JOptionPane.WARNING_MESSAGE); return; }
-                var info = svc.findNhanVienByMa(ma);
-            if (info == null) {
-                infoPanelCN.setVisible(false); chamCongStatusPanelCN.setVisible(false);
-                if (histPanelCN != null) histPanelCN.setVisible(false);
-                maNVTimKiem = null;
-                JOptionPane.showMessageDialog(this, "Không tìm thấy nhân viên: " + ma, "Lỗi", JOptionPane.ERROR_MESSAGE);
-            } else {
-                maNVTimKiem = info.maNV;
-                lblHoTenCNCN.setText(info.hoTen);
-                lblEmailCNCN.setText(info.email.isEmpty() ? "(Chưa có)" : info.email);
-                lblChucVuCNCN.setText(info.tenChucVu.isEmpty() ? "(Chưa có)" : info.tenChucVu);
-                lblPhongBanCNCN.setText(info.tenPhongBan.isEmpty() ? "(Chưa có)" : info.tenPhongBan);
-                lblTrangThaiCNCN.setText(formatTrangThaiNV(info.trangThai));
-                lblTrangThaiCNCN.setForeground("dang_lam_viec".equals(info.trangThai) ? UIColors.SUCCESS_GREEN : UIColors.DANGER_RED);
-                infoPanelCN.setVisible(true); chamCongStatusPanelCN.setVisible(true);
-                if (histPanelCN != null) histPanelCN.setVisible(true);
-                refreshCaNhan(chkOT); loadLichSuCaNhan(); p.revalidate(); p.repaint();
-            }
-        });
-        txtMaNVCN.addActionListener(e -> btnTim.doClick());
         p.add(topPanel, BorderLayout.NORTH);
 
         // Lich su cham cong
@@ -1074,20 +1074,22 @@ public class AttendancePanel extends JPanel {
         histPanelCN.add(statsPanelCN, BorderLayout.SOUTH);
         p.add(histPanelCN, BorderLayout.CENTER);
 
-        // Tu dong load thong tin nguoi dang dang nhap neu co lien ket NV
-        if (maNVCaNhan != null) {
-                String maNhanVienStr = svc.getMaNhanVienById(maNVCaNhan);
-            if (maNhanVienStr != null) {
-                txtMaNVCN.setText(maNhanVienStr);
-                btnTim.doClick();
-            }
-        }
+        maNVTimKiem = maNVCaNhan;
+        loadThongTinCaNhan(p, chkOT);
 
         return p;
     }
 
     private void refreshCaNhan(JCheckBox chkOT) {
         if (maNVTimKiem == null || lblCaNhanStatus == null) return;
+        if (!isViewingOwnAttendance()) {
+            lblCaNhanStatus.setText("Chá»‰ cÃ³ thá»ƒ check-in/check-out cho chÃ­nh báº¡n.");
+            lblCaNhanStatus.setForeground(UIColors.TEXT_GRAY);
+            if (btnCheckInCN  != null) btnCheckInCN.setVisible(false);
+            if (btnCheckOutCN != null) btnCheckOutCN.setVisible(false);
+            if (chkOT != null) { chkOT.setVisible(false); chkOT.setEnabled(false); }
+            return;
+        }
         ChamCong cc = svc.getChamCongHomNay(maNVTimKiem);
         DateTimeFormatter fG = DateTimeFormatter.ofPattern("HH:mm");
         if (cc == null) {
@@ -1119,6 +1121,73 @@ public class AttendancePanel extends JPanel {
             if (btnCheckOutCN != null) btnCheckOutCN.setVisible(false);
             if (chkOT != null) { chkOT.setVisible(false); chkOT.setEnabled(false); }
         }
+    }
+
+    private void loadThongTinCaNhan(JPanel panel, JCheckBox chkOT) {
+        if (maNVCaNhan == null) {
+            infoPanelCN.setVisible(false);
+            chamCongStatusPanelCN.setVisible(false);
+            if (histPanelCN != null) histPanelCN.setVisible(false);
+            maNVTimKiem = null;
+            return;
+        }
+        var info = svc.findNhanVienByMa(maNVCaNhan);
+        if (info == null) {
+            infoPanelCN.setVisible(false);
+            chamCongStatusPanelCN.setVisible(false);
+            if (histPanelCN != null) histPanelCN.setVisible(false);
+            maNVTimKiem = null;
+            return;
+        }
+        maNVTimKiem = info.maNV;
+        lblHoTenCNCN.setText(info.hoTen);
+        lblEmailCNCN.setText(info.email.isEmpty() ? "(Chưa có)" : info.email);
+        lblChucVuCNCN.setText(info.tenChucVu.isEmpty() ? "(Chưa có)" : info.tenChucVu);
+        lblPhongBanCNCN.setText(info.tenPhongBan.isEmpty() ? "(Chưa có)" : info.tenPhongBan);
+        lblTrangThaiCNCN.setText(formatTrangThaiNV(info.trangThai));
+        lblTrangThaiCNCN.setForeground("dang_lam_viec".equals(info.trangThai) ? UIColors.SUCCESS_GREEN : UIColors.DANGER_RED);
+        infoPanelCN.setVisible(true);
+        chamCongStatusPanelCN.setVisible(true);
+        if (histPanelCN != null) histPanelCN.setVisible(true);
+        refreshCaNhan(chkOT);
+        loadLichSuCaNhan();
+        panel.revalidate();
+        panel.repaint();
+    }
+
+    private void searchCaNhan(JPanel panel, JCheckBox chkOT) {
+        String ma = txtMaNVCN.getText().trim();
+        if (ma.isEmpty()) {
+            JOptionPane.showMessageDialog(this, "Vui lòng nhập mã nhân viên.", "Thông báo", JOptionPane.WARNING_MESSAGE);
+            return;
+        }
+        var info = svc.findNhanVienByMa(ma);
+        if (info == null) {
+            infoPanelCN.setVisible(false);
+            chamCongStatusPanelCN.setVisible(false);
+            if (histPanelCN != null) histPanelCN.setVisible(false);
+            maNVTimKiem = null;
+            JOptionPane.showMessageDialog(this, "Không tìm thấy nhân viên: " + ma, "Lỗi", JOptionPane.ERROR_MESSAGE);
+            return;
+        }
+        maNVTimKiem = info.maNV;
+        lblHoTenCNCN.setText(info.hoTen);
+        lblEmailCNCN.setText(info.email.isEmpty() ? "(Chưa có)" : info.email);
+        lblChucVuCNCN.setText(info.tenChucVu.isEmpty() ? "(Chưa có)" : info.tenChucVu);
+        lblPhongBanCNCN.setText(info.tenPhongBan.isEmpty() ? "(Chưa có)" : info.tenPhongBan);
+        lblTrangThaiCNCN.setText(formatTrangThaiNV(info.trangThai));
+        lblTrangThaiCNCN.setForeground("dang_lam_viec".equals(info.trangThai) ? UIColors.SUCCESS_GREEN : UIColors.DANGER_RED);
+        infoPanelCN.setVisible(true);
+        chamCongStatusPanelCN.setVisible(true);
+        if (histPanelCN != null) histPanelCN.setVisible(true);
+        refreshCaNhan(chkOT);
+        loadLichSuCaNhan();
+        panel.revalidate();
+        panel.repaint();
+    }
+
+    private boolean isViewingOwnAttendance() {
+        return maNVCaNhan != null && maNVCaNhan.equals(maNVTimKiem);
     }
 
     private void loadLichSuCaNhan() {
@@ -1318,6 +1387,92 @@ public class AttendancePanel extends JPanel {
     // ===============================================
     //  HELPERS
     // ===============================================
+    private void initTongHopFilters(JPanel toolbar) {
+        toolbar.add(new JLabel("Mã NV:"));
+        cboMaNVFilter = new JComboBox<>();
+        cboMaNVFilter.addActionListener(e -> applyCCRowFilter());
+        toolbar.add(cboMaNVFilter);
+
+        toolbar.add(new JLabel("Trạng thái:"));
+        cboTrangThaiFilter = new JComboBox<>();
+        cboTrangThaiFilter.addActionListener(e -> applyCCRowFilter());
+        toolbar.add(cboTrangThaiFilter);
+
+        setTongHopFilterItems(cboMaNVFilter, List.of("Tất cả"), "Tất cả");
+        setTongHopFilterItems(cboTrangThaiFilter, List.of("Tất cả"), "Tất cả");
+    }
+
+    private void refreshTongHopFilterOptionsFromTable() {
+        if (modelCC == null || cboMaNVFilter == null || cboTrangThaiFilter == null) return;
+        String selectedMaNV = (String) cboMaNVFilter.getSelectedItem();
+        String selectedTrangThai = (String) cboTrangThaiFilter.getSelectedItem();
+        LinkedHashSet<String> maNVItems = new LinkedHashSet<>();
+        LinkedHashSet<String> trangThaiItems = new LinkedHashSet<>();
+        maNVItems.add("Tất cả");
+        trangThaiItems.add("Tất cả");
+        for (int i = 0; i < modelCC.getRowCount(); i++) {
+            Object maNV = modelCC.getValueAt(i, 0);
+            Object trangThai = modelCC.getValueAt(i, 8);
+            if (maNV != null && !maNV.toString().isBlank()) maNVItems.add(maNV.toString());
+            if (trangThai != null && !trangThai.toString().isBlank()) trangThaiItems.add(trangThai.toString());
+        }
+        setTongHopFilterItems(cboMaNVFilter, new ArrayList<>(maNVItems), selectedMaNV);
+        setTongHopFilterItems(cboTrangThaiFilter, new ArrayList<>(trangThaiItems), selectedTrangThai);
+    }
+
+    private void setTongHopFilterItems(JComboBox<String> combo, List<String> items, String selectedValue) {
+        combo.removeAllItems();
+        for (String item : items) combo.addItem(item);
+        if (selectedValue != null && items.contains(selectedValue)) combo.setSelectedItem(selectedValue);
+        else if (!items.isEmpty()) combo.setSelectedIndex(0);
+    }
+
+    private void applyCCRowFilter() {
+        if (tableChamCong == null || modelCC == null) return;
+        TableRowSorter<DefaultTableModel> sorter;
+        if (tableChamCong.getRowSorter() instanceof TableRowSorter<?> existingSorter) {
+            @SuppressWarnings("unchecked")
+            TableRowSorter<DefaultTableModel> casted = (TableRowSorter<DefaultTableModel>) existingSorter;
+            sorter = casted;
+        } else {
+            sorter = new TableRowSorter<>(modelCC);
+            tableChamCong.setRowSorter(sorter);
+        }
+        String maNV = cboMaNVFilter != null ? (String) cboMaNVFilter.getSelectedItem() : null;
+        String trangThai = cboTrangThaiFilter != null ? (String) cboTrangThaiFilter.getSelectedItem() : null;
+        List<RowFilter<Object, Object>> filters = new ArrayList<>();
+        if (maNV != null && !"Tất cả".equals(maNV)) {
+            filters.add(RowFilter.regexFilter("^" + java.util.regex.Pattern.quote(maNV) + "$", 0));
+        }
+        if (trangThai != null && !"Tất cả".equals(trangThai)) {
+            filters.add(RowFilter.regexFilter("^" + java.util.regex.Pattern.quote(trangThai) + "$", 8));
+        }
+        sorter.setRowFilter(filters.isEmpty() ? null : RowFilter.andFilter(filters));
+        refreshTongHopStatsFromVisibleRows();
+    }
+
+    private void refreshTongHopStatsFromVisibleRows() {
+        if (statsPanel == null || tableChamCong == null) return;
+        int tong = tableChamCong.getRowCount();
+        int dungGio = 0;
+        int diMuon = 0;
+        int vang = 0;
+        for (int viewRow = 0; viewRow < tong; viewRow++) {
+            Object value = tableChamCong.getValueAt(viewRow, 8);
+            String trangThai = value != null ? value.toString() : "";
+            if (trangThai.equalsIgnoreCase("Dung gio")) dungGio++;
+            else if (trangThai.equalsIgnoreCase("Di muon")) diMuon++;
+            else if (trangThai.equalsIgnoreCase("Vang mat")) vang++;
+        }
+        statsPanel.removeAll();
+        statsPanel.add(lbl("Tá»•ng:", String.valueOf(tong), UIColors.PRIMARY_PURPLE));
+        statsPanel.add(lbl("ÄÃºng giá»:", String.valueOf(dungGio), UIColors.SUCCESS_GREEN));
+        statsPanel.add(lbl("Äi muá»™n:", String.valueOf(diMuon), UIColors.DANGER_RED));
+        statsPanel.add(lbl("Váº¯ng:", String.valueOf(vang), com.hrm.util.UIColors.TEXT_GRAY));
+        statsPanel.revalidate();
+        statsPanel.repaint();
+    }
+
     private String fmtTien(double a) { return moneyFmt.format(Math.round(a)) + " d"; }
 
     private JPanel panel() {

@@ -1,58 +1,37 @@
 package com.hrm.bus;
 
-import com.hrm.dao.ChucVuDAO;
-import com.hrm.dao.LichSuLuongDAO;
 import com.hrm.dao.BoNhiemDAO;
+import com.hrm.dao.ChucVuDAO;
 import com.hrm.model.ChucVu;
-import com.hrm.model.LichSuHeSoLuong;
+import com.hrm.model.DataScope;
+import com.hrm.model.TaiKhoan;
 import com.hrm.util.SessionContext;
 
-import java.time.LocalDate;
-import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.stream.Collectors;
 
-/**
- * Service quản lý chức vụ.
- * Áp dụng business logic và delegate persistence xuống ChucVuDAO (JDBC).
- * Tự động ghi lịch sử khi hệ số lương hoặc phụ cấp thay đổi.
- */
 public class ChucVuBUS {
+    private static final String ACTION_POSITION_MANAGE = "POSITION_MANAGE";
     private static final String TRANG_THAI_HOAT_DONG = "hoatdong";
     private static final String TRANG_THAI_NGUNG_HOAT_DONG = "ngung_hoat_dong";
-    private static final String DEFAULT_USER_NAME = "Admin";
 
     private final ChucVuDAO positionRepo = new ChucVuDAO();
-    private final LichSuLuongDAO historyRepo = LichSuLuongDAO.getInstance();
     private final BoNhiemDAO boNhiemRepo = BoNhiemDAO.getInstance();
 
-    /**
-     * Lấy tất cả chức vụ.
-     */
     public List<ChucVu> getAllPositions() {
         return positionRepo.findAll();
     }
 
-    /**
-     * Lấy danh sách chức vụ đang hoạt động.
-     */
     public List<ChucVu> getActivePositions() {
         return positionRepo.findActive();
     }
 
-    /**
-     * Lấy danh sách chức vụ được phép tuyển dụng thông thường (capBac >= 3).
-     * Các vị trí cấp cao (Giám đốc, Trưởng phòng) chỉ bổ nhiệm trực tiếp.
-     */
     public List<ChucVu> getRecruitablePositions() {
         return getActivePositions().stream()
-                .filter(cv -> cv.getCapBac() >= 3)
+                .filter(position -> position.getCapBac() >= 3)
                 .collect(Collectors.toList());
     }
 
-    /**
-     * Tìm chức vụ theo mã.
-     */
     public ChucVu getById(String maChucVu) {
         return positionRepo.findById(maChucVu);
     }
@@ -61,174 +40,108 @@ public class ChucVuBUS {
         return positionRepo.existsActiveByCode(maChucVu);
     }
 
-    /**
-     * Lấy lịch sử thay đổi hệ số lương của một chức vụ.
-     */
-    public List<LichSuHeSoLuong> getHistoryByMaChucVu(String maChucVu) {
-        return historyRepo.findByMaChucVu(maChucVu);
-    }
-
-    /**
-     * Thêm chức vụ mới.
-     *
-     * @param maChucVu     mã chức vụ (duy nhất)
-     * @param tenChucVu    tên chức vụ
-     * @param capBac       cấp bậc (1 là cao nhất)
-     * @param heSoLuong    hệ số lương (>0)
-     * @param phuCapChucVu phụ cấp chức vụ (>=0)
-     * @param moTa         mô tả
-     */
     public KetQua<Void> addPosition(String maChucVu, String tenChucVu, int capBac,
-                                    double heSoLuong, double phuCapChucVu, String moTa) {
-
+                                    double phuCapChucVu, String moTa) {
+        KetQua<Void> permission = validateManagePermission();
+        if (!permission.isSuccess()) {
+            return permission;
+        }
         if (isBlank(maChucVu)) {
-            return KetQua.error("Mã chức vụ không được để trống.");
+            return KetQua.error("Ma chuc vu khong duoc de trong.");
         }
-
         if (isBlank(tenChucVu)) {
-            return KetQua.error("Tên chức vụ không được để trống.");
+            return KetQua.error("Ten chuc vu khong duoc de trong.");
         }
-
         if (positionRepo.existsById(maChucVu.trim())) {
-            return KetQua.error("Mã chức vụ '" + maChucVu + "' đã tồn tại.");
+            return KetQua.error("Ma chuc vu '" + maChucVu + "' da ton tai.");
         }
-
-        if (heSoLuong <= 0) {
-            return KetQua.error("Hệ số lương phải lớn hơn 0.");
-        }
-
         if (phuCapChucVu < 0) {
-            return KetQua.error("Phụ cấp không được âm.");
+            return KetQua.error("Phu cap khong duoc am.");
         }
 
-        ChucVu pos = new ChucVu(
+        ChucVu position = new ChucVu(
                 maChucVu.trim(),
                 tenChucVu.trim(),
                 capBac,
-                heSoLuong,
                 phuCapChucVu,
                 moTa,
                 TRANG_THAI_HOAT_DONG
         );
-
-        positionRepo.save(pos);
-        return KetQua.success(null, "Thêm chức vụ thành công.");
+        positionRepo.save(position);
+        return KetQua.success(null, "Them chuc vu thanh cong.");
     }
 
-    /**
-     * Cập nhật thông tin chức vụ.
-     * Tự động ghi lịch sử nếu hệ số lương hoặc phụ cấp thay đổi.
-     */
     public KetQua<Void> updatePosition(String maChucVu, String tenMoi, int capBacMoi,
-                                       double heSoMoi, double phuCapMoi, String moTaMoi) {
-
-        ChucVu pos = positionRepo.findById(maChucVu);
-
-        if (pos == null) {
-            return KetQua.error("Không tìm thấy chức vụ.");
+                                       double phuCapMoi, String moTaMoi) {
+        KetQua<Void> permission = validateManagePermission();
+        if (!permission.isSuccess()) {
+            return permission;
         }
-
+        ChucVu position = positionRepo.findById(maChucVu);
+        if (position == null) {
+            return KetQua.error("Khong tim thay chuc vu.");
+        }
         if (isBlank(tenMoi)) {
-            return KetQua.error("Tên chức vụ không được để trống.");
+            return KetQua.error("Ten chuc vu khong duoc de trong.");
         }
-
-        if (heSoMoi <= 0) {
-            return KetQua.error("Hệ số lương phải lớn hơn 0.");
-        }
-
         if (phuCapMoi < 0) {
-            return KetQua.error("Phụ cấp không được âm.");
+            return KetQua.error("Phu cap khong duoc am.");
         }
 
-        boolean heSoThayDoi = Double.compare(pos.getHeSoLuong(), heSoMoi) != 0;
-        boolean phuCapThayDoi = Double.compare(pos.getPhuCapChucVu(), phuCapMoi) != 0;
-
-        if (heSoThayDoi || phuCapThayDoi) {
-
-            String ngayHom = LocalDate.now()
-                    .format(DateTimeFormatter.ofPattern("dd/MM/yyyy"));
-
-            String nguoiThayDoi = getCurrentUserName();
-
-            LichSuHeSoLuong history = new LichSuHeSoLuong(
-                    historyRepo.generateId(),
-                    maChucVu,
-                    pos.getHeSoLuong(),
-                    heSoMoi,
-                    pos.getPhuCapChucVu(),
-                    phuCapMoi,
-                    ngayHom,
-                    nguoiThayDoi
-            );
-
-            historyRepo.save(history);
-        }
-
-        pos.setTenChucVu(tenMoi.trim());
-        pos.setCapBac(capBacMoi);
-        pos.setHeSoLuong(heSoMoi);
-        pos.setPhuCapChucVu(phuCapMoi);
-        pos.setMoTa(moTaMoi);
-
-        positionRepo.update(pos);
-        return KetQua.success(null, "Cập nhật chức vụ thành công.");
+        position.setTenChucVu(tenMoi.trim());
+        position.setCapBac(capBacMoi);
+        position.setPhuCapChucVu(phuCapMoi);
+        position.setMoTa(moTaMoi);
+        positionRepo.update(position);
+        return KetQua.success(null, "Cap nhat chuc vu thanh cong.");
     }
 
-    /**
-     * Ngừng hoạt động chức vụ.
-     */
     public KetQua<Void> deactivatePosition(String maChucVu) {
-
-        ChucVu pos = positionRepo.findById(maChucVu);
-
-        if (pos == null) {
-            return KetQua.error("Không tìm thấy chức vụ.");
+        KetQua<Void> permission = validateManagePermission();
+        if (!permission.isSuccess()) {
+            return permission;
         }
-
+        ChucVu position = positionRepo.findById(maChucVu);
+        if (position == null) {
+            return KetQua.error("Khong tim thay chuc vu.");
+        }
         if (boNhiemRepo.hasActiveBoNhiemByChucVu(maChucVu)) {
-            return KetQua.error("Không thể ngừng hoạt động chức vụ vì còn nhân viên đang giữ chức vụ này.");
+            return KetQua.error("Khong the ngung hoat dong chuc vu vi van con nhan vien dang giu chuc vu nay.");
         }
-
-        pos.setTrangThai(TRANG_THAI_NGUNG_HOAT_DONG);
-        positionRepo.update(pos);
-        return KetQua.success(null, "Đã ngừng hoạt động chức vụ.");
+        position.setTrangThai(TRANG_THAI_NGUNG_HOAT_DONG);
+        positionRepo.update(position);
+        return KetQua.success(null, "Da ngung hoat dong chuc vu.");
     }
 
-    /**
-     * Kích hoạt lại chức vụ đã ngừng.
-     */
     public KetQua<Void> activatePosition(String maChucVu) {
-
-        ChucVu pos = positionRepo.findById(maChucVu);
-
-        if (pos == null) {
-            return KetQua.error("Không tìm thấy chức vụ.");
+        KetQua<Void> permission = validateManagePermission();
+        if (!permission.isSuccess()) {
+            return permission;
         }
-
-        pos.setTrangThai(TRANG_THAI_HOAT_DONG);
-        positionRepo.update(pos);
-        return KetQua.success(null, "Đã kích hoạt lại chức vụ.");
+        ChucVu position = positionRepo.findById(maChucVu);
+        if (position == null) {
+            return KetQua.error("Khong tim thay chuc vu.");
+        }
+        position.setTrangThai(TRANG_THAI_HOAT_DONG);
+        positionRepo.update(position);
+        return KetQua.success(null, "Da kich hoat lai chuc vu.");
     }
 
-    /**
-     * Lấy tên người đang đăng nhập để ghi lịch sử.
-     */
-    private String getCurrentUserName() {
-
-        SessionContext session = SessionContext.getInstance();
-
-        if (session.isLoggedIn() && session.getCurrentUser() != null) {
-
-            String fullName = session.getCurrentUser().getHoTen();
-
-            if (fullName != null && !fullName.isEmpty()) {
-                return fullName;
-            }
-
-            return session.getCurrentUser().getTenDangNhap();
+    private KetQua<Void> validateManagePermission() {
+        TaiKhoan currentUser = SessionContext.getInstance().getCurrentUser();
+        if (currentUser == null) {
+            return KetQua.error("Phien dang nhap khong hop le.");
         }
-
-        return DEFAULT_USER_NAME;
+        if ("admin".equalsIgnoreCase(currentUser.getTenDangNhap()) || currentUser.coVaiTro("ADMIN")) {
+            return KetQua.success(null, "");
+        }
+        if (!currentUser.coQuyen(ACTION_POSITION_MANAGE)) {
+            return KetQua.error("Ban khong co quyen quan ly chuc vu.");
+        }
+        if (XacThucBUS.getInstance().getScopeForAction(ACTION_POSITION_MANAGE) != DataScope.ALL) {
+            return KetQua.error("Quyen quan ly chuc vu yeu cau pham vi ALL.");
+        }
+        return KetQua.success(null, "");
     }
 
     private boolean isBlank(String value) {

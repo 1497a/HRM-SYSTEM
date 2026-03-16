@@ -487,10 +487,10 @@ public class BangLuongDAO {
 
     /**
      * Returns total bonus salary from active BONHIEM records for this employee.
-     * luongChucVu = SUM( tyLeHuongLuong/100 * heSoLuong * luongCoSo + phuCapChucVu )
+     * luongChucVu = SUM( tyLeHuongLuong/100 * phuCapChucVu )
      */
     public double getTongLuongChucVu(String nhanVienId, double luongCoSo) {
-        String sql = "SELECT b.tyLeHuongLuong, cv.heSoLuong, cv.phuCapChucVu "
+        String sql = "SELECT b.tyLeHuongLuong, cv.phuCapChucVu "
                 + "FROM BONHIEM b "
                 + "JOIN CHUCVU cv ON b.maChucVu = cv.maChucVu "
                 + "WHERE b.maNV=? AND b.trangThai='hieu_luc'";

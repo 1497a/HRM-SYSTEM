@@ -216,12 +216,34 @@ public class BoNhiemBUS {
             return KetQua.error("Chỉ có thể kết thúc bổ nhiệm đang hiệu lực.");
         }
 
+        // Không cho tự kết thúc bổ nhiệm của chính mình (nhất quán với tao/phe duyet)
+        if (SelfApprovalGuard.isSelfAction(getCurrentUserNhanVienId(), bn.getNhanVienId())
+                && !SelfApprovalGuard.currentUserCanBypassSelfRestriction()) {
+            return KetQua.error("Bạn không thể tự kết thúc bổ nhiệm của chính mình.");
+        }
+
+        // Bảo vệ bổ nhiệm CEO (capBac=1): chỉ ADMIN mới được kết thúc
+        ChucVu cv = chucVuRepo.findById(bn.getChucVuId());
+        if (cv != null && cv.getCapBac() == 1) {
+            com.hrm.util.SessionContext ctx = com.hrm.util.SessionContext.getInstance();
+            if (!ctx.hasRole(ROLE_ADMIN)) {
+                return KetQua.error("Chỉ ADMIN mới có thể kết thúc bổ nhiệm Tổng Giám Đốc.");
+            }
+        }
+
         if (bn.getTuNgay() != null && !denNgay.isAfter(bn.getTuNgay())) {
             return KetQua.error("Ngày kết thúc phải sau ngày bắt đầu (" + bn.getTuNgay() + ").");
         }
 
         try {
             boNhiemRepo.endBoNhiem(maBoNhiem, denNgay);
+
+            // Cascade: chuyển cấp dưới lên cấp trên kế tiếp (grandparent)
+            java.util.List<String> subordinates = boNhiemRepo.findActiveSubordinateNVIds(bn.getNhanVienId());
+            if (!subordinates.isEmpty()) {
+                boNhiemRepo.updateManagerForNVList(subordinates, bn.getMaQuanLy());
+            }
+
             return KetQua.success(null, "Đã kết thúc bổ nhiệm #" + maBoNhiem + " từ ngày " + denNgay);
         } catch (Exception e) {
             return KetQua.error("Lỗi khi kết thúc bổ nhiệm: " + e.getMessage());

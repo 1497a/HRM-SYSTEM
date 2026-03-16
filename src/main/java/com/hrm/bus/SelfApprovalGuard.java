@@ -20,7 +20,6 @@ final class SelfApprovalGuard {
         }
         return "admin".equalsIgnoreCase(currentUser.getTenDangNhap())
                 || currentUser.coVaiTro("ADMIN")
-                || currentUser.coVaiTro("TONG_GIAM_DOC")
-                || currentUser.coVaiTro("GIAM_DOC");
+                || currentUser.coVaiTro("TONG_GIAM_DOC");
     }
 }

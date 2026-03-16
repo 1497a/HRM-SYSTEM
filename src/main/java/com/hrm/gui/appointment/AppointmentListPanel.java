@@ -193,7 +193,7 @@ public class AppointmentListPanel extends JPanel {
         btnXemChiTiet.setEnabled(false);
         panel.add(btnXemChiTiet);
 
-        JButton btnLamMoi = new JButton("Lam moi");
+        JButton btnLamMoi = new JButton("Làm mới");
         btnLamMoi.addActionListener(e -> loadData());
         panel.add(btnLamMoi);
 

@@ -360,7 +360,7 @@ public class MainFrame extends JFrame {
         btnUsers.setVisible(sc.coQuyen("USER_VIEW"));
         btnRoles.setVisible(sc.coQuyen("ROLE_VIEW"));
         btnReports.setVisible(sc.coQuyen("REPORT_VIEW"));
-        btnSettings.setVisible(sc.coQuyen("SETTINGS_VIEW"));
+        btnSettings.setVisible(sc.coQuyen("CHANGE_PASSWORD"));
     }
 
     private JPanel createPageShell(String title, JComponent component) {
@@ -393,14 +393,14 @@ public class MainFrame extends JFrame {
             ex.printStackTrace();
             JOptionPane.showMessageDialog(
                     this,
-                    "Khong mo duoc man hinh '" + title + "'.\nChi tiet: " + ex.getMessage(),
-                    "Loi mo man hinh",
+                    "Không mở được màn hình '" + title + "'.\nChi tiết: " + ex.getMessage(),
+                    "Lỗi mở màn hình",
                     JOptionPane.ERROR_MESSAGE
             );
             JPanel errorPanel = new JPanel(new BorderLayout());
             errorPanel.setBackground(UIColors.WHITE);
             errorPanel.setBorder(new EmptyBorder(20, 20, 20, 20));
-            errorPanel.add(new JLabel("Khong tai duoc man hinh. Vui long xem log de biet chi tiet."), BorderLayout.NORTH);
+            errorPanel.add(new JLabel("Không tải được màn hình. Vui lòng xem log để biết chi tiết."), BorderLayout.NORTH);
             renderContent(createPageShell(title, errorPanel));
         }
     }

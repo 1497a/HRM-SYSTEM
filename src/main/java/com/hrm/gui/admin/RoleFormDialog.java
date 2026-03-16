@@ -1,39 +1,52 @@
 package com.hrm.gui.admin;
 
-import com.hrm.gui.components.CheckboxTree;
+import com.hrm.bus.KetQua;
+import com.hrm.bus.XacThucBUS;
+import com.hrm.model.DataScope;
 import com.hrm.model.Quyen;
 import com.hrm.model.VaiTro;
-import com.hrm.bus.XacThucBUS;
-import com.hrm.bus.KetQua;
 import com.hrm.util.UIHelper;
 
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
 import javax.swing.border.TitledBorder;
+import javax.swing.table.DefaultTableCellRenderer;
+import javax.swing.table.DefaultTableModel;
+import javax.swing.table.TableColumn;
+import javax.swing.table.TableRowSorter;
 import java.awt.*;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.HashMap;
 import java.util.List;
-import java.util.stream.Collectors;
+import java.util.Map;
 
-/**
- * Dialog tạo/sửa vai trò với ma trận phân quyền theo module x hành động.
- * Đã nâng cấp sử dụng CheckboxTree để hiển thị toàn bộ chi tiết quyền rõ ràng.
- */
 public class RoleFormDialog extends JDialog {
+    private static final ScopeOption[] SCOPE_OPTIONS = {
+            new ScopeOption(DataScope.NONE, "Không cấp quyền"),
+            new ScopeOption(DataScope.SELF, "Cá nhân"),
+            new ScopeOption(DataScope.TEAM, "Nhóm trực tiếp"),
+            new ScopeOption(DataScope.DEPT, "Phòng ban"),
+            new ScopeOption(DataScope.ALL, "Toàn bộ")
+    };
+    /** Dùng cho quyền không cần scope (hành động nhị phân: có/không). */
+    private static final ScopeOption[] BINARY_SCOPE_OPTIONS = {
+            new ScopeOption(DataScope.NONE, "Không cấp quyền"),
+            new ScopeOption(DataScope.ALL,  "Có quyền")
+    };
+
     private final XacThucBUS authService;
     private final VaiTro editingRole;
+    private final Map<String, Quyen> allPermMap = new HashMap<>();
+    /** modelRow → true nếu quyền đó cần scope (coPhamVi=true), false nếu là quyền nhị phân. */
+    private final Map<Integer, Boolean> rowCoPhamVi = new HashMap<>();
     private boolean successful = false;
 
     private JTextField txtCode;
     private JTextField txtName;
     private JTextArea txtDescription;
-
-    // Tree hiển thị quyền
-    private CheckboxTree permissionTree;
-    private CheckboxTree.CheckboxTreeNode rooTreeNode;
-
-    // Tất cả permission (code -> Quyen)
-    private final Map<String, Quyen> allPermMap = new HashMap<>();
+    private JTable permissionTable;
+    private DefaultTableModel permissionTableModel;
 
     public RoleFormDialog(Frame parent, VaiTro role) {
         super(parent, role == null ? "Tạo vai trò mới" : "Sửa vai trò", true);
@@ -42,32 +55,32 @@ public class RoleFormDialog extends JDialog {
 
         initComponents();
         setupLayout();
+        loadPermissionRows();
         if (role != null) {
             loadRoleData();
         }
 
-        setSize(600, 650);
+        setSize(960, 720);
         setLocationRelativeTo(parent);
     }
 
-    /** Tạo mã vai trò tự động dạng VT001, VT002, ... */
     private String generateRoleCode() {
         List<VaiTro> roles = authService.getAllRoles();
         int maxNum = 0;
-        for (VaiTro r : roles) {
-            String code = r.getId();
-            if (code != null && code.matches("VT\\d+")) {
-                try {
-                    int num = Integer.parseInt(code.substring(2));
-                    if (num > maxNum) maxNum = num;
-                } catch (NumberFormatException ignored) {}
+        for (VaiTro role : roles) {
+            String code = role.getId();
+            if (code == null || !code.matches("VT\\d+")) {
+                continue;
+            }
+            try {
+                maxNum = Math.max(maxNum, Integer.parseInt(code.substring(2)));
+            } catch (NumberFormatException ignored) {
             }
         }
         return String.format("VT%03d", maxNum + 1);
     }
 
     private void initComponents() {
-        // Mã vai trò luôn chỉ đọc — tự sinh cho vai trò mới, cố định cho vai trò đang sửa
         txtCode = new JTextField(20);
         txtCode.setEditable(false);
         txtCode.setBackground(com.hrm.util.UIColors.LIGHT_GRAY_BG);
@@ -81,70 +94,78 @@ public class RoleFormDialog extends JDialog {
             txtCode.setText(generateRoleCode());
         }
 
-        // Tải tất cả quyền
-        List<Quyen> allPermissions = authService.getAllPermissions();
-        for (Quyen p : allPermissions) {
-            allPermMap.put(p.getId(), p);
-        }
-
-        // Nhóm các quyền theo module
-        Map<String, List<Quyen>> permsByModule = allPermissions.stream()
-                .filter(p -> p.getNhomQuyen() != null)
-                .collect(Collectors.groupingBy(Quyen::getModule));
-
-        // Xây dựng cây quyền
-        rooTreeNode = new CheckboxTree.CheckboxTreeNode("Tất cả quyền hạn");
-        
-        List<String> modules = permsByModule.keySet().stream().sorted().collect(Collectors.toList());
-        for (String module : modules) {
-            CheckboxTree.CheckboxTreeNode moduleNode = new CheckboxTree.CheckboxTreeNode(module);
-            rooTreeNode.add(moduleNode);
-
-            List<Quyen> modulePerms = permsByModule.get(module);
-            // Sắp xếp theo tên quyền để dễ nhìn
-            modulePerms.sort(Comparator.comparing(Quyen::getName));
-            
-            for (Quyen p : modulePerms) {
-                CheckboxTree.CheckboxTreeNode permNode = new CheckboxTree.CheckboxTreeNode(p.getTenQuyen(), p.getId());
-                moduleNode.add(permNode);
+        permissionTableModel = new DefaultTableModel(
+                new Object[]{"Mã quyền", "Tên quyền", "Mô tả quyền", "Nhóm quyền", "Phạm vi"}, 0) {
+            @Override
+            public boolean isCellEditable(int row, int column) {
+                return column == 4;
             }
-        }
-        
-        permissionTree = new CheckboxTree(rooTreeNode);
+        };
+
+        permissionTable = new JTable(permissionTableModel);
+        permissionTable.setRowHeight(28);
+        permissionTable.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+        permissionTable.setAutoCreateRowSorter(true);
+
+        TableRowSorter<DefaultTableModel> sorter = new TableRowSorter<>(permissionTableModel);
+        sorter.setComparator(1, Comparator.nullsLast(String::compareToIgnoreCase));
+        sorter.setComparator(3, Comparator.nullsLast(String::compareToIgnoreCase));
+        permissionTable.setRowSorter(sorter);
+
+        TableColumn scopeColumn = permissionTable.getColumnModel().getColumn(4);
+        scopeColumn.setCellEditor(new ScopeCellEditor());
+        scopeColumn.setCellRenderer(new ScopeCellRenderer());
     }
 
     private void setupLayout() {
         JPanel mainPanel = new JPanel(new BorderLayout(10, 10));
         mainPanel.setBorder(new EmptyBorder(15, 15, 15, 15));
 
-        // --- Phần form thông tin ---
         JPanel formPanel = new JPanel(new GridBagLayout());
         GridBagConstraints gbc = new GridBagConstraints();
         gbc.insets = new Insets(5, 5, 5, 5);
         gbc.anchor = GridBagConstraints.WEST;
 
-        gbc.gridx = 0; gbc.gridy = 0;
+        gbc.gridx = 0;
+        gbc.gridy = 0;
         formPanel.add(new JLabel("Mã vai trò:"), gbc);
-        gbc.gridx = 1; gbc.fill = GridBagConstraints.HORIZONTAL;
+        gbc.gridx = 1;
+        gbc.fill = GridBagConstraints.HORIZONTAL;
+        gbc.weightx = 1.0;
         formPanel.add(txtCode, gbc);
 
-        gbc.gridx = 0; gbc.gridy = 1; gbc.fill = GridBagConstraints.NONE;
+        gbc.gridx = 0;
+        gbc.gridy = 1;
+        gbc.weightx = 0;
+        gbc.fill = GridBagConstraints.NONE;
         formPanel.add(new JLabel("Tên vai trò:"), gbc);
-        gbc.gridx = 1; gbc.fill = GridBagConstraints.HORIZONTAL;
+        gbc.gridx = 1;
+        gbc.fill = GridBagConstraints.HORIZONTAL;
+        gbc.weightx = 1.0;
         formPanel.add(txtName, gbc);
 
-        gbc.gridx = 0; gbc.gridy = 2; gbc.fill = GridBagConstraints.NONE;
+        gbc.gridx = 0;
+        gbc.gridy = 2;
+        gbc.weightx = 0;
+        gbc.fill = GridBagConstraints.NONE;
         gbc.anchor = GridBagConstraints.NORTHWEST;
         formPanel.add(new JLabel("Mô tả:"), gbc);
-        gbc.gridx = 1; gbc.fill = GridBagConstraints.HORIZONTAL;
+        gbc.gridx = 1;
+        gbc.fill = GridBagConstraints.HORIZONTAL;
+        gbc.weightx = 1.0;
         formPanel.add(new JScrollPane(txtDescription), gbc);
 
-        // --- Danh sách phân quyền dạng Cây ---
-        JScrollPane treeScroll = new JScrollPane(permissionTree);
-        treeScroll.setBorder(new TitledBorder("Cây phân quyền chi tiết"));
-        treeScroll.setPreferredSize(new Dimension(540, 350));
-        
-        // --- Nút Lưu / Hủy ---
+        JScrollPane tableScroll = new JScrollPane(permissionTable);
+        tableScroll.setBorder(new TitledBorder("Danh sách quyền và phạm vi"));
+
+        JPanel notePanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 0, 0));
+        notePanel.setOpaque(false);
+        notePanel.add(new JLabel("Nếu chọn \"Không cấp quyền\" thì quyền đó sẽ không được gán cho vai trò."));
+
+        JPanel scopeHelpPanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 0, 0));
+        scopeHelpPanel.setOpaque(false);
+        scopeHelpPanel.add(new JLabel("Phạm vi: Cá nhân = chỉ bản thân, Nhóm trực tiếp = cấp dưới trực tiếp, Phòng ban = toàn bộ nhân sự trong phòng, Toàn bộ = toàn công ty. Quyền hành động (tạo/quản lý...) chỉ có Không cấp / Có quyền."));
+
         JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT));
         JButton btnSave = UIHelper.createSuccessButton("Lưu");
         btnSave.addActionListener(e -> save());
@@ -153,14 +174,40 @@ public class RoleFormDialog extends JDialog {
         buttonPanel.add(btnSave);
         buttonPanel.add(btnCancel);
 
-        JPanel topPanel = new JPanel(new BorderLayout(0, 4));
+        JPanel topPanel = new JPanel(new BorderLayout(0, 8));
         topPanel.add(formPanel, BorderLayout.NORTH);
+        JPanel helpPanel = new JPanel(new GridLayout(2, 1, 0, 4));
+        helpPanel.setOpaque(false);
+        helpPanel.add(notePanel);
+        helpPanel.add(scopeHelpPanel);
+        topPanel.add(helpPanel, BorderLayout.SOUTH);
 
         mainPanel.add(topPanel, BorderLayout.NORTH);
-        mainPanel.add(treeScroll, BorderLayout.CENTER);
+        mainPanel.add(tableScroll, BorderLayout.CENTER);
         mainPanel.add(buttonPanel, BorderLayout.SOUTH);
-
         setContentPane(mainPanel);
+    }
+
+    private void loadPermissionRows() {
+        permissionTableModel.setRowCount(0);
+        rowCoPhamVi.clear();
+        List<Quyen> permissions = new ArrayList<>(authService.getAllPermissions());
+        permissions.sort(Comparator
+                .comparing(Quyen::getModule, Comparator.nullsLast(String::compareToIgnoreCase))
+                .thenComparing(Quyen::getName, Comparator.nullsLast(String::compareToIgnoreCase)));
+
+        for (Quyen permission : permissions) {
+            allPermMap.put(permission.getId(), permission);
+            int row = permissionTableModel.getRowCount();
+            rowCoPhamVi.put(row, permission.isCoPhamVi());
+            permissionTableModel.addRow(new Object[]{
+                    permission.getId(),
+                    safe(permission.getTenQuyen()),
+                    safe(permission.getMoTa()),
+                    safe(permission.getNhomQuyen()),
+                    DataScope.NONE
+            });
+        }
     }
 
     private void loadRoleData() {
@@ -168,47 +215,19 @@ public class RoleFormDialog extends JDialog {
         txtName.setText(editingRole.getTenVaiTro());
         txtDescription.setText(editingRole.getMoTa() != null ? editingRole.getMoTa() : "");
 
-        Set<String> roleCodes = editingRole.getQuyens().stream()
-                .map(Quyen::getCode).collect(Collectors.toSet());
+        Map<String, DataScope> scopeByPermission = new HashMap<>();
+        for (Quyen permission : editingRole.getQuyens()) {
+            scopeByPermission.put(permission.getId(), permission.getPhamVi() != null ? permission.getPhamVi() : DataScope.NONE);
+        }
 
-        // Đệ quy để chọn các node trong cây
-        checkNodesByCodes(rooTreeNode, roleCodes);
-        
-        // Cập nhật lại giao diện (vì load programatically không kích hoạt sự kiện click)
-        permissionTree.repaint();
-    }
-    
-    // Hàm phụ trợ xử lý chọn node từ CSDL
-    private void checkNodesByCodes(CheckboxTree.CheckboxTreeNode node, Set<String> validCodes) {
-        if (node.isLeaf()) {
-            if (node.getUserObjectCode() != null && validCodes.contains(node.getUserObjectCode())) {
-                node.setSelected(true);
+        for (int row = 0; row < permissionTableModel.getRowCount(); row++) {
+            String permissionCode = String.valueOf(permissionTableModel.getValueAt(row, 0));
+            DataScope scope = scopeByPermission.getOrDefault(permissionCode, DataScope.NONE);
+            // Quyền nhị phân: ánh xạ SELF/TEAM/DEPT → ALL để hiển thị đúng "Có quyền"
+            if (!rowCoPhamVi.getOrDefault(row, true) && scope != DataScope.NONE) {
+                scope = DataScope.ALL;
             }
-        } else {
-            boolean allSelected = true;
-            boolean anySelected = false;
-            
-            for (int i = 0; i < node.getChildCount(); i++) {
-                CheckboxTree.CheckboxTreeNode child = (CheckboxTree.CheckboxTreeNode) node.getChildAt(i);
-                checkNodesByCodes(child, validCodes);
-                
-                if (child.isSelected()) {
-                    anySelected = true;
-                } else if (child.isPartialSelection()) {
-                    anySelected = true;
-                    allSelected = false;
-                } else {
-                    allSelected = false;
-                }
-            }
-            
-            if (node.getChildCount() > 0) {
-                if (allSelected) {
-                    node.setSelected(true);
-                } else if (anySelected) {
-                    node.setPartialSelection(true);
-                }
-            }
+            permissionTableModel.setValueAt(scope, row, 4);
         }
     }
 
@@ -222,12 +241,29 @@ public class RoleFormDialog extends JDialog {
             return;
         }
 
-        List<String> selectedCodes = new ArrayList<>();
-        List<CheckboxTree.CheckboxTreeNode> selectedLeaves = permissionTree.getSelectedLeaves();
-        for (CheckboxTree.CheckboxTreeNode leave : selectedLeaves) {
-            if (leave.getUserObjectCode() != null) {
-                selectedCodes.add(leave.getUserObjectCode());
+        if (permissionTable.isEditing()) {
+            permissionTable.getCellEditor().stopCellEditing();
+        }
+
+        List<Quyen> selectedPermissions = new ArrayList<>();
+        for (int row = 0; row < permissionTableModel.getRowCount(); row++) {
+            String permissionCode = String.valueOf(permissionTableModel.getValueAt(row, 0));
+            DataScope scope = extractScope(permissionTableModel.getValueAt(row, 4));
+            if (scope == null) {
+                JOptionPane.showMessageDialog(this, "Phạm vi không hợp lệ cho quyền " + permissionCode + ".", "Lỗi", JOptionPane.ERROR_MESSAGE);
+                return;
             }
+            if (scope == DataScope.NONE) {
+                continue;
+            }
+            Quyen source = allPermMap.get(permissionCode);
+            if (source == null) {
+                continue;
+            }
+            Quyen permission = new Quyen(source.getId(), source.getTenQuyen(), source.getNhomQuyen());
+            permission.setMoTa(source.getMoTa());
+            permission.setPhamVi(scope);
+            selectedPermissions.add(permission);
         }
 
         if (editingRole == null) {
@@ -236,36 +272,140 @@ public class RoleFormDialog extends JDialog {
                 JOptionPane.showMessageDialog(this, createResult.getMessage(), "Lỗi", JOptionPane.ERROR_MESSAGE);
                 return;
             }
-            KetQua<Void> permResult = authService.setRolePermissions(code, selectedCodes);
-            if (!permResult.isSuccess()) {
+            KetQua<Void> permissionResult = authService.setRolePermissions(code, selectedPermissions);
+            if (!permissionResult.isSuccess()) {
                 JOptionPane.showMessageDialog(this,
-                        "Đã tạo vai trò nhưng không thể gán quyền: " + permResult.getMessage(),
-                        "Cảnh báo", JOptionPane.WARNING_MESSAGE);
+                        "Đã tạo vai trò nhưng không thể gán quyền: " + permissionResult.getMessage(),
+                        "Cảnh báo",
+                        JOptionPane.WARNING_MESSAGE);
             }
         } else {
             editingRole.setTenVaiTro(name);
-            editingRole.setMoTa(description);
+            editingRole.setMoTa(description.isEmpty() ? null : description);
             KetQua<Void> updateResult = authService.updateRole(editingRole);
             if (!updateResult.isSuccess()) {
                 JOptionPane.showMessageDialog(this, updateResult.getMessage(), "Lỗi", JOptionPane.ERROR_MESSAGE);
                 return;
             }
-            KetQua<Void> permResult = authService.setRolePermissions(editingRole.getId(), selectedCodes);
-            if (!permResult.isSuccess()) {
+            KetQua<Void> permissionResult = authService.setRolePermissions(editingRole.getId(), selectedPermissions);
+            if (!permissionResult.isSuccess()) {
                 JOptionPane.showMessageDialog(this,
-                        "Đã cập nhật vai trò nhưng không thể cập nhật quyền: " + permResult.getMessage(),
-                        "Cảnh báo", JOptionPane.WARNING_MESSAGE);
+                        "Đã cập nhật vai trò nhưng không thể cập nhật quyền: " + permissionResult.getMessage(),
+                        "Cảnh báo",
+                        JOptionPane.WARNING_MESSAGE);
             }
         }
 
         successful = true;
         JOptionPane.showMessageDialog(this,
-                editingRole == null ? "Đã tạo vai trò thành công!" : "Đã cập nhật vai trò thành công!",
-                "Thông báo", JOptionPane.INFORMATION_MESSAGE);
+                editingRole == null ? "Đã tạo vai trò thành công." : "Đã cập nhật vai trò thành công.",
+                "Thông báo",
+                JOptionPane.INFORMATION_MESSAGE);
         dispose();
     }
 
     public boolean isSuccessful() {
         return successful;
+    }
+
+    private DataScope extractScope(Object value) {
+        if (value instanceof DataScope) {
+            return (DataScope) value;
+        }
+        if (value instanceof ScopeOption) {
+            return ((ScopeOption) value).scope;
+        }
+        if (value instanceof String) {
+            for (ScopeOption option : SCOPE_OPTIONS) {
+                if (option.label.equals(value) || option.scope.name().equals(value)) {
+                    return option.scope;
+                }
+            }
+        }
+        return null;
+    }
+
+    private String safe(String value) {
+        return value != null ? value : "";
+    }
+
+    private class ScopeCellEditor extends AbstractCellEditor implements javax.swing.table.TableCellEditor {
+        private final JComboBox<ScopeOption> fullCombo = new JComboBox<>(SCOPE_OPTIONS);
+        private final JComboBox<ScopeOption> binaryCombo = new JComboBox<>(BINARY_SCOPE_OPTIONS);
+        private JComboBox<ScopeOption> activeCombo = fullCombo;
+
+        @Override
+        public Component getTableCellEditorComponent(JTable table, Object value, boolean isSelected, int row, int column) {
+            int modelRow = table.convertRowIndexToModel(row);
+            boolean needsScope = rowCoPhamVi.getOrDefault(modelRow, true);
+            activeCombo = needsScope ? fullCombo : binaryCombo;
+            DataScope current = extractScope(value);
+            // Quyền nhị phân: ánh xạ SELF/TEAM/DEPT → ALL (đã được cấp)
+            if (!needsScope && current != null && current != DataScope.NONE) {
+                current = DataScope.ALL;
+            }
+            ScopeOption[] opts = needsScope ? SCOPE_OPTIONS : BINARY_SCOPE_OPTIONS;
+            ScopeOption selected = opts[0];
+            for (ScopeOption opt : opts) {
+                if (opt.scope == current) { selected = opt; break; }
+            }
+            activeCombo.setSelectedItem(selected);
+            return activeCombo;
+        }
+
+        @Override
+        public Object getCellEditorValue() {
+            return activeCombo.getSelectedItem();
+        }
+    }
+
+    private class ScopeCellRenderer extends DefaultTableCellRenderer {
+        @Override
+        public Component getTableCellRendererComponent(JTable table, Object value, boolean isSelected, boolean hasFocus, int row, int column) {
+            super.getTableCellRendererComponent(table, value, isSelected, hasFocus, row, column);
+            setHorizontalAlignment(SwingConstants.CENTER);
+            DataScope scope = null;
+            if (value instanceof DataScope) {
+                scope = (DataScope) value;
+            } else if (value instanceof ScopeOption) {
+                scope = ((ScopeOption) value).scope;
+            }
+            if (scope != null) {
+                int modelRow = table.convertRowIndexToModel(row);
+                boolean needsScope = rowCoPhamVi.getOrDefault(modelRow, true);
+                if (!needsScope) {
+                    setText(scope == DataScope.NONE ? "Không cấp quyền" : "Có quyền");
+                } else {
+                    setText(toLabel(scope));
+                }
+            } else {
+                setText(value != null ? value.toString() : "");
+            }
+            return this;
+        }
+
+        private String toLabel(DataScope scope) {
+            for (ScopeOption option : SCOPE_OPTIONS) {
+                if (option.scope == scope) {
+                    return option.label;
+                }
+            }
+            return scope != null ? scope.name() : "";
+        }
+    }
+
+    private static class ScopeOption {
+        private final DataScope scope;
+        private final String label;
+
+        private ScopeOption(DataScope scope, String label) {
+            this.scope = scope;
+            this.label = label;
+        }
+
+        @Override
+        public String toString() {
+            return label;
+        }
     }
 }

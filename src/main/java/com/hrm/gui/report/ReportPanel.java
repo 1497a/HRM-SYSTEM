@@ -1,11 +1,17 @@
 package com.hrm.gui.report;
 
-import com.hrm.gui.components.RoundedPanel;
 import com.hrm.bus.LuongBUS;
 import com.hrm.bus.NghiPhepBUS;
 import com.hrm.bus.NhanVienBUS;
+import com.hrm.bus.XacThucBUS;
+import com.hrm.gui.components.RoundedPanel;
 import com.hrm.model.BangLuong;
+import com.hrm.model.ChiTietLuong;
+import com.hrm.model.DataScope;
 import com.hrm.model.NhanVien;
+import com.hrm.model.SoDungPhep;
+import com.hrm.model.TaiKhoan;
+import com.hrm.util.SessionContext;
 import com.hrm.util.UIColors;
 import com.hrm.util.UIHelper;
 
@@ -15,20 +21,23 @@ import javax.swing.border.TitledBorder;
 import javax.swing.table.DefaultTableModel;
 import java.awt.*;
 import java.text.NumberFormat;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Locale;
+import java.util.Map;
+import java.util.Set;
+import java.util.stream.Collectors;
 
-/**
- * Panel báo cáo nhân sự.
- * Tab 1: Tổng quan nhân sự (dashboard cards + bảng theo phòng ban).
- * Tab 2: Báo cáo nghỉ phép.
- * Tab 3: Báo cáo lương.
- */
 public class ReportPanel extends JPanel {
-
     private final NhanVienBUS nvService;
     private final LuongBUS luongService;
     private final NghiPhepBUS leaveService;
+    private final DataScope reportScope;
+    private final String currentMaNV;
+    private final List<NhanVien> scopedEmployees;
+    private final Set<String> scopedEmployeeIds;
 
     private static final NumberFormat MONEY_FORMAT = NumberFormat.getNumberInstance(new Locale("vi", "VN"));
 
@@ -37,13 +46,20 @@ public class ReportPanel extends JPanel {
         this.luongService = LuongBUS.getInstance();
         this.leaveService = NghiPhepBUS.getInstance();
 
+        TaiKhoan currentUser = SessionContext.getInstance().getCurrentUser();
+        this.currentMaNV = currentUser != null ? currentUser.getNhanVienId() : null;
+        this.reportScope = XacThucBUS.getInstance().getScopeForAction("REPORT_VIEW");
+        this.scopedEmployees = loadScopedEmployees();
+        this.scopedEmployeeIds = scopedEmployees.stream()
+                .map(NhanVien::getMaNhanVien)
+                .collect(Collectors.toSet());
+
         setLayout(new BorderLayout());
         setBackground(UIColors.LIGHT_GRAY_BG);
 
         JTabbedPane tabbedPane = new JTabbedPane();
         tabbedPane.setFont(com.hrm.util.UIFonts.TEXT_MEDIUM);
         tabbedPane.setBackground(UIColors.WHITE);
-
         tabbedPane.addTab("Tổng quan nhân sự", buildTongQuanTab());
         tabbedPane.addTab("Báo cáo nghỉ phép", buildLeaveReportTab());
         tabbedPane.addTab("Báo cáo lương", buildSalaryReportTab());
@@ -51,52 +67,45 @@ public class ReportPanel extends JPanel {
         add(tabbedPane, BorderLayout.CENTER);
     }
 
-    // =======================
-    // Tab 1 - Tổng quan
-    // =======================
-
     private JPanel buildTongQuanTab() {
         JPanel panel = new JPanel(new BorderLayout(12, 12));
         panel.setBackground(UIColors.LIGHT_GRAY_BG);
         panel.setBorder(new EmptyBorder(16, 16, 16, 16));
 
-        // Load data
-        List<NhanVien> allNV = Collections.emptyList();
-        try {
-            allNV = nvService.getAll();
-        } catch (Exception ex) {
-            // ignore, show 0s
-        }
-
+        List<NhanVien> allNV = new ArrayList<>(scopedEmployees);
         int tongNV = allNV.size();
         long dangLam = allNV.stream().filter(nv -> "dang_lam_viec".equals(nv.getTrangThai())).count();
         long tamNghi = allNV.stream().filter(nv -> "tam_nghi".equals(nv.getTrangThai())).count();
         long nghiViec = allNV.stream().filter(nv -> "nghi_viec".equals(nv.getTrangThai())).count();
 
-        // Stat cards row
         JPanel cardsPanel = new JPanel(new GridLayout(1, 4, 16, 0));
         cardsPanel.setOpaque(false);
         cardsPanel.setBorder(new EmptyBorder(0, 0, 16, 0));
-
         cardsPanel.add(RoundedPanel.createStatCard("Tổng nhân viên", String.valueOf(tongNV), UIColors.PRIMARY_PURPLE));
         cardsPanel.add(RoundedPanel.createStatCard("Đang làm việc", String.valueOf(dangLam), UIColors.SUCCESS_GREEN));
         cardsPanel.add(RoundedPanel.createStatCard("Tạm nghỉ", String.valueOf(tamNghi), UIColors.WARNING_YELLOW));
         cardsPanel.add(RoundedPanel.createStatCard("Đã nghỉ việc", String.valueOf(nghiViec), UIColors.DANGER_RED));
 
-        // Table - NV by department
         Map<String, Integer> countByDept = new LinkedHashMap<>();
         for (NhanVien nv : allNV) {
-            String dept = nv.getTenPhongBanHienTai();
-            if (dept == null || dept.isEmpty()) dept = "(Chưa phân công)";
-            countByDept.merge(dept, 1, Integer::sum);
+            String department = nv.getTenPhongBanHienTai();
+            if (department == null || department.isEmpty()) {
+                department = "(Chưa phân công)";
+            }
+            countByDept.merge(department, 1, Integer::sum);
         }
 
-        String[] cols = {"Phòng ban", "Số nhân viên"};
-        DefaultTableModel model = new DefaultTableModel(cols, 0) {
-            @Override public boolean isCellEditable(int r, int c) { return false; }
+        DefaultTableModel model = new DefaultTableModel(new String[]{"Phòng ban", "Số nhân viên"}, 0) {
+            @Override
+            public boolean isCellEditable(int row, int column) {
+                return false;
+            }
         };
         for (Map.Entry<String, Integer> entry : countByDept.entrySet()) {
             model.addRow(new Object[]{entry.getKey(), entry.getValue()});
+        }
+        if (model.getRowCount() == 0) {
+            model.addRow(new Object[]{"Không có dữ liệu trong phạm vi báo cáo", 0});
         }
 
         JTable table = buildStyledTable(model);
@@ -106,19 +115,10 @@ public class ReportPanel extends JPanel {
         JScrollPane scroll = new JScrollPane(table);
         scroll.setBorder(new TitledBorder("Số nhân viên theo phòng ban"));
 
-        // Refresh button — top-right
         JPanel toolbar = new JPanel(new FlowLayout(FlowLayout.RIGHT, 8, 4));
         toolbar.setOpaque(false);
-        JButton btnRefresh = UIHelper.createDefaultButton("🔄 Làm mới");
-        btnRefresh.addActionListener(e -> {
-            JTabbedPane tp = (JTabbedPane) SwingUtilities.getAncestorOfClass(JTabbedPane.class, panel);
-            if (tp != null) {
-                int idx = tp.indexOfComponent(panel);
-                tp.removeTabAt(idx);
-                tp.insertTab("Tổng quan nhân sự", null, buildTongQuanTab(), null, idx);
-                tp.setSelectedIndex(idx);
-            }
-        });
+        JButton btnRefresh = UIHelper.createDefaultButton("Làm mới");
+        btnRefresh.addActionListener(e -> refreshTab(panel, "Tổng quan nhân sự", 0));
         toolbar.add(btnRefresh);
 
         JPanel north = new JPanel(new BorderLayout());
@@ -131,48 +131,40 @@ public class ReportPanel extends JPanel {
         return panel;
     }
 
-    // =======================
-    // Tab 2 - Báo cáo nghỉ phép
-    // =======================
-
     private JPanel buildLeaveReportTab() {
         JPanel panel = new JPanel(new BorderLayout(8, 8));
         panel.setBackground(UIColors.LIGHT_GRAY_BG);
         panel.setBorder(new EmptyBorder(16, 16, 16, 16));
 
-        // Tách riêng cột "Nhân viên" và "Loại phép"
-        String[] cols = {"Nhân viên", "Loại phép", "Được cấp", "Đã dùng", "Còn lại"};
-        DefaultTableModel model = new DefaultTableModel(cols, 0) {
-            @Override public boolean isCellEditable(int r, int c) { return false; }
+        DefaultTableModel model = new DefaultTableModel(
+                new String[]{"Nhân viên", "Loại phép", "Được cấp", "Đã dùng", "Còn lại"}, 0) {
+            @Override
+            public boolean isCellEditable(int row, int column) {
+                return false;
+            }
         };
 
-        try {
-            List<NhanVien> allNV = nvService.getAll();
-
-            for (NhanVien nv : allNV) {
-                try {
-                    List<com.hrm.model.SoDungPhep> balances =
-                            leaveService.getBalances(nv.getMaNhanVien());
-                    if (balances.isEmpty()) {
+        for (NhanVien nv : scopedEmployees) {
+            try {
+                List<SoDungPhep> balances = leaveService.getBalances(nv.getMaNhanVien());
+                if (balances.isEmpty()) {
+                    model.addRow(new Object[]{displayEmployee(nv), "-", 0, 0, 0});
+                } else {
+                    for (SoDungPhep balance : balances) {
                         model.addRow(new Object[]{
-                                nv.getHoTen() != null ? nv.getHoTen() : nv.getMaNhanVien(),
-                                "—", 0, 0, 0
+                                displayEmployee(nv),
+                                mapLeaveTypeCode(balance.getLeaveTypeCode()),
+                                balance.getTotalDays(),
+                                balance.getUsedDays(),
+                                balance.getRemainingDays()
                         });
-                    } else {
-                        for (com.hrm.model.SoDungPhep bal : balances) {
-                            model.addRow(new Object[]{
-                                    nv.getHoTen() != null ? nv.getHoTen() : nv.getMaNhanVien(),
-                                    mapLeaveTypeCode(bal.getLeaveTypeCode()),
-                                    bal.getTotalDays(),
-                                    bal.getUsedDays(),
-                                    bal.getRemainingDays()
-                            });
-                        }
                     }
-                } catch (Exception ignored) {}
+                }
+            } catch (Exception ignored) {
             }
-        } catch (Exception ex) {
-            model.addRow(new Object[]{"Lỗi tải dữ liệu: " + ex.getMessage(), "", "", "", ""});
+        }
+        if (model.getRowCount() == 0) {
+            model.addRow(new Object[]{"Không có dữ liệu trong phạm vi báo cáo", "", "", "", ""});
         }
 
         JTable table = buildStyledTable(model);
@@ -185,50 +177,45 @@ public class ReportPanel extends JPanel {
         JScrollPane scroll = new JScrollPane(table);
         scroll.setBorder(new TitledBorder("Báo cáo sử dụng phép nghỉ"));
 
-        JPanel toolbar = buildRefreshToolbar(panel, "Báo cáo nghỉ phép", 1);
-
-        panel.add(toolbar, BorderLayout.NORTH);
+        panel.add(buildRefreshToolbar(panel, "Báo cáo nghỉ phép", 1), BorderLayout.NORTH);
         panel.add(scroll, BorderLayout.CENTER);
         return panel;
     }
-
-    // =======================
-    // Tab 3 - Báo cáo lương
-    // =======================
 
     private JPanel buildSalaryReportTab() {
         JPanel panel = new JPanel(new BorderLayout(8, 8));
         panel.setBackground(UIColors.LIGHT_GRAY_BG);
         panel.setBorder(new EmptyBorder(16, 16, 16, 16));
 
-        // Bỏ cột "Tên bảng lương" vì trùng nội dung "Tháng/Năm"
-        String[] cols = {"Tháng/Năm", "Trạng thái", "Tổng lương (thực nhận)"};
-        DefaultTableModel model = new DefaultTableModel(cols, 0) {
-            @Override public boolean isCellEditable(int r, int c) { return false; }
+        DefaultTableModel model = new DefaultTableModel(
+                new String[]{"Tháng/Năm", "Trạng thái", "Tổng lương (thực nhận)"}, 0) {
+            @Override
+            public boolean isCellEditable(int row, int column) {
+                return false;
+            }
         };
 
         try {
-            List<BangLuong> bangLuongList = luongService.getAll();
-            for (BangLuong bl : bangLuongList) {
-                String thangNam = bl.getThang() + "/" + bl.getNam();
-                String trangThai = bl.getTrangThai() != null ? bl.getTrangThai().getDisplayName() : "";
-
-                double tongLuong = 0;
-                try {
-                    var chiTietList = luongService.getChiTiet(bl.getMaBL());
-                    tongLuong = chiTietList.stream()
-                            .mapToDouble(ct -> ct.getLuongThucNhan())
-                            .sum();
-                } catch (Exception ignored) {}
-
+            List<BangLuong> payrolls = luongService.getAll();
+            for (BangLuong bangLuong : payrolls) {
+                List<ChiTietLuong> details = applyPayrollScopeFilter(luongService.getChiTiet(bangLuong.getMaBL()));
+                if (details.isEmpty() && reportScope != DataScope.ALL) {
+                    continue;
+                }
+                double tongLuong = details.stream()
+                        .mapToDouble(ChiTietLuong::getLuongThucNhan)
+                        .sum();
                 model.addRow(new Object[]{
-                        thangNam,
-                        trangThai,
+                        bangLuong.getThang() + "/" + bangLuong.getNam(),
+                        bangLuong.getTrangThai() != null ? bangLuong.getTrangThai().getDisplayName() : "",
                         formatMoney(tongLuong)
                 });
             }
         } catch (Exception ex) {
             model.addRow(new Object[]{"Lỗi tải dữ liệu: " + ex.getMessage(), "", ""});
+        }
+        if (model.getRowCount() == 0) {
+            model.addRow(new Object[]{"Không có dữ liệu trong phạm vi báo cáo", "", ""});
         }
 
         JTable table = buildStyledTable(model);
@@ -236,7 +223,6 @@ public class ReportPanel extends JPanel {
         table.getColumnModel().getColumn(1).setPreferredWidth(150);
         table.getColumnModel().getColumn(2).setPreferredWidth(200);
 
-        // Right-align tổng lương
         javax.swing.table.DefaultTableCellRenderer right = new javax.swing.table.DefaultTableCellRenderer();
         right.setHorizontalAlignment(SwingConstants.RIGHT);
         table.getColumnModel().getColumn(2).setCellRenderer(right);
@@ -244,16 +230,29 @@ public class ReportPanel extends JPanel {
         JScrollPane scroll = new JScrollPane(table);
         scroll.setBorder(new TitledBorder("Báo cáo tổng hợp bảng lương"));
 
-        JPanel toolbar = buildRefreshToolbar(panel, "Báo cáo lương", 2);
-
-        panel.add(toolbar, BorderLayout.NORTH);
+        panel.add(buildRefreshToolbar(panel, "Báo cáo lương", 2), BorderLayout.NORTH);
         panel.add(scroll, BorderLayout.CENTER);
         return panel;
     }
 
-    // =======================
-    // Helpers
-    // =======================
+    private List<NhanVien> loadScopedEmployees() {
+        if (reportScope == DataScope.NONE || currentMaNV == null && reportScope != DataScope.ALL) {
+            return Collections.emptyList();
+        }
+        return nvService.getAllByActionScope("REPORT_VIEW", currentMaNV);
+    }
+
+    private List<ChiTietLuong> applyPayrollScopeFilter(List<ChiTietLuong> details) {
+        if (details == null) {
+            return new ArrayList<>();
+        }
+        if (reportScope == DataScope.ALL) {
+            return new ArrayList<>(details);
+        }
+        return details.stream()
+                .filter(detail -> scopedEmployeeIds.contains(detail.getMaNV()))
+                .collect(Collectors.toList());
+    }
 
     private JTable buildStyledTable(DefaultTableModel model) {
         JTable table = new JTable(model);
@@ -269,49 +268,74 @@ public class ReportPanel extends JPanel {
         return table;
     }
 
-    /** Ánh xạ mã loại phép → tên hiển thị tiếng Việt */
     private String mapLeaveTypeCode(String code) {
-        if (code == null) return "";
+        if (code == null) {
+            return "";
+        }
         switch (code) {
-            case "PHEP_NAM":         return "Phép năm";
-            case "PHEP_OM":          return "Nghỉ ốm";
-            case "PHEP_CUOI":        return "Nghỉ cưới";
-            case "PHEP_TANG":        return "Nghỉ tang";
-            case "PHEP_THAI_SAN":    return "Thai sản";
-            case "PHEP_KHONG_LUONG": return "Không lương";
-            // Fallback cho code kiểu cũ
-            case "AL": return "Phép năm";
-            case "SL": return "Nghỉ ốm";
-            case "ML": return "Thai sản";
-            case "UL": return "Không lương";
-            default: return code;
+            case "PHEP_NAM":
+            case "AL":
+                return "Phép năm";
+            case "PHEP_OM":
+            case "SL":
+                return "Nghỉ ốm";
+            case "PHEP_CUOI":
+                return "Nghỉ cưới";
+            case "PHEP_TANG":
+                return "Nghỉ tang";
+            case "PHEP_THAI_SAN":
+            case "ML":
+                return "Thai sản";
+            case "PHEP_KHONG_LUONG":
+            case "UL":
+                return "Không lương";
+            default:
+                return code;
         }
     }
 
     private JPanel buildRefreshToolbar(JPanel targetPanel, String tabName, int tabIndex) {
         JPanel toolbar = new JPanel(new FlowLayout(FlowLayout.RIGHT, 8, 4));
         toolbar.setOpaque(false);
-        JButton btn = UIHelper.createDefaultButton("🔄 Làm mới");
-        btn.addActionListener(e -> {
-            JTabbedPane tp = (JTabbedPane) SwingUtilities.getAncestorOfClass(JTabbedPane.class, targetPanel);
-            if (tp != null) {
-                JPanel newTab;
-                switch (tabIndex) {
-                    case 0: newTab = buildTongQuanTab(); break;
-                    case 1: newTab = buildLeaveReportTab(); break;
-                    case 2: newTab = buildSalaryReportTab(); break;
-                    default: return;
-                }
-                tp.removeTabAt(tabIndex);
-                tp.insertTab(tabName, null, newTab, null, tabIndex);
-                tp.setSelectedIndex(tabIndex);
-            }
-        });
+        JButton btn = UIHelper.createDefaultButton("Làm mới");
+        btn.addActionListener(e -> refreshTab(targetPanel, tabName, tabIndex));
         toolbar.add(btn);
         return toolbar;
     }
 
-    private String formatMoney(double amount) {
-        return MONEY_FORMAT.format((long) amount) + " đ";
+    private void refreshTab(JPanel targetPanel, String tabName, int tabIndex) {
+        JTabbedPane tabbedPane = (JTabbedPane) SwingUtilities.getAncestorOfClass(JTabbedPane.class, targetPanel);
+        if (tabbedPane == null) {
+            return;
+        }
+        JPanel newTab;
+        switch (tabIndex) {
+            case 0:
+                newTab = buildTongQuanTab();
+                break;
+            case 1:
+                newTab = buildLeaveReportTab();
+                break;
+            case 2:
+                newTab = buildSalaryReportTab();
+                break;
+            default:
+                return;
+        }
+        tabbedPane.removeTabAt(tabIndex);
+        tabbedPane.insertTab(tabName, null, newTab, null, tabIndex);
+        tabbedPane.setSelectedIndex(tabIndex);
+    }
+
+    private String displayEmployee(NhanVien nhanVien) {
+        if (nhanVien == null) {
+            return "";
+        }
+        String hoTen = nhanVien.getHoTen() != null ? nhanVien.getHoTen() : nhanVien.getMaNhanVien();
+        return "[" + nhanVien.getMaNhanVien() + "] " + hoTen;
+    }
+
+    private String formatMoney(double value) {
+        return MONEY_FORMAT.format(value) + " đ";
     }
 }

@@ -28,25 +28,11 @@ CREATE TABLE CHUCVU (
     maChucVu VARCHAR(20) PRIMARY KEY,
     tenChucVu NVARCHAR(100) NOT NULL,
     capBac INT NOT NULL DEFAULT 10,
-    heSoLuong DECIMAL(5,2) NOT NULL DEFAULT 1.00,
     phuCapChucVu DECIMAL(15,2) DEFAULT 0,
     moTa NVARCHAR(500),
     trangThai ENUM('hoatDong', 'ngung_hoat_dong') DEFAULT 'hoatDong',
     ngayTao DATETIME DEFAULT CURRENT_TIMESTAMP,
     ngayCapNhat DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
-) ENGINE=InnoDB;
-
-CREATE TABLE LICHSU_HESOLUONG (
-    maLichSu INT AUTO_INCREMENT PRIMARY KEY,
-    maChucVu VARCHAR(20) NOT NULL,
-    heSoLuongCu DECIMAL(5,2),
-    heSoLuongMoi DECIMAL(5,2),
-    phuCapCu DECIMAL(15,2),
-    phuCapMoi DECIMAL(15,2),
-    ngayThayDoi DATETIME DEFAULT CURRENT_TIMESTAMP,
-    nguoiThayDoi INT,
-    lyDo NVARCHAR(500),
-    FOREIGN KEY (maChucVu) REFERENCES CHUCVU(maChucVu) ON DELETE CASCADE
 ) ENGINE=InnoDB;
 
 -- =====================================================
@@ -176,7 +162,7 @@ CREATE TABLE HOPDONGLAODONG (
     ngayHetHieuLuc DATE NULL,
     fileDinhKem VARCHAR(255),
     noiDung TEXT,
-    trangThai ENUM('hieu_luc', 'het_han', 'thanh_ly', 'huy') DEFAULT 'hieu_luc',
+    trangThai ENUM('cho_duyet', 'hieu_luc', 'het_han', 'thanh_ly', 'huy') DEFAULT 'cho_duyet',
     ngayTao DATETIME DEFAULT CURRENT_TIMESTAMP,
     ngayCapNhat DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     FOREIGN KEY (maNV) REFERENCES NHANVIEN(maNV) ON DELETE CASCADE
@@ -361,6 +347,7 @@ CREATE TABLE QUYEN (
     tenQuyen NVARCHAR(100) NOT NULL,
     nhomQuyen VARCHAR(50),
     moTa NVARCHAR(255),
+    coPhamVi BOOLEAN DEFAULT TRUE,
     ngayTao DATETIME DEFAULT CURRENT_TIMESTAMP
 ) ENGINE=InnoDB;
 
@@ -403,7 +390,6 @@ CREATE TABLE THONGBAO (
     maTaiKhoanNhan INT NOT NULL,
     daDoc BOOLEAN DEFAULT FALSE,
     ngayDoc DATETIME,
-    linkLienQuan VARCHAR(255),
     ngayTao DATETIME DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (maTaiKhoanGui) REFERENCES TAIKHOAN(maTaiKhoan) ON DELETE SET NULL,
     FOREIGN KEY (maTaiKhoanNhan) REFERENCES TAIKHOAN(maTaiKhoan) ON DELETE CASCADE
@@ -527,16 +513,6 @@ CREATE INDEX idx_audit_bang ON LOG_AUDIT(bangDuLieu);
 -- =====================================================
 
 DELIMITER //
-
-CREATE TRIGGER trg_lich_su_he_so_luong
-BEFORE UPDATE ON CHUCVU
-FOR EACH ROW
-BEGIN
-    IF OLD.heSoLuong != NEW.heSoLuong OR OLD.phuCapChucVu != NEW.phuCapChucVu THEN
-        INSERT INTO LICHSU_HESOLUONG (maChucVu, heSoLuongCu, heSoLuongMoi, phuCapCu, phuCapMoi)
-        VALUES (OLD.maChucVu, OLD.heSoLuong, NEW.heSoLuong, OLD.phuCapChucVu, NEW.phuCapChucVu);
-    END IF;
-END //
 
 CREATE TRIGGER trg_cap_nhat_so_phep
 AFTER UPDATE ON DONXINNGHIPHEP

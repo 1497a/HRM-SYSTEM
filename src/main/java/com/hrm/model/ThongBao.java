@@ -15,7 +15,6 @@ public class ThongBao {
     private int maTaiKhoanNhan;
     private boolean daDoc;
     private LocalDateTime ngayDoc;
-    private String linkLienQuan;
     private LocalDateTime ngayTao;
 
     public ThongBao() {
@@ -87,14 +86,6 @@ public class ThongBao {
 
     public void setNgayDoc(LocalDateTime ngayDoc) {
         this.ngayDoc = ngayDoc;
-    }
-
-    public String getLinkLienQuan() {
-        return linkLienQuan;
-    }
-
-    public void setLinkLienQuan(String linkLienQuan) {
-        this.linkLienQuan = linkLienQuan;
     }
 
     public LocalDateTime getNgayTao() {

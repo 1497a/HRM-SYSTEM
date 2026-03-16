@@ -134,6 +134,7 @@ public class SalaryListPanel extends JPanel {
 
         tblBangLuong = new JTable(modelBangLuong);
         tblBangLuong.setRowHeight(28);
+        tblBangLuong.setFillsViewportHeight(true);
         tblBangLuong.setFont(com.hrm.util.UIFonts.TEXT_NORMAL);
         tblBangLuong.getTableHeader().setFont(com.hrm.util.UIFonts.BOLD_NORMAL);
         tblBangLuong.getTableHeader().setBackground(UIColors.PRIMARY_PURPLE);
@@ -199,6 +200,7 @@ public class SalaryListPanel extends JPanel {
 
         tblChiTiet = new JTable(modelChiTiet);
         tblChiTiet.setRowHeight(28);
+        tblChiTiet.setFillsViewportHeight(true);
         tblChiTiet.setFont(com.hrm.util.UIFonts.TEXT_NORMAL);
         tblChiTiet.getTableHeader().setFont(com.hrm.util.UIFonts.BOLD_NORMAL);
         tblChiTiet.getTableHeader().setBackground(UIColors.PRIMARY_PURPLE);
@@ -241,8 +243,12 @@ public class SalaryListPanel extends JPanel {
 
     private void loadBangLuong() {
         try {
+            int currentSelection = selectedMaBL;
             danhSachBL = salaryService.getAll();
             loadBangLuongManagement();
+            if (currentSelection >= 0) {
+                restoreBangLuongSelection(currentSelection);
+            }
         } catch (Exception ex) {
             JOptionPane.showMessageDialog(this,
                     "Lỗi tải danh sách bảng lương: " + ex.getMessage(),
@@ -346,6 +352,9 @@ public class SalaryListPanel extends JPanel {
                         "Tính lương tháng " + thang + "/" + nam + " thành công!",
                         "Thành công", JOptionPane.INFORMATION_MESSAGE);
                 loadBangLuong();
+                if (sr.getData() != null) {
+                    restoreBangLuongSelection(sr.getData().getMaBL());
+                }
             } else {
                 JOptionPane.showMessageDialog(this, sr.getMessage(), "Lỗi", JOptionPane.ERROR_MESSAGE);
             }
@@ -427,7 +436,8 @@ public class SalaryListPanel extends JPanel {
             KetQua<Void> sr = salaryService.tinhLaiChoNhanVien(bangLuong.getMaBL(), ct.getMaNV());
             if (sr.isSuccess()) {
                 JOptionPane.showMessageDialog(this, sr.getMessage(), "Thành công", JOptionPane.INFORMATION_MESSAGE);
-                loadChiTiet(bangLuong.getMaBL());
+                loadBangLuong();
+                restoreBangLuongSelection(bangLuong.getMaBL());
                 restoreChiTietSelection(ct.getMaNV());
             } else {
                 JOptionPane.showMessageDialog(this, sr.getMessage(), "Lỗi", JOptionPane.ERROR_MESSAGE);
@@ -464,6 +474,7 @@ public class SalaryListPanel extends JPanel {
                         "Đã duyệt bảng lương thành công.",
                         "Thành công", JOptionPane.INFORMATION_MESSAGE);
                 loadBangLuong();
+                restoreBangLuongSelection(maBL);
             } else {
                 JOptionPane.showMessageDialog(this, sr.getMessage(), "Lỗi", JOptionPane.ERROR_MESSAGE);
             }
@@ -499,6 +510,7 @@ public class SalaryListPanel extends JPanel {
                         "Đã khóa bảng lương thành công.",
                         "Thành công", JOptionPane.INFORMATION_MESSAGE);
                 loadBangLuong();
+                restoreBangLuongSelection(maBL);
             } else {
                 JOptionPane.showMessageDialog(this, sr.getMessage(), "Lỗi", JOptionPane.ERROR_MESSAGE);
             }

@@ -2,14 +2,14 @@ package com.hrm.bus;
 
 import com.hrm.dao.BoNhiemDAO;
 import com.hrm.dao.PhongBanDAO;
+import com.hrm.model.DataScope;
 import com.hrm.model.PhongBan;
+import com.hrm.model.TaiKhoan;
 
 import java.util.List;
 
-/**
- * Service quan ly phong ban.
- */
 public class PhongBanBUS {
+    private static final String ACTION_DEPARTMENT_MANAGE = "DEPARTMENT_MANAGE";
     private static final String TRANG_THAI_HOAT_DONG = "hoatDong";
     private static final String TRANG_THAI_NGUNG_HOAT_DONG = "ngung_hoat_dong";
 
@@ -29,103 +29,132 @@ public class PhongBanBUS {
     }
 
     public KetQua<Void> addDepartment(String maPhongBan, String tenPhongBan, String phongBanCha) {
+        KetQua<Void> permission = validateManagePermission();
+        if (!permission.isSuccess()) {
+            return permission;
+        }
         if (isBlank(maPhongBan)) {
-            return KetQua.error("Mã phòng ban không được để trống.");
+            return KetQua.error("Ma phong ban khong duoc de trong.");
         }
         if (isBlank(tenPhongBan)) {
-            return KetQua.error("Tên phòng ban không được để trống.");
+            return KetQua.error("Ten phong ban khong duoc de trong.");
         }
         if (repository.existsById(maPhongBan.trim())) {
-            return KetQua.error("Mã phòng ban '" + maPhongBan.trim() + "' đã tồn tại trong hệ thống.");
+            return KetQua.error("Ma phong ban '" + maPhongBan.trim() + "' da ton tai trong he thong.");
         }
 
         if (!isBlank(phongBanCha)) {
             PhongBan cha = repository.findById(phongBanCha.trim());
             if (cha == null) {
-                return KetQua.error("Phòng ban cha không tồn tại.");
+                return KetQua.error("Phong ban cha khong ton tai.");
             }
             if (!isActiveStatus(cha.getTrangThai())) {
-                return KetQua.error("Phòng ban cha '" + cha.getTenPhongBan() + "' đã ngừng hoạt động.");
+                return KetQua.error("Phong ban cha '" + cha.getTenPhongBan() + "' da ngung hoat dong.");
             }
         }
 
         String maCha = normalizeOptional(phongBanCha);
-        PhongBan dept = new PhongBan(maPhongBan.trim(), tenPhongBan.trim(), maCha, TRANG_THAI_HOAT_DONG);
-        repository.save(dept);
-        return KetQua.success(null, "Thêm phòng ban thành công.");
+        PhongBan department = new PhongBan(maPhongBan.trim(), tenPhongBan.trim(), maCha, TRANG_THAI_HOAT_DONG);
+        repository.save(department);
+        return KetQua.success(null, "Them phong ban thanh cong.");
     }
 
     public KetQua<Void> updateDepartment(String maPhongBan, String tenMoi, String phongBanChaMoi) {
-        PhongBan dept = repository.findById(maPhongBan);
-        if (dept == null) {
-            return KetQua.error("Không tìm thấy phòng ban.");
+        KetQua<Void> permission = validateManagePermission();
+        if (!permission.isSuccess()) {
+            return permission;
+        }
+        PhongBan department = repository.findById(maPhongBan);
+        if (department == null) {
+            return KetQua.error("Khong tim thay phong ban.");
         }
         if (isBlank(tenMoi)) {
-            return KetQua.error("Tên phòng ban không được để trống.");
+            return KetQua.error("Ten phong ban khong duoc de trong.");
         }
 
         if (!isBlank(phongBanChaMoi)) {
             PhongBan cha = repository.findById(phongBanChaMoi.trim());
             if (cha == null) {
-                return KetQua.error("Phòng ban cha không tồn tại.");
+                return KetQua.error("Phong ban cha khong ton tai.");
             }
             if (!isActiveStatus(cha.getTrangThai())) {
-                return KetQua.error("Phòng ban cha '" + cha.getTenPhongBan() + "' đã ngừng hoạt động.");
+                return KetQua.error("Phong ban cha '" + cha.getTenPhongBan() + "' da ngung hoat dong.");
             }
             if (isDescendant(maPhongBan, phongBanChaMoi.trim())) {
-                return KetQua.error("Không thể chọn phòng ban con/cháu làm phòng ban cha. Sẽ tạo vòng lặp trong cây tổ chức.");
+                return KetQua.error("Khong the chon phong ban con/chau lam phong ban cha.");
             }
         }
 
-        String maCha = normalizeOptional(phongBanChaMoi);
-        dept.setTenPhongBan(tenMoi.trim());
-        dept.setPhongBanChaId(maCha);
-        repository.update(dept);
-        return KetQua.success(null, "Cập nhật phòng ban thành công.");
+        department.setTenPhongBan(tenMoi.trim());
+        department.setPhongBanChaId(normalizeOptional(phongBanChaMoi));
+        repository.update(department);
+        return KetQua.success(null, "Cap nhat phong ban thanh cong.");
     }
 
     public KetQua<Void> deactivateDepartment(String maPhongBan) {
-        PhongBan dept = repository.findById(maPhongBan);
-        if (dept == null) {
-            return KetQua.error("Không tìm thấy phòng ban.");
+        KetQua<Void> permission = validateManagePermission();
+        if (!permission.isSuccess()) {
+            return permission;
+        }
+        PhongBan department = repository.findById(maPhongBan);
+        if (department == null) {
+            return KetQua.error("Khong tim thay phong ban.");
         }
 
-        List<PhongBan> danhSachCon = repository.findChildren(maPhongBan);
-        for (PhongBan con : danhSachCon) {
-            if (isActiveStatus(con.getTrangThai())) {
-                return KetQua.error("Không thể ngừng hoạt động. Phòng ban '" + con.getTenPhongBan() + "' vẫn đang hoạt động. Vui lòng ngừng các phòng ban con trước.");
+        List<PhongBan> children = repository.findChildren(maPhongBan);
+        for (PhongBan child : children) {
+            if (isActiveStatus(child.getTrangThai())) {
+                return KetQua.error("Khong the ngung hoat dong khi phong ban con van dang hoat dong.");
             }
         }
 
         if (boNhiemRepo.hasActiveBoNhiemInDepartment(maPhongBan)) {
-            return KetQua.error("Không thể ngừng hoạt động. Phòng ban vẫn còn bổ nhiệm đang hiệu lực. Vui lòng kết thúc các bổ nhiệm trước.");
+            return KetQua.error("Khong the ngung hoat dong khi phong ban van con bo nhiem hieu luc.");
         }
 
-        dept.setTrangThai(TRANG_THAI_NGUNG_HOAT_DONG);
-        repository.update(dept);
-        return KetQua.success(null, "Đã ngừng hoạt động phòng ban.");
+        department.setTrangThai(TRANG_THAI_NGUNG_HOAT_DONG);
+        repository.update(department);
+        return KetQua.success(null, "Da ngung hoat dong phong ban.");
     }
 
-    /**
-     * Kich hoat lai phong ban da ngung hoat dong.
-     */
     public KetQua<Void> activateDepartment(String maPhongBan) {
-        PhongBan dept = repository.findById(maPhongBan);
-        if (dept == null) {
-            return KetQua.error("Không tìm thấy phòng ban.");
+        KetQua<Void> permission = validateManagePermission();
+        if (!permission.isSuccess()) {
+            return permission;
+        }
+        PhongBan department = repository.findById(maPhongBan);
+        if (department == null) {
+            return KetQua.error("Khong tim thay phong ban.");
         }
 
-        String maCha = dept.getPhongBanChaId();
+        String maCha = department.getPhongBanChaId();
         if (!isBlank(maCha)) {
             PhongBan cha = repository.findById(maCha.trim());
             if (cha != null && !isActiveStatus(cha.getTrangThai())) {
-                return KetQua.error("Không thể kích hoạt. Phòng ban cha '" + cha.getTenPhongBan() + "' đang ngừng hoạt động.");
+                return KetQua.error("Khong the kich hoat khi phong ban cha dang ngung hoat dong.");
             }
         }
 
-        dept.setTrangThai(TRANG_THAI_HOAT_DONG);
-        repository.update(dept);
-        return KetQua.success(null, "Đã kích hoạt lại phòng ban.");
+        department.setTrangThai(TRANG_THAI_HOAT_DONG);
+        repository.update(department);
+        return KetQua.success(null, "Da kich hoat lai phong ban.");
+    }
+
+    private KetQua<Void> validateManagePermission() {
+        TaiKhoan currentUser = com.hrm.util.SessionContext.getInstance().getCurrentUser();
+        if (currentUser == null) {
+            return KetQua.error("Phien dang nhap khong hop le.");
+        }
+        if ("admin".equalsIgnoreCase(currentUser.getTenDangNhap()) || currentUser.coVaiTro("ADMIN")) {
+            return KetQua.success(null, "");
+        }
+        if (!currentUser.coQuyen(ACTION_DEPARTMENT_MANAGE)) {
+            return KetQua.error("Ban khong co quyen quan ly phong ban.");
+        }
+        if (XacThucBUS.getInstance().getScopeForAction(ACTION_DEPARTMENT_MANAGE) != DataScope.ALL) {
+            return KetQua.error("Quyen quan ly phong ban yeu cau pham vi ALL.");
+        }
+        return KetQua.success(null, "");
     }
 
     private boolean isActiveStatus(String status) {
@@ -133,7 +162,9 @@ public class PhongBanBUS {
     }
 
     private String normalizeStatus(String status) {
-        if (status == null) return "";
+        if (status == null) {
+            return "";
+        }
         return status.toLowerCase().replace("_", "").replace(" ", "").replace("-", "");
     }
 
@@ -142,7 +173,9 @@ public class PhongBanBUS {
     }
 
     private String normalizeOptional(String value) {
-        if (isBlank(value)) return null;
+        if (isBlank(value)) {
+            return null;
+        }
         return value.trim();
     }
 
@@ -153,10 +186,10 @@ public class PhongBanBUS {
         if (maCon.equals(maCha)) {
             return true;
         }
-        PhongBan con = repository.findById(maCon);
-        if (con == null) {
+        PhongBan child = repository.findById(maCon);
+        if (child == null) {
             return false;
         }
-        return isDescendant(maCha, con.getPhongBanChaId());
+        return isDescendant(maCha, child.getPhongBanChaId());
     }
 }

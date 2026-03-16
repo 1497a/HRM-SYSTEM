@@ -4,18 +4,16 @@ public class ChucVu {
     private String id;
     private String tenChucVu;
     private int capBac;
-    private double heSoLuong;
     private double phuCapChucVu;
     private String moTa;
     private String trangThai;
 
     public ChucVu() {}
 
-    public ChucVu(String id, String tenChucVu, int capBac, double heSoLuong, double phuCapChucVu, String moTa, String trangThai) {
+    public ChucVu(String id, String tenChucVu, int capBac, double phuCapChucVu, String moTa, String trangThai) {
         this.id = id;
         this.tenChucVu = tenChucVu;
         this.capBac = capBac;
-        this.heSoLuong = heSoLuong;
         this.phuCapChucVu = phuCapChucVu;
         this.moTa = moTa;
         this.trangThai = trangThai;
@@ -27,8 +25,6 @@ public class ChucVu {
     public void setTenChucVu(String tenChucVu) { this.tenChucVu = tenChucVu; }
     public int getCapBac() { return capBac; }
     public void setCapBac(int capBac) { this.capBac = capBac; }
-    public double getHeSoLuong() { return heSoLuong; }
-    public void setHeSoLuong(double heSoLuong) { this.heSoLuong = heSoLuong; }
     public double getPhuCapChucVu() { return phuCapChucVu; }
     public void setPhuCapChucVu(double phuCapChucVu) { this.phuCapChucVu = phuCapChucVu; }
     public String getMoTa() { return moTa; }

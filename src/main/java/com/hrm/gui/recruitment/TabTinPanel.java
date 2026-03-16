@@ -58,7 +58,7 @@ class TabTinPanel extends JPanel {
         toolbar.add(new JLabel("Trạng thái:"));
         toolbar.add(cboTrangThai);
 
-        String[] cols = {"Ma tin", "Tieu de", "Phong ban", "Chuc vu", "Han nop", "Can tuyen", "So don", "Trang thai"};
+        String[] cols = {"Mã tin", "Tiêu đề", "Phòng ban", "Chức vụ", "Hạn nộp", "Cần tuyển", "Số đơn", "Trạng thái"};
         model = new DefaultTableModel(cols, 0) {
             @Override
             public boolean isCellEditable(int r, int c) {

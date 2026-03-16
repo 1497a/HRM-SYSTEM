@@ -147,12 +147,14 @@ public class EmployeeDetailPanel extends JDialog {
         btnClose.addActionListener(e -> dispose());
 
         SessionContext sc = SessionContext.getInstance();
-        boolean canUpdate = sc.coVaiTro("ADMIN") || sc.coQuyen("EMPLOYEE_UPDATE");
+        boolean canUpdate = nvService.canEditEmployeeProfile(maNV);
+        boolean canChangeStatus = nvService.canChangeEmployeeStatus(maNV);
         String myMaNV = sc.getCurrentUser() != null ? sc.getCurrentUser().getNhanVienId() : null;
         boolean isSelf = maNV != null && maNV.equals(myMaNV);
+        personalTab.configureStatusOptions();
 
-        btnSuaThongTin.setVisible(canUpdate || isSelf);
-        btnDoiTrangThai.setVisible(canUpdate && !isSelf);
+        btnSuaThongTin.setVisible(canUpdate);
+        btnDoiTrangThai.setVisible(canChangeStatus && !isSelf);
 
         right.add(btnSuaThongTin);
         right.add(btnDoiTrangThai);
@@ -234,11 +236,13 @@ public class EmployeeDetailPanel extends JDialog {
         if (btnSuaThongTin == null || btnDoiTrangThai == null) return;
         boolean isPersonalTab = tabs.getSelectedIndex() == 0;
         SessionContext sc = SessionContext.getInstance();
-        boolean canUpdate = sc.coVaiTro("ADMIN") || sc.coQuyen("EMPLOYEE_UPDATE");
+        boolean canUpdate = nvService.canEditEmployeeProfile(maNV);
+        boolean canChangeStatus = nvService.canChangeEmployeeStatus(maNV);
         String myMaNV = sc.getCurrentUser() != null ? sc.getCurrentUser().getNhanVienId() : null;
         boolean isSelf = maNV != null && maNV.equals(myMaNV);
-        btnSuaThongTin.setVisible(isPersonalTab && (canUpdate || isSelf));
-        btnDoiTrangThai.setVisible(isPersonalTab && canUpdate && !isSelf);
+        personalTab.configureStatusOptions();
+        btnSuaThongTin.setVisible(isPersonalTab && canUpdate);
+        btnDoiTrangThai.setVisible(isPersonalTab && canChangeStatus && !isSelf);
     }
 
     private JLabel createStatusBadge(String statusKey, String displayText) {

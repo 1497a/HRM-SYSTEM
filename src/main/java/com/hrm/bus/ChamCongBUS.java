@@ -18,7 +18,11 @@ public class ChamCongBUS {
     private static ChamCongBUS instance;
     private final ChamCongDAO repository;
     private static final String ACTION_ATTENDANCE_VIEW = "ATTENDANCE_VIEW";
-    private static final String ACTION_ATTENDANCE_APPROVE = "ATTENDANCE_APPROVE";
+    private static final String ACTION_ATTENDANCE_MANAGE = "ATTENDANCE_MANAGE";
+    private static final String ACTION_ALLOWANCE_MANAGE  = "ALLOWANCE_MANAGE";
+    private static final String ACTION_ATTENDANCE_CHECKIN = "ATTENDANCE_CHECKIN";
+    private static final String ACTION_OVERTIME_REQUEST = "OVERTIME_REQUEST";
+    private static final String ACTION_OVERTIME_APPROVE = "OVERTIME_APPROVE";
 
     /** Số giờ OT tối đa trong một tháng */
     private static final double OT_TONG_TOI_DA_THANG = 40.0;
@@ -62,6 +66,8 @@ public class ChamCongBUS {
      * Validate: maCaLam không rỗng, giờ hợp lệ.
      */
     public KetQua<CaLam> saveCaLam(CaLam caLam) {
+        KetQua<Void> permission = validateAttendanceManagePermission();
+        if (!permission.isSuccess()) return KetQua.error(permission.getMessage());
         if (caLam.getMaCaLam() == null || caLam.getMaCaLam().trim().isEmpty()) {
             return KetQua.error("Mã ca làm không được để trống.");
         }
@@ -81,6 +87,8 @@ public class ChamCongBUS {
 
     // Legacy compat
     public KetQua<CaLam> themCaLam(String ma, String ten, String gioBD, String gioKT, double sg, boolean ot) {
+        KetQua<Void> permission = validateAttendanceManagePermission();
+        if (!permission.isSuccess()) return KetQua.error(permission.getMessage());
         CaLam existing = repository.findCaLamById(ma.trim());
         if (existing != null) return KetQua.error("Ma ca da ton tai.");
         LocalTime tBD, tKT;
@@ -102,6 +110,8 @@ public class ChamCongBUS {
     }
 
     public KetQua<CaLam> suaCaLam(String ma, String ten, String gioBD, String gioKT, double sg, boolean ot) {
+        KetQua<Void> permission = validateAttendanceManagePermission();
+        if (!permission.isSuccess()) return KetQua.error(permission.getMessage());
         CaLam ca = repository.findCaLamById(ma);
         if (ca == null) return KetQua.error("Khong tim thay ca lam.");
         LocalTime tBD, tKT;
@@ -125,6 +135,8 @@ public class ChamCongBUS {
     }
 
     public KetQua<Void> xoaCaLam(String ma) {
+        KetQua<Void> permission = validateAttendanceManagePermission();
+        if (!permission.isSuccess()) return permission;
         CaLam ca = repository.findCaLamById(ma);
         if (ca == null) return KetQua.error("Không tìm thấy ca làm.");
         repository.deleteCaLam(ma);
@@ -139,6 +151,8 @@ public class ChamCongBUS {
      * Check-in: xác thực NV chưa check-in hôm nay, tính trạng thái đi muộn.
      */
     public KetQua<ChamCong> checkIn(String maNV, String maCaLam, String phuongThuc) {
+        KetQua<Void> permission = validateCheckInOutPermission(ACTION_ATTENDANCE_CHECKIN, maNV);
+        if (!permission.isSuccess()) return KetQua.error(permission.getMessage());
         LocalDate today = LocalDate.now();
         if (isBlank(maNV)) {
             return KetQua.error("Mã nhân viên không hợp lệ.");
@@ -166,6 +180,8 @@ public class ChamCongBUS {
      * Check-out: tính soGioLam, gioLamThem nếu có OT đã duyệt.
      */
     public KetQua<ChamCong> checkOut(String maNV) {
+        KetQua<Void> permission = validateCheckInOutPermission(ACTION_ATTENDANCE_CHECKIN, maNV);
+        if (!permission.isSuccess()) return KetQua.error(permission.getMessage());
         if (isBlank(maNV)) {
             return KetQua.error("Mã nhân viên không hợp lệ.");
         }
@@ -202,6 +218,8 @@ public class ChamCongBUS {
     public KetQua<ChamCong> themChamCongThuCong(String maNV, LocalDate ngay, String maCaLam,
                                                         LocalDateTime gioVao, LocalDateTime gioRa,
                                                         ChamCong.TrangThai trangThai, String ghiChu) {
+        KetQua<Void> permission = validateAttendanceManagePermission();
+        if (!permission.isSuccess()) return KetQua.error(permission.getMessage());
         CaLam caLam = repository.findCaLamById(maCaLam);
         if (caLam == null) {
             return KetQua.error("Mã ca làm không hợp lệ.");
@@ -229,10 +247,12 @@ public class ChamCongBUS {
     }
 
     public ChamCong getChamCongHomNay(String maNV) {
+        if (!canViewAttendanceOf(maNV)) return null;
         return repository.findChamCongByNVAndNgay(maNV, LocalDate.now());
     }
 
     public List<ChamCong> getChamCongTheoThang(String maNV, int thang, int nam) {
+        if (!canViewAttendanceOf(maNV)) return java.util.Collections.emptyList();
         return repository.findByNVAndThang(maNV, thang, nam);
     }
 
@@ -251,6 +271,7 @@ public class ChamCongBUS {
     }
 
     public List<ChamCong> getLichSuChamCong(String maNV, LocalDate tu, LocalDate den) {
+        if (!canViewAttendanceOf(maNV)) return java.util.Collections.emptyList();
         // Approximate using findByNVAndThang for the month range
         return repository.findByNVAndThang(maNV, tu.getMonthValue(), tu.getYear());
     }
@@ -264,6 +285,8 @@ public class ChamCongBUS {
      * Validate: tổng OT trong tháng không vượt quá 40 giờ.
      */
     public KetQua<DangKyLamThem> taoDonLamThem(String maNV, LocalDate ngay, double soGio, String lyDo) {
+        KetQua<Void> permission = validateSelfActionPermission(ACTION_OVERTIME_REQUEST, maNV);
+        if (!permission.isSuccess()) return KetQua.error(permission.getMessage());
         KetQua<Void> overtimeValidation = validateOvertimeInput(soGio, lyDo);
         if (!overtimeValidation.isSuccess()) return KetQua.error(overtimeValidation.getMessage());
 
@@ -300,7 +323,7 @@ public class ChamCongBUS {
     }
 
     public List<DangKyLamThem> getDonChoDuyetOTByScope(String currentMaNV) {
-        com.hrm.model.DataScope scope = getScopeForAction(ACTION_ATTENDANCE_APPROVE);
+        com.hrm.model.DataScope scope = getScopeForAction(ACTION_OVERTIME_APPROVE);
         return repository.findChoDuyetOTByScope(scope, currentMaNV);
     }
 
@@ -336,11 +359,18 @@ public class ChamCongBUS {
         return repository.findAllDangKyLamThemByScope(scope, currentMaNV);
     }
 
+    public List<DangKyLamThem> getDonLamThemTatCaByApproveScope(String currentMaNV) {
+        com.hrm.model.DataScope scope = getScopeForAction(ACTION_OVERTIME_APPROVE);
+        return repository.findAllDangKyLamThemByScope(scope, currentMaNV);
+    }
+
     /** Update heSoOT for an OT request without approving. */
     public KetQua<Void> capNhatHeSoOT(int maDK, double heSo) {
         if (heSo <= 0) return KetQua.error("Hệ số OT phải lớn hơn 0.");
         DangKyLamThem dk = repository.findById(maDK);
         if (dk == null) return KetQua.error("Không tìm thấy đơn OT.");
+        KetQua<Void> permission = validateOvertimeApprovePermission(dk.getMaNV());
+        if (!permission.isSuccess()) return permission;
         repository.updateHeSoOT(maDK, heSo);
         return KetQua.success(null, "Đã cập nhật hệ số OT thành x" + heSo + ".");
     }
@@ -359,6 +389,8 @@ public class ChamCongBUS {
 
     public KetQua<CauHinhPhuCap> themCauHinhPC(ThanhPhanLuong.Loai loai, String tenKhoan,
             CauHinhPhuCap.KieuTinh kieuTinh, double giaTri, String nguon) {
+        KetQua<Void> permission = validateAllowanceManagePermission();
+        if (!permission.isSuccess()) return KetQua.error(permission.getMessage());
         KetQua<Void> validation = validateKhoanLuongInput(tenKhoan, giaTri);
         if (!validation.isSuccess()) return KetQua.error(validation.getMessage());
         CauHinhPhuCap pc = new CauHinhPhuCap(loai, tenKhoan.trim(), kieuTinh, giaTri, nguon);
@@ -368,6 +400,8 @@ public class ChamCongBUS {
 
     public KetQua<CauHinhPhuCap> suaCauHinhPC(int maPC, ThanhPhanLuong.Loai loai, String tenKhoan,
             CauHinhPhuCap.KieuTinh kieuTinh, double giaTri, String nguon) {
+        KetQua<Void> permission = validateAllowanceManagePermission();
+        if (!permission.isSuccess()) return KetQua.error(permission.getMessage());
         CauHinhPhuCap pc = repository.findCauHinhPCById(maPC);
         if (pc == null) return KetQua.error("Không tìm thấy khoản phụ cấp.");
         KetQua<Void> validation = validateKhoanLuongInput(tenKhoan, giaTri);
@@ -382,6 +416,8 @@ public class ChamCongBUS {
     }
 
     public KetQua<Void> xoaCauHinhPC(int maPC) {
+        KetQua<Void> permission = validateAllowanceManagePermission();
+        if (!permission.isSuccess()) return permission;
         CauHinhPhuCap pc = repository.findCauHinhPCById(maPC);
         if (pc == null) return KetQua.error("Không tìm thấy khoản phụ cấp.");
         repository.deactivateCauHinhPC(maPC);
@@ -398,6 +434,8 @@ public class ChamCongBUS {
      *        fallback ca gần nhất trong vòng ±2h.
      */
     public KetQua<ChamCong> checkInAuto(String maNV, boolean laOT) {
+        KetQua<Void> permission = validateCheckInOutPermission(ACTION_ATTENDANCE_CHECKIN, maNV);
+        if (!permission.isSuccess()) return KetQua.error(permission.getMessage());
         if (isBlank(maNV)) return KetQua.error("Mã nhân viên không hợp lệ.");
         if (repository.findChamCongByNVAndNgay(maNV, LocalDate.now()) != null)
             return KetQua.error("Bạn đã check-in hôm nay rồi.");
@@ -474,6 +512,13 @@ public class ChamCongBUS {
     }
 
     public ChamCongDAO.NhanVienInfo findNhanVienByMa(String maNV) {
+        if (!canViewAttendanceOf(maNV)) return null;
+        return repository.findNhanVienByMa(maNV);
+    }
+
+    public ChamCongDAO.NhanVienInfo findNhanVienByMaForManualAttendance(String maNV) {
+        KetQua<Void> permission = validateAttendanceManagePermission();
+        if (!permission.isSuccess()) return null;
         return repository.findNhanVienByMa(maNV);
     }
 
@@ -484,6 +529,8 @@ public class ChamCongBUS {
     /** Tạo đơn OT theo khoảng giờ (gioVao → gioRa), tính soGio tự động. */
     public KetQua<DangKyLamThem> taoDonLamThem(String maNV, LocalDate ngay,
             LocalTime gioVao, LocalTime gioRa, String lyDo) {
+        KetQua<Void> permission = validateSelfActionPermission(ACTION_OVERTIME_REQUEST, maNV);
+        if (!permission.isSuccess()) return KetQua.error(permission.getMessage());
         if (gioVao == null || gioRa == null)
             return KetQua.error("Vui lòng nhập giờ bắt đầu và kết thúc OT.");
         double soGio = DangKyLamThem.tinhSoGioOT(gioVao, gioRa);
@@ -505,6 +552,8 @@ public class ChamCongBUS {
         DangKyLamThem dk = repository.findById(maDK);
         if (dk == null) return KetQua.error("Không tìm thấy đơn OT.");
         if (!dk.dangChoDuyet()) return KetQua.error("Chỉ xóa được đơn đang chờ duyệt.");
+        KetQua<Void> permission = validateSelfActionPermission(ACTION_OVERTIME_REQUEST, maNV);
+        if (!permission.isSuccess()) return permission;
         if (isBlank(maNV) || !maNV.equals(dk.getMaNV())) {
             return KetQua.error("Bạn không có quyền xóa đơn OT này.");
         }
@@ -540,6 +589,8 @@ public class ChamCongBUS {
         DangKyLamThem dk = repository.findById(maDK);
         KetQua<Void> requestValidation = validateOTRequestForProcessing(dk);
         if (!requestValidation.isSuccess()) return KetQua.error(requestValidation.getMessage());
+        KetQua<Void> permission = validateOvertimeApprovePermission(dk.getMaNV());
+        if (!permission.isSuccess()) return KetQua.error(permission.getMessage());
         if (SelfApprovalGuard.isSelfAction(nguoiDuyetId, dk.getMaNV())
                 && !SelfApprovalGuard.currentUserCanBypassSelfRestriction()) {
             return KetQua.error(approve
@@ -590,6 +641,106 @@ public class ChamCongBUS {
             return KetQua.error("Đơn đã được xử lý rồi.");
         }
         return KetQua.success(null, "");
+    }
+
+    private KetQua<Void> validateAttendanceManagePermission() {
+        TaiKhoan currentUser = com.hrm.util.SessionContext.getInstance().getCurrentUser();
+        if (currentUser == null) return KetQua.error("Bạn chưa đăng nhập.");
+        if ("admin".equalsIgnoreCase(currentUser.getTenDangNhap()) || currentUser.coVaiTro("ADMIN")) {
+            return KetQua.success(null, "");
+        }
+        if (!currentUser.coQuyen(ACTION_ATTENDANCE_MANAGE)) {
+            return KetQua.error("Bạn không có quyền quản lý chấm công.");
+        }
+        return KetQua.success(null, "");
+    }
+
+    private KetQua<Void> validateAllowanceManagePermission() {
+        TaiKhoan currentUser = com.hrm.util.SessionContext.getInstance().getCurrentUser();
+        if (currentUser == null) return KetQua.error("Bạn chưa đăng nhập.");
+        if ("admin".equalsIgnoreCase(currentUser.getTenDangNhap()) || currentUser.coVaiTro("ADMIN")) {
+            return KetQua.success(null, "");
+        }
+        if (!currentUser.coQuyen(ACTION_ALLOWANCE_MANAGE)) {
+            return KetQua.error("Bạn không có quyền quản lý phụ cấp và khấu trừ.");
+        }
+        return KetQua.success(null, "");
+    }
+
+    private KetQua<Void> validateSelfActionPermission(String action, String targetMaNV) {
+        TaiKhoan currentUser = com.hrm.util.SessionContext.getInstance().getCurrentUser();
+        if (currentUser == null) return KetQua.error("Bạn chưa đăng nhập.");
+        if ("admin".equalsIgnoreCase(currentUser.getTenDangNhap()) || currentUser.coVaiTro("ADMIN")) {
+            return KetQua.success(null, "");
+        }
+        if (!currentUser.coQuyen(action)) {
+            return KetQua.error("Bạn không có quyền thực hiện thao tác này.");
+        }
+        DataScope scope = getScopeForAction(action);
+        if (scope == DataScope.ALL) return KetQua.success(null, "");
+        String currentMaNV = currentUser.getNhanVienId();
+        if (scope == DataScope.SELF && !isBlank(currentMaNV) && currentMaNV.equals(targetMaNV)) {
+            return KetQua.success(null, "");
+        }
+        return KetQua.error("Bạn chỉ được thao tác trên dữ liệu của chính mình.");
+    }
+
+    private KetQua<Void> validateCheckInOutPermission(String action, String targetMaNV) {
+        KetQua<Void> selfPermission = validateSelfActionPermission(action, targetMaNV);
+        if (selfPermission.isSuccess()) {
+            return selfPermission;
+        }
+        KetQua<Void> managePermission = validateAttendanceManagePermission();
+        if (managePermission.isSuccess()) {
+            return KetQua.success(null, "");
+        }
+        return selfPermission;
+    }
+
+    private KetQua<Void> validateOvertimeApprovePermission(String targetMaNV) {
+        TaiKhoan currentUser = com.hrm.util.SessionContext.getInstance().getCurrentUser();
+        if (currentUser == null) return KetQua.error("Bạn chưa đăng nhập.");
+        if ("admin".equalsIgnoreCase(currentUser.getTenDangNhap()) || currentUser.coVaiTro("ADMIN")) {
+            return KetQua.success(null, "");
+        }
+        if (!currentUser.coQuyen(ACTION_OVERTIME_APPROVE)) {
+            return KetQua.error("Bạn không có quyền duyệt đơn OT.");
+        }
+        DataScope scope = getScopeForAction(ACTION_OVERTIME_APPROVE);
+        if (isScopeSufficient(scope, resolveTargetScope(targetMaNV))) {
+            return KetQua.success(null, "");
+        }
+        return KetQua.error("Phạm vi quyền duyệt OT không đủ cho đơn này.");
+    }
+
+    private boolean canViewAttendanceOf(String targetMaNV) {
+        TaiKhoan currentUser = com.hrm.util.SessionContext.getInstance().getCurrentUser();
+        if (currentUser == null) return false;
+        if ("admin".equalsIgnoreCase(currentUser.getTenDangNhap()) || currentUser.coVaiTro("ADMIN")) {
+            return true;
+        }
+        if (!currentUser.coQuyen(ACTION_ATTENDANCE_VIEW)) {
+            return false;
+        }
+        return isScopeSufficient(getScopeForAction(ACTION_ATTENDANCE_VIEW), resolveTargetScope(targetMaNV));
+    }
+
+    private DataScope resolveTargetScope(String targetMaNV) {
+        TaiKhoan currentUser = com.hrm.util.SessionContext.getInstance().getCurrentUser();
+        String currentMaNV = currentUser != null ? currentUser.getNhanVienId() : null;
+        if (isBlank(currentMaNV) || isBlank(targetMaNV)) return DataScope.NONE;
+        if (currentMaNV.equals(targetMaNV)) return DataScope.SELF;
+        return repository.resolveScopeBetweenEmployees(currentMaNV, targetMaNV);
+    }
+
+    private boolean isScopeSufficient(DataScope grantedScope, DataScope requiredScope) {
+        if (grantedScope == null || requiredScope == null) return false;
+        if (grantedScope == DataScope.ALL) return requiredScope != DataScope.NONE;
+        if (grantedScope == requiredScope) return true;
+        if (grantedScope == DataScope.DEPT) {
+            return requiredScope == DataScope.TEAM || requiredScope == DataScope.SELF;
+        }
+        return grantedScope == DataScope.TEAM && requiredScope == DataScope.SELF;
     }
 
     private com.hrm.model.DataScope getScopeForAction(String action) {

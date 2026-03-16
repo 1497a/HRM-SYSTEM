@@ -1,11 +1,11 @@
 package com.hrm.gui.employee;
 
+import com.hrm.bus.NhanVienBUS;
+import com.hrm.bus.PhongBanBUS;
 import com.hrm.gui.components.PurpleButton;
 import com.hrm.gui.components.PurpleTable;
-import com.hrm.model.PhongBan;
 import com.hrm.model.NhanVien;
-import com.hrm.bus.PhongBanBUS;
-import com.hrm.bus.NhanVienBUS;
+import com.hrm.model.PhongBan;
 import com.hrm.util.SessionContext;
 import com.hrm.util.UIColors;
 import com.hrm.util.UIHelper;
@@ -36,8 +36,8 @@ public class EmployeeListPanel extends JPanel {
     private JComboBox<String> cboPhongBan;
 
     private PurpleButton btnThem;
+    private PurpleButton btnChiTiet;
 
-    // Danh sách đang hiển thị (để lấy đối tượng khi chọn dòng)
     private List<NhanVien> danhSachHienThi = new ArrayList<>();
 
     private static final String[] COL_NAMES = {
@@ -59,16 +59,10 @@ public class EmployeeListPanel extends JPanel {
         refreshTable();
     }
 
-    // ============================
-    // Build sections
-    // ============================
-
     private JPanel buildNorthPanel() {
         JPanel panel = new JPanel(new BorderLayout(8, 8));
         panel.setOpaque(false);
 
-
-        // Search + filter
         JPanel searchWrap = new JPanel(new BorderLayout(0, 4));
         searchWrap.setOpaque(false);
 
@@ -106,7 +100,6 @@ public class EmployeeListPanel extends JPanel {
         cboTrangThai.setFont(com.hrm.util.UIFonts.TEXT_MEDIUM);
         cboTrangThai.setPreferredSize(new Dimension(160, 32));
 
-
         searchPanel.add(lblSearch);
         searchPanel.add(txtSearch);
         searchPanel.add(Box.createHorizontalStrut(4));
@@ -128,7 +121,6 @@ public class EmployeeListPanel extends JPanel {
         table.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
         table.setDefaultRenderer(Object.class, new StatusColorRenderer());
 
-        // Chiều rộng cột
         int[] widths = {45, 80, 160, 160, 140, 110, 130, 120};
         for (int i = 0; i < widths.length; i++) {
             table.getColumnModel().getColumn(i).setPreferredWidth(widths[i]);
@@ -137,17 +129,12 @@ public class EmployeeListPanel extends JPanel {
         sorter = new TableRowSorter<>(tableModel);
         table.setRowSorter(sorter);
 
-        // Chỉ cho phép sort cột 1 (Mã NV) và cột 2 (Họ tên)
         for (int i = 0; i < COL_NAMES.length; i++) {
-            sorter.setSortable(i, false); // tắt hết trước
+            sorter.setSortable(i, false);
         }
-        sorter.setSortable(1, true); // Mã NV
-        sorter.setSortable(2, true); // Họ tên
-
-        // Comparator tiếng Việt cho cột Họ tên
+        sorter.setSortable(1, true);
+        sorter.setSortable(2, true);
         sorter.setComparator(2, UIHelper.vietnameseNameComparator());
-
-        // Mặc định sort theo Mã NV tăng dần
         sorter.setSortKeys(List.of(new RowSorter.SortKey(1, SortOrder.ASCENDING)));
 
         JScrollPane scroll = new JScrollPane(table);
@@ -159,23 +146,23 @@ public class EmployeeListPanel extends JPanel {
         JPanel panel = new JPanel(new FlowLayout(FlowLayout.LEFT, 8, 6));
         panel.setOpaque(false);
 
-        btnThem = new PurpleButton("+ Thêm mới");
+        btnThem = new PurpleButton("+ Tạo hồ sơ");
+        btnChiTiet = new PurpleButton("Xem chi tiết");
+        btnChiTiet.setEnabled(false);
 
         panel.add(btnThem);
+        panel.add(btnChiTiet);
 
-        JButton btnLamMoi = new JButton("Lam moi");
+        JButton btnLamMoi = new JButton("Làm mới");
         btnLamMoi.addActionListener(e -> refreshTable());
         panel.add(btnLamMoi);
 
         return panel;
     }
 
-    // ============================
-    // Events
-    // ============================
-
     private void setupEvents() {
         btnThem.addActionListener(e -> showAddDialog());
+        btnChiTiet.addActionListener(e -> showHoSoDialog());
 
         txtSearch.addKeyListener(new java.awt.event.KeyAdapter() {
             @Override
@@ -186,6 +173,11 @@ public class EmployeeListPanel extends JPanel {
 
         cboTrangThai.addActionListener(e -> applyFilter());
         cboPhongBan.addActionListener(e -> applyFilter());
+        table.getSelectionModel().addListSelectionListener(e -> {
+            if (!e.getValueIsAdjusting()) {
+                updateActionButtons();
+            }
+        });
 
         table.addMouseListener(new java.awt.event.MouseAdapter() {
             @Override
@@ -197,19 +189,12 @@ public class EmployeeListPanel extends JPanel {
         });
     }
 
-    // ============================
-    // Permissions
-    // ============================
-
     private void setupPermissions() {
         SessionContext sc = SessionContext.getInstance();
         boolean canCreate = sc.coVaiTro("ADMIN") || sc.coQuyen("EMPLOYEE_CREATE");
         btnThem.setVisible(canCreate);
+        updateActionButtons();
     }
-
-    // ============================
-    // Data loading
-    // ============================
 
     public void refreshTable() {
         com.hrm.model.TaiKhoan currentUser = SessionContext.getInstance().getCurrentUser();
@@ -231,6 +216,7 @@ public class EmployeeListPanel extends JPanel {
         }
         rebuildDeptCombo();
         applyFilter();
+        updateActionButtons();
     }
 
     private void rebuildDeptCombo() {
@@ -242,8 +228,8 @@ public class EmployeeListPanel extends JPanel {
             for (PhongBan d : new PhongBanBUS().getActiveDepartments()) {
                 cboPhongBan.addItem(d.getTenPhongBan());
             }
-        } catch (Exception ignored) {}
-        // Restore selection
+        } catch (Exception ignored) {
+        }
         if (selected != null) {
             for (int i = 0; i < cboPhongBan.getItemCount(); i++) {
                 if (selected.equals(cboPhongBan.getItemAt(i))) {
@@ -263,19 +249,16 @@ public class EmployeeListPanel extends JPanel {
         RowFilter<DefaultTableModel, Object> rf = new RowFilter<DefaultTableModel, Object>() {
             @Override
             public boolean include(Entry<? extends DefaultTableModel, ? extends Object> entry) {
-                // Lọc theo mã NV hoặc họ tên (cột 1, 2) — AND condition
                 String maNV = entry.getStringValue(1).toLowerCase();
                 String hoTen = entry.getStringValue(2).toLowerCase();
                 boolean matchSearch = searchText.isEmpty()
                         || maNV.contains(searchText) || hoTen.contains(searchText);
 
-                // Lọc theo phòng ban (cột 3)
                 String tenPhongBan = entry.getStringValue(3);
                 boolean matchDept = "Tất cả phòng ban".equals(phongBanFilter)
                         || phongBanFilter == null
                         || phongBanFilter.equals(tenPhongBan);
 
-                // Lọc theo trạng thái (cột 7)
                 String trangThai = entry.getStringValue(7);
                 boolean matchStatus = true;
                 if ("Đang làm việc".equals(trangThaiFilter)) {
@@ -290,11 +273,8 @@ public class EmployeeListPanel extends JPanel {
         };
 
         sorter.setRowFilter(rf);
+        updateActionButtons();
     }
-
-    // ============================
-    // Actions
-    // ============================
 
     private void showAddDialog() {
         EmployeeFormDialog dialog = new EmployeeFormDialog(
@@ -321,26 +301,29 @@ public class EmployeeListPanel extends JPanel {
         }
     }
 
-    // ============================
-    // Helper: get selected NhanVien
-    // ============================
+    private void updateActionButtons() {
+        if (btnChiTiet != null) {
+            btnChiTiet.setEnabled(getSelectedNhanVien() != null);
+        }
+    }
 
     private NhanVien getSelectedNhanVien() {
         int viewRow = table.getSelectedRow();
-        if (viewRow == -1) return null;
+        if (viewRow == -1) {
+            return null;
+        }
         int modelRow = table.convertRowIndexToModel(viewRow);
-        if (modelRow < 0 || modelRow >= danhSachHienThi.size()) return null;
-        // Tìm đúng đối tượng dựa vào mã NV trong model
+        if (modelRow < 0 || modelRow >= tableModel.getRowCount()) {
+            return null;
+        }
         String maNV = (String) tableModel.getValueAt(modelRow, 1);
         for (NhanVien nv : danhSachHienThi) {
-            if (maNV.equals(nv.getMaNhanVien())) return nv;
+            if (maNV.equals(nv.getMaNhanVien())) {
+                return nv;
+            }
         }
         return null;
     }
-
-    // ============================
-    // Custom renderer for status coloring
-    // ============================
 
     private class StatusColorRenderer extends DefaultTableCellRenderer {
         @Override
@@ -354,14 +337,13 @@ public class EmployeeListPanel extends JPanel {
                 c.setBackground(row % 2 == 0 ? com.hrm.util.UIColors.WHITE : UIColors.TABLE_ALT_ROW);
                 c.setForeground(UIColors.TEXT_DARK);
 
-                // Tô màu cột trạng thái (cột 7)
                 if (col == 7 && value != null) {
                     String val = value.toString();
-                    if (val.contains("lam viec") || val.contains("Dang")) {
+                    if (val.contains("lam viec") || val.contains("Đang")) {
                         c.setForeground(UIColors.SUCCESS_GREEN);
-                    } else if (val.contains("Tam nghi")) {
+                    } else if (val.contains("Tạm nghỉ") || val.contains("Tam nghi")) {
                         c.setForeground(com.hrm.util.UIColors.WARNING_TEXT_AMBER);
-                    } else if (val.contains("Nghi viec")) {
+                    } else if (val.contains("Nghỉ việc") || val.contains("Nghi viec")) {
                         c.setForeground(UIColors.DANGER_RED);
                     }
                     ((JLabel) c).setFont(com.hrm.util.UIFonts.BOLD_SMALL);

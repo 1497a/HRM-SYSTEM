@@ -185,7 +185,7 @@ public class EvalResultPanel extends JPanel {
         }
         topPanel.add(new JLabel("Kỳ đánh giá:"));
         topPanel.add(cboKyDanhGia);
-        JButton btnLamMoi = new JButton("Lam moi");
+        JButton btnLamMoi = new JButton("Làm mới");
         btnLamMoi.addActionListener(e -> loadData());
         topPanel.add(btnLamMoi);
 

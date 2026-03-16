@@ -136,7 +136,7 @@ public class EvalCycleListPanel extends JPanel {
         }
         if (isManager) topPanel.add(btnEvaluate);
         topPanel.add(btnViewDetail);
-        JButton btnLamMoi = new JButton("Lam moi");
+        JButton btnLamMoi = new JButton("Làm mới");
         btnLamMoi.addActionListener(e -> loadData());
         topPanel.add(btnLamMoi);
 

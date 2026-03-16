@@ -106,7 +106,7 @@ public class RoleManagementPanel extends JPanel {
 
         JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT, 10, 0));
         buttonPanel.setOpaque(false);
-        JButton btnLamMoi = new JButton("Lam moi");
+        JButton btnLamMoi = new JButton("Làm mới");
         btnLamMoi.addActionListener(e -> loadData());
         buttonPanel.add(btnLamMoi);
         if (sessionContext.coQuyen("ROLE_CREATE")) {

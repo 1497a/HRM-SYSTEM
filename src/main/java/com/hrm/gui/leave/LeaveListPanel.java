@@ -60,7 +60,7 @@ public class LeaveListPanel extends JPanel {
         setBorder(new EmptyBorder(15, 15, 15, 15));
 
         // Status combo
-        cboStatus = new JComboBox<>(new String[]{"Tat ca",
+        cboStatus = new JComboBox<>(new String[]{"Tất cả",
                 DonXinNghiPhep.TrangThai.CHO_DUYET.getTenHienThi(),
                 DonXinNghiPhep.TrangThai.DA_DUYET.getTenHienThi(),
                 DonXinNghiPhep.TrangThai.TU_CHOI.getTenHienThi()});
@@ -235,7 +235,7 @@ public class LeaveListPanel extends JPanel {
 
     private void applyFilter() {
         String s = (String) cboStatus.getSelectedItem();
-        sorter.setRowFilter("Tat ca".equals(s) ? null : RowFilter.regexFilter("^" + s + "$", 7));
+        sorter.setRowFilter("Tất cả".equals(s) ? null : RowFilter.regexFilter("^" + s + "$", 7));
     }
 
     private void updateBalanceDisplay(String empId) {

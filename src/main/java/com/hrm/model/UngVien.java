@@ -26,6 +26,8 @@ public class UngVien {
 
     // Transient - dùng để hiển thị
     private transient String tenTin;
+    private transient String tenChucVu;
+    private transient String tenPhongBan;
 
     public UngVien() {
     }
@@ -172,6 +174,22 @@ public class UngVien {
 
     public void setTenTin(String tenTin) {
         this.tenTin = tenTin;
+    }
+
+    public String getTenChucVu() {
+        return tenChucVu;
+    }
+
+    public void setTenChucVu(String tenChucVu) {
+        this.tenChucVu = tenChucVu;
+    }
+
+    public String getTenPhongBan() {
+        return tenPhongBan;
+    }
+
+    public void setTenPhongBan(String tenPhongBan) {
+        this.tenPhongBan = tenPhongBan;
     }
 
     /**

@@ -22,6 +22,7 @@ import java.time.format.DateTimeParseException;
 class TabThongTinCaNhanPanel extends JPanel {
 
     private static final DateTimeFormatter DATE_FMT = DateTimeFormatter.ofPattern("dd/MM/yyyy");
+    private static final String[] STATUS_OPTIONS_ALL = {"dang_lam_viec", "tam_nghi", "nghi_viec"};
 
     private final String maNV;
     private ThongTinCaNhan ttcn;
@@ -65,7 +66,7 @@ class TabThongTinCaNhanPanel extends JPanel {
         });
         cboTrangThaiNhanVien.setSelectedItem(nhanVien != null ? nhanVien.getTrangThai() : "dang_lam_viec");
         setStatusEditMode(false);
-        addInfoRow(nvPanel, 3, "Trang thai:", cboTrangThaiNhanVien);
+        addInfoRow(nvPanel, 3, "Trạng thái:", cboTrangThaiNhanVien);
         content.add(nvPanel);
         content.add(Box.createVerticalStrut(16));
 
@@ -245,6 +246,38 @@ class TabThongTinCaNhanPanel extends JPanel {
         return (String) cboTrangThaiNhanVien.getSelectedItem();
     }
 
+    void configureStatusOptions() {
+        if (cboTrangThaiNhanVien == null) {
+            return;
+        }
+        String currentValue = (String) cboTrangThaiNhanVien.getSelectedItem();
+        DefaultComboBoxModel<String> model = new DefaultComboBoxModel<>(STATUS_OPTIONS_ALL);
+        cboTrangThaiNhanVien.setModel(model);
+        if (currentValue != null) {
+            boolean exists = false;
+            for (int i = 0; i < model.getSize(); i++) {
+                if (currentValue.equals(model.getElementAt(i))) {
+                    exists = true;
+                    break;
+                }
+            }
+            if (exists) {
+                cboTrangThaiNhanVien.setSelectedItem(currentValue);
+            } else {
+                cboTrangThaiNhanVien.setSelectedItem(model.getElementAt(0));
+            }
+        }
+        cboTrangThaiNhanVien.setRenderer(new DefaultListCellRenderer() {
+            @Override
+            public Component getListCellRendererComponent(JList<?> list, Object value,
+                    int index, boolean isSelected, boolean cellHasFocus) {
+                super.getListCellRendererComponent(list, value, index, isSelected, cellHasFocus);
+                setText(trangThaiDisplay(value != null ? value.toString() : ""));
+                return this;
+            }
+        });
+    }
+
     // ---- Private helpers ----
 
     private void loadFields() {
@@ -377,9 +410,9 @@ class TabThongTinCaNhanPanel extends JPanel {
 
     private String trangThaiDisplay(String key) {
         return switch (key) {
-            case "dang_lam_viec" -> "Dang lam viec";
-            case "tam_nghi"      -> "Tam nghi";
-            case "nghi_viec"     -> "Nghi viec";
+            case "dang_lam_viec" -> "Đang làm việc";
+            case "tam_nghi"      -> "Tạm nghỉ";
+            case "nghi_viec"     -> "Nghỉ việc";
             default -> key;
         };
     }

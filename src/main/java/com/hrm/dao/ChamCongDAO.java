@@ -920,6 +920,52 @@ public class ChamCongDAO {
         }
     }
 
+    public com.hrm.model.DataScope resolveScopeBetweenEmployees(String currentMaNV, String targetMaNV) {
+        if (currentMaNV == null || currentMaNV.trim().isEmpty() || targetMaNV == null || targetMaNV.trim().isEmpty()) {
+            return com.hrm.model.DataScope.NONE;
+        }
+        if (currentMaNV.equals(targetMaNV)) {
+            return com.hrm.model.DataScope.SELF;
+        }
+        try (Connection conn = DatabaseConnection.getConnection()) {
+            String sqlTeam = "SELECT COUNT(*) FROM BONHIEM b "
+                    + "WHERE b.maNV = ? AND b.maQuanLy = ? "
+                    + "AND b.trangThai = 'hieu_luc' AND b.loaiBoNhiem = 'chinh'";
+            try (PreparedStatement ps = conn.prepareStatement(sqlTeam)) {
+                ps.setString(1, targetMaNV);
+                ps.setString(2, currentMaNV);
+                try (ResultSet rs = ps.executeQuery()) {
+                    if (rs.next() && rs.getInt(1) > 0) {
+                        return com.hrm.model.DataScope.TEAM;
+                    }
+                }
+            }
+
+            java.util.Set<String> depts = getDeptSubtree(currentMaNV, conn);
+            if (!depts.isEmpty()) {
+                String placeholders = String.join(",", java.util.Collections.nCopies(depts.size(), "?"));
+                String sqlDept = "SELECT COUNT(*) FROM BONHIEM b "
+                        + "WHERE b.maNV = ? AND b.trangThai = 'hieu_luc' AND b.loaiBoNhiem = 'chinh' "
+                        + "AND b.maPhongBan IN (" + placeholders + ")";
+                try (PreparedStatement ps = conn.prepareStatement(sqlDept)) {
+                    int index = 1;
+                    ps.setString(index++, targetMaNV);
+                    for (String dept : depts) {
+                        ps.setString(index++, dept);
+                    }
+                    try (ResultSet rs = ps.executeQuery()) {
+                        if (rs.next() && rs.getInt(1) > 0) {
+                            return com.hrm.model.DataScope.DEPT;
+                        }
+                    }
+                }
+            }
+        } catch (SQLException e) {
+            throw new RuntimeException("Lỗi xác định phạm vi nhân viên: " + e.getMessage(), e);
+        }
+        return com.hrm.model.DataScope.NONE;
+    }
+
     /** Alias cho findActiveCaLam() — tương thích với chamcongnew. */
     public List<com.hrm.model.CaLam> findCaLamHoatDong() {
         return findActiveCaLam();
