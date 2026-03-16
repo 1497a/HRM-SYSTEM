@@ -60,7 +60,10 @@ public class LeaveListPanel extends JPanel {
         setBorder(new EmptyBorder(15, 15, 15, 15));
 
         // Status combo
-        cboStatus = new JComboBox<>(new String[]{"Tất cả", "Cho duyệt", "Đã duyệt", "Từ chối"});
+        cboStatus = new JComboBox<>(new String[]{"Tat ca",
+                DonXinNghiPhep.TrangThai.CHO_DUYET.getTenHienThi(),
+                DonXinNghiPhep.TrangThai.DA_DUYET.getTenHienThi(),
+                DonXinNghiPhep.TrangThai.TU_CHOI.getTenHienThi()});
         cboStatus.addActionListener(e -> applyFilter());
 
         // Nhan vien combo (only for manager/hr/director)

@@ -58,7 +58,7 @@ class TabTinPanel extends JPanel {
         toolbar.add(new JLabel("Trạng thái:"));
         toolbar.add(cboTrangThai);
 
-        String[] cols = {"Mã tin", "Tiêu đề", "Phòng ban", "Chức vụ", "Hạn nộp", "Số đơn", "Trạng thái"};
+        String[] cols = {"Ma tin", "Tieu de", "Phong ban", "Chuc vu", "Han nop", "Can tuyen", "So don", "Trang thai"};
         model = new DefaultTableModel(cols, 0) {
             @Override
             public boolean isCellEditable(int r, int c) {
@@ -67,21 +67,22 @@ class TabTinPanel extends JPanel {
 
             @Override
             public Class<?> getColumnClass(int col) {
-                return (col == 0 || col == 5) ? Integer.class : String.class;
+                return (col == 0 || col == 5 || col == 6) ? Integer.class : String.class;
             }
         };
 
         tbl = TabUtils.buildTable(model);
-        TabUtils.applyColWidths(tbl, new int[]{60, 220, 160, 140, 110, 70, 110});
-        tbl.getColumnModel().getColumn(6).setCellRenderer(new RecruitmentStatusRenderer());
+        TabUtils.applyColWidths(tbl, new int[]{60, 220, 160, 140, 110, 80, 70, 110});
+        tbl.getColumnModel().getColumn(7).setCellRenderer(new RecruitmentStatusRenderer());
 
         TableRowSorter<DefaultTableModel> sorter = new TableRowSorter<>(model);
         tbl.setRowSorter(sorter);
         sorter.setComparator(0, Comparator.comparingInt(a -> (Integer) a));
         sorter.setComparator(5, Comparator.comparingInt(a -> (Integer) a));
+        sorter.setComparator(6, Comparator.comparingInt(a -> (Integer) a));
         sorter.setComparator(4, TabUtils.dateComparator());
         sorter.setSortKeys(List.of(new SortKey(0, ASCENDING)));
-        UIHelper.attachStatusFilter(sorter, cboTrangThai, 6);
+        UIHelper.attachStatusFilter(sorter, cboTrangThai, 7);
 
         JScrollPane scroll = new JScrollPane(tbl);
         scroll.setBorder(new TitledBorder("Danh sách tin tuyển dụng"));
@@ -107,6 +108,7 @@ class TabTinPanel extends JPanel {
                         tin.getTenPhongBan() != null ? tin.getTenPhongBan() : "",
                         tin.getTenChucVu() != null ? tin.getTenChucVu() : "",
                         han,
+                        tin.getSoLuongCanTuyen(),
                         tin.getSoUngVien(),
                         tin.getTrangThaiDisplay()
                 });
@@ -148,6 +150,20 @@ class TabTinPanel extends JPanel {
                 null, null, java.util.Calendar.DAY_OF_MONTH);
         JSpinner spinHanNop = new JSpinner(dm);
         spinHanNop.setEditor(new JSpinner.DateEditor(spinHanNop, "dd/MM/yyyy"));
+
+        // Pre-fill deadline from YeuCau when selection changes
+        cboYeuCau.addActionListener(ev -> {
+            YeuCauTuyenDung sel = (YeuCauTuyenDung) cboYeuCau.getSelectedItem();
+            if (sel != null && sel.getHanTuyenDung() != null) {
+                spinHanNop.setValue(java.util.Date.from(
+                        sel.getHanTuyenDung().atStartOfDay(java.time.ZoneId.systemDefault()).toInstant()));
+            }
+        });
+        // Trigger once for initial selection
+        if (!dsYCDaDuyet.isEmpty() && dsYCDaDuyet.get(0).getHanTuyenDung() != null) {
+            spinHanNop.setValue(java.util.Date.from(
+                    dsYCDaDuyet.get(0).getHanTuyenDung().atStartOfDay(java.time.ZoneId.systemDefault()).toInstant()));
+        }
 
         JPanel form = new JPanel(new GridLayout(5, 2, 8, 8));
         form.add(new JLabel("Yêu cầu tuyển dụng:"));

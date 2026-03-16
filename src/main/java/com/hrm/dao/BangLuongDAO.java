@@ -455,13 +455,27 @@ public class BangLuongDAO {
     // Helpers for salary calculation
     // =====================================================================
 
-    /** Returns luongCoSo from the currently active labour contract for this employee. */
-    public double getLuongCoSoFromHopDong(String nhanVienId) {
-        String sql = "SELECT luongCoSo FROM HOPDONGLAODONG WHERE maNV=? AND trangThai='hieu_luc' "
+    /**
+     * Returns luongCoSo from the labour contract that was effective during the given pay period.
+     * Checks both trangThai and actual date range so expired-but-not-yet-updated contracts
+     * are not mistakenly picked up, and future contracts are excluded.
+     *
+     * @param nhanVienId  employee ID
+     * @param ngayBatDauKy  first day of the pay period
+     * @param ngayCuoiKy    last day of the pay period
+     */
+    public double getLuongCoSoFromHopDong(String nhanVienId, java.time.LocalDate ngayBatDauKy, java.time.LocalDate ngayCuoiKy) {
+        String sql = "SELECT luongCoSo FROM HOPDONGLAODONG "
+                + "WHERE maNV=? "
+                + "  AND trangThai IN ('hieu_luc','het_han') "
+                + "  AND ngayHieuLuc <= ? "
+                + "  AND (ngayHetHieuLuc IS NULL OR ngayHetHieuLuc >= ?) "
                 + "ORDER BY ngayHieuLuc DESC LIMIT 1";
         try (Connection conn = DatabaseConnection.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setString(1, nhanVienId);
+            ps.setDate(2, java.sql.Date.valueOf(ngayCuoiKy));
+            ps.setDate(3, java.sql.Date.valueOf(ngayBatDauKy));
             try (ResultSet rs = ps.executeQuery()) {
                 if (rs.next()) return rs.getDouble("luongCoSo");
             }

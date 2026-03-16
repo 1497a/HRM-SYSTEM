@@ -227,6 +227,25 @@ public class HopDongDAO {
     }
 
     // ============================
+    // expireHetHanContracts — cập nhật trạng thái hết hạn
+    // ============================
+
+    /**
+     * Cập nhật trangThai → 'het_han' cho các hợp đồng đã qua ngayHetHieuLuc.
+     * Gọi lazy mỗi khi load danh sách hợp đồng.
+     */
+    public void expireHetHanContracts() {
+        String sql = "UPDATE HOPDONGLAODONG SET trangThai='het_han' "
+                + "WHERE trangThai='hieu_luc' AND ngayHetHieuLuc IS NOT NULL AND ngayHetHieuLuc < CURDATE()";
+        try (Connection conn = DatabaseConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.executeUpdate();
+        } catch (SQLException e) {
+            System.err.println("Lỗi expire hợp đồng hết hạn: " + e.getMessage());
+        }
+    }
+
+    // ============================
     // existsBySoHopDong
     // ============================
 

@@ -21,6 +21,7 @@ public class TinTuyenDung {
     private transient String tenPhongBan;
     private transient String tenChucVu;
     private transient int soUngVien;
+    private transient int soLuongCanTuyen; // lay tu YeuCauTuyenDung.soLuong
 
     public TinTuyenDung() {
     }
@@ -123,6 +124,14 @@ public class TinTuyenDung {
 
     public void setSoUngVien(int soUngVien) {
         this.soUngVien = soUngVien;
+    }
+
+    public int getSoLuongCanTuyen() {
+        return soLuongCanTuyen;
+    }
+
+    public void setSoLuongCanTuyen(int soLuongCanTuyen) {
+        this.soLuongCanTuyen = soLuongCanTuyen;
     }
 
     /**

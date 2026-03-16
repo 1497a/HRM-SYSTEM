@@ -78,12 +78,15 @@ public class BoNhiemBUS {
                         "Nhân viên đã có bổ nhiệm chính hiệu lực trong khoảng thời gian này. "
                         + "Hãy kết thúc bổ nhiệm cũ trước.");
             }
-            // Chặn tạo bổ nhiệm mới nếu chức vụ lãnh đạo (capBac <= 3: GD/TP/TT) đã có người giữ
+            // Chan tao bo nhiem moi neu chuc vu lanh dao (capBac <= 3: GD/TP/TT) da co nguoi giu
             ChucVu cv = chucVuRepo.findById(bn.getChucVuId());
             if (cv != null && cv.getCapBac() <= 3) {
-                if (boNhiemRepo.hasActiveChinhForChucVuInDept(bn.getPhongBanId(), bn.getChucVuId(), 0)) {
+                // Giam doc (capBac=1): kiem tra toan cong ty, khong gioi han phong ban
+                String deptToCheck = (cv.getCapBac() == 1) ? null : bn.getPhongBanId();
+                if (boNhiemRepo.hasActiveChinhForChucVuInDept(deptToCheck, bn.getChucVuId(), 0)) {
                     String tenCV = cv.getTenChucVu() != null ? cv.getTenChucVu() : bn.getChucVuId();
-                    return KetQua.error("Chuc vu " + tenCV + " da co nguoi dang giu trong phong ban nay. Ket thuc bo nhiem cu truoc khi tao moi.");
+                    String scope = (cv.getCapBac() == 1) ? "trong cong ty" : "trong phong ban nay";
+                    return KetQua.error("Chuc vu " + tenCV + " da co nguoi dang giu " + scope + ". Ket thuc bo nhiem cu truoc khi tao moi.");
                 }
             }
         }

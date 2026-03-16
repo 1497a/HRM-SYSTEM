@@ -307,7 +307,7 @@ INSERT INTO VAITRO_QUYEN (maVaiTro, maQuyen, phamVi) VALUES
 ('TRUONG_PHONG_KT', 'CONTRACT_MANAGE',       'ALL'),
 ('TRUONG_PHONG_KT', 'PAYROLL_VIEW',          'ALL'),
 ('TRUONG_PHONG_KT', 'PAYROLL_CALCULATE',     'ALL'),
-('TRUONG_PHONG_KT', 'LEAVE_VIEW',            'ALL'),
+('TRUONG_PHONG_KT', 'LEAVE_VIEW',            'DEPT'),
 ('TRUONG_PHONG_KT', 'LEAVE_CREATE',          'SELF'),
 ('TRUONG_PHONG_KT', 'LEAVE_APPROVE',         'DEPT'),
 ('TRUONG_PHONG_KT', 'EVAL_VIEW',             'ALL'),
@@ -748,8 +748,8 @@ INSERT INTO DONXINNGHIPHEP (maNV, maLoaiPhep, tuNgay, denNgay, soNgayNghi, lyDo,
 -- trangThai ENUM: 'dang_xu_ly' | 'da_duyet' | 'da_khoa'
 -- nguoiTao/nguoiDuyet là INT (id auto-increment của NHANVIEN), để NULL khi không xác định
 INSERT INTO BANGLUONG (thang, nam, tenBangLuong, nguoiTao, nguoiDuyet, ngayDuyet, trangThai) VALUES
-( 1, 2026, 'Bảng lương tháng 01/2026', NULL, NULL, '2026-02-03', 'da_duyet'),
-( 2, 2026, 'Bảng lương tháng 02/2026', NULL, NULL, NULL,         'dang_xu_ly');
+( 1, 2026, 'Bảng lương tháng 01/2026', 5, 4, '2026-02-03', 'da_duyet'),
+( 2, 2026, 'Bảng lương tháng 02/2026', 5, NULL, NULL,      'dang_xu_ly');
 
 -- Chi tiet luong T1/2026 (maBangLuong = 1, mau 6 NV dai dien)
 -- Cot: maBangLuong, maNV, luongCoSo, tongLuongChucVu, luongLamThem, tongThuNhap, tongKhauTru, luongThucLanh, soNgayCong, soGioLamThem

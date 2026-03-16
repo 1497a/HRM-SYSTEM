@@ -82,32 +82,45 @@ public class ChamCongBUS {
     // Legacy compat
     public KetQua<CaLam> themCaLam(String ma, String ten, String gioBD, String gioKT, double sg, boolean ot) {
         CaLam existing = repository.findCaLamById(ma.trim());
-        if (existing != null) return KetQua.error("Mã ca đã tồn tại.");
+        if (existing != null) return KetQua.error("Ma ca da ton tai.");
+        LocalTime tBD, tKT;
         try {
-            CaLam ca = new CaLam(ma.trim(), ten.trim(),
-                    LocalTime.parse(gioBD.trim()), LocalTime.parse(gioKT.trim()));
+            tBD = LocalTime.parse(gioBD.trim());
+            tKT = LocalTime.parse(gioKT.trim());
+        } catch (Exception e) {
+            return KetQua.error("Dinh dang gio khong hop le (HH:mm).");
+        }
+        try {
+            CaLam ca = new CaLam(ma.trim(), ten.trim(), tBD, tKT);
             ca.setSoGioChuan(sg);
             ca.setChoPhepLamThem(ot);
             repository.saveCaLam(ca);
-            return KetQua.success(ca, "Đã thêm ca làm '" + ten + "'.");
+            return KetQua.success(ca, "Da them ca lam '" + ten + "'.");
         } catch (Exception e) {
-            return KetQua.error("Định dạng giờ không hợp lệ (HH:mm).");
+            return KetQua.error("Loi luu ca lam: " + e.getMessage());
         }
     }
 
     public KetQua<CaLam> suaCaLam(String ma, String ten, String gioBD, String gioKT, double sg, boolean ot) {
         CaLam ca = repository.findCaLamById(ma);
-        if (ca == null) return KetQua.error("Không tìm thấy ca làm.");
+        if (ca == null) return KetQua.error("Khong tim thay ca lam.");
+        LocalTime tBD, tKT;
+        try {
+            tBD = LocalTime.parse(gioBD.trim());
+            tKT = LocalTime.parse(gioKT.trim());
+        } catch (Exception e) {
+            return KetQua.error("Dinh dang gio khong hop le (HH:mm).");
+        }
         try {
             ca.setTenCaLam(ten.trim());
-            ca.setGioBatDau(LocalTime.parse(gioBD.trim()));
-            ca.setGioKetThuc(LocalTime.parse(gioKT.trim()));
+            ca.setGioBatDau(tBD);
+            ca.setGioKetThuc(tKT);
             ca.setSoGioChuan(sg);
             ca.setChoPhepLamThem(ot);
             repository.saveCaLam(ca);
-            return KetQua.success(ca, "Đã cập nhật ca làm.");
+            return KetQua.success(ca, "Da cap nhat ca lam.");
         } catch (Exception e) {
-            return KetQua.error("Định dạng giờ không hợp lệ.");
+            return KetQua.error("Loi cap nhat ca lam: " + e.getMessage());
         }
     }
 

@@ -18,6 +18,7 @@ import javax.swing.table.TableRowSorter;
 import java.awt.*;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 
 /**
@@ -149,6 +150,7 @@ public class ContractListPanel extends JPanel {
 
         sorter = new TableRowSorter<>(tableModel);
         table.setRowSorter(sorter);
+        sorter.setComparator(0, Comparator.comparingInt(a -> (Integer) a));
 
         JScrollPane scroll = new JScrollPane(table);
         scroll.setBorder(BorderFactory.createLineBorder(UIColors.BORDER_GRAY));
@@ -316,14 +318,19 @@ public class ContractListPanel extends JPanel {
         HopDongLaoDong selected = getSelectedHopDong();
         if (selected == null) {
             JOptionPane.showMessageDialog(this,
-                    "Vui lòng chọn một hợp đồng để thanh lý.",
-                    "Thông báo", JOptionPane.INFORMATION_MESSAGE);
+                    "Vui long chon mot hop dong de thanh ly.",
+                    "Thong bao", JOptionPane.INFORMATION_MESSAGE);
             return;
         }
 
-        int confirm = JOptionPane.showConfirmDialog(this,
-                "Xác nhận thanh lý hợp đồng số '" + selected.getSoHopDong() + "'?",
-                "Xác nhận thanh lý", JOptionPane.YES_NO_OPTION);
+        String confirmMsg = "Xac nhan thanh ly hop dong so '" + selected.getSoHopDong() + "'?";
+        if (hopDongService.isHopDongHetHan(selected.getMaHopDong())) {
+            confirmMsg = "Hop dong nay DA HET HAN. Ban co muon thanh ly khong?\n"
+                    + "So HD: " + selected.getSoHopDong() + "\n"
+                    + "Luu y: Cac bo nhiem hieu luc se bi ket thuc.";
+        }
+        int confirm = JOptionPane.showConfirmDialog(this, confirmMsg,
+                "Xac nhan thanh ly", JOptionPane.YES_NO_OPTION);
         if (confirm != JOptionPane.YES_OPTION) return;
 
         KetQua<Void> result = hopDongService.thanhLyHopDong(selected.getMaHopDong());

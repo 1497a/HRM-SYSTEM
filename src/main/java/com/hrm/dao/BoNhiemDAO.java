@@ -189,7 +189,8 @@ public class BoNhiemDAO {
 
     public BoNhiem findBoNhiemChinhHieuLuc(String maNV) {
         String sql = buildJoinQuery(
-                "WHERE b.maNV = ? AND b.trangThai = 'hieu_luc' AND b.loaiBoNhiem = 'chinh'",
+                "WHERE b.maNV = ? AND b.trangThai = 'hieu_luc' AND b.loaiBoNhiem = 'chinh'"
+                + " AND (b.denNgay IS NULL OR b.denNgay >= CURDATE())",
                 "LIMIT 1");
         try (Connection conn = DatabaseConnection.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
@@ -371,21 +372,41 @@ public class BoNhiemDAO {
      * Kiểm tra chức vụ đã có người giữ bổ nhiệm chính hiệu lực trong phòng ban chưa.
      * Dùng để ngăn bổ nhiệm nhiều người vào cùng một chức vụ chính (trưởng phòng, giám đốc...).
      */
+    /**
+     * Neu maPhongBan = null: kiem tra toan cong ty (danh cho Giam doc - capBac=1).
+     * Neu maPhongBan co gia tri: kiem tra trong phong ban cu the.
+     */
     public boolean hasActiveChinhForChucVuInDept(String maPhongBan, String maChucVu, int excludeBoNhiemId) {
-        String sql = "SELECT COUNT(*) FROM BONHIEM "
-                + "WHERE maPhongBan=? AND maChucVu=? AND loaiBoNhiem='chinh' "
-                + "AND trangThai IN ('hieu_luc','cho_duyet') "
-                + "AND maBoNhiem <> ?";
+        String sql;
+        if (maPhongBan == null) {
+            // Company-wide check (for Director level)
+            sql = "SELECT COUNT(*) FROM BONHIEM "
+                    + "WHERE maChucVu=? AND loaiBoNhiem='chinh' "
+                    + "AND trangThai IN ('hieu_luc','cho_duyet') "
+                    + "AND maBoNhiem <> ? "
+                    + "AND (denNgay IS NULL OR denNgay >= CURDATE())";
+        } else {
+            sql = "SELECT COUNT(*) FROM BONHIEM "
+                    + "WHERE maPhongBan=? AND maChucVu=? AND loaiBoNhiem='chinh' "
+                    + "AND trangThai IN ('hieu_luc','cho_duyet') "
+                    + "AND maBoNhiem <> ? "
+                    + "AND (denNgay IS NULL OR denNgay >= CURDATE())";
+        }
         try (Connection conn = DatabaseConnection.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
-            ps.setString(1, maPhongBan);
-            ps.setString(2, maChucVu);
-            ps.setInt(3, excludeBoNhiemId);
+            if (maPhongBan == null) {
+                ps.setString(1, maChucVu);
+                ps.setInt(2, excludeBoNhiemId);
+            } else {
+                ps.setString(1, maPhongBan);
+                ps.setString(2, maChucVu);
+                ps.setInt(3, excludeBoNhiemId);
+            }
             try (ResultSet rs = ps.executeQuery()) {
                 if (rs.next()) return rs.getInt(1) > 0;
             }
         } catch (SQLException e) {
-            throw new RuntimeException("Lỗi kiểm tra chức vụ độc quyền: " + e.getMessage(), e);
+            throw new RuntimeException("Loi kiem tra chuc vu doc quyen: " + e.getMessage(), e);
         }
         return false;
     }
@@ -419,7 +440,7 @@ public class BoNhiemDAO {
      * Kiểm tra phòng ban có bổ nhiệm đang hiệu lực không (để validate trước khi ngưng phòng ban).
      */
     public boolean hasActiveBoNhiemInDepartment(String maPhongBan) {
-        String sql = "SELECT COUNT(*) FROM BONHIEM WHERE maPhongBan=? AND trangThai='hieu_luc'";
+        String sql = "SELECT COUNT(*) FROM BONHIEM WHERE maPhongBan=? AND trangThai='hieu_luc' AND (denNgay IS NULL OR denNgay >= CURDATE())";
         try (Connection conn = DatabaseConnection.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setString(1, maPhongBan);
@@ -436,7 +457,7 @@ public class BoNhiemDAO {
      * Kiểm tra một chức vụ còn đang được sử dụng bởi bổ nhiệm hiệu lực hay không.
      */
     public boolean hasActiveBoNhiemByChucVu(String maChucVu) {
-        String sql = "SELECT COUNT(*) FROM BONHIEM WHERE maChucVu=? AND trangThai='hieu_luc'";
+        String sql = "SELECT COUNT(*) FROM BONHIEM WHERE maChucVu=? AND trangThai='hieu_luc' AND (denNgay IS NULL OR denNgay >= CURDATE())";
         try (Connection conn = DatabaseConnection.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setString(1, maChucVu);

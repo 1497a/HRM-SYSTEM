@@ -211,31 +211,36 @@ public class LuongBUS {
             }
         }
 
-        double luongCoBan = bangLuongRepo.getLuongCoSoFromHopDong(maNV);
+        LocalDate ngayBatDauKy = LocalDate.of(nam, thang, 1);
+        LocalDate ngayCuoiKy = ngayBatDauKy.withDayOfMonth(ngayBatDauKy.lengthOfMonth());
+        double luongCoBan = bangLuongRepo.getLuongCoSoFromHopDong(maNV, ngayBatDauKy, ngayCuoiKy);
         double tongLuongChucVu = bangLuongRepo.getTongLuongChucVu(maNV, luongCoBan);
 
         int soNgayCong = tinhSoNgayCong(maNV, thang, nam);
-        double luongCoBanThucTe = luongCoBan / NGAY_CONG_CHUAN * soNgayCong;
+        double tienTruNgayVang = soNgayCong < NGAY_CONG_CHUAN
+                ? luongCoBan / NGAY_CONG_CHUAN * (NGAY_CONG_CHUAN - soNgayCong)
+                : 0.0;
         double tongGioLam = bangLuongRepo.getTongGioLam(maNV, thang, nam);
         double tongGioOT = bangLuongRepo.getTongGioOT(maNV, thang, nam);
         double tienOT = bangLuongRepo.getTienOT(maNV, thang, nam, luongCoBan);
 
         BonusSummary bonusSummary = tinhPhuCapTheoCauHinh(luongCoBan);
 
-        double tongThuNhap = luongCoBanThucTe + tongLuongChucVu + tienOT + bonusSummary.tongTien;
+        double tongThuNhap = luongCoBan + tongLuongChucVu + tienOT + bonusSummary.tongTien;
         double thueTNCN = tinhThueTNCN(tongThuNhap);
         KhauTruSummary khauTru = tinhKhauTruBatBuoc(luongCoBan, thueTNCN);
-        double luongThucNhan = tongThuNhap - khauTru.tongKhauTru;
+        double tongKhauTruThucTe = khauTru.tongKhauTru + tienTruNgayVang;
+        double luongThucNhan = tongThuNhap - tongKhauTruThucTe;
 
         ChiTietLuong ctl = new ChiTietLuong();
         ctl.setMaBL(maBL);
         ctl.setMaNV(maNV);
         ctl.setTenNV(nv.getHoTen() != null ? nv.getHoTen() : "");
-        ctl.setLuongCoBan(luongCoBanThucTe);
+        ctl.setLuongCoBan(luongCoBan);
         ctl.setTongLuongChucVu(tongLuongChucVu);
         ctl.setTienOT(tienOT);
         ctl.setTongLuong(tongThuNhap);
-        ctl.setTongKhauTru(khauTru.tongKhauTru);
+        ctl.setTongKhauTru(tongKhauTruThucTe);
         ctl.setLuongThucNhan(luongThucNhan);
         ctl.setSoNgayCong(soNgayCong);
         ctl.setTongGioLam(tongGioLam);

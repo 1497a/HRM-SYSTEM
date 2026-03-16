@@ -2,6 +2,7 @@ package com.hrm.bus;
 
 import com.hrm.model.HopDongLaoDong;
 import com.hrm.model.NhanVien;
+import com.hrm.dao.BoNhiemDAO;
 import com.hrm.dao.HopDongDAO;
 import com.hrm.dao.NhanVienDAO;
 
@@ -91,13 +92,29 @@ public class HopDongBUS {
     public KetQua<Void> thanhLyHopDong(int maHopDong) {
         HopDongLaoDong hd = findById(maHopDong);
         if (hd == null) {
-            return KetQua.error("Không tìm thấy hợp đồng.");
+            return KetQua.error("Khong tim thay hop dong.");
         }
         if (TRANG_THAI_THANH_LY.equals(hd.getTrangThai())) {
-            return KetQua.error("Hợp đồng đã được thanh lý.");
+            return KetQua.error("Hop dong da duoc thanh ly.");
+        }
+        if ("het_han".equals(hd.getTrangThai())) {
+            return KetQua.error("Khong the thanh ly hop dong da het han. Chi thanh ly hop dong dang hieu luc.");
         }
         hopDongRepo.updateTrangThai(maHopDong, TRANG_THAI_THANH_LY);
-        return KetQua.success(null, "Thanh lý hợp đồng thành công.");
+        // Ket thuc tat ca bo nhiem hieu luc cua nhan vien
+        if (hd.getMaNV() != null) {
+            BoNhiemDAO.getInstance().endAllActiveBoNhiemForNV(hd.getMaNV(), LocalDate.now());
+        }
+        return KetQua.success(null, "Thanh ly hop dong thanh cong. Da ket thuc cac bo nhiem hieu luc.");
+    }
+
+    /**
+     * Kiem tra hop dong co the thanh ly khong (dung de canh bao UI).
+     * Tra ve true neu hop dong da het han.
+     */
+    public boolean isHopDongHetHan(int maHopDong) {
+        HopDongLaoDong hd = findById(maHopDong);
+        return hd != null && "het_han".equals(hd.getTrangThai());
     }
 
 
@@ -115,10 +132,12 @@ public class HopDongBUS {
     }
 
     public List<HopDongLaoDong> getAll() {
+        hopDongRepo.expireHetHanContracts();
         return hopDongRepo.findAll();
     }
 
     public HopDongLaoDong getHieuLuc(String maNV) {
+        hopDongRepo.expireHetHanContracts();
         return hopDongRepo.findHieuLuc(maNV);
     }
 

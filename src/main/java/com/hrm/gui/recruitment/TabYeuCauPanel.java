@@ -135,7 +135,10 @@ class TabYeuCauPanel extends JPanel {
 
         JComboBox<PhongBan> cboPhongBan = new JComboBox<>();
         for (PhongBan pb : dsPhongBan) {
-            cboPhongBan.addItem(pb);
+            // Bo qua phong ban goc (Cong ty) - chi cho chon phong ban thuc su
+            if (pb.getPhongBanChaId() != null) {
+                cboPhongBan.addItem(pb);
+            }
         }
         cboPhongBan.setRenderer((list, v, i, s, f) -> new JLabel(v != null ? v.getTenPhongBan() : ""));
 

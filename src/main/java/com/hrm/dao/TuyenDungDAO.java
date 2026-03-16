@@ -231,7 +231,7 @@ public class TuyenDungDAO {
      */
     public List<TinTuyenDung> findAllTin() {
         List<TinTuyenDung> list = new ArrayList<>();
-        String sql = "SELECT t.*, pb.tenPhongBan, cv.tenChucVu, "
+        String sql = "SELECT t.*, pb.tenPhongBan, cv.tenChucVu, yc.soLuong, "
                 + "(SELECT COUNT(*) FROM UNGVIEN uv WHERE uv.maTin = t.maTin) AS soUngVien "
                 + "FROM TINTUYENDUNG t "
                 + "JOIN YEUCAUTUYENDUNG yc ON t.maYeuCau = yc.maYeuCau "
@@ -246,20 +246,21 @@ public class TuyenDungDAO {
                 tin.setTenPhongBan(rs.getString("tenPhongBan"));
                 tin.setTenChucVu(rs.getString("tenChucVu"));
                 tin.setSoUngVien(rs.getInt("soUngVien"));
+                tin.setSoLuongCanTuyen(rs.getInt("soLuong"));
                 list.add(tin);
             }
         } catch (SQLException e) {
-            System.err.println("Lỗi findAllTin: " + e.getMessage());
+            System.err.println("Loi findAllTin: " + e.getMessage());
             e.printStackTrace();
         }
         return list;
     }
 
     /**
-     * Tìm tin tuyển dụng theo ID với transients.
+     * Tim tin tuyen dung theo ID voi transients.
      */
     public TinTuyenDung findTinById(int maTin) {
-        String sql = "SELECT t.*, pb.tenPhongBan, cv.tenChucVu, "
+        String sql = "SELECT t.*, pb.tenPhongBan, cv.tenChucVu, yc.soLuong, "
                 + "(SELECT COUNT(*) FROM UNGVIEN uv WHERE uv.maTin = t.maTin) AS soUngVien "
                 + "FROM TINTUYENDUNG t "
                 + "JOIN YEUCAUTUYENDUNG yc ON t.maYeuCau = yc.maYeuCau "
@@ -275,11 +276,12 @@ public class TuyenDungDAO {
                     tin.setTenPhongBan(rs.getString("tenPhongBan"));
                     tin.setTenChucVu(rs.getString("tenChucVu"));
                     tin.setSoUngVien(rs.getInt("soUngVien"));
+                    tin.setSoLuongCanTuyen(rs.getInt("soLuong"));
                     return tin;
                 }
             }
         } catch (SQLException e) {
-            System.err.println("Lỗi findTinById: " + e.getMessage());
+            System.err.println("Loi findTinById: " + e.getMessage());
             e.printStackTrace();
         }
         return null;
@@ -455,6 +457,28 @@ public class TuyenDungDAO {
             }
         } catch (SQLException e) {
             System.err.println("Loi countConvertedByYeuCau: " + e.getMessage());
+        }
+        return 0;
+    }
+
+    /**
+     * Dem so ung vien co trang thai "trung_tuyen" cho mot yeu cau tuyen dung.
+     * Dung de kiem tra han muc truoc khi danh dau them ung vien trung tuyen.
+     */
+    public int countTrungTuyenByYeuCau(int maYeuCau) {
+        String sql = "SELECT COUNT(*) FROM UNGVIEN uv "
+                + "JOIN TINTUYENDUNG t ON uv.maTin = t.maTin "
+                + "WHERE t.maYeuCau = ? AND uv.trangThai IN (?, ?)";
+        try (Connection conn = DatabaseConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setInt(1, maYeuCau);
+            ps.setString(2, RecruitmentStatus.UngVien.TRUNG_TUYEN);
+            ps.setString(3, RecruitmentStatus.UngVien.DA_CHUYEN_NHAN_VIEN);
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) return rs.getInt(1);
+            }
+        } catch (SQLException e) {
+            System.err.println("Loi countTrungTuyenByYeuCau: " + e.getMessage());
         }
         return 0;
     }

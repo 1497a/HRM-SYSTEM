@@ -193,18 +193,33 @@ public class TuyenDungBUS {
 
         UngVien uv = recruitmentRepo.findById(maUV);
         if (uv == null) {
-            return KetQua.error("Không tìm thấy ứng viên #" + maUV);
+            return KetQua.error("Khong tim thay ung vien #" + maUV);
         }
         if (daChuyenThanhNhanVien(uv)) {
-            return KetQua.error("Ứng viên đã được chuyển thành nhân viên, không thể cập nhật trạng thái.");
+            return KetQua.error("Ung vien da duoc chuyen thanh nhan vien, khong the cap nhat trang thai.");
+        }
+
+        // Kiem tra han muc khi danh dau "trung_tuyen"
+        if (RecruitmentStatus.UngVien.TRUNG_TUYEN.equals(trangThai)) {
+            TinTuyenDung tin = recruitmentRepo.findTinById(uv.getMaTin());
+            if (tin != null) {
+                YeuCauTuyenDung yc = recruitmentRepo.findYeuCauById(tin.getMaYeuCau());
+                if (yc != null) {
+                    int daTrungTuyen = recruitmentRepo.countTrungTuyenByYeuCau(tin.getMaYeuCau());
+                    if (daTrungTuyen >= yc.getSoLuong()) {
+                        return KetQua.error("Da du so luong trung tuyen (" + yc.getSoLuong()
+                                + "). Khong the danh dau them ung vien trung tuyen.");
+                    }
+                }
+            }
         }
 
         uv.setTrangThai(trangThai);
         try {
             recruitmentRepo.updateUngVien(uv);
-            return KetQua.success(null, "Cập nhật trạng thái ứng viên thành công.");
+            return KetQua.success(null, "Cap nhat trang thai ung vien thanh cong.");
         } catch (Exception e) {
-            return KetQua.error("Lỗi cập nhật trạng thái ứng viên: " + e.getMessage());
+            return KetQua.error("Loi cap nhat trang thai ung vien: " + e.getMessage());
         }
     }
 
@@ -248,7 +263,8 @@ public class TuyenDungBUS {
 
             String thongTinTK = taoThongTinTaiKhoan(maNV);
             return KetQua.success(null,
-                    "Chuyển ứng viên thành nhân viên thành công.\nMã NV: " + maNV + boNhiemNote + thongTinTK);
+                    "Chuyển ứng viên thành nhân viên thành công.\nMã NV: " + maNV + boNhiemNote + thongTinTK
+                    + "\n\n⚠ Luu y: Can tao hop dong lao dong cho nhan vien nay trong module Hop dong.");
         } catch (Exception e) {
             return KetQua.error("Lỗi chuyển ứng viên thành nhân viên: " + e.getMessage());
         }
