@@ -25,7 +25,7 @@ import static org.junit.jupiter.api.Assertions.*;
  * PATTERN NÀY GỌI LÀ: AAA (Arrange - Act - Assert)
  * Là cách viết test chuẩn trong ngành.
  */
-class CaLamTest {
+public class CaLamTest {
 
     // ====================================================
     // BIẾN DÙNG CHUNG CHO CÁC TEST

@@ -11,7 +11,7 @@ import static org.junit.jupiter.api.Assertions.*;
 /**
  * Unit test cho ChamCong model.
  */
-class ChamCongTest {
+public class ChamCongTest {
 
     @Test
     @DisplayName("Constructor mac dinh: soGioLam = 0, trangThai = DUNG_GIO")
@@ -27,9 +27,9 @@ class ChamCongTest {
     @Test
     @DisplayName("Constructor check-in: set maNV, ngay, gioVao tu dong")
     void constructor_checkIn() {
-        ChamCong cc = new ChamCong(5, LocalDate.of(2026, 2, 21), "HANH_CHINH");
+        ChamCong cc = new ChamCong("NV005", LocalDate.of(2026, 2, 21), "HANH_CHINH");
 
-        assertEquals(5, cc.getMaNV());
+        assertEquals("NV005", cc.getMaNV());
         assertEquals(LocalDate.of(2026, 2, 21), cc.getNgay());
         assertEquals("HANH_CHINH", cc.getMaCaLam());
         assertNotNull(cc.getGioVao(), "Gio vao phai duoc set tu dong");

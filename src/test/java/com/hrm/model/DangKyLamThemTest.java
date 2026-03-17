@@ -10,7 +10,7 @@ import static org.junit.jupiter.api.Assertions.*;
 /**
  * Unit test cho DangKyLamThem model.
  */
-class DangKyLamThemTest {
+public class DangKyLamThemTest {
 
     @Test
     @DisplayName("Constructor mac dinh: trang thai = CHO_DUYET")
@@ -27,9 +27,9 @@ class DangKyLamThemTest {
     @DisplayName("Constructor day du: set dung cac field")
     void constructor_dayDu() {
         DangKyLamThem dk = new DangKyLamThem(
-                5, LocalDate.of(2026, 2, 21), 2.5, "Hoan thanh bao cao");
+                "NV005", LocalDate.of(2026, 2, 21), 2.5, "Hoan thanh bao cao");
 
-        assertEquals(5, dk.getMaNV());
+        assertEquals("NV005", dk.getMaNV());
         assertEquals(LocalDate.of(2026, 2, 21), dk.getNgay());
         assertEquals(2.5, dk.getSoGio(), 0.01);
         assertEquals("Hoan thanh bao cao", dk.getLyDo());
@@ -44,26 +44,26 @@ class DangKyLamThemTest {
     @DisplayName("duyet(): set trang thai, nguoi duyet, ngay duyet cung luc")
     void duyet_setDung3Fields() {
         // Arrange
-        DangKyLamThem dk = new DangKyLamThem(5, LocalDate.now(), 2.0, "OT");
+        DangKyLamThem dk = new DangKyLamThem("NV005", LocalDate.now(), 2.0, "OT");
 
         // Act
-        dk.duyet(10); // Quản lý ID = 10 duyệt
+        dk.duyet("NV010"); // Quản lý NV010 duyệt
 
         // Assert
         assertEquals(DangKyLamThem.TrangThai.DA_DUYET, dk.getTrangThai());
-        assertEquals(10, dk.getNguoiDuyet());
+        assertEquals("NV010", dk.getNguoiDuyet());
         assertNotNull(dk.getNgayDuyet(), "Ngay duyet phai duoc set tu dong");
     }
 
     @Test
     @DisplayName("tuChoi(): set trang thai TU_CHOI")
     void tuChoi_setDungTrangThai() {
-        DangKyLamThem dk = new DangKyLamThem(5, LocalDate.now(), 2.0, "OT");
+        DangKyLamThem dk = new DangKyLamThem("NV005", LocalDate.now(), 2.0, "OT");
 
-        dk.tuChoi(10);
+        dk.tuChoi("NV010");
 
         assertEquals(DangKyLamThem.TrangThai.TU_CHOI, dk.getTrangThai());
-        assertEquals(10, dk.getNguoiDuyet());
+        assertEquals("NV010", dk.getNguoiDuyet());
         assertNotNull(dk.getNgayDuyet());
     }
 
@@ -74,31 +74,31 @@ class DangKyLamThemTest {
     @Test
     @DisplayName("dangChoDuyet: don moi → true, don da duyet → false")
     void dangChoDuyet_kiemTraDung() {
-        DangKyLamThem dk = new DangKyLamThem(5, LocalDate.now(), 2.0, "OT");
+        DangKyLamThem dk = new DangKyLamThem("NV005", LocalDate.now(), 2.0, "OT");
 
         assertTrue(dk.dangChoDuyet(), "Don moi phai dang cho duyet");
 
-        dk.duyet(10);
+        dk.duyet("NV010");
         assertFalse(dk.dangChoDuyet(), "Don da duyet → khong con cho");
     }
 
     @Test
     @DisplayName("daDuocDuyet: chi true khi trang thai = DA_DUYET")
     void daDuocDuyet_kiemTraDung() {
-        DangKyLamThem dk = new DangKyLamThem(5, LocalDate.now(), 2.0, "OT");
+        DangKyLamThem dk = new DangKyLamThem("NV005", LocalDate.now(), 2.0, "OT");
 
         assertFalse(dk.daDuocDuyet(), "Don moi chua duoc duyet");
 
-        dk.duyet(10);
+        dk.duyet("NV010");
         assertTrue(dk.daDuocDuyet(), "Sau khi duyet phai tra ve true");
     }
 
     @Test
     @DisplayName("daDuocDuyet: don bi tu choi → false")
     void daDuocDuyet_biTuChoi_traVeFalse() {
-        DangKyLamThem dk = new DangKyLamThem(5, LocalDate.now(), 2.0, "OT");
+        DangKyLamThem dk = new DangKyLamThem("NV005", LocalDate.now(), 2.0, "OT");
 
-        dk.tuChoi(10);
+        dk.tuChoi("NV010");
         assertFalse(dk.daDuocDuyet(),
                 "Don bi tu choi khong phai 'da duoc duyet'");
     }

@@ -23,6 +23,9 @@ import java.util.stream.Collectors;
  * Singleton pattern.
  */
 public class TuyenDungBUS {
+    static final String ACTION_RECRUITMENT_VIEW = "RECRUITMENT_VIEW";
+    static final String ACTION_RECRUITMENT_REQUEST = "RECRUITMENT_REQUEST";
+    static final String ACTION_RECRUITMENT_MANAGE = "RECRUITMENT_MANAGE";
 
     private static TuyenDungBUS instance;
     private final TuyenDungDAO recruitmentRepo = TuyenDungDAO.getInstance();
