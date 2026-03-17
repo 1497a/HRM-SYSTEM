@@ -7,6 +7,7 @@ import com.hrm.gui.components.PurpleTable;
 import com.hrm.model.DataScope;
 import com.hrm.model.HopDongLaoDong;
 import com.hrm.model.TaiKhoan;
+import com.hrm.util.PermissionCodes;
 import com.hrm.util.SessionContext;
 import com.hrm.util.UIColors;
 
@@ -89,7 +90,7 @@ public class ContractListPanel extends JPanel {
         cboNhanVien.setFont(com.hrm.util.UIFonts.TEXT_MEDIUM);
         cboNhanVien.addItem("Tất cả");
 
-        DataScope contractScope = XacThucBUS.getInstance().getScopeForAction("CONTRACT_VIEW");
+        DataScope contractScope = XacThucBUS.getInstance().getScopeForAction(PermissionCodes.CONTRACT_VIEW);
         boolean isManager = contractScope == DataScope.ALL
                 || contractScope == DataScope.DEPT
                 || contractScope == DataScope.TEAM;
@@ -97,7 +98,7 @@ public class ContractListPanel extends JPanel {
         if (isManager) {
             com.hrm.model.TaiKhoan currentUser = SessionContext.getInstance().getCurrentUser();
             List<com.hrm.model.NhanVien> dsNV = com.hrm.bus.NhanVienBUS.getInstance()
-                    .getAllByActionScope("EMPLOYEE_VIEW", currentUser != null ? currentUser.getNhanVienId() : null);
+                    .getAllByActionScope(PermissionCodes.EMPLOYEE_VIEW, currentUser != null ? currentUser.getNhanVienId() : null);
             for (com.hrm.model.NhanVien nv : dsNV) {
                 cboNhanVien.addItem(nv);
             }
@@ -189,12 +190,12 @@ public class ContractListPanel extends JPanel {
 
     private void setupPermissions() {
         SessionContext sc = SessionContext.getInstance();
-        boolean canCreate = sc.coQuyen("CONTRACT_CREATE");
+        boolean canCreate = sc.hasPermission(PermissionCodes.CONTRACT_CREATE);
         btnTao.setVisible(canCreate);
     }
 
     public void loadData() {
-        DataScope scope = XacThucBUS.getInstance().getScopeForAction("CONTRACT_VIEW");
+        DataScope scope = XacThucBUS.getInstance().getScopeForAction(PermissionCodes.CONTRACT_VIEW);
         TaiKhoan user = SessionContext.getInstance().getCurrentUser();
         String myMaNV = user != null ? user.getNhanVienId() : null;
         if (scope == DataScope.SELF) {
@@ -205,7 +206,7 @@ public class ContractListPanel extends JPanel {
             danhSachHienThi = hopDongService.getAll();
         } else {
             java.util.Set<String> maNVSet = com.hrm.bus.NhanVienBUS.getInstance()
-                    .getAllByActionScope("CONTRACT_VIEW", myMaNV).stream()
+                    .getAllByActionScope(PermissionCodes.CONTRACT_VIEW, myMaNV).stream()
                     .map(com.hrm.model.NhanVien::getMaNhanVien)
                     .collect(java.util.stream.Collectors.toSet());
             danhSachHienThi = hopDongService.getAll().stream()

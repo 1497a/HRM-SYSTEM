@@ -11,6 +11,7 @@ import com.hrm.model.TinTuyenDung;
 import com.hrm.model.UngVien;
 import com.hrm.model.YeuCauTuyenDung;
 import com.hrm.util.SessionContext;
+import com.hrm.util.ValidationUtils;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -61,6 +62,13 @@ public class TuyenDungBUS {
             return KetQua.error("Số lượng tuyển dụng phải lớn hơn 0.");
         }
 
+        if (yc.getHanTuyenDung() == null) {
+            return KetQua.error("Han tuyen dung khong duoc de trong.");
+        }
+        if (yc.getHanTuyenDung().isBefore(LocalDate.now())) {
+            return KetQua.error("Han tuyen dung phai tu hom nay tro di.");
+        }
+
         yc.setTrangThai(RecruitmentStatus.YeuCau.CHO_DUYET);
 
         try {
@@ -106,6 +114,17 @@ public class TuyenDungBUS {
         if (tin.getMaYeuCau() <= 0) {
             return KetQua.error("Vui lòng chọn yêu cầu tuyển dụng liên kết.");
         }
+
+        if (tin.getHanNopHoSo() == null) {
+            return KetQua.error("Han nop ho so khong duoc de trong.");
+        }
+        if (tin.getHanNopHoSo().isBefore(LocalDate.now())) {
+            return KetQua.error("Han nop ho so phai tu hom nay tro di.");
+        }
+        String salaryErr = ValidationUtils.validateFreeText(tin.getMucLuong(), "Muc luong");
+        if (salaryErr != null) return KetQua.error(salaryErr);
+        String locationErr = ValidationUtils.validateFreeText(tin.getDiaDiem(), "Dia diem");
+        if (locationErr != null) return KetQua.error(locationErr);
 
         tin.setTrangThai(RecruitmentStatus.Tin.DANG_TUYEN);
         tin.setNgayTao(LocalDate.now());
@@ -161,6 +180,15 @@ public class TuyenDungBUS {
         }
         if (uv.getMaTin() <= 0) {
             return KetQua.error("Vui lòng chọn tin tuyển dụng liên kết.");
+        }
+
+        String emailErr = ValidationUtils.validateEmail(uv.getEmail());
+        if (emailErr != null) return KetQua.error(emailErr);
+        String phoneErr = ValidationUtils.validatePhone(uv.getDienThoai());
+        if (phoneErr != null) return KetQua.error(phoneErr);
+        if (uv.getNgaySinh() != null) {
+            String birthErr = ValidationUtils.validateBirthDate(uv.getNgaySinh());
+            if (birthErr != null) return KetQua.error(birthErr);
         }
 
         TinTuyenDung tin = recruitmentRepo.findTinById(uv.getMaTin());

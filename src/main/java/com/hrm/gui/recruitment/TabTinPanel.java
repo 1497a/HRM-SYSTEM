@@ -4,6 +4,7 @@ import com.hrm.bus.KetQua;
 import com.hrm.bus.TuyenDungBUS;
 import com.hrm.model.TinTuyenDung;
 import com.hrm.model.YeuCauTuyenDung;
+import com.hrm.util.PermissionCodes;
 import com.hrm.util.SessionContext;
 import com.hrm.util.UIColors;
 import com.hrm.util.UIHelper;
@@ -90,7 +91,7 @@ class TabTinPanel extends JPanel {
         add(toolbar, BorderLayout.NORTH);
         add(scroll, BorderLayout.CENTER);
 
-        boolean canManage = SessionContext.getInstance().coQuyen("RECRUITMENT_MANAGE");
+        boolean canManage = SessionContext.getInstance().hasPermission(PermissionCodes.RECRUITMENT_MANAGE);
         btnDangTin.setVisible(canManage);
         btnDongTin.setVisible(canManage);
 

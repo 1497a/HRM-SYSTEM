@@ -1,6 +1,7 @@
 package com.hrm.bus;
 
 import com.hrm.model.TaiKhoan;
+import com.hrm.util.HRMConstants;
 import com.hrm.util.SessionContext;
 
 final class SelfApprovalGuard {
@@ -18,8 +19,8 @@ final class SelfApprovalGuard {
         if (currentUser == null) {
             return false;
         }
-        return "admin".equalsIgnoreCase(currentUser.getTenDangNhap())
-                || currentUser.coVaiTro("ADMIN")
+        return HRMConstants.USERNAME_ADMIN.equalsIgnoreCase(currentUser.getTenDangNhap())
+                || currentUser.coVaiTro(HRMConstants.ROLE_ADMIN)
                 || currentUser.coVaiTro("TONG_GIAM_DOC");
     }
 }

@@ -10,6 +10,10 @@ import java.util.regex.Pattern;
  */
 public final class ValidationUtils {
 
+    private static final int DEFAULT_TEXT_LIMIT = 255;
+    private static final int NOTIFICATION_TITLE_LIMIT = 200;
+    private static final int NOTIFICATION_CONTENT_LIMIT = 4000;
+
     private ValidationUtils() {}
 
     private static final Pattern EMAIL = Pattern.compile(
@@ -49,5 +53,38 @@ public final class ValidationUtils {
         return date.isBefore(LocalDate.now())
             ? null
             : "Ngày sinh phải là ngày trong quá khứ";
+    }
+    public static String validateRequired(String value, String fieldName) {
+        if (value == null || value.trim().isEmpty()) {
+            return fieldName + " khong duoc de trong.";
+        }
+        return null;
+    }
+
+    public static String validateMaxLength(String value, int maxLength, String fieldName) {
+        if (value == null || value.isBlank()) return null;
+        return value.trim().length() <= maxLength
+            ? null
+            : fieldName + " khong duoc vuot qua " + maxLength + " ky tu.";
+    }
+
+    public static String validatePositive(long value, String fieldName) {
+        return value > 0 ? null : fieldName + " phai lon hon 0.";
+    }
+
+    public static String validateNotificationTitle(String title) {
+        String required = validateRequired(title, "Tieu de thong bao");
+        if (required != null) return required;
+        return validateMaxLength(title, NOTIFICATION_TITLE_LIMIT, "Tieu de thong bao");
+    }
+
+    public static String validateNotificationContent(String content) {
+        String required = validateRequired(content, "Noi dung thong bao");
+        if (required != null) return required;
+        return validateMaxLength(content, NOTIFICATION_CONTENT_LIMIT, "Noi dung thong bao");
+    }
+
+    public static String validateFreeText(String value, String fieldName) {
+        return validateMaxLength(value, DEFAULT_TEXT_LIMIT, fieldName);
     }
 }

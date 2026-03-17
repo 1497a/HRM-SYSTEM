@@ -1,10 +1,11 @@
 package com.hrm.gui.employee;
 
+import com.hrm.bus.KetQua;
 import com.hrm.model.HopDongLaoDong;
 import com.hrm.model.NhanVien;
 import com.hrm.model.ThongTinCaNhan;
-import com.hrm.bus.KetQua;
 import com.hrm.util.UIColors;
+import com.hrm.util.ValidationUtils;
 
 import javax.swing.*;
 import javax.swing.border.Border;
@@ -15,8 +16,8 @@ import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
 
 /**
- * Tab 1 cua EmployeeDetailPanel: Thong tin ca nhan + hop dong.
- * Expose public methods de EmployeeDetailPanel goi: setEditMode, setStatusEditMode,
+ * Tab 1 của EmployeeDetailPanel: Thông tin cá nhân + hợp đồng.
+ * Expose public methods để EmployeeDetailPanel gọi: setEditMode, setStatusEditMode,
  * hasChanges, save, getTrangThai.
  */
 class TabThongTinCaNhanPanel extends JPanel {
@@ -27,12 +28,20 @@ class TabThongTinCaNhanPanel extends JPanel {
     private final String maNV;
     private ThongTinCaNhan ttcn;
 
-    // Cac truong co the chinh sua
-    private JTextField txtHoTen, txtNgaySinh, txtCCCD, txtDienThoai, txtEmail;
-    private JTextField txtDiaChi, txtDiaChiThuongTru, txtQueQuan, txtTrinhDoHocVan, txtFileCV;
-    private JTextArea  txtKinhNghiem;
-    private JComboBox<String> cboGioiTinh, cboTinhTrangHonNhan;
-    JComboBox<String> cboTrangThaiNhanVien; // dung boi EmployeeDetailPanel
+    private JTextField txtHoTen;
+    private JTextField txtNgaySinh;
+    private JTextField txtCCCD;
+    private JTextField txtDienThoai;
+    private JTextField txtEmail;
+    private JTextField txtDiaChi;
+    private JTextField txtDiaChiThuongTru;
+    private JTextField txtQueQuan;
+    private JTextField txtTrinhDoHocVan;
+    private JTextField txtFileCV;
+    private JTextArea txtKinhNghiem;
+    private JComboBox<String> cboGioiTinh;
+    private JComboBox<String> cboTinhTrangHonNhan;
+    JComboBox<String> cboTrangThaiNhanVien;
 
     TabThongTinCaNhanPanel(String maNV, NhanVien nhanVien, ThongTinCaNhan ttcn, HopDongLaoDong hopDong) {
         this.maNV = maNV;
@@ -44,7 +53,6 @@ class TabThongTinCaNhanPanel extends JPanel {
         content.setBackground(UIColors.WHITE);
         content.setBorder(BorderFactory.createEmptyBorder(16, 20, 16, 20));
 
-        // Section: Thong tin nhan vien
         content.add(buildSectionTitle("Thông tin nhân viên"));
         content.add(Box.createVerticalStrut(8));
         JPanel nvPanel = buildInfoGrid();
@@ -70,38 +78,37 @@ class TabThongTinCaNhanPanel extends JPanel {
         content.add(nvPanel);
         content.add(Box.createVerticalStrut(16));
 
-        // Section: Thong tin ca nhan
         content.add(buildSectionTitle("Thông tin cá nhân"));
         content.add(Box.createVerticalStrut(8));
         JPanel ttcnPanel = buildInfoGrid();
         if (ttcn != null) {
-            txtHoTen          = createReadOnlyTextField();
-            txtNgaySinh       = createReadOnlyTextField();
-            cboGioiTinh       = new JComboBox<>(new String[]{"nam", "nu", "khac"});
-            txtCCCD           = createReadOnlyTextField();
-            txtDienThoai      = createReadOnlyTextField();
-            txtEmail          = createReadOnlyTextField();
-            txtDiaChi         = createReadOnlyTextField();
+            txtHoTen = createReadOnlyTextField();
+            txtNgaySinh = createReadOnlyTextField();
+            cboGioiTinh = new JComboBox<>(new String[]{"nam", "nu", "khac"});
+            txtCCCD = createReadOnlyTextField();
+            txtDienThoai = createReadOnlyTextField();
+            txtEmail = createReadOnlyTextField();
+            txtDiaChi = createReadOnlyTextField();
             txtDiaChiThuongTru = createReadOnlyTextField();
-            txtQueQuan        = createReadOnlyTextField();
+            txtQueQuan = createReadOnlyTextField();
             cboTinhTrangHonNhan = new JComboBox<>(new String[]{"doc_than", "da_ket_hon", "ly_hon"});
-            txtTrinhDoHocVan  = createReadOnlyTextField();
-            txtFileCV         = createReadOnlyTextField();
-            txtKinhNghiem     = createReadOnlyTextArea();
+            txtTrinhDoHocVan = createReadOnlyTextField();
+            txtFileCV = createReadOnlyTextField();
+            txtKinhNghiem = createReadOnlyTextArea();
 
-            addInfoRow(ttcnPanel, 0,  "Họ và tên:",            txtHoTen);
-            addInfoRow(ttcnPanel, 1,  "Ngày sinh:",            txtNgaySinh);
-            addInfoRow(ttcnPanel, 2,  "Giới tính:",            cboGioiTinh);
-            addInfoRow(ttcnPanel, 3,  "CCCD:",                 txtCCCD);
-            addInfoRow(ttcnPanel, 4,  "Số điện thoại:",        txtDienThoai);
-            addInfoRow(ttcnPanel, 5,  "Email:",                txtEmail);
-            addInfoRow(ttcnPanel, 6,  "Địa chỉ:",              txtDiaChi);
-            addInfoRow(ttcnPanel, 7,  "Địa chỉ thường trú:",   txtDiaChiThuongTru);
-            addInfoRow(ttcnPanel, 8,  "Quê quán:",             txtQueQuan);
-            addInfoRow(ttcnPanel, 9,  "Tình trạng hôn nhân:",  cboTinhTrangHonNhan);
-            addInfoRow(ttcnPanel, 10, "Trình độ học vấn:",     txtTrinhDoHocVan);
-            addInfoRow(ttcnPanel, 11, "File CV:",              txtFileCV);
-            addInfoRow(ttcnPanel, 12, "Kinh nghiệm:",          new JScrollPane(txtKinhNghiem));
+            addInfoRow(ttcnPanel, 0, "Họ và tên:", txtHoTen);
+            addInfoRow(ttcnPanel, 1, "Ngày sinh:", txtNgaySinh);
+            addInfoRow(ttcnPanel, 2, "Giới tính:", cboGioiTinh);
+            addInfoRow(ttcnPanel, 3, "CCCD:", txtCCCD);
+            addInfoRow(ttcnPanel, 4, "Số điện thoại:", txtDienThoai);
+            addInfoRow(ttcnPanel, 5, "Email:", txtEmail);
+            addInfoRow(ttcnPanel, 6, "Địa chỉ:", txtDiaChi);
+            addInfoRow(ttcnPanel, 7, "Địa chỉ thường trú:", txtDiaChiThuongTru);
+            addInfoRow(ttcnPanel, 8, "Quê quán:", txtQueQuan);
+            addInfoRow(ttcnPanel, 9, "Tình trạng hôn nhân:", cboTinhTrangHonNhan);
+            addInfoRow(ttcnPanel, 10, "Trình độ học vấn:", txtTrinhDoHocVan);
+            addInfoRow(ttcnPanel, 11, "File CV:", txtFileCV);
+            addInfoRow(ttcnPanel, 12, "Kinh nghiệm:", new JScrollPane(txtKinhNghiem));
             loadFields();
             setEditMode(false);
         } else {
@@ -113,12 +120,11 @@ class TabThongTinCaNhanPanel extends JPanel {
         content.add(ttcnPanel);
         content.add(Box.createVerticalStrut(16));
 
-        // Section: Hop dong lao dong
         content.add(buildSectionTitle("Hợp đồng lao động"));
         content.add(Box.createVerticalStrut(8));
         JPanel hdPanel = buildInfoGrid();
         if (hopDong != null) {
-            addInfoRow(hdPanel, 0, "Số hợp đồng:",   safe(hopDong.getSoHopDong()));
+            addInfoRow(hdPanel, 0, "Số hợp đồng:", safe(hopDong.getSoHopDong()));
             addInfoRow(hdPanel, 1, "Loại hợp đồng:", safe(hopDong.getLoaiHopDongDisplay()));
             addInfoRow(hdPanel, 2, "Ngày ký:",
                     hopDong.getNgayKy() != null ? hopDong.getNgayKy().format(DATE_FMT) : "");
@@ -142,8 +148,6 @@ class TabThongTinCaNhanPanel extends JPanel {
         scroll.getVerticalScrollBar().setUnitIncrement(16);
         add(scroll, BorderLayout.CENTER);
     }
-
-    // ---- Public API for EmployeeDetailPanel ----
 
     void setEditMode(boolean editable) {
         if (ttcn == null) return;
@@ -176,8 +180,10 @@ class TabThongTinCaNhanPanel extends JPanel {
         applyVisual(txtTrinhDoHocVan, bg, border);
         applyVisual(txtFileCV, bg, border);
         applyVisual(txtKinhNghiem, bg, border);
-        cboGioiTinh.setBackground(bg);         cboGioiTinh.setBorder(border);
-        cboTinhTrangHonNhan.setBackground(bg);  cboTinhTrangHonNhan.setBorder(border);
+        cboGioiTinh.setBackground(bg);
+        cboGioiTinh.setBorder(border);
+        cboTinhTrangHonNhan.setBackground(bg);
+        cboTinhTrangHonNhan.setBorder(border);
     }
 
     void setStatusEditMode(boolean editable) {
@@ -208,23 +214,32 @@ class TabThongTinCaNhanPanel extends JPanel {
     }
 
     KetQua<ThongTinCaNhan> save() {
-        if (ttcn == null) { ttcn = new ThongTinCaNhan(); ttcn.setMaNV(maNV); }
+        if (ttcn == null) {
+            ttcn = new ThongTinCaNhan();
+            ttcn.setMaNV(maNV);
+        }
         String hoTen = txtHoTen.getText().trim();
         if (hoTen.isEmpty()) return KetQua.error("Họ tên không được để trống.");
 
         String ngaySinhStr = txtNgaySinh.getText().trim();
         LocalDate ngaySinh = null;
         if (!ngaySinhStr.isEmpty()) {
-            try { ngaySinh = LocalDate.parse(ngaySinhStr, DATE_FMT); }
-            catch (DateTimeParseException e) { return KetQua.error("Ngày sinh không hợp lệ. Định dạng dd/MM/yyyy."); }
-            if (ngaySinh.isAfter(LocalDate.now())) return KetQua.error("Ngày sinh không thể ở tương lai.");
+            try {
+                ngaySinh = LocalDate.parse(ngaySinhStr, DATE_FMT);
+            } catch (DateTimeParseException e) {
+                return KetQua.error("Ngày sinh không hợp lệ. Định dạng dd/MM/yyyy.");
+            }
+            String birthErr = ValidationUtils.validateBirthDate(ngaySinh);
+            if (birthErr != null) return KetQua.error(birthErr);
         }
+
         String email = txtEmail.getText().trim();
-        if (!email.isEmpty() && !email.matches("^[A-Za-z0-9+_.-]+@[A-Za-z0-9.-]+$"))
-            return KetQua.error("Email không hợp lệ.");
+        String emailErr = ValidationUtils.validateEmail(email);
+        if (emailErr != null) return KetQua.error(emailErr);
+
         String sdt = txtDienThoai.getText().trim();
-        if (!sdt.isEmpty() && !sdt.matches("^\\d{9,11}$"))
-            return KetQua.error("Số điện thoại không hợp lệ.");
+        String phoneErr = ValidationUtils.validatePhone(sdt);
+        if (phoneErr != null) return KetQua.error(phoneErr);
 
         ttcn.setHoTen(hoTen);
         ttcn.setNgaySinh(ngaySinh);
@@ -261,11 +276,7 @@ class TabThongTinCaNhanPanel extends JPanel {
                     break;
                 }
             }
-            if (exists) {
-                cboTrangThaiNhanVien.setSelectedItem(currentValue);
-            } else {
-                cboTrangThaiNhanVien.setSelectedItem(model.getElementAt(0));
-            }
+            cboTrangThaiNhanVien.setSelectedItem(exists ? currentValue : model.getElementAt(0));
         }
         cboTrangThaiNhanVien.setRenderer(new DefaultListCellRenderer() {
             @Override
@@ -277,8 +288,6 @@ class TabThongTinCaNhanPanel extends JPanel {
             }
         });
     }
-
-    // ---- Private helpers ----
 
     private void loadFields() {
         if (ttcn == null) return;
@@ -318,12 +327,14 @@ class TabThongTinCaNhanPanel extends JPanel {
     }
 
     private void applyVisual(JTextComponent c, Color bg, Border border) {
-        c.setBackground(bg); c.setBorder(border);
+        c.setBackground(bg);
+        c.setBorder(border);
     }
 
     private JLabel buildSectionTitle(String text) {
         JLabel lbl = new JLabel(text.toUpperCase()) {
-            @Override protected void paintComponent(Graphics g) {
+            @Override
+            protected void paintComponent(Graphics g) {
                 super.paintComponent(g);
                 Graphics2D g2 = (Graphics2D) g;
                 g2.setColor(UIColors.PRIMARY_PURPLE);
@@ -359,12 +370,19 @@ class TabThongTinCaNhanPanel extends JPanel {
         lbl.setPreferredSize(new Dimension(170, 24));
 
         GridBagConstraints gl = new GridBagConstraints();
-        gl.gridx = 0; gl.gridy = row; gl.anchor = GridBagConstraints.WEST;
-        gl.insets = new Insets(3, 0, 3, 12); gl.fill = GridBagConstraints.NONE;
+        gl.gridx = 0;
+        gl.gridy = row;
+        gl.anchor = GridBagConstraints.WEST;
+        gl.insets = new Insets(3, 0, 3, 12);
+        gl.fill = GridBagConstraints.NONE;
 
         GridBagConstraints gv = new GridBagConstraints();
-        gv.gridx = 1; gv.gridy = row; gv.anchor = GridBagConstraints.WEST;
-        gv.insets = new Insets(3, 0, 3, 0); gv.fill = GridBagConstraints.HORIZONTAL; gv.weightx = 1.0;
+        gv.gridx = 1;
+        gv.gridy = row;
+        gv.anchor = GridBagConstraints.WEST;
+        gv.insets = new Insets(3, 0, 3, 0);
+        gv.fill = GridBagConstraints.HORIZONTAL;
+        gv.weightx = 1.0;
 
         grid.add(lbl, gl);
         grid.add(valueComponent, gv);
@@ -372,24 +390,33 @@ class TabThongTinCaNhanPanel extends JPanel {
 
     private GridBagConstraints buildGbc(int col, int row, int colspan) {
         GridBagConstraints gbc = new GridBagConstraints();
-        gbc.gridx = col; gbc.gridy = row; gbc.gridwidth = colspan;
-        gbc.anchor = GridBagConstraints.WEST; gbc.insets = new Insets(4, 0, 4, 0);
-        gbc.fill = GridBagConstraints.HORIZONTAL; gbc.weightx = 1.0;
+        gbc.gridx = col;
+        gbc.gridy = row;
+        gbc.gridwidth = colspan;
+        gbc.anchor = GridBagConstraints.WEST;
+        gbc.insets = new Insets(4, 0, 4, 0);
+        gbc.fill = GridBagConstraints.HORIZONTAL;
+        gbc.weightx = 1.0;
         return gbc;
     }
 
     private JLabel buildStatusLabel(String statusKey, String displayText) {
         Color bg = resolveColor(statusKey);
         JLabel lbl = new JLabel("  " + safe(displayText) + "  ") {
-            @Override protected void paintComponent(Graphics g) {
+            @Override
+            protected void paintComponent(Graphics g) {
                 Graphics2D g2 = (Graphics2D) g.create();
                 g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
-                g2.setColor(getBackground()); g2.fillRoundRect(0, 0, getWidth(), getHeight(), 10, 10);
-                g2.dispose(); super.paintComponent(g);
+                g2.setColor(getBackground());
+                g2.fillRoundRect(0, 0, getWidth(), getHeight(), 10, 10);
+                g2.dispose();
+                super.paintComponent(g);
             }
         };
-        lbl.setOpaque(false); lbl.setFont(com.hrm.util.UIFonts.BOLD_SMALL);
-        lbl.setForeground(UIColors.WHITE); lbl.setBackground(bg);
+        lbl.setOpaque(false);
+        lbl.setFont(com.hrm.util.UIFonts.BOLD_SMALL);
+        lbl.setForeground(UIColors.WHITE);
+        lbl.setBackground(bg);
         lbl.setBorder(BorderFactory.createEmptyBorder(3, 8, 3, 8));
         return lbl;
     }
@@ -399,20 +426,20 @@ class TabThongTinCaNhanPanel extends JPanel {
         return switch (key) {
             case "dang_lam_viec", "hieu_luc", "dung_gio" -> UIColors.SUCCESS_GREEN;
             case "tam_nghi", "cho_duyet", "di_muon", "ve_som" -> UIColors.WARNING_TEXT_AMBER;
-            case "nghi_viec", "tu_choi", "huy", "vang_mat"   -> UIColors.DANGER_RED;
-            case "het_han", "het_hieu_luc"                    -> UIColors.TEXT_GRAY;
-            case "thanh_ly"   -> new Color(23, 162, 184);
-            case "nghi_phep"  -> new Color(0, 123, 200);
-            case "cong_tac"   -> new Color(100, 60, 200);
-            default           -> UIColors.TEXT_GRAY;
+            case "nghi_viec", "tu_choi", "huy", "vang_mat" -> UIColors.DANGER_RED;
+            case "het_han", "het_hieu_luc" -> UIColors.TEXT_GRAY;
+            case "thanh_ly" -> new Color(23, 162, 184);
+            case "nghi_phep" -> new Color(0, 123, 200);
+            case "cong_tac" -> new Color(100, 60, 200);
+            default -> UIColors.TEXT_GRAY;
         };
     }
 
     private String trangThaiDisplay(String key) {
         return switch (key) {
             case "dang_lam_viec" -> "Đang làm việc";
-            case "tam_nghi"      -> "Tạm nghỉ";
-            case "nghi_viec"     -> "Nghỉ việc";
+            case "tam_nghi" -> "Tạm nghỉ";
+            case "nghi_viec" -> "Nghỉ việc";
             default -> key;
         };
     }
@@ -423,6 +450,11 @@ class TabThongTinCaNhanPanel extends JPanel {
         return na.equals(nb);
     }
 
-    private static String safe(String s) { return (s != null && !s.isEmpty()) ? s : ""; }
-    private static String empty(String s) { return (s == null || s.isEmpty()) ? null : s; }
+    private static String safe(String s) {
+        return (s != null && !s.isEmpty()) ? s : "";
+    }
+
+    private static String empty(String s) {
+        return (s == null || s.isEmpty()) ? null : s;
+    }
 }

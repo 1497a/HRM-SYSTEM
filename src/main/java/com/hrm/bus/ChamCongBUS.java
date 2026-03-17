@@ -3,6 +3,8 @@ package com.hrm.bus;
 import com.hrm.model.*;
 import com.hrm.dao.ChamCongDAO;
 import com.hrm.model.CauHinhPhuCap;
+import com.hrm.util.HRMConstants;
+import com.hrm.util.PermissionCodes;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -17,12 +19,12 @@ public class ChamCongBUS {
 
     private static ChamCongBUS instance;
     private final ChamCongDAO repository;
-    private static final String ACTION_ATTENDANCE_VIEW = "ATTENDANCE_VIEW";
-    private static final String ACTION_ATTENDANCE_MANAGE = "ATTENDANCE_MANAGE";
-    private static final String ACTION_ALLOWANCE_MANAGE  = "ALLOWANCE_MANAGE";
-    private static final String ACTION_ATTENDANCE_CHECKIN = "ATTENDANCE_CHECKIN";
-    private static final String ACTION_OVERTIME_REQUEST = "OVERTIME_REQUEST";
-    private static final String ACTION_OVERTIME_APPROVE = "OVERTIME_APPROVE";
+    private static final String ACTION_ATTENDANCE_VIEW = PermissionCodes.ATTENDANCE_VIEW;
+    private static final String ACTION_ATTENDANCE_MANAGE = PermissionCodes.ATTENDANCE_MANAGE;
+    private static final String ACTION_ALLOWANCE_MANAGE  = PermissionCodes.ALLOWANCE_MANAGE;
+    private static final String ACTION_ATTENDANCE_CHECKIN = PermissionCodes.ATTENDANCE_CHECKIN;
+    private static final String ACTION_OVERTIME_REQUEST = PermissionCodes.OVERTIME_REQUEST;
+    private static final String ACTION_OVERTIME_APPROVE = PermissionCodes.OVERTIME_APPROVE;
 
     /** Số giờ OT tối đa trong một tháng */
     private static final double OT_TONG_TOI_DA_THANG = 40.0;
@@ -220,6 +222,18 @@ public class ChamCongBUS {
                                                         ChamCong.TrangThai trangThai, String ghiChu) {
         KetQua<Void> permission = validateAttendanceManagePermission();
         if (!permission.isSuccess()) return KetQua.error(permission.getMessage());
+        if (isBlank(maNV)) {
+            return KetQua.error("Ma nhan vien khong hop le.");
+        }
+        if (ngay == null) {
+            return KetQua.error("Ngay cham cong khong duoc de trong.");
+        }
+        if (gioVao == null || gioRa == null) {
+            return KetQua.error("Gio vao va gio ra khong duoc de trong.");
+        }
+        if (!gioRa.isAfter(gioVao)) {
+            return KetQua.error("Gio ra phai sau gio vao.");
+        }
         CaLam caLam = repository.findCaLamById(maCaLam);
         if (caLam == null) {
             return KetQua.error("Mã ca làm không hợp lệ.");
@@ -646,7 +660,7 @@ public class ChamCongBUS {
     private KetQua<Void> validateAttendanceManagePermission() {
         TaiKhoan currentUser = com.hrm.util.SessionContext.getInstance().getCurrentUser();
         if (currentUser == null) return KetQua.error("Bạn chưa đăng nhập.");
-        if ("admin".equalsIgnoreCase(currentUser.getTenDangNhap()) || currentUser.coVaiTro("ADMIN")) {
+        if (HRMConstants.USERNAME_ADMIN.equalsIgnoreCase(currentUser.getTenDangNhap()) || currentUser.coVaiTro(HRMConstants.ROLE_ADMIN)) {
             return KetQua.success(null, "");
         }
         if (!currentUser.coQuyen(ACTION_ATTENDANCE_MANAGE)) {
@@ -658,7 +672,7 @@ public class ChamCongBUS {
     private KetQua<Void> validateAllowanceManagePermission() {
         TaiKhoan currentUser = com.hrm.util.SessionContext.getInstance().getCurrentUser();
         if (currentUser == null) return KetQua.error("Bạn chưa đăng nhập.");
-        if ("admin".equalsIgnoreCase(currentUser.getTenDangNhap()) || currentUser.coVaiTro("ADMIN")) {
+        if (HRMConstants.USERNAME_ADMIN.equalsIgnoreCase(currentUser.getTenDangNhap()) || currentUser.coVaiTro(HRMConstants.ROLE_ADMIN)) {
             return KetQua.success(null, "");
         }
         if (!currentUser.coQuyen(ACTION_ALLOWANCE_MANAGE)) {
@@ -670,7 +684,7 @@ public class ChamCongBUS {
     private KetQua<Void> validateSelfActionPermission(String action, String targetMaNV) {
         TaiKhoan currentUser = com.hrm.util.SessionContext.getInstance().getCurrentUser();
         if (currentUser == null) return KetQua.error("Bạn chưa đăng nhập.");
-        if ("admin".equalsIgnoreCase(currentUser.getTenDangNhap()) || currentUser.coVaiTro("ADMIN")) {
+        if (HRMConstants.USERNAME_ADMIN.equalsIgnoreCase(currentUser.getTenDangNhap()) || currentUser.coVaiTro(HRMConstants.ROLE_ADMIN)) {
             return KetQua.success(null, "");
         }
         if (!currentUser.coQuyen(action)) {
@@ -700,7 +714,7 @@ public class ChamCongBUS {
     private KetQua<Void> validateOvertimeApprovePermission(String targetMaNV) {
         TaiKhoan currentUser = com.hrm.util.SessionContext.getInstance().getCurrentUser();
         if (currentUser == null) return KetQua.error("Bạn chưa đăng nhập.");
-        if ("admin".equalsIgnoreCase(currentUser.getTenDangNhap()) || currentUser.coVaiTro("ADMIN")) {
+        if (HRMConstants.USERNAME_ADMIN.equalsIgnoreCase(currentUser.getTenDangNhap()) || currentUser.coVaiTro(HRMConstants.ROLE_ADMIN)) {
             return KetQua.success(null, "");
         }
         if (!currentUser.coQuyen(ACTION_OVERTIME_APPROVE)) {
@@ -716,7 +730,7 @@ public class ChamCongBUS {
     private boolean canViewAttendanceOf(String targetMaNV) {
         TaiKhoan currentUser = com.hrm.util.SessionContext.getInstance().getCurrentUser();
         if (currentUser == null) return false;
-        if ("admin".equalsIgnoreCase(currentUser.getTenDangNhap()) || currentUser.coVaiTro("ADMIN")) {
+        if (HRMConstants.USERNAME_ADMIN.equalsIgnoreCase(currentUser.getTenDangNhap()) || currentUser.coVaiTro(HRMConstants.ROLE_ADMIN)) {
             return true;
         }
         if (!currentUser.coQuyen(ACTION_ATTENDANCE_VIEW)) {

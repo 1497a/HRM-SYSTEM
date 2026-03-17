@@ -5,6 +5,7 @@ import com.hrm.bus.ChamCongBUS;
 import com.hrm.bus.KetQua;
 import com.hrm.bus.LuongBUS;
 import com.hrm.bus.XacThucBUS;
+import com.hrm.util.PermissionCodes;
 import com.hrm.util.SessionContext;
 import com.hrm.util.UIColors;
 
@@ -92,18 +93,18 @@ public class AttendancePanel extends JPanel {
         luongSvc = LuongBUS.getInstance();
         currentUser = SessionContext.getInstance().getCurrentUser();
         SessionContext sc = SessionContext.getInstance();
-        attendanceScope = XacThucBUS.getInstance().getScopeForAction("ATTENDANCE_VIEW");
-        canManage         = sc.hasPermission("ATTENDANCE_MANAGE");
-        canManageAllowance = sc.hasPermission("ALLOWANCE_MANAGE");
-        overtimeApproveScope = sc.hasPermission("OVERTIME_APPROVE")
-            ? XacThucBUS.getInstance().getScopeForAction("OVERTIME_APPROVE")
+        attendanceScope = XacThucBUS.getInstance().getScopeForAction(PermissionCodes.ATTENDANCE_VIEW);
+        canManage         = sc.hasPermission(PermissionCodes.ATTENDANCE_MANAGE);
+        canManageAllowance = sc.hasPermission(PermissionCodes.ALLOWANCE_MANAGE);
+        overtimeApproveScope = sc.hasPermission(PermissionCodes.OVERTIME_APPROVE)
+            ? XacThucBUS.getInstance().getScopeForAction(PermissionCodes.OVERTIME_APPROVE)
             : DataScope.NONE;
         canViewTeam = attendanceScope == DataScope.ALL
                    || attendanceScope == DataScope.DEPT
                    || attendanceScope == DataScope.TEAM;
-        canCheckInSelf = sc.hasPermission("ATTENDANCE_CHECKIN");
-        canRequestOTSelf = sc.hasPermission("OVERTIME_REQUEST");
-        canApproveOT = sc.hasPermission("OVERTIME_APPROVE")
+        canCheckInSelf = sc.hasPermission(PermissionCodes.ATTENDANCE_CHECKIN);
+        canRequestOTSelf = sc.hasPermission(PermissionCodes.OVERTIME_REQUEST);
+        canApproveOT = sc.hasPermission(PermissionCodes.OVERTIME_APPROVE)
             && (overtimeApproveScope == DataScope.ALL
             || overtimeApproveScope == DataScope.DEPT
             || overtimeApproveScope == DataScope.TEAM);
@@ -410,7 +411,8 @@ public class AttendancePanel extends JPanel {
         g.gridx=0; g.gridy=3; f.add(new JLabel("Giờ kết thúc:"),g);
         JTextField tKT=new JTextField(edit?ex.getGioKetThuc().format(fmt):"17:00"); g.gridx=1; f.add(tKT,g);
         g.gridx=0; g.gridy=4; f.add(new JLabel("Số giờ chuẩn:"),g);
-        JTextField tGio=new JTextField(edit?String.valueOf(ex.getSoGioChuan()):"8.0"); g.gridx=1; f.add(tGio,g);
+        JTextField tGio=new JTextField(edit?String.valueOf(ex.getSoGioChuan()):"8.0");
+        g.gridx=1; f.add(tGio,g);
         g.gridx=0; g.gridy=5; f.add(new JLabel("Cho phép OT:"),g);
         JCheckBox chk=new JCheckBox("Có",!edit||ex.isChoPhepLamThem()); chk.setOpaque(false); g.gridx=1; f.add(chk,g);
         JButton bL=btn(edit?"Cập nhật":"Thêm mới",UIColors.PRIMARY_PURPLE); bL.setFont(new Font("Segoe UI",Font.BOLD,14));
@@ -532,8 +534,13 @@ public class AttendancePanel extends JPanel {
         int maDK=(int)modelOT.getValueAt(row,0);
         String input=JOptionPane.showInputDialog(this,"Nhập hệ số mới (vd: 1.5):","Chỉnh hệ số",JOptionPane.QUESTION_MESSAGE);
         if(input==null||input.trim().isEmpty())return;
-        try{double hs=Double.parseDouble(input.trim()); svc.capNhatHeSoOT(maDK,hs); loadOT();
-        }catch(NumberFormatException ex){JOptionPane.showMessageDialog(this,"Hệ số phải là số.");}
+        try {
+            double hs = Double.parseDouble(input.trim());
+            svc.capNhatHeSoOT(maDK, hs);
+            loadOT();
+        } catch (NumberFormatException e) {
+            JOptionPane.showMessageDialog(this, "He so phai la so hop le (vd: 1.5).");
+        }
     }
 
     // ===============================================

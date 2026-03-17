@@ -187,6 +187,13 @@ public class LeaveCreateDialog extends JDialog {
         LocalDate start = startDate.toInstant().atZone(ZoneId.systemDefault()).toLocalDate();
         LocalDate end = endDate.toInstant().atZone(ZoneId.systemDefault()).toLocalDate();
 
+        if (start.isAfter(end)) {
+            JOptionPane.showMessageDialog(this, "Ngay bat dau phai truoc hoac bang Ngay ket thuc.",
+                    "Loi nhap lieu", JOptionPane.ERROR_MESSAGE);
+            spnStartDate.requestFocus();
+            return;
+        }
+
         KetQua<?> result = leaveService.createRequest(
                 currentUser.getNhanVienId(),
                 currentUser.getHoTen(),

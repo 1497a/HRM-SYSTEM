@@ -10,6 +10,8 @@ import com.hrm.dao.NhanVienDAO;
 import com.hrm.dao.ThongTinCaNhanDAO;
 import com.hrm.dao.ChucVuDAO;
 import com.hrm.model.ChucVu;
+import com.hrm.util.HRMConstants;
+import com.hrm.util.PermissionCodes;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -25,10 +27,9 @@ public class BoNhiemBUS {
     private static final String TRANG_THAI_HIEU_LUC = "hieu_luc";
     private static final String TRANG_THAI_TU_CHOI = "tu_choi";
     private static final String LOAI_BO_NHIEM_CHINH = "chinh";
-    private static final String ACTION_APPOINTMENT_VIEW = "APPOINTMENT_VIEW";
-    private static final String ROLE_ADMIN = "ADMIN";
-    private static final String ROLE_EMPLOYEE_VI = "NHAN_VIEN";
-    private static final String ROLE_EMPLOYEE_EN = "EMPLOYEE";
+    private static final String ACTION_APPOINTMENT_VIEW = PermissionCodes.APPOINTMENT_VIEW;
+    private static final String ROLE_ADMIN = HRMConstants.ROLE_ADMIN;
+    private static final String ROLE_EMPLOYEE = HRMConstants.ROLE_EMPLOYEE;
 
     private static BoNhiemBUS instance;
 
@@ -297,10 +298,9 @@ public class BoNhiemBUS {
         List<VaiTro> roles = authService.getAllRoles();
         if (roles == null || roles.isEmpty()) return null;
 
-        // Ưu tiên tìm "NHAN_VIEN" hoặc "EMPLOYEE"
+        // Ưu tiên tìm vai trò nhân viên chuẩn của hệ thống.
         for (VaiTro role : roles) {
-            if (ROLE_EMPLOYEE_VI.equalsIgnoreCase(role.getId()) ||
-                ROLE_EMPLOYEE_EN.equalsIgnoreCase(role.getId())) {
+            if (ROLE_EMPLOYEE.equalsIgnoreCase(role.getId())) {
                 return role.getId();
             }
         }

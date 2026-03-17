@@ -5,6 +5,7 @@ import com.hrm.bus.TuyenDungBUS;
 import com.hrm.model.RecruitmentStatus;
 import com.hrm.model.UngVien;
 import com.hrm.model.RecruitmentStatus;
+import com.hrm.util.PermissionCodes;
 import com.hrm.util.SessionContext;
 import com.hrm.util.UIColors;
 import com.hrm.util.UIFonts;
@@ -145,7 +146,7 @@ class HopThoaiChiTietUngVien extends JDialog {
         JPanel panel = new JPanel(new FlowLayout(FlowLayout.RIGHT, 8, 4));
         panel.setBackground(UIColors.WHITE);
 
-        boolean canManage = SessionContext.getInstance().coQuyen("RECRUITMENT_MANAGE");
+        boolean canManage = SessionContext.getInstance().hasPermission(PermissionCodes.RECRUITMENT_MANAGE);
 
         if (canManage && ungVien != null) {
             JButton btnChuyenTT = UIHelper.createPrimaryButton("Chuyển trạng thái");

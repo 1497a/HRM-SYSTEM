@@ -4,6 +4,7 @@ import com.hrm.bus.ThongBaoBUS;
 import com.hrm.bus.XacThucBUS;
 import com.hrm.model.DataScope;
 import com.hrm.model.TaiKhoan;
+import com.hrm.util.PermissionCodes;
 import com.hrm.util.SessionContext;
 import com.hrm.util.UIColors;
 
@@ -20,7 +21,7 @@ public class NotificationPanel extends JPanel {
     public NotificationPanel() {
         ThongBaoBUS service  = ThongBaoBUS.getInstance();
         TaiKhoan currentUser = SessionContext.getInstance().getCurrentUser();
-        DataScope sendScope  = XacThucBUS.getInstance().getScopeForAction("NOTIFICATION_SEND");
+        DataScope sendScope  = XacThucBUS.getInstance().getScopeForAction(PermissionCodes.NOTIFICATION_SEND);
 
         setLayout(new BorderLayout());
         setBackground(UIColors.LIGHT_GRAY_BG);

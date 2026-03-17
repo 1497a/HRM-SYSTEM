@@ -4,6 +4,7 @@ import com.hrm.model.DonXinNghiPhep;
 import com.hrm.model.TaiKhoan;
 import com.hrm.bus.KetQua;
 import com.hrm.bus.NghiPhepBUS;
+import com.hrm.util.HRMConstants;
 import com.hrm.util.SessionContext;
 import com.hrm.util.UIHelper;
 
@@ -172,7 +173,7 @@ public class LeaveApproveDialog extends JDialog {
             return;
         }
 
-        String approverId = "admin";
+        String approverId = HRMConstants.USERNAME_ADMIN;
         String approverName = "Quản trị viên";
         if (currentUser.getNhanVienId() != null && !currentUser.getNhanVienId().trim().isEmpty()) {
             approverId = currentUser.getNhanVienId();

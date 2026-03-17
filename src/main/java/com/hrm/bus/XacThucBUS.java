@@ -4,8 +4,10 @@ import com.hrm.model.Quyen;
 import com.hrm.model.VaiTro;
 import com.hrm.model.TaiKhoan;
 import com.hrm.dao.TaiKhoanDAO;
+import com.hrm.util.HRMConstants;
 import com.hrm.util.PasswordUtil;
 import com.hrm.util.SessionContext;
+import com.hrm.util.ValidationUtils;
 
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -19,8 +21,8 @@ import java.util.Set;
 public class XacThucBUS {
 
     private static final int MIN_PASSWORD_LENGTH = 6;
-    private static final String ROLE_ADMIN = "ADMIN";
-    private static final String USERNAME_ADMIN = "admin";
+    private static final String ROLE_ADMIN = HRMConstants.ROLE_ADMIN;
+    private static final String USERNAME_ADMIN = HRMConstants.USERNAME_ADMIN;
 
     private static XacThucBUS instance;
     private final TaiKhoanDAO taiKhoanRepo;
@@ -196,6 +198,11 @@ public class XacThucBUS {
             return KetQua.error("Vai trò không được để trống.");
         }
 
+        String emailErr = ValidationUtils.validateEmail(email);
+        if (emailErr != null) {
+            return KetQua.error(emailErr);
+        }
+
         String trimmedUsername = tenDangNhap.trim();
         if (taiKhoanRepo.existsByUsername(trimmedUsername)) {
             return KetQua.error("Tên đăng nhập '" + trimmedUsername + "' đã tồn tại.");
@@ -227,6 +234,11 @@ public class XacThucBUS {
         TaiKhoan existing = findExistingUser(user);
         if (existing == null) {
             return KetQua.error("Không tìm thấy tài khoản.");
+        }
+
+        String emailErr = ValidationUtils.validateEmail(user != null ? user.getEmail() : null);
+        if (emailErr != null) {
+            return KetQua.error(emailErr);
         }
 
         enforceAdminProtection(existing, user);

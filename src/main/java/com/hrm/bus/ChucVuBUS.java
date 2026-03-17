@@ -5,13 +5,15 @@ import com.hrm.dao.ChucVuDAO;
 import com.hrm.model.ChucVu;
 import com.hrm.model.DataScope;
 import com.hrm.model.TaiKhoan;
+import com.hrm.util.HRMConstants;
+import com.hrm.util.PermissionCodes;
 import com.hrm.util.SessionContext;
 
 import java.util.List;
 import java.util.stream.Collectors;
 
 public class ChucVuBUS {
-    private static final String ACTION_POSITION_MANAGE = "POSITION_MANAGE";
+    private static final String ACTION_POSITION_MANAGE = PermissionCodes.POSITION_MANAGE;
     private static final String TRANG_THAI_HOAT_DONG = "hoatdong";
     private static final String TRANG_THAI_NGUNG_HOAT_DONG = "ngung_hoat_dong";
 
@@ -132,7 +134,7 @@ public class ChucVuBUS {
         if (currentUser == null) {
             return KetQua.error("Phien dang nhap khong hop le.");
         }
-        if ("admin".equalsIgnoreCase(currentUser.getTenDangNhap()) || currentUser.coVaiTro("ADMIN")) {
+        if (HRMConstants.USERNAME_ADMIN.equalsIgnoreCase(currentUser.getTenDangNhap()) || currentUser.coVaiTro(HRMConstants.ROLE_ADMIN)) {
             return KetQua.success(null, "");
         }
         if (!currentUser.coQuyen(ACTION_POSITION_MANAGE)) {

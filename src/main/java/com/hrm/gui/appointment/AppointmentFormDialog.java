@@ -10,6 +10,8 @@ import com.hrm.bus.ChucVuBUS;
 import com.hrm.bus.NhanVienBUS;
 import com.hrm.bus.KetQua;
 import com.hrm.bus.PhongBanBUS;
+import com.hrm.util.HRMConstants;
+import com.hrm.util.PermissionCodes;
 import com.hrm.util.SessionContext;
 import com.hrm.util.UIColors;
 
@@ -322,7 +324,7 @@ public class AppointmentFormDialog extends JDialog {
         btnPanel.add(btnLuu);
 
         // Action buttons for view mode (conditionally shown by status + permission)
-        if (boNhiemHienThi != null && SessionContext.getInstance().coQuyen("APPOINTMENT_APPROVE")) {
+        if (boNhiemHienThi != null && SessionContext.getInstance().hasPermission(PermissionCodes.APPOINTMENT_APPROVE)) {
             String status = boNhiemHienThi.getTrangThai();
             if ("cho_duyet".equals(status)) {
                 JButton btnTuChoi = new JButton("Từ chối");
@@ -439,7 +441,7 @@ public class AppointmentFormDialog extends JDialog {
             // Hiển thị mã nếu tên bị rỗng
             nguoiDuyet = bn.getNguoiDuyet();
         }
-        if ("admin".equals(nguoiDuyet)) {
+        if (HRMConstants.USERNAME_ADMIN.equals(nguoiDuyet)) {
             nguoiDuyet = "Quản trị viên";
         }
         txtNguoiDuyet.setText(nguoiDuyet != null ? nguoiDuyet : "Chưa duyệt");
@@ -568,7 +570,7 @@ public class AppointmentFormDialog extends JDialog {
                 "Xác nhận phê duyệt", JOptionPane.YES_NO_OPTION);
         if (confirm != JOptionPane.YES_OPTION) return;
 
-        String userId = "admin";
+        String userId = HRMConstants.USERNAME_ADMIN;
         if (SessionContext.getInstance().getCurrentUser() != null) {
             String nvId = SessionContext.getInstance().getCurrentUser().getNhanVienId();
             if (nvId != null && !nvId.trim().isEmpty()) {

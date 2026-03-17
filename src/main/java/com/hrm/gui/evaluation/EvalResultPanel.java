@@ -6,6 +6,7 @@ import com.hrm.model.DanhGiaHieuSuat;
 import com.hrm.model.DotDanhGia;
 import com.hrm.model.NhanVien;
 import com.hrm.model.TaiKhoan;
+import com.hrm.util.PermissionCodes;
 import com.hrm.util.SessionContext;
 
 import javax.swing.*;
@@ -46,7 +47,9 @@ public class EvalResultPanel extends JPanel {
     public EvalResultPanel(int presetCycleId) {
         this.evalService = DanhGiaBUS.getInstance();
         this.currentUser = SessionContext.getInstance().getCurrentUser();
-        this.isManager = currentUser.coQuyen("EVAL_MANAGE") || currentUser.coQuyen("EVAL_REVIEW");
+        SessionContext session = SessionContext.getInstance();
+        this.isManager = session.hasPermission(PermissionCodes.EVAL_MANAGE)
+                || session.hasPermission(PermissionCodes.EVAL_REVIEW);
         this.presetCycleId = presetCycleId;
 
         this.myMaNV = currentUser.getNhanVienId();
@@ -64,7 +67,7 @@ public class EvalResultPanel extends JPanel {
         if (isManager) {
             cboNhanVien.addItem("Tất cả");
             List<NhanVien> dsNV = com.hrm.bus.NhanVienBUS.getInstance()
-                    .getAllByActionScope("EVAL_VIEW", currentUser.getNhanVienId());
+                    .getAllByActionScope(PermissionCodes.EVAL_VIEW, currentUser.getNhanVienId());
             for (NhanVien nv : dsNV) {
                 cboNhanVien.addItem(nv);
             }

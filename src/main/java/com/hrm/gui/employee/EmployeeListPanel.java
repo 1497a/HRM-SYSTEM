@@ -6,6 +6,8 @@ import com.hrm.gui.components.PurpleButton;
 import com.hrm.gui.components.PurpleTable;
 import com.hrm.model.NhanVien;
 import com.hrm.model.PhongBan;
+import com.hrm.util.HRMConstants;
+import com.hrm.util.PermissionCodes;
 import com.hrm.util.SessionContext;
 import com.hrm.util.UIColors;
 import com.hrm.util.UIHelper;
@@ -191,7 +193,7 @@ public class EmployeeListPanel extends JPanel {
 
     private void setupPermissions() {
         SessionContext sc = SessionContext.getInstance();
-        boolean canCreate = sc.coVaiTro("ADMIN") || sc.coQuyen("EMPLOYEE_CREATE");
+        boolean canCreate = sc.hasRole(HRMConstants.ROLE_ADMIN) || sc.hasPermission(PermissionCodes.EMPLOYEE_CREATE);
         btnThem.setVisible(canCreate);
         updateActionButtons();
     }

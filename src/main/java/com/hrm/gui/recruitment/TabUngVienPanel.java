@@ -2,6 +2,7 @@ package com.hrm.gui.recruitment;
 
 import com.hrm.bus.TuyenDungBUS;
 import com.hrm.model.UngVien;
+import com.hrm.util.PermissionCodes;
 import com.hrm.util.SessionContext;
 import com.hrm.util.UIColors;
 import com.hrm.util.UIHelper;
@@ -97,7 +98,7 @@ class TabUngVienPanel extends JPanel {
         add(toolbar, BorderLayout.NORTH);
         add(scroll, BorderLayout.CENTER);
 
-        btnTaoUV.setVisible(SessionContext.getInstance().coQuyen("RECRUITMENT_MANAGE"));
+        btnTaoUV.setVisible(SessionContext.getInstance().hasPermission(PermissionCodes.RECRUITMENT_MANAGE));
 
         load();
     }

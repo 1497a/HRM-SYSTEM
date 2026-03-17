@@ -17,6 +17,7 @@ import com.hrm.gui.report.ReportPanel;
 import com.hrm.gui.salary.SalaryListPanel;
 import com.hrm.model.DataScope;
 import com.hrm.model.TaiKhoan;
+import com.hrm.util.PermissionCodes;
 import com.hrm.util.SessionContext;
 import com.hrm.util.UIColors;
 import com.hrm.util.UIFonts;
@@ -348,19 +349,19 @@ public class MainFrame extends JFrame {
         SessionContext sc = SessionContext.getInstance();
         DataScope none = DataScope.NONE;
 
-        btnEmployees.setVisible(authService.getScopeForAction("EMPLOYEE_VIEW") != none);
-        btnOrganization.setVisible(sc.coQuyen("DEPARTMENT_VIEW") || sc.coQuyen("POSITION_VIEW"));
-        btnAppointments.setVisible(authService.getScopeForAction("APPOINTMENT_VIEW") != none);
-        btnRecruitment.setVisible(authService.getScopeForAction("RECRUITMENT_VIEW") != none);
-        btnAttendance.setVisible(authService.getScopeForAction("ATTENDANCE_VIEW") != none);
-        btnContracts.setVisible(authService.getScopeForAction("CONTRACT_VIEW") != none);
-        btnPayroll.setVisible(authService.getScopeForAction("PAYROLL_VIEW") != none);
-        btnLeave.setVisible(authService.getScopeForAction("LEAVE_VIEW") != none);
-        btnPerformance.setVisible(authService.getScopeForAction("EVAL_VIEW") != none);
-        btnUsers.setVisible(sc.coQuyen("USER_VIEW"));
-        btnRoles.setVisible(sc.coQuyen("ROLE_VIEW"));
-        btnReports.setVisible(sc.coQuyen("REPORT_VIEW"));
-        btnSettings.setVisible(sc.coQuyen("CHANGE_PASSWORD"));
+        btnEmployees.setVisible(authService.getScopeForAction(PermissionCodes.EMPLOYEE_VIEW) != none);
+        btnOrganization.setVisible(sc.hasPermission(PermissionCodes.DEPARTMENT_VIEW) || sc.hasPermission(PermissionCodes.POSITION_VIEW));
+        btnAppointments.setVisible(authService.getScopeForAction(PermissionCodes.APPOINTMENT_VIEW) != none);
+        btnRecruitment.setVisible(authService.getScopeForAction(PermissionCodes.RECRUITMENT_VIEW) != none);
+        btnAttendance.setVisible(authService.getScopeForAction(PermissionCodes.ATTENDANCE_VIEW) != none);
+        btnContracts.setVisible(authService.getScopeForAction(PermissionCodes.CONTRACT_VIEW) != none);
+        btnPayroll.setVisible(authService.getScopeForAction(PermissionCodes.PAYROLL_VIEW) != none);
+        btnLeave.setVisible(authService.getScopeForAction(PermissionCodes.LEAVE_VIEW) != none);
+        btnPerformance.setVisible(authService.getScopeForAction(PermissionCodes.EVAL_VIEW) != none);
+        btnUsers.setVisible(sc.hasPermission(PermissionCodes.USER_VIEW));
+        btnRoles.setVisible(sc.hasPermission(PermissionCodes.ROLE_VIEW));
+        btnReports.setVisible(sc.hasPermission(PermissionCodes.REPORT_VIEW));
+        btnSettings.setVisible(sc.hasPermission(PermissionCodes.CHANGE_PASSWORD));
     }
 
     private JPanel createPageShell(String title, JComponent component) {

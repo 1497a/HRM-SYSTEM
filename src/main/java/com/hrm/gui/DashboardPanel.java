@@ -11,6 +11,7 @@ import com.hrm.model.DonXinNghiPhep;
 import com.hrm.model.SoDungPhep;
 import com.hrm.model.TaiKhoan;
 import com.hrm.model.BangLuong;
+import com.hrm.util.PermissionCodes;
 import com.hrm.util.SessionContext;
 import com.hrm.util.UIColors;
 import com.hrm.util.UIFonts;
@@ -36,7 +37,7 @@ class DashboardPanel extends JPanel {
         this.authService = authService;
         setLayout(new BorderLayout());
         setBackground(UIColors.LIGHT_GRAY_BG);
-        DataScope scope = authService.getScopeForAction("EMPLOYEE_VIEW");
+        DataScope scope = authService.getScopeForAction(PermissionCodes.EMPLOYEE_VIEW);
         JPanel inner = (scope == DataScope.ALL || scope == DataScope.DEPT || scope == DataScope.TEAM)
                 ? buildManagerDashboard(scope)
                 : buildPersonalDashboard();
@@ -74,7 +75,7 @@ class DashboardPanel extends JPanel {
     }
 
     private void addManagerStatCards(List<JPanel> cards, DataScope scope, String maNV) {
-        if (authService.getScopeForAction("EMPLOYEE_VIEW") != DataScope.NONE) {
+        if (authService.getScopeForAction(PermissionCodes.EMPLOYEE_VIEW) != DataScope.NONE) {
             try {
                 long count = NhanVienBUS.getInstance().getDangLamViec().size();
                 cards.add(RoundedPanel.createStatCard("NV đang làm việc", String.valueOf(count), UIColors.PRIMARY_PURPLE));
@@ -82,7 +83,7 @@ class DashboardPanel extends JPanel {
                 cards.add(RoundedPanel.createStatCard("NV đang làm việc", "—", UIColors.PRIMARY_PURPLE));
             }
         }
-        if (authService.getScopeForAction("LEAVE_VIEW") != DataScope.NONE) {
+        if (authService.getScopeForAction(PermissionCodes.LEAVE_VIEW) != DataScope.NONE) {
             try {
                 long pending = NghiPhepBUS.getInstance().getPendingRequestsByScope(maNV).size();
                 cards.add(RoundedPanel.createStatCard("Đơn nghỉ chờ duyệt", String.valueOf(pending), UIColors.DANGER_RED));
@@ -90,7 +91,7 @@ class DashboardPanel extends JPanel {
                 cards.add(RoundedPanel.createStatCard("Đơn nghỉ chờ duyệt", "—", UIColors.DANGER_RED));
             }
         }
-        if (authService.getScopeForAction("PAYROLL_VIEW") != DataScope.NONE) {
+        if (authService.getScopeForAction(PermissionCodes.PAYROLL_VIEW) != DataScope.NONE) {
             try {
                 LocalDate today = LocalDate.now();
                 BangLuong payroll = LuongBUS.getInstance().getBangLuongTheoKy(today.getMonthValue(), today.getYear());
@@ -100,7 +101,7 @@ class DashboardPanel extends JPanel {
                 cards.add(RoundedPanel.createStatCard("Lương tháng này", "—", UIColors.SUCCESS_GREEN));
             }
         }
-        if (authService.getScopeForAction("RECRUITMENT_VIEW") != DataScope.NONE) {
+        if (authService.getScopeForAction(PermissionCodes.RECRUITMENT_VIEW) != DataScope.NONE) {
             try {
                 long opening = TuyenDungBUS.getInstance().getAllTinTuyenDung().stream()
                         .filter(t -> "dang_tuyen".equals(t.getTrangThai())).count();

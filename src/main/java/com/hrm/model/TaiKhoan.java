@@ -1,5 +1,7 @@
 package com.hrm.model;
 
+import com.hrm.util.HRMConstants;
+
 import java.util.ArrayList;
 import java.util.List;
 
@@ -56,14 +58,14 @@ public class TaiKhoan {
     public void xoaVaiTro(VaiTro vaiTro) { vaiTros.remove(vaiTro); }
 
     public boolean coQuyen(String maQuyen) {
-        if ("admin".equalsIgnoreCase(tenDangNhap) || coVaiTro("ADMIN")) {
+        if (HRMConstants.USERNAME_ADMIN.equalsIgnoreCase(tenDangNhap) || coVaiTro(HRMConstants.ROLE_ADMIN)) {
             return true;
         }
         return vaiTros.stream().anyMatch(vt -> vt.coQuyen(maQuyen));
     }
 
     public boolean coVaiTro(String maVaiTro) {
-        if ("ADMIN".equalsIgnoreCase(maVaiTro) && "admin".equalsIgnoreCase(tenDangNhap)) {
+        if (HRMConstants.ROLE_ADMIN.equalsIgnoreCase(maVaiTro) && HRMConstants.USERNAME_ADMIN.equalsIgnoreCase(tenDangNhap)) {
             return true;
         }
         return vaiTros.stream().anyMatch(vt -> vt.getId().equals(maVaiTro));

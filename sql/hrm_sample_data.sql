@@ -65,7 +65,7 @@ INSERT INTO NHANVIEN (maNV, loaiHopDong, ngayVaoLam, trangThai, ghiChu) VALUES
 ('NV008', 'khong_xac_dinh',    '2018-01-15', 'dang_lam_viec', 'Trưởng phòng IT'),
 ('NV009', 'khong_xac_dinh',    '2019-08-01', 'dang_lam_viec', 'Trưởng nhóm IT'),
 ('NV010', 'xac_dinh_thoi_han', '2022-02-01', 'dang_lam_viec', NULL),
-('NV011', 'thu_viec',          '2025-10-01', 'dang_lam_viec', 'Đang thử việc IT'),
+('NV011', 'xac_dinh_thoi_han', '2025-10-01', 'dang_lam_viec', 'Đã ký hợp đồng chính thức từ 01/01/2026'),
 -- Phòng Marketing
 ('NV012', 'khong_xac_dinh',    '2018-07-01', 'dang_lam_viec', 'Trưởng phòng Marketing'),
 ('NV013', 'xac_dinh_thoi_han', '2021-03-01', 'dang_lam_viec', NULL);
@@ -113,7 +113,8 @@ INSERT INTO BONHIEM (maNV, maPhongBan, maChucVu, loaiBoNhiem, tyLeHuongLuong, ma
 ('NV008', 'PHONGIT',  'TP',  'chinh', 100.00, 'NV001', 'NV001', '2018-01-15', 'hieu_luc', 'Bổ nhiệm Trưởng phòng Công nghệ thông tin'),
 ('NV009', 'PHONGIT',  'TT',  'chinh', 100.00, 'NV008', 'NV008', '2019-08-01', 'hieu_luc', 'Trưởng nhóm phát triển IT'),
 ('NV010', 'PHONGIT',  'NV',  'chinh', 100.00, 'NV009', 'NV008', '2022-02-01', 'hieu_luc', 'Nhân viên phát triển IT'),
-('NV011', 'PHONGIT',  'TV',  'chinh', 100.00, 'NV009', 'NV008', '2025-10-01', 'hieu_luc', 'Thử việc phát triển IT'),
+('NV011', 'PHONGIT',  'TV',  'chinh', 100.00, 'NV009', 'NV008', '2025-10-01', 'het_hieu_luc', 'Thu viec phat trien IT'),
+('NV011', 'PHONGIT',  'NV',  'chinh', 100.00, 'NV009', 'NV008', '2026-01-01', 'hieu_luc', 'Chinh thuc sau khi het thu viec'),
 -- Phòng Marketing
 ('NV012', 'PHONGMKT', 'TP',  'chinh', 100.00, 'NV001', 'NV001', '2018-07-01', 'hieu_luc', 'Bổ nhiệm Trưởng phòng Marketing'),
 ('NV013', 'PHONGMKT', 'NV',  'chinh', 100.00, 'NV012', 'NV001', '2021-03-01', 'hieu_luc', 'Nhân viên Marketing');
@@ -138,6 +139,7 @@ INSERT INTO QUYEN (maQuyen, tenQuyen, nhomQuyen, moTa) VALUES
 ('EMPLOYEE_VIEW',       'Xem nhân viên',                                  'Nhân viên',  'Xem danh sách và hồ sơ nhân viên (phạm vi theo role)'),
 ('EMPLOYEE_CREATE',     'Tạo nhân viên',                                  'Nhân viên',  'Tạo hồ sơ nhân viên mới vào hệ thống'),
 ('EMPLOYEE_UPDATE',     'Sửa thông tin nhân viên',                        'Nhân viên',  'Sửa thông tin cá nhân và liên hệ của nhân viên'),
+('EMPLOYEE_STATUS_UPDATE', 'Đổi trạng thái nhân viên',                   'Nhân viên',  'Đổi trạng thái làm việc của nhân viên'),
 -- To chuc
 ('DEPARTMENT_VIEW',     'Xem phòng ban',                                  'Tổ chức',    'Xem danh sách và thông tin phòng ban'),
 ('DEPARTMENT_MANAGE',   'Thêm, sửa và vô hiệu hóa phòng ban',            'Tổ chức',    'Toàn quyền cơ cấu phòng ban: thêm mới, sửa tên/phân cấp, vô hiệu hóa'),
@@ -198,7 +200,7 @@ UPDATE QUYEN SET coPhamVi = FALSE WHERE maQuyen IN (
     -- (1) Luon SELF
     'ATTENDANCE_CHECKIN', 'OVERTIME_REQUEST', 'LEAVE_CREATE',
     -- (2) Nhan vien
-    'EMPLOYEE_CREATE',
+    'EMPLOYEE_CREATE', 'EMPLOYEE_STATUS_UPDATE',
     -- (2) To chuc
     'DEPARTMENT_MANAGE', 'POSITION_MANAGE','POSITION_VIEW','DEPARTMENT_VIEW',
     -- (2) Bo nhiem
@@ -290,7 +292,7 @@ INSERT INTO VAITRO_QUYEN (maVaiTro, maQuyen, phamVi) VALUES
 
 -- -----------------------------------------------
 -- TRUONG_PHONG_NS: base TRUONG_PHONG + toàn quyền HR
--- Có thêm: EMPLOYEE_CREATE/RESIGN, APPOINTMENT_CREATE/APPROVE,
+-- Có thêm: EMPLOYEE_CREATE/EMPLOYEE_STATUS_UPDATE, APPOINTMENT_CREATE/APPROVE,
 --          CONTRACT_CREATE/MANAGE, LEAVE_MANAGE, EVAL_MANAGE,
 --          RECRUITMENT_MANAGE, REPORT_VIEW, NOTIFICATION_SEND=ALL
 -- phamVi cho mọi CREATE/MANAGE=ALL vì NS xử lý dữ liệu toàn công ty
@@ -299,6 +301,7 @@ INSERT INTO VAITRO_QUYEN (maVaiTro, maQuyen, phamVi) VALUES
 ('TRUONG_PHONG_NS', 'EMPLOYEE_VIEW',         'ALL'),
 ('TRUONG_PHONG_NS', 'EMPLOYEE_CREATE',       'ALL'),
 ('TRUONG_PHONG_NS', 'EMPLOYEE_UPDATE',       'ALL'),
+('TRUONG_PHONG_NS', 'EMPLOYEE_STATUS_UPDATE','ALL'),
 ('TRUONG_PHONG_NS', 'APPOINTMENT_VIEW',      'ALL'),
 ('TRUONG_PHONG_NS', 'APPOINTMENT_CREATE',    'ALL'),
 ('TRUONG_PHONG_NS', 'APPOINTMENT_APPROVE',   'ALL'),
@@ -364,6 +367,7 @@ INSERT INTO VAITRO_QUYEN (maVaiTro, maQuyen, phamVi) VALUES
 ('TONG_GIAM_DOC', 'EMPLOYEE_VIEW',         'ALL'),
 ('TONG_GIAM_DOC', 'EMPLOYEE_CREATE',       'ALL'),
 ('TONG_GIAM_DOC', 'EMPLOYEE_UPDATE',       'ALL'),
+('TONG_GIAM_DOC', 'EMPLOYEE_STATUS_UPDATE','ALL'),
 ('TONG_GIAM_DOC', 'DEPARTMENT_VIEW',       'ALL'),
 ('TONG_GIAM_DOC', 'DEPARTMENT_MANAGE',     'ALL'),
 ('TONG_GIAM_DOC', 'POSITION_VIEW',         'ALL'),
@@ -496,7 +500,8 @@ INSERT INTO HOPDONGLAODONG (soHopDong, maNV, loaiHopDong, luongCoSo, ngayKy, nga
 ('HD2019-IT-009',  'NV009', 'khong_xac_dinh', 28000000, '2019-07-28', '2019-08-01', NULL,         'hieu_luc', 'Hop dong Truong nhom IT'),
 ('HD2022-IT-010',  'NV010', 'xac_dinh_thoi_han', 15000000, '2022-01-28', '2022-02-01', '2024-02-01', 'het_han', 'Hop dong lan 1 NV IT'),
 ('HD2024-IT-010',  'NV010', 'xac_dinh_thoi_han', 18000000, '2024-01-28', '2024-02-01', '2026-02-01', 'hieu_luc', 'Hop dong lan 2 NV IT'),
-('HD2025-IT-011',  'NV011', 'thu_viec',           8500000, '2025-09-28', '2025-10-01', '2026-01-01', 'hieu_luc', 'Hop dong thu viec IT'),
+('HD2025-IT-011',  'NV011', 'thu_viec',           8500000, '2025-09-28', '2025-10-01', '2026-01-01', 'het_han',  'Hop dong thu viec IT'),
+('HD2026-IT-011',  'NV011', 'xac_dinh_thoi_han', 9500000, '2025-12-28', '2026-01-01', '2028-01-01', 'hieu_luc', 'Hop dong xac dinh thoi han sau thu viec'),
 -- Phòng Marketing
 ('HD2018-MKT-012', 'NV012', 'khong_xac_dinh', 22000000, '2018-06-25', '2018-07-01', NULL,         'hieu_luc', 'Hop dong TP Marketing'),
 ('HD2021-MKT-013', 'NV013', 'xac_dinh_thoi_han', 11000000, '2021-02-25', '2021-03-01', '2023-03-01', 'het_han', 'Hop dong lan 1 NV MKT'),
@@ -748,14 +753,14 @@ INSERT INTO LOAIPHEP (maLoaiPhep, tenLoaiPhep, coLuong, canChungTu, soNgayToiDa,
 -- Mỗi NV có thể có nhiều loại phép trong 1 năm (PHEP_NAM là chính, PHEP_OM khi cần)
 INSERT INTO SODUNGPHEP (maNV, nam, maLoaiPhep, soNgayDuocCap, soNgayDaDung) VALUES
 -- Phép năm 2026 (gốc 12 ngày, một số TP được thêm 1-2 ngày)
-('NV001', 2026, 'PHEP_NAM', 15, 1),
+('NV001', 2026, 'PHEP_NAM', 15, 0),
 ('NV002', 2026, 'PHEP_NAM', 13, 1),
 ('NV003', 2026, 'PHEP_NAM', 12, 0),
 ('NV004', 2026, 'PHEP_NAM', 13, 0),
 ('NV005', 2026, 'PHEP_NAM', 12, 0),
 ('NV006', 2026, 'PHEP_NAM', 13, 0),
 ('NV007', 2026, 'PHEP_NAM', 12, 1),
-('NV008', 2026, 'PHEP_NAM', 14, 1),
+('NV008', 2026, 'PHEP_NAM', 14, 0),
 ('NV009', 2026, 'PHEP_NAM', 12, 0),
 ('NV009', 2026, 'PHEP_OM',  30, 1),
 ('NV010', 2026, 'PHEP_NAM', 12, 4),
@@ -777,16 +782,17 @@ INSERT INTO DONXINNGHIPHEP (maNV, maLoaiPhep, tuNgay, denNgay, soNgayNghi, lyDo,
 -- 14. BẢNG LƯƠNG
 -- =====================================================
 -- trangThai ENUM: 'dang_xu_ly' | 'da_duyet' | 'da_khoa'
--- nguoiTao/nguoiDuyet là INT (id auto-increment của NHANVIEN), để NULL khi không xác định
+-- nguoiTao/nguoiDuyet là INT tham chiếu TAIKHOAN.maTaiKhoan
+-- maTaiKhoan: 1=admin, 2=NV001(GD), 3=NV002(TP NS), 4=NV003(NSV), 5=NV004(TP KT), ...
 INSERT INTO BANGLUONG (thang, nam, tenBangLuong, nguoiTao, nguoiDuyet, ngayDuyet, trangThai) VALUES
-( 1, 2026, 'Bảng lương tháng 01/2026', 5, 4, '2026-02-03', 'da_duyet'),
+( 1, 2026, 'Bảng lương tháng 01/2026', 5, 5, '2026-02-03', 'da_duyet'),
 ( 2, 2026, 'Bảng lương tháng 02/2026', 5, NULL, NULL,      'dang_xu_ly');
 
 -- Chi tiet luong T1/2026 (maBangLuong = 1, mau 6 NV dai dien)
 -- Cot: maBangLuong, maNV, luongCoSo, tongLuongChucVu, luongLamThem, tongThuNhap, tongKhauTru, luongThucLanh, soNgayCong, soGioLamThem
 INSERT INTO CHITIETLUONG (maBangLuong, maNV, luongCoSo, tongLuongChucVu, luongLamThem, tongThuNhap, tongKhauTru, luongThucLanh, soNgayCong, soGioLamThem) VALUES
-(1, 'NV001', 80000000, 15000000,  3030000, 98030000, 37060000,  60970000, 20,  2.5),
-(1, 'NV002', 22000000,  5000000,        0, 27000000,  8993000,  18007000, 19,  0.0),
+(1, 'NV001', 80000000, 15000000,  3030000, 98030000, 37060000,  60970000, 21,  2.5),
+(1, 'NV002', 22000000,  5000000,        0, 27000000,  8993000,  18007000, 20,  0.0),
 (1, 'NV008', 35000000,  5000000,  2188000, 42188000, 13895000,  28293000, 21,  4.0),
 (1, 'NV009', 28000000,  2000000,        0, 30000000, 10006000,  19994000, 20,  0.0),
 (1, 'NV010', 18000000,        0,  1463000, 19463000,  4753000,  14710000, 20,  6.5),
@@ -805,7 +811,7 @@ INSERT INTO DANHGIAHIEUSUAT (maDot, maNV, nguoiDanhGia, tongDiem, xepLoai, nhanX
 (1, 'NV008', 'NV001', 8.7, 'tot',      'TP IT chủ động xử lý sự cố, đảm bảo tiến độ dự án',    '2025-09-30', 'da_xac_nhan'),
 (1, 'NV009', 'NV008', 8.2, 'tot',      'TT nhóm phát triển ổn định, giao tiếp tốt',            '2025-09-30', 'da_xac_nhan'),
 (1, 'NV010', 'NV009', 7.3, 'kha',      'NV cố gắng nhưng cần cải thiện đúng giờ',              '2025-09-30', 'da_xac_nhan'),
-(1, 'NV011', 'NV009', 7.3, 'kha',      'Thử việc tích cực, học nhanh',                          '2025-09-30', 'da_xac_nhan'),
+-- NV011 không có đánh giá Q3/2025 vì chưa vào làm (ngayVaoLam = 2025-10-01, sau kỳ Q3)
 -- Cuoi nam 2025
 (2, 'NV008', 'NV001', 8.8, 'xuat_sac', 'Dự án lớn hoàn thành đúng hạn, chất lượng cao',         '2025-12-31', 'da_xac_nhan'),
 (2, 'NV009', 'NV008', 8.3, 'tot',      'Hoàn thành tốt nhiệm vụ TT, team tinh thần cao',        '2025-12-31', 'da_xac_nhan'),
@@ -856,14 +862,7 @@ INSERT INTO CHITIETDANHGIA (maDanhGia, maTieuChi, diem, nhanXet) VALUES
 (3, 5,  7.00, 'Phối hợp chưa tốt lắm'),
 (3, 6,  7.00, 'Cần đi làm đúng giờ hơn'),
 (3, 7,  7.00, 'Có tinh thần học hỏi'),
--- Q3/2025: NV011 (Tổng 7.3 ~ 73/100)
-(4, 1, 22.00, 'Làm việc được giao tốt'),
-(4, 2, 16.00, 'Theo kịp tiến độ'),
-(4, 3,  7.00, 'Mới làm việc, chưa thể hiện nhiều'),
-(4, 4,  7.00, 'Kiến thức cơ bản vững'),
-(4, 5,  7.00, 'Tích cực'),
-(4, 6,  7.00, 'Tác phong tốt'),
-(4, 7,  7.00, 'Ham học hỏi'),
+-- NV011 Q3/2025: bị xóa vì NV011 chưa vào làm (ngayVaoLam=2025-10-01)
 -- Cuoi nam 2025: NV008 (Tổng 8.8 ~ 88/100)
 (5, 1, 29.00, 'Hoàn thành xuất sắc'),
 (5, 2, 19.00, 'Luôn bám deadline'),
@@ -893,10 +892,11 @@ INSERT INTO CHITIETDANHGIA (maDanhGia, maTieuChi, diem, nhanXet) VALUES
 -- 15. TUYỂN DỤNG
 -- =====================================================
 -- Bước 1: Tạo yêu cầu tuyển dụng (YEUCAUTUYENDUNG)
+-- nguoiDuyet: maTaiKhoan=2 = NV001 (GD) — xem LOG_AUDIT confirm GD duyệt các yêu cầu này
 INSERT INTO YEUCAUTUYENDUNG (maPhongBan, maChucVu, soLuong, lyDo, mucLuongDuKien, yeuCauKinhNghiem, yeuCauHocVan, hanTuyenDung, nguoiDuyet, ngayDuyet, trangThai) VALUES
-('PHONGIT',  'NV',  1, 'Mở rộng team, tăng tài năng IT',     '20-30 triệu',  'Java/Spring Boot, 3+ năm KN', 'Đại học CNTT',      '2026-02-28', NULL, '2026-01-12', 'da_duyet'),
-('PHONGKT',  'KTV', 1, 'Bổ sung nhân lực phòng KT',          '10-15 triệu',  'Kế toán tổng hợp 2+ năm',     'Đại học Kế toán',   '2026-03-15', NULL, '2026-01-18', 'da_duyet'),
-('PHONGNS',  'NSV', 1, 'Tăng cường tuyển dụng cho Q2',       '9-13 triệu',   'Tuyển dụng, C&B, Excel',      'Đại học QTKD/NS',   '2026-02-15', NULL, '2026-01-22', 'da_duyet'),
+('PHONGIT',  'NV',  1, 'Mở rộng team, tăng tài năng IT',     '20-30 triệu',  'Java/Spring Boot, 3+ năm KN', 'Đại học CNTT',      '2026-02-28', 2, '2026-01-12', 'da_duyet'),
+('PHONGKT',  'KTV', 1, 'Bổ sung nhân lực phòng KT',          '10-15 triệu',  'Kế toán tổng hợp 2+ năm',     'Đại học Kế toán',   '2026-03-15', 2, '2026-01-18', 'da_duyet'),
+('PHONGNS',  'NSV', 1, 'Tăng cường tuyển dụng cho Q2',       '9-13 triệu',   'Tuyển dụng, C&B, Excel',      'Đại học QTKD/NS',   '2026-02-15', 2, '2026-01-22', 'da_duyet'),
 ('PHONGMKT', 'NV',  1, 'Tuyển thêm NV cho chiến dịch H1',    '10-15 triệu',  'Digital marketing, SEO/SEM',  'Đại học Marketing', '2026-03-31', NULL, NULL,         'cho_duyet');
 
 -- Bước 2: Đăng tin tuyển dụng (TINTUYENDUNG) - tương ứng với maYeuCau 1,2,3,4

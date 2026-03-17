@@ -3,6 +3,7 @@ package com.hrm.bus;
 import com.hrm.model.*;
 import com.hrm.dao.ChamCongDAO;
 import com.hrm.dao.NghiPhepDAO;
+import com.hrm.util.PermissionCodes;
 
 import java.time.DayOfWeek;
 import java.time.LocalDate;
@@ -15,8 +16,8 @@ import java.util.List;
  */
 public class NghiPhepBUS {
     private static final String MA_LOAI_PHEP_NAM = "AL";
-    private static final String ACTION_LEAVE_APPROVE = "LEAVE_APPROVE";
-    private static final String ACTION_LEAVE_VIEW = "LEAVE_VIEW";
+    private static final String ACTION_LEAVE_APPROVE = PermissionCodes.LEAVE_APPROVE;
+    private static final String ACTION_LEAVE_VIEW = PermissionCodes.LEAVE_VIEW;
     private static final String TRANG_THAI_DA_DUYET = "da_duyet";
     private static final String TRANG_THAI_TU_CHOI = "tu_choi";
     private static final String TRANG_THAI_HUY = "huy";
@@ -75,6 +76,10 @@ public class NghiPhepBUS {
         }
         if (denNgay.isBefore(tuNgay)) {
             return KetQua.error("Ngày kết thúc phải sau ngày bắt đầu.");
+        }
+
+        if (isBlank(lyDo)) {
+            return KetQua.error("Ly do nghi phep khong duoc de trong.");
         }
 
         LoaiPhep loaiPhep = repository.findLoaiPhepById(maLoaiPhep);

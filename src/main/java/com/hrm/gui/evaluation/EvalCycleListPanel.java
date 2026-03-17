@@ -5,6 +5,7 @@ import com.hrm.bus.KetQua;
 import com.hrm.model.DotDanhGia;
 import com.hrm.model.TaiKhoan;
 import com.hrm.model.TieuChiDanhGia;
+import com.hrm.util.PermissionCodes;
 import com.hrm.util.SessionContext;
 import com.hrm.util.UIColors;
 import com.hrm.util.UIHelper;
@@ -44,8 +45,9 @@ public class EvalCycleListPanel extends JPanel {
     public EvalCycleListPanel() {
         this.evalService = DanhGiaBUS.getInstance();
         this.currentUser = SessionContext.getInstance().getCurrentUser();
-        this.isAdmin   = currentUser.coQuyen("EVAL_MANAGE");
-        this.isManager = isAdmin || currentUser.coQuyen("EVAL_REVIEW");
+        SessionContext session = SessionContext.getInstance();
+        this.isAdmin   = session.hasPermission(PermissionCodes.EVAL_MANAGE);
+        this.isManager = isAdmin || session.hasPermission(PermissionCodes.EVAL_REVIEW);
 
         initComponents();
         setupLayout();

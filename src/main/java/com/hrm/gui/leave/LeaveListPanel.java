@@ -5,6 +5,8 @@ import com.hrm.model.NhanVien;
 import com.hrm.model.SoDungPhep;
 import com.hrm.model.TaiKhoan;
 import com.hrm.bus.NghiPhepBUS;
+import com.hrm.util.HRMConstants;
+import com.hrm.util.PermissionCodes;
 import com.hrm.util.SessionContext;
 import com.hrm.util.UIHelper;
 
@@ -44,8 +46,8 @@ public class LeaveListPanel extends JPanel {
         this.leaveService = NghiPhepBUS.getInstance();
         this.currentUser = SessionContext.getInstance().getCurrentUser();
         com.hrm.bus.XacThucBUS authBus = com.hrm.bus.XacThucBUS.getInstance();
-        com.hrm.model.DataScope leaveViewScope = authBus.getScopeForAction("LEAVE_VIEW");
-        com.hrm.model.DataScope leaveApproveScope = authBus.getScopeForAction("LEAVE_APPROVE");
+        com.hrm.model.DataScope leaveViewScope = authBus.getScopeForAction(PermissionCodes.LEAVE_VIEW);
+        com.hrm.model.DataScope leaveApproveScope = authBus.getScopeForAction(PermissionCodes.LEAVE_APPROVE);
         this.isManager = leaveViewScope != com.hrm.model.DataScope.NONE
                       && leaveViewScope != com.hrm.model.DataScope.SELF;
         this.canApprove = leaveApproveScope != com.hrm.model.DataScope.NONE;
@@ -71,7 +73,7 @@ public class LeaveListPanel extends JPanel {
         if (isManager) {
             cboNhanVien.addItem("Tất cả");
             String currentMaNV = currentUser.getNhanVienId();
-            List<NhanVien> dsNV = com.hrm.bus.NhanVienBUS.getInstance().getAllByActionScope("LEAVE_VIEW", currentMaNV);
+            List<NhanVien> dsNV = com.hrm.bus.NhanVienBUS.getInstance().getAllByActionScope(PermissionCodes.LEAVE_VIEW, currentMaNV);
             for (NhanVien nv : dsNV) {
                 cboNhanVien.addItem(nv);
             }
@@ -264,7 +266,7 @@ public class LeaveListPanel extends JPanel {
 
     private void createRequest() {
         if (currentUser.getNhanVienId() == null) {
-            String message = currentUser.coVaiTro("ADMIN")
+            String message = SessionContext.getInstance().hasRole(HRMConstants.ROLE_ADMIN)
                     ? "Tài khoản admin không cần tạo yêu cầu nghỉ phép."
                    : "Tài khoản của bạn chưa gắn mã nhân viên nên không thể tạo đơn nghỉ phép.";
             JOptionPane.showMessageDialog(this,

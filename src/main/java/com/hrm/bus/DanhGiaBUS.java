@@ -2,6 +2,7 @@ package com.hrm.bus;
 
 import com.hrm.model.*;
 import com.hrm.dao.DanhGiaDAO;
+import com.hrm.util.PermissionCodes;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -16,7 +17,7 @@ import java.util.Set;
  * Đã cập nhật để maNV là String (ví dụ: "NV001", "NV002", ...).
  */
 public class DanhGiaBUS {
-    private static final String ACTION_EVAL_VIEW = "EVAL_VIEW";
+    private static final String ACTION_EVAL_VIEW = PermissionCodes.EVAL_VIEW;
 
     private static DanhGiaBUS instance;
     private final DanhGiaDAO repository;

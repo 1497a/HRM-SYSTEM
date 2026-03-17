@@ -7,17 +7,20 @@ import com.hrm.model.DataScope;
 import com.hrm.model.HopDongLaoDong;
 import com.hrm.model.NhanVien;
 import com.hrm.model.TaiKhoan;
+import com.hrm.util.HRMConstants;
+import com.hrm.util.PermissionCodes;
 
 import java.time.LocalDate;
 import java.time.temporal.ChronoUnit;
 import java.util.List;
 
 public class HopDongBUS {
-    private static final String ACTION_CONTRACT_CREATE  = "CONTRACT_CREATE";
-    private static final String ACTION_CONTRACT_APPROVE = "CONTRACT_APPROVE";
-    private static final String ACTION_CONTRACT_MANAGE  = "CONTRACT_MANAGE";
+    private static final String ACTION_CONTRACT_CREATE  = PermissionCodes.CONTRACT_CREATE;
+    private static final String ACTION_CONTRACT_APPROVE = PermissionCodes.CONTRACT_APPROVE;
+    private static final String ACTION_CONTRACT_MANAGE  = PermissionCodes.CONTRACT_MANAGE;
     private static final String LOAI_THU_VIEC = "thu_viec";
     private static final String LOAI_XAC_DINH_THOI_HAN = "xac_dinh_thoi_han";
+    private static final String LOAI_KHONG_XAC_DINH_THOI_HAN = "khong_xac_dinh";
     private static final String TRANG_THAI_CHO_DUYET = "cho_duyet";
     private static final String TRANG_THAI_HIEU_LUC  = "hieu_luc";
     private static final String TRANG_THAI_THANH_LY  = "thanh_ly";
@@ -91,6 +94,9 @@ public class HopDongBUS {
         if (nv == null) {
             return KetQua.error("Khong tim thay nhan vien.");
         }
+        if (hd.getLuongCoSo() <= 0) {
+            return KetQua.error("Luong co so phai lon hon 0.");
+        }
 
         hd.setSoHopDong(generateSoHopDong());
 
@@ -125,8 +131,8 @@ public class HopDongBUS {
     public KetQua<Void> pheDuyetHopDong(int maHopDong) {
         TaiKhoan currentUser = com.hrm.util.SessionContext.getInstance().getCurrentUser();
         if (currentUser == null) return KetQua.error("Phien dang nhap khong hop le.");
-        if (!"admin".equalsIgnoreCase(currentUser.getTenDangNhap())
-                && !currentUser.coVaiTro("ADMIN")
+        if (!HRMConstants.USERNAME_ADMIN.equalsIgnoreCase(currentUser.getTenDangNhap())
+                && !currentUser.coVaiTro(HRMConstants.ROLE_ADMIN)
                 && !currentUser.coQuyen(ACTION_CONTRACT_APPROVE)) {
             return KetQua.error("Ban khong co quyen phe duyet hop dong.");
         }
@@ -194,7 +200,7 @@ public class HopDongBUS {
         if (currentUser == null) {
             return KetQua.error("Phien dang nhap khong hop le.");
         }
-        if ("admin".equalsIgnoreCase(currentUser.getTenDangNhap()) || currentUser.coVaiTro("ADMIN")) {
+        if (HRMConstants.USERNAME_ADMIN.equalsIgnoreCase(currentUser.getTenDangNhap()) || currentUser.coVaiTro(HRMConstants.ROLE_ADMIN)) {
             return KetQua.success(null, "");
         }
         if (!currentUser.coQuyen(action)) {
@@ -249,11 +255,17 @@ public class HopDongBUS {
 
     private KetQua<Void> validateTheoLoaiHopDong(HopDongLaoDong hd) {
         String loai = hd.getLoaiHopDong();
+        if (isBlank(loai)) {
+            return KetQua.error("Loai hop dong khong duoc de trong.");
+        }
         if (LOAI_THU_VIEC.equals(loai)) {
             return validateHopDongThuViec(hd);
         }
         if (LOAI_XAC_DINH_THOI_HAN.equals(loai)) {
             return validateHopDongXacDinhThoiHan(hd);
+        }
+        if (!LOAI_KHONG_XAC_DINH_THOI_HAN.equals(loai)) {
+            return KetQua.error("Loai hop dong khong hop le.");
         }
         return KetQua.success(null, "");
     }

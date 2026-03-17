@@ -4,6 +4,7 @@ import com.hrm.model.TaiKhoan;
 import com.hrm.model.VaiTro;
 import com.hrm.bus.XacThucBUS;
 import com.hrm.bus.KetQua;
+import com.hrm.util.PermissionCodes;
 import com.hrm.util.SessionContext;
 import com.hrm.util.UIColors;
 import com.hrm.util.UIHelper;
@@ -155,13 +156,13 @@ public class UserManagementPanel extends JPanel {
         JButton btnLamMoi = new JButton("Làm mới");
         btnLamMoi.addActionListener(e -> loadData());
         buttonPanel.add(btnLamMoi);
-        if (sessionContext.coQuyen("USER_CREATE")) {
+        if (sessionContext.hasPermission(PermissionCodes.USER_CREATE)) {
             buttonPanel.add(btnCreate);
         }
-        if (sessionContext.coQuyen("USER_UPDATE")) {
+        if (sessionContext.hasPermission(PermissionCodes.USER_UPDATE)) {
             buttonPanel.add(btnEdit);
         }
-        if (sessionContext.coQuyen("USER_DELETE")) {
+        if (sessionContext.hasPermission(PermissionCodes.USER_DELETE)) {
             buttonPanel.add(btnDelete);
         }
 

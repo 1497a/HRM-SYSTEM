@@ -7,6 +7,7 @@ import com.hrm.model.BangLuong;
 import com.hrm.model.ChiTietLuong;
 import com.hrm.model.DataScope;
 import com.hrm.model.TaiKhoan;
+import com.hrm.util.PermissionCodes;
 import com.hrm.util.SessionContext;
 import com.hrm.util.UIColors;
 import com.hrm.util.UIHelper;
@@ -58,13 +59,13 @@ public class SalaryListPanel extends JPanel {
 
         SessionContext session = SessionContext.getInstance();
         TaiKhoan currentUser = session.getCurrentUser();
-        this.currentScope = XacThucBUS.getInstance().getScopeForAction("PAYROLL_VIEW");
-        this.canCalculate = session.coQuyen("PAYROLL_CALCULATE");
-        this.canLock      = session.coQuyen("PAYROLL_LOCK");
+        this.currentScope = XacThucBUS.getInstance().getScopeForAction(PermissionCodes.PAYROLL_VIEW);
+        this.canCalculate = session.hasPermission(PermissionCodes.PAYROLL_CALCULATE);
+        this.canLock      = session.hasPermission(PermissionCodes.PAYROLL_LOCK);
         this.maNVHienTai = currentUser != null ? currentUser.getNhanVienId() : null;
         if ((currentScope == DataScope.DEPT || currentScope == DataScope.TEAM) && maNVHienTai != null) {
             this.maNVTrongPhamVi = com.hrm.bus.NhanVienBUS.getInstance()
-                    .getAllByActionScope("PAYROLL_VIEW", maNVHienTai).stream()
+                    .getAllByActionScope(PermissionCodes.PAYROLL_VIEW, maNVHienTai).stream()
                     .map(com.hrm.model.NhanVien::getMaNhanVien)
                     .collect(Collectors.toSet());
         } else {

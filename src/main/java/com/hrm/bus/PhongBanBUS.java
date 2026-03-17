@@ -5,11 +5,13 @@ import com.hrm.dao.PhongBanDAO;
 import com.hrm.model.DataScope;
 import com.hrm.model.PhongBan;
 import com.hrm.model.TaiKhoan;
+import com.hrm.util.HRMConstants;
+import com.hrm.util.PermissionCodes;
 
 import java.util.List;
 
 public class PhongBanBUS {
-    private static final String ACTION_DEPARTMENT_MANAGE = "DEPARTMENT_MANAGE";
+    private static final String ACTION_DEPARTMENT_MANAGE = PermissionCodes.DEPARTMENT_MANAGE;
     private static final String TRANG_THAI_HOAT_DONG = "hoatDong";
     private static final String TRANG_THAI_NGUNG_HOAT_DONG = "ngung_hoat_dong";
 
@@ -145,7 +147,7 @@ public class PhongBanBUS {
         if (currentUser == null) {
             return KetQua.error("Phien dang nhap khong hop le.");
         }
-        if ("admin".equalsIgnoreCase(currentUser.getTenDangNhap()) || currentUser.coVaiTro("ADMIN")) {
+        if (HRMConstants.USERNAME_ADMIN.equalsIgnoreCase(currentUser.getTenDangNhap()) || currentUser.coVaiTro(HRMConstants.ROLE_ADMIN)) {
             return KetQua.success(null, "");
         }
         if (!currentUser.coQuyen(ACTION_DEPARTMENT_MANAGE)) {

@@ -4,6 +4,7 @@ import com.hrm.bus.BoNhiemBUS;
 import com.hrm.gui.components.PurpleButton;
 import com.hrm.gui.components.PurpleTable;
 import com.hrm.model.BoNhiem;
+import com.hrm.util.PermissionCodes;
 import com.hrm.util.SessionContext;
 import com.hrm.util.UIColors;
 import com.hrm.util.UIHelper;
@@ -240,7 +241,7 @@ public class AppointmentListPanel extends JPanel {
     }
 
     private void setupPermissions() {
-        btnTao.setVisible(SessionContext.getInstance().coQuyen("APPOINTMENT_CREATE"));
+        btnTao.setVisible(SessionContext.getInstance().hasPermission(PermissionCodes.APPOINTMENT_CREATE));
     }
 
     public void loadData() {

@@ -11,6 +11,7 @@ import com.hrm.model.DataScope;
 import com.hrm.model.NhanVien;
 import com.hrm.model.SoDungPhep;
 import com.hrm.model.TaiKhoan;
+import com.hrm.util.PermissionCodes;
 import com.hrm.util.SessionContext;
 import com.hrm.util.UIColors;
 import com.hrm.util.UIHelper;
@@ -48,7 +49,7 @@ public class ReportPanel extends JPanel {
 
         TaiKhoan currentUser = SessionContext.getInstance().getCurrentUser();
         this.currentMaNV = currentUser != null ? currentUser.getNhanVienId() : null;
-        this.reportScope = XacThucBUS.getInstance().getScopeForAction("REPORT_VIEW");
+        this.reportScope = XacThucBUS.getInstance().getScopeForAction(PermissionCodes.REPORT_VIEW);
         this.scopedEmployees = loadScopedEmployees();
         this.scopedEmployeeIds = scopedEmployees.stream()
                 .map(NhanVien::getMaNhanVien)
@@ -239,7 +240,7 @@ public class ReportPanel extends JPanel {
         if (reportScope == DataScope.NONE || currentMaNV == null && reportScope != DataScope.ALL) {
             return Collections.emptyList();
         }
-        return nvService.getAllByActionScope("REPORT_VIEW", currentMaNV);
+        return nvService.getAllByActionScope(PermissionCodes.REPORT_VIEW, currentMaNV);
     }
 
     private List<ChiTietLuong> applyPayrollScopeFilter(List<ChiTietLuong> details) {

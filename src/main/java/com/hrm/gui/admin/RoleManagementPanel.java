@@ -3,6 +3,7 @@ package com.hrm.gui.admin;
 import com.hrm.model.VaiTro;
 import com.hrm.bus.XacThucBUS;
 import com.hrm.bus.KetQua;
+import com.hrm.util.PermissionCodes;
 import com.hrm.util.SessionContext;
 import com.hrm.util.UIColors;
 import com.hrm.util.UIHelper;
@@ -109,13 +110,13 @@ public class RoleManagementPanel extends JPanel {
         JButton btnLamMoi = new JButton("Làm mới");
         btnLamMoi.addActionListener(e -> loadData());
         buttonPanel.add(btnLamMoi);
-        if (sessionContext.coQuyen("ROLE_CREATE")) {
+        if (sessionContext.hasPermission(PermissionCodes.ROLE_CREATE)) {
             buttonPanel.add(btnCreate);
         }
-        if (sessionContext.coQuyen("ROLE_UPDATE")) {
+        if (sessionContext.hasPermission(PermissionCodes.ROLE_UPDATE)) {
             buttonPanel.add(btnEdit);
         }
-        if (sessionContext.coQuyen("ROLE_DELETE")) {
+        if (sessionContext.hasPermission(PermissionCodes.ROLE_DELETE)) {
             buttonPanel.add(btnDelete);
         }
 

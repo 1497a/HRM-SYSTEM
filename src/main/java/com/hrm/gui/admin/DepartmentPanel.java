@@ -4,6 +4,7 @@ import com.hrm.bus.KetQua;
 import com.hrm.bus.PhongBanBUS;
 import com.hrm.model.PhongBan;
 import com.hrm.util.DialogUtil;
+import com.hrm.util.PermissionCodes;
 import com.hrm.util.SessionContext;
 import com.hrm.util.UIHelper;
 
@@ -113,7 +114,7 @@ public class DepartmentPanel extends JPanel {
     }
 
     private void setupPermissions() {
-        btnThem.setVisible(SessionContext.getInstance().coQuyen("DEPARTMENT_MANAGE"));
+        btnThem.setVisible(SessionContext.getInstance().hasPermission(PermissionCodes.DEPARTMENT_MANAGE));
     }
 
     private void applyFilter() {
@@ -203,7 +204,7 @@ public class DepartmentPanel extends JPanel {
         PhongBan dept = service.getById(ma);
         if (dept == null) return;
 
-        boolean canEdit = SessionContext.getInstance().coQuyen("DEPARTMENT_MANAGE");
+        boolean canEdit = SessionContext.getInstance().hasPermission(PermissionCodes.DEPARTMENT_MANAGE);
 
         Frame frame = (Frame) SwingUtilities.getWindowAncestor(this);
         JDialog dialog = new JDialog(frame, "Chi tiết phòng ban - " + dept.getTenPhongBan(), true);

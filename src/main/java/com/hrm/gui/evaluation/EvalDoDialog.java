@@ -8,6 +8,8 @@ import com.hrm.model.TaiKhoan;
 import com.hrm.bus.DanhGiaBUS;
 import com.hrm.bus.KetQua;
 import com.hrm.bus.NhanVienBUS;
+import com.hrm.util.HRMConstants;
+import com.hrm.util.PermissionCodes;
 import com.hrm.util.SessionContext;
 import com.hrm.util.UIColors;
 import com.hrm.util.UIHelper;
@@ -117,7 +119,7 @@ public class EvalDoDialog extends JDialog {
     private void loadEmployees() {
         String currentMaNV = currentUser.getNhanVienId();
         List<NhanVien> employees = NhanVienBUS.getInstance()
-                .getAllByActionScope("EVAL_REVIEW", currentMaNV);
+                .getAllByActionScope(PermissionCodes.EVAL_REVIEW, currentMaNV);
 
         List<String> alreadyEvaluated = evalService.getEvaluatedMaNVInCycle(cycleId);
 
@@ -311,7 +313,7 @@ public class EvalDoDialog extends JDialog {
             return;
         }
 
-        String approverId = "admin";
+        String approverId = HRMConstants.USERNAME_ADMIN;
         String approverName = "Quản trị viên";
         if (currentUser.getNhanVienId() != null && !currentUser.getNhanVienId().trim().isEmpty()) {
             approverId = currentUser.getNhanVienId();

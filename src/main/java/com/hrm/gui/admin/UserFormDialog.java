@@ -7,6 +7,7 @@ import com.hrm.model.TaiKhoan;
 import com.hrm.bus.NhanVienBUS;
 import com.hrm.bus.XacThucBUS;
 import com.hrm.bus.KetQua;
+import com.hrm.util.HRMConstants;
 import com.hrm.util.SessionContext;
 import com.hrm.util.UIHelper;
 import com.hrm.util.ValidationUtils;
@@ -415,10 +416,10 @@ public class UserFormDialog extends JDialog {
 
     private boolean isEditingProtectedAdminAccount() {
         if (editingUser == null) return false;
-        if ("admin".equalsIgnoreCase(editingUser.getTenDangNhap())) return true;
+        if (HRMConstants.USERNAME_ADMIN.equalsIgnoreCase(editingUser.getTenDangNhap())) return true;
         if (currentUser == null || currentUser.getId() != editingUser.getId()) return false;
         return currentUser.getVaiTros() != null
-                && currentUser.getVaiTros().stream().anyMatch(v -> "ADMIN".equalsIgnoreCase(v.getId()));
+                && currentUser.getVaiTros().stream().anyMatch(v -> HRMConstants.ROLE_ADMIN.equalsIgnoreCase(v.getId()));
     }
 
     public boolean isSuccessful() { return successful; }

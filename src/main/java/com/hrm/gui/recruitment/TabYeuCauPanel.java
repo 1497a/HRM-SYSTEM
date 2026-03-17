@@ -7,6 +7,7 @@ import com.hrm.bus.TuyenDungBUS;
 import com.hrm.model.ChucVu;
 import com.hrm.model.PhongBan;
 import com.hrm.model.YeuCauTuyenDung;
+import com.hrm.util.PermissionCodes;
 import com.hrm.util.SessionContext;
 import com.hrm.util.UIColors;
 import com.hrm.util.UIHelper;
@@ -103,8 +104,8 @@ class TabYeuCauPanel extends JPanel {
 
     private void setupPermissions() {
         SessionContext sc = SessionContext.getInstance();
-        boolean canRequest = sc.coQuyen("RECRUITMENT_REQUEST") || sc.coQuyen("RECRUITMENT_MANAGE");
-        boolean canManage = sc.coQuyen("RECRUITMENT_MANAGE");
+        boolean canRequest = sc.hasPermission(PermissionCodes.RECRUITMENT_REQUEST) || sc.hasPermission(PermissionCodes.RECRUITMENT_MANAGE);
+        boolean canManage = sc.hasPermission(PermissionCodes.RECRUITMENT_MANAGE);
         btnTao.setVisible(canRequest);
         btnPheDuyet.setVisible(canManage);
         btnTuChoi.setVisible(canManage);

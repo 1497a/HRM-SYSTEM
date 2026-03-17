@@ -6,6 +6,7 @@ import com.hrm.model.NhanVien;
 import com.hrm.bus.HopDongBUS;
 import com.hrm.bus.NhanVienBUS;
 import com.hrm.bus.KetQua;
+import com.hrm.util.PermissionCodes;
 import com.hrm.util.UIColors;
 
 import javax.swing.*;
@@ -362,8 +363,8 @@ public class ContractFormDialog extends JDialog {
 
         com.hrm.util.SessionContext sc = com.hrm.util.SessionContext.getInstance();
         String trangThai = hopDongHienThi.getTrangThai();
-        btnPheDuyet.setVisible(sc.coQuyen("CONTRACT_APPROVE") && "cho_duyet".equals(trangThai));
-        btnThanhLy.setVisible(sc.coQuyen("CONTRACT_MANAGE")
+        btnPheDuyet.setVisible(sc.hasPermission(PermissionCodes.CONTRACT_APPROVE) && "cho_duyet".equals(trangThai));
+        btnThanhLy.setVisible(sc.hasPermission(PermissionCodes.CONTRACT_MANAGE)
                 && ("hieu_luc".equals(trangThai) || "het_hieu_luc".equals(trangThai)));
     }
 
@@ -434,17 +435,29 @@ public class ContractFormDialog extends JDialog {
             return;
         }
 
-        // Ngày ký và ngày hiệu lực
         Date ngayKyDate = (Date) spnNgayKy.getValue();
         Date ngayHieuLucDate = (Date) spnNgayHieuLuc.getValue();
         LocalDate ngayKy = ngayKyDate.toInstant().atZone(ZoneId.systemDefault()).toLocalDate();
         LocalDate ngayHieuLuc = ngayHieuLucDate.toInstant().atZone(ZoneId.systemDefault()).toLocalDate();
+
+        if (ngayKy.isAfter(ngayHieuLuc)) {
+            JOptionPane.showMessageDialog(this, "Ngay ky phai truoc hoac bang Ngay hieu luc.",
+                    "Loi nhap lieu", JOptionPane.ERROR_MESSAGE);
+            spnNgayKy.requestFocus();
+            return;
+        }
 
         // Ngày hết hiệu lực (nullable)
         LocalDate ngayHetHieuLuc = null;
         if (!chkKhongXacDinhNgayHet.isSelected()) {
             Date ngayHetDate = (Date) spnNgayHetHieuLuc.getValue();
             ngayHetHieuLuc = ngayHetDate.toInstant().atZone(ZoneId.systemDefault()).toLocalDate();
+            if (ngayHetHieuLuc.isBefore(ngayHieuLuc)) {
+                JOptionPane.showMessageDialog(this, "Ngay het hieu luc phai sau hoac bang Ngay hieu luc.",
+                        "Loi nhap lieu", JOptionPane.ERROR_MESSAGE);
+                spnNgayHetHieuLuc.requestFocus();
+                return;
+            }
         }
 
         // Map combo loại HĐ -> DB value

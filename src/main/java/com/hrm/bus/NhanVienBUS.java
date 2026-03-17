@@ -8,12 +8,14 @@ import com.hrm.model.NhanVien;
 import com.hrm.model.TaiKhoan;
 import com.hrm.model.ThongTinCaNhan;
 import com.hrm.util.DatabaseConnection;
+import com.hrm.util.HRMConstants;
+import com.hrm.util.PermissionCodes;
 import com.hrm.util.SessionContext;
+import com.hrm.util.ValidationUtils;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
-import java.text.Normalizer;
 import java.time.LocalDate;
 import java.util.List;
 
@@ -22,8 +24,9 @@ import java.util.List;
  * Singleton pattern.
  */
 public class NhanVienBUS {
-    private static final String ACTION_EMPLOYEE_VIEW = "EMPLOYEE_VIEW";
-    private static final String ACTION_EMPLOYEE_UPDATE = "EMPLOYEE_UPDATE";
+    private static final String ACTION_EMPLOYEE_VIEW = PermissionCodes.EMPLOYEE_VIEW;
+    private static final String ACTION_EMPLOYEE_UPDATE = PermissionCodes.EMPLOYEE_UPDATE;
+    private static final String ACTION_EMPLOYEE_STATUS_UPDATE = PermissionCodes.EMPLOYEE_STATUS_UPDATE;
 
     private static final String TRANG_THAI_DANG_LAM_VIEC = "dang_lam_viec";
     private static final String TRANG_THAI_TAM_NGHI = "tam_nghi";
@@ -33,17 +36,7 @@ public class NhanVienBUS {
     private static final String REGEX_EMAIL = "^[\\w.-]+@[\\w.-]+\\.[a-zA-Z]{2,}$";
     private static final String REGEX_PHONE = "0\\d{9,10}";
 
-    private static final String ROLE_ADMIN = "ADMIN";
-    private static final String ROLE_TONG_GIAM_DOC = "TONG_GIAM_DOC";
-    private static final String ROLE_GIAM_DOC = "GIAM_DOC";
-    private static final String ROLE_PHO_GIAM_DOC = "PHO_GIAM_DOC";
-    private static final String ROLE_TRUONG_PHONG_NS = "TRUONG_PHONG_NS";
-    private static final String ROLE_TRUONG_PHONG_KT = "TRUONG_PHONG_KT";
-    private static final String ROLE_TRUONG_PHONG = "TRUONG_PHONG";
-    private static final String ROLE_QUAN_LY = "QUAN_LY";
-    private static final String ROLE_NHAN_SU = "NHAN_SU";
-    private static final String ROLE_KE_TOAN = "KE_TOAN";
-    private static final String ROLE_NHAN_VIEN = "NHAN_VIEN";
+    private static final String ROLE_ADMIN = HRMConstants.ROLE_ADMIN;
 
     private static NhanVienBUS instance;
 
@@ -71,6 +64,20 @@ public class NhanVienBUS {
         }
         if (isBlank(ttcn.getHoTen())) {
             return KetQua.error("Ho ten khong duoc de trong.");
+        }
+        if (ttcn.getNgaySinh() != null) {
+            String birthErr = ValidationUtils.validateBirthDate(ttcn.getNgaySinh());
+            if (birthErr != null) {
+                return KetQua.error(birthErr);
+            }
+        }
+        String emailErr = ValidationUtils.validateEmail(ttcn.getEmail());
+        if (emailErr != null) {
+            return KetQua.error(emailErr);
+        }
+        String phoneErr = ValidationUtils.validatePhone(ttcn.getDienThoai());
+        if (phoneErr != null) {
+            return KetQua.error(phoneErr);
         }
 
         KetQua<Void> cccdValidation = validateCCCD(ttcn.getCccd(), nv.getMaNhanVien());
@@ -118,16 +125,16 @@ public class NhanVienBUS {
         if (!cccdValidation.isSuccess()) {
             return KetQua.error(cccdValidation.getMessage());
         }
-
-        if (ttcn.getEmail() != null && !ttcn.getEmail().trim().isEmpty()
-                && !ttcn.getEmail().trim().matches(REGEX_EMAIL)) {
-            return KetQua.error("Dia chi email khong hop le.");
+        if (ttcn.getNgaySinh() != null) {
+            String birthErr = ValidationUtils.validateBirthDate(ttcn.getNgaySinh());
+            if (birthErr != null) {
+                return KetQua.error(birthErr);
+            }
         }
-
-        if (ttcn.getDienThoai() != null && !ttcn.getDienThoai().trim().isEmpty()
-                && !ttcn.getDienThoai().trim().matches(REGEX_PHONE)) {
-            return KetQua.error("So dien thoai khong hop le (bat dau bang 0 va co 10-11 chu so).");
-        }
+        String emailErr = ValidationUtils.validateEmail(ttcn.getEmail());
+        if (emailErr != null) return KetQua.error(emailErr);
+        String phoneErr = ValidationUtils.validatePhone(ttcn.getDienThoai());
+        if (phoneErr != null) return KetQua.error(phoneErr);
 
         try {
             ttcnRepo.update(ttcn);
@@ -313,21 +320,15 @@ public class NhanVienBUS {
             return KetQua.error("Khong the tu doi trang thai cua chinh minh.");
         }
 
-        if (!isCurrentUserAllowedForAction(currentUser, ACTION_EMPLOYEE_UPDATE)) {
+        if (!isCurrentUserAllowedForAction(currentUser, ACTION_EMPLOYEE_STATUS_UPDATE)) {
             return KetQua.error("Ban khong co quyen doi trang thai nhan vien nay.");
-        }
-        if (!isTargetWithinActionScope(ACTION_EMPLOYEE_UPDATE, currentMaNV, target.getMaNhanVien())) {
-            return KetQua.error("Ban khong co pham vi thao tac tren nhan vien nay.");
-        }
-        if (!canManageTargetByHierarchy(currentUser, target)) {
-            return KetQua.error("Khong duoc phep doi trang thai cua nhan su co cap bac bang hoac cao hon.");
         }
         return KetQua.success(null, "");
     }
 
     private boolean isCurrentUserAllowedForAction(TaiKhoan currentUser, String action) {
         return currentUser != null
-                && ("admin".equalsIgnoreCase(currentUser.getTenDangNhap())
+                && (HRMConstants.USERNAME_ADMIN.equalsIgnoreCase(currentUser.getTenDangNhap())
                 || currentUser.coVaiTro(ROLE_ADMIN)
                 || currentUser.coQuyen(action));
     }
@@ -349,109 +350,6 @@ public class NhanVienBUS {
             }
         }
         return false;
-    }
-
-    private boolean canManageTargetByHierarchy(TaiKhoan actor, NhanVien target) {
-        if (actor == null) {
-            return false;
-        }
-        if ("admin".equalsIgnoreCase(actor.getTenDangNhap()) || actor.coVaiTro(ROLE_ADMIN)) {
-            return true;
-        }
-
-        TaiKhoan targetUser = taiKhoanRepo.findByMaNV(target.getMaNhanVien());
-        int actorRank = getAuthorityRank(actor, null);
-        int targetRank = getAuthorityRank(targetUser, target.getTenChucVuHienTai());
-        return actorRank > targetRank;
-    }
-
-    private int getAuthorityRank(TaiKhoan user, String fallbackTitle) {
-        int rank = getTitleRank(fallbackTitle);
-        if (user == null) {
-            return rank;
-        }
-        if (user.getVaiTros() != null) {
-            for (com.hrm.model.VaiTro role : user.getVaiTros()) {
-                rank = Math.max(rank, getRoleRank(role != null ? role.getId() : null));
-            }
-        }
-        return rank;
-    }
-
-    private int getRoleRank(String roleId) {
-        if (roleId == null) {
-            return 0;
-        }
-        switch (roleId.trim().toUpperCase()) {
-            case ROLE_ADMIN:
-                return 1000;
-            case ROLE_TONG_GIAM_DOC:
-                return 900;
-            case ROLE_GIAM_DOC:
-                return 850;
-            case ROLE_PHO_GIAM_DOC:
-                return 800;
-            case ROLE_TRUONG_PHONG_NS:
-                return 750;
-            case ROLE_TRUONG_PHONG_KT:
-            case ROLE_TRUONG_PHONG:
-                return 700;
-            case ROLE_QUAN_LY:
-                return 600;
-            case ROLE_NHAN_SU:
-                return 500;
-            case ROLE_KE_TOAN:
-                return 450;
-            case ROLE_NHAN_VIEN:
-                return 100;
-            default:
-                return 0;
-        }
-    }
-
-    private int getTitleRank(String title) {
-        String normalized = normalizeText(title);
-        if (normalized.isEmpty()) {
-            return 0;
-        }
-        if (normalized.contains("tong giam doc")) {
-            return 900;
-        }
-        if (normalized.contains("pho giam doc")) {
-            return 800;
-        }
-        if (normalized.contains("giam doc")) {
-            return 850;
-        }
-        if (normalized.contains("truong phong nhan su")) {
-            return 750;
-        }
-        if (normalized.contains("truong phong ke toan") || normalized.contains("truong phong")) {
-            return 700;
-        }
-        if (normalized.contains("quan ly")) {
-            return 600;
-        }
-        if (normalized.contains("nhan su")) {
-            return 500;
-        }
-        if (normalized.contains("ke toan")) {
-            return 450;
-        }
-        return 100;
-    }
-
-    private String normalizeText(String value) {
-        if (value == null) {
-            return "";
-        }
-        String normalized = Normalizer.normalize(value, Normalizer.Form.NFD)
-                .replaceAll("\\p{M}+", "")
-                .replace('đ', 'd')
-                .replace('Đ', 'D')
-                .toLowerCase()
-                .trim();
-        return normalized.replace('_', ' ');
     }
 
     private boolean isBlank(String value) {
