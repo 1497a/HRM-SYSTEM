@@ -15,7 +15,6 @@ import java.util.List;
 public class HopDongDAO {
 
     private static HopDongDAO instance;
-
     private HopDongDAO() {
     }
 
@@ -29,7 +28,6 @@ public class HopDongDAO {
     // ============================
     // Mapping helper
     // ============================
-
     private HopDongLaoDong mapRow(ResultSet rs) throws SQLException {
         HopDongLaoDong hd = new HopDongLaoDong();
         hd.setMaHopDong(rs.getInt("maHopDong"));
@@ -37,16 +35,12 @@ public class HopDongDAO {
         hd.setMaNV(rs.getString("maNV"));
         hd.setLoaiHopDong(rs.getString("loaiHopDong"));
         hd.setLuongCoSo(rs.getLong("luongCoSo"));
-
         Date ngayKy = rs.getDate("ngayKy");
         if (ngayKy != null) hd.setNgayKy(ngayKy.toLocalDate());
-
         Date ngayHieuLuc = rs.getDate("ngayHieuLuc");
         if (ngayHieuLuc != null) hd.setNgayHieuLuc(ngayHieuLuc.toLocalDate());
-
         Date ngayHetHieuLuc = rs.getDate("ngayHetHieuLuc");
         if (ngayHetHieuLuc != null) hd.setNgayHetHieuLuc(ngayHetHieuLuc.toLocalDate());
-
         hd.setFileDinhKem(rs.getString("fileDinhKem"));
         hd.setNoiDung(rs.getString("noiDung"));
         hd.setTrangThai(rs.getString("trangThai"));
@@ -56,7 +50,6 @@ public class HopDongDAO {
     // ============================
     // insert - returns generated maHopDong
     // ============================
-
     public int insert(HopDongLaoDong hd) throws SQLException {
         String sql = "INSERT INTO HOPDONGLAODONG "
                 + "(soHopDong, maNV, loaiHopDong, luongCoSo, ngayKy, ngayHieuLuc, "
@@ -80,7 +73,6 @@ public class HopDongDAO {
     // ============================
     // update
     // ============================
-
     public void update(HopDongLaoDong hd) {
         String sql = "UPDATE HOPDONGLAODONG SET "
                 + "soHopDong=?, maNV=?, loaiHopDong=?, luongCoSo=?, ngayKy=?, ngayHieuLuc=?, "
@@ -99,7 +91,6 @@ public class HopDongDAO {
     // ============================
     // updateTrangThai
     // ============================
-
     public void updateTrangThai(int maHopDong, String trangThai) {
         String sql = "UPDATE HOPDONGLAODONG SET trangThai=? WHERE maHopDong=?";
         try (Connection conn = DatabaseConnection.getConnection();
@@ -115,7 +106,6 @@ public class HopDongDAO {
     // ============================
     // findByMaNV - with tenNV transient
     // ============================
-
     public List<HopDongLaoDong> findByMaNV(String maNV) {
         String sql = buildJoinQuery("WHERE h.maNV = ?", "ORDER BY h.ngayHieuLuc DESC");
         List<HopDongLaoDong> result = new ArrayList<>();
@@ -138,7 +128,6 @@ public class HopDongDAO {
     // ============================
     // findHieuLuc - returns current active contract
     // ============================
-
     public HopDongLaoDong findHieuLuc(String maNV) {
         String sql = buildJoinQuery("WHERE h.maNV = ? AND h.trangThai = 'hieu_luc'", "LIMIT 1");
         try (Connection conn = DatabaseConnection.getConnection();
@@ -178,7 +167,6 @@ public class HopDongDAO {
     // ============================
     // findSapHetHan - contracts expiring in N days, with tenNV
     // ============================
-
     public List<HopDongLaoDong> findSapHetHan(int soNgay) {
         LocalDate today = LocalDate.now();
         LocalDate deadline = today.plusDays(soNgay);
@@ -207,7 +195,6 @@ public class HopDongDAO {
     // ============================
     // findAll - with tenNV
     // ============================
-
     public List<HopDongLaoDong> findAll() {
         String sql = buildJoinQuery("", "ORDER BY h.maHopDong DESC");
         List<HopDongLaoDong> result = new ArrayList<>();
@@ -228,7 +215,6 @@ public class HopDongDAO {
     // ============================
     // countByYearMonth - for auto code generation
     // ============================
-
     public int countByYearMonth(int year, int month) {
         String prefix = String.format("HD-%04d%02d-", year, month);
         String sql = "SELECT COUNT(*) FROM HOPDONGLAODONG WHERE soHopDong LIKE ?";
@@ -247,7 +233,6 @@ public class HopDongDAO {
     // ============================
     // expireHetHanContracts — cập nhật trạng thái hết hạn
     // ============================
-
     /**
      * Cập nhật trangThai → 'het_han' cho các hợp đồng đã qua ngayHetHieuLuc.
      * Gọi lazy mỗi khi load danh sách hợp đồng.
@@ -266,7 +251,6 @@ public class HopDongDAO {
     // ============================
     // existsBySoHopDong
     // ============================
-
     public boolean existsBySoHopDong(String soHopDong, int excludeId) {
         String sql = "SELECT COUNT(*) FROM HOPDONGLAODONG WHERE soHopDong=? AND maHopDong<>?";
         try (Connection conn = DatabaseConnection.getConnection();
@@ -285,7 +269,6 @@ public class HopDongDAO {
     // ============================
     // Private helpers
     // ============================
-
     private String buildJoinQuery(String whereClause, String orderAndLimit) {
         return "SELECT h.*, t.hoTen FROM HOPDONGLAODONG h "
                 + "LEFT JOIN THONGTINCANHAN t ON h.maNV = t.maNV "

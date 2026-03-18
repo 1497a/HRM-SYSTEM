@@ -6,6 +6,7 @@ import com.hrm.model.DotDanhGia;
 import com.hrm.model.TaiKhoan;
 import com.hrm.model.TieuChiDanhGia;
 import com.hrm.util.PermissionCodes;
+import com.hrm.util.UIFonts;
 import com.hrm.util.SessionContext;
 import com.hrm.util.UIColors;
 import com.hrm.util.UIHelper;
@@ -16,6 +17,7 @@ import javax.swing.border.TitledBorder;
 import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.table.DefaultTableModel;
 import javax.swing.table.TableRowSorter;
+
 import java.awt.*;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
@@ -27,7 +29,6 @@ public class EvalCycleListPanel extends JPanel {
     private final TaiKhoan currentUser;
     private final boolean isAdmin;
     private final boolean isManager;
-
     private JTable cycleTable;
     private DefaultTableModel cycleTableModel;
     private JButton btnTaoDot;
@@ -36,19 +37,16 @@ public class EvalCycleListPanel extends JPanel {
     private JButton btnConfigCriteria;
     private JButton btnEvaluate;
     private JButton btnViewDetail;
-
     private static final DateTimeFormatter DATE_FORMAT = DateTimeFormatter.ofPattern("dd/MM/yyyy");
     private static final String STATUS_CHUA = "Chưa bắt đầu";
     private static final String STATUS_DANG = "Đang diễn ra";
     private static final String STATUS_DA_KET = "Đã kết thúc";
-
     public EvalCycleListPanel() {
         this.evalService = DanhGiaBUS.getInstance();
         this.currentUser = SessionContext.getInstance().getCurrentUser();
         SessionContext session = SessionContext.getInstance();
         this.isAdmin   = session.hasPermission(PermissionCodes.EVAL_MANAGE);
         this.isManager = isAdmin || session.hasPermission(PermissionCodes.EVAL_REVIEW);
-
         initComponents();
         setupLayout();
         loadData();
@@ -57,13 +55,11 @@ public class EvalCycleListPanel extends JPanel {
     private void initComponents() {
         setLayout(new BorderLayout(10, 10));
         setBorder(new EmptyBorder(15, 15, 15, 15));
-        setBackground(UIColors.LIGHT_GRAY_BG);
-
+        setBackground(Color.WHITE);
         String[] cycleColumns = {"ID", "Tên đợt đánh giá", "Kỳ", "Năm", "Bắt đầu", "Kết thúc", "Trạng thái"};
         cycleTableModel = new DefaultTableModel(cycleColumns, 0) {
             @Override public boolean isCellEditable(int row, int col) { return false; }
         };
-
         cycleTable = new JTable(cycleTableModel);
         TableRowSorter<DefaultTableModel> sorter = new TableRowSorter<>(cycleTableModel);
         cycleTable.setRowSorter(sorter);
@@ -74,7 +70,6 @@ public class EvalCycleListPanel extends JPanel {
         cycleTable.getTableHeader().setFont(com.hrm.util.UIFonts.BOLD_NORMAL);
         cycleTable.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
         cycleTable.getSelectionModel().addListSelectionListener(e -> onCycleSelected());
-
         cycleTable.getColumnModel().getColumn(0).setPreferredWidth(40);
         cycleTable.getColumnModel().getColumn(1).setPreferredWidth(260);
         cycleTable.getColumnModel().getColumn(2).setPreferredWidth(60);
@@ -82,7 +77,6 @@ public class EvalCycleListPanel extends JPanel {
         cycleTable.getColumnModel().getColumn(4).setPreferredWidth(100);
         cycleTable.getColumnModel().getColumn(5).setPreferredWidth(100);
         cycleTable.getColumnModel().getColumn(6).setPreferredWidth(120);
-
         cycleTable.getColumnModel().getColumn(6).setCellRenderer(new DefaultTableCellRenderer() {
             @Override
             public Component getTableCellRendererComponent(JTable t, Object value,
@@ -90,32 +84,28 @@ public class EvalCycleListPanel extends JPanel {
                 Component c = super.getTableCellRendererComponent(t, value, sel, focus, row, col);
                 if (!sel && value != null) {
                     String s = value.toString();
-                    if (STATUS_DANG.equals(s)) c.setBackground(com.hrm.util.UIColors.LIGHT_GREEN_BG);
-                    else if (STATUS_DA_KET.equals(s)) c.setBackground(com.hrm.util.UIColors.BORDER_GRAY);
-                    else c.setBackground(com.hrm.util.UIColors.LIGHT_YELLOW_BG);
+                    if (STATUS_DANG.equals(s)) c.setBackground(new Color(200, 255, 200));
+                    else if (STATUS_DA_KET.equals(s)) c.setBackground(Color.LIGHT_GRAY);
+                    else c.setBackground(new Color(255, 255, 200));
                 }
                 return c;
             }
         });
-
         btnTaoDot = UIHelper.createSuccessButton("+ Tạo đợt mới");
         btnOpenCycle = UIHelper.createPrimaryButton("Mở kỳ đánh giá");
         btnCloseCycle = UIHelper.createDangerButton("Đóng kỳ đánh giá");
         btnConfigCriteria = UIHelper.createPrimaryButton("Cấu hình tiêu chí");
         btnEvaluate = UIHelper.createPrimaryButton("Đánh giá nhân viên");
         btnViewDetail = UIHelper.createPrimaryButton("Xem chi tiết");
-
         btnOpenCycle.setEnabled(false);
         btnCloseCycle.setEnabled(false);
         btnEvaluate.setEnabled(false);
-
         btnTaoDot.addActionListener(e -> taoDot());
         btnOpenCycle.addActionListener(e -> openCycle());
         btnCloseCycle.addActionListener(e -> closeCycle());
         btnConfigCriteria.addActionListener(e -> configCriteria());
         btnEvaluate.addActionListener(e -> evaluateEmployee());
         btnViewDetail.addActionListener(e -> viewResults());
-
         cycleTable.addMouseListener(new java.awt.event.MouseAdapter() {
             @Override
             public void mouseClicked(java.awt.event.MouseEvent e) {
@@ -129,7 +119,6 @@ public class EvalCycleListPanel extends JPanel {
     private void setupLayout() {
         JPanel topPanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 8, 5));
         topPanel.setOpaque(false);
-
         if (isAdmin) {
             topPanel.add(btnTaoDot);
             topPanel.add(btnOpenCycle);
@@ -141,10 +130,8 @@ public class EvalCycleListPanel extends JPanel {
         JButton btnLamMoi = new JButton("Làm mới");
         btnLamMoi.addActionListener(e -> loadData());
         topPanel.add(btnLamMoi);
-
         JScrollPane cycleScroll = new JScrollPane(cycleTable);
         cycleScroll.setBorder(new TitledBorder("Các đợt đánh giá (nhấp đúp để xem kết quả)"));
-
         add(topPanel, BorderLayout.NORTH);
         add(cycleScroll, BorderLayout.CENTER);
     }
@@ -185,43 +172,35 @@ public class EvalCycleListPanel extends JPanel {
     private void taoDot() {
         JTextField txtTen = new JTextField(25);
         txtTen.setFont(com.hrm.util.UIFonts.TEXT_NORMAL);
-
         String[] kyOptions = {"Quý 1", "Quý 2", "Quý 3", "Quý 4", "Cả năm"};
         String[] kyValues = {"quy_1", "quy_2", "quy_3", "quy_4", "ca_nam"};
         JComboBox<String> cboKy = new JComboBox<>(kyOptions);
         cboKy.setFont(com.hrm.util.UIFonts.TEXT_NORMAL);
-
         JSpinner spinNam = new JSpinner(new SpinnerNumberModel(LocalDate.now().getYear(), 2020, 2099, 1));
         spinNam.setFont(com.hrm.util.UIFonts.TEXT_NORMAL);
-
         SpinnerDateModel mdBD = new SpinnerDateModel(java.util.Date.from(
                 LocalDate.now().atStartOfDay(java.time.ZoneId.systemDefault()).toInstant()),
                 null, null, java.util.Calendar.DAY_OF_MONTH);
         JSpinner spinBD = new JSpinner(mdBD);
         spinBD.setEditor(new JSpinner.DateEditor(spinBD, "dd/MM/yyyy"));
-
         SpinnerDateModel mdKT = new SpinnerDateModel(java.util.Date.from(
                 LocalDate.now().plusMonths(3).atStartOfDay(java.time.ZoneId.systemDefault()).toInstant()),
                 null, null, java.util.Calendar.DAY_OF_MONTH);
         JSpinner spinKT = new JSpinner(mdKT);
         spinKT.setEditor(new JSpinner.DateEditor(spinKT, "dd/MM/yyyy"));
-
         JPanel formInfo = new JPanel(new GridLayout(5, 2, 8, 8));
         formInfo.add(new JLabel("Tên đợt đánh giá (*):")); formInfo.add(txtTen);
         formInfo.add(new JLabel("Kỳ đánh giá:"));          formInfo.add(cboKy);
         formInfo.add(new JLabel("Năm:"));                  formInfo.add(spinNam);
         formInfo.add(new JLabel("Ngày bắt đầu:"));         formInfo.add(spinBD);
         formInfo.add(new JLabel("Ngày kết thúc:"));        formInfo.add(spinKT);
-
         List<TieuChiDanhGia> allCriteria = evalService.getAllCriteria();
         JPanel criteriaPanel = new JPanel(new GridLayout(0, 1, 4, 4));
         criteriaPanel.setBorder(new TitledBorder("Chọn các tiêu chí"));
         List<JCheckBox> checkBoxes = new java.util.ArrayList<>();
-
         JLabel lblTotal = new JLabel("Tổng trọng số: 0%");
         lblTotal.setFont(com.hrm.util.UIFonts.BOLD_NORMAL);
         lblTotal.setForeground(UIColors.DANGER_RED);
-
         java.awt.event.ActionListener calcTotalAction = e -> {
             int total = 0;
             for (JCheckBox cb : checkBoxes) {
@@ -235,15 +214,13 @@ public class EvalCycleListPanel extends JPanel {
             lblTotal.setForeground(total == 100 ? UIColors.SUCCESS_GREEN : UIColors.DANGER_RED);
             criteriaPanel.repaint();
         };
-
         for (TieuChiDanhGia c : allCriteria) {
-            JCheckBox cb = new JCheckBox(c.getName() + " (" + (int) c.getDiemToiDa() + "%)");
+                JCheckBox cb = new JCheckBox(c.getTenTieuChi() + " (" + (int) c.getDiemToiDa() + "%)");
             cb.putClientProperty("criteria", c);
             cb.addActionListener(calcTotalAction);
             checkBoxes.add(cb);
             criteriaPanel.add(cb);
         }
-
         int initialTotal = checkBoxes.stream()
                 .mapToInt(cb -> (int) ((TieuChiDanhGia) cb.getClientProperty("criteria")).getDiemToiDa())
                 .sum();
@@ -251,22 +228,18 @@ public class EvalCycleListPanel extends JPanel {
             for (JCheckBox cb : checkBoxes) cb.setSelected(true);
         }
         calcTotalAction.actionPerformed(null);
-
         JPanel scrollCriteriaPanel = new JPanel(new BorderLayout());
         JScrollPane scrollPane = new JScrollPane(criteriaPanel);
         scrollPane.setPreferredSize(new Dimension(300, 150));
         scrollCriteriaPanel.add(scrollPane, BorderLayout.CENTER);
         scrollCriteriaPanel.add(lblTotal, BorderLayout.SOUTH);
-
         JPanel mainForm = new JPanel(new BorderLayout(0, 10));
         mainForm.add(formInfo, BorderLayout.NORTH);
         mainForm.add(scrollCriteriaPanel, BorderLayout.CENTER);
-
         while (true) {
             int res = JOptionPane.showConfirmDialog(this, mainForm,
                     "Tạo đợt đánh giá mới", JOptionPane.OK_CANCEL_OPTION, JOptionPane.PLAIN_MESSAGE);
             if (res != JOptionPane.OK_OPTION) return;
-
             String ten = txtTen.getText().trim();
             if (ten.isEmpty()) {
                 JOptionPane.showMessageDialog(this,
@@ -274,7 +247,6 @@ public class EvalCycleListPanel extends JPanel {
                         "Lỗi", JOptionPane.WARNING_MESSAGE);
                 continue;
             }
-
             List<TieuChiDanhGia> selectedCriteria = new java.util.ArrayList<>();
             int totalWeight = 0;
             for (JCheckBox cb : checkBoxes) {
@@ -286,21 +258,17 @@ public class EvalCycleListPanel extends JPanel {
                     totalWeight += c.getDiemToiDa();
                 }
             }
-
             if (totalWeight != 100) {
                 JOptionPane.showMessageDialog(this,
                         "Tổng trọng số các tiêu chí được chọn phải chính xác 100%.",
                         "Lỗi trọng số", JOptionPane.WARNING_MESSAGE);
                 continue;
             }
-
             LocalDate tuNgay = toLocalDate((java.util.Date) spinBD.getValue());
             LocalDate denNgay = toLocalDate((java.util.Date) spinKT.getValue());
             int kyIdx = cboKy.getSelectedIndex();
-
             KetQua<?> kq = evalService.taoDotDanhGia(
                     ten, (int) spinNam.getValue(), kyValues[kyIdx], tuNgay, denNgay, selectedCriteria);
-
             showResult(kq);
             if (kq.isSuccess()) {
                 loadData();
@@ -325,7 +293,6 @@ public class EvalCycleListPanel extends JPanel {
                 "Bạn có chắc muốn đóng kỳ đánh giá này?\nSau khi đóng sẽ không thể sửa đổi.",
                 "Xác nhận", JOptionPane.YES_NO_OPTION);
         if (confirm != JOptionPane.YES_OPTION) return;
-
         int cycleId = (int) cycleTableModel.getValueAt(cycleTable.convertRowIndexToModel(row), 0);
         KetQua<?> result = evalService.closeCycle(cycleId);
         showResult(result);
@@ -338,7 +305,7 @@ public class EvalCycleListPanel extends JPanel {
     }
 
     private void evaluateEmployee() {
-        if (currentUser.getNhanVienId() == null || currentUser.getNhanVienId().isEmpty()) {
+        if (currentUser.getMaNV() == null || currentUser.getMaNV().isEmpty()) {
             JOptionPane.showMessageDialog(this,
                     "Tài khoản quản trị viên không đánh giá nhân viên\n",
                     "Không thể thực hiện",
@@ -354,7 +321,6 @@ public class EvalCycleListPanel extends JPanel {
         }
         int cycleId = (int) cycleTableModel.getValueAt(cycleTable.convertRowIndexToModel(row), 0);
         String cycleName = (String) cycleTableModel.getValueAt(cycleTable.convertRowIndexToModel(row), 1);
-
         EvalDoDialog dialog = new EvalDoDialog((Frame) SwingUtilities.getWindowAncestor(this), cycleId, cycleName);
         dialog.setVisible(true);
         if (dialog.isSuccessful()) {
@@ -370,7 +336,6 @@ public class EvalCycleListPanel extends JPanel {
             selectedCycleId = (int) cycleTableModel.getValueAt(selectedRow, 0);
         }
         EvalResultPanel resultPanel = new EvalResultPanel(selectedCycleId);
-
         JDialog dialog = new JDialog((Frame) SwingUtilities.getWindowAncestor(this),
                 selectedRow >= 0 ? "Kết quả đánh giá - kỳ đã chọn" : "Kết quả đánh giá",
                 true);
@@ -411,4 +376,5 @@ public class EvalCycleListPanel extends JPanel {
                 result.isSuccess() ? "Thành công" : "Lỗi",
                 result.isSuccess() ? JOptionPane.INFORMATION_MESSAGE : JOptionPane.ERROR_MESSAGE);
     }
+
 }

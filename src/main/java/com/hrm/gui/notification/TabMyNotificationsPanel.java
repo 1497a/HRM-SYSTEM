@@ -5,6 +5,7 @@ import com.hrm.bus.ThongBaoBUS;
 import com.hrm.model.TaiKhoan;
 import com.hrm.model.ThongBao;
 import com.hrm.util.UIColors;
+import com.hrm.util.UIFonts;
 import com.hrm.util.UIHelper;
 
 import javax.swing.*;
@@ -22,36 +23,28 @@ import java.util.List;
 class TabMyNotificationsPanel extends JPanel {
 
     private static final DateTimeFormatter DATE_FORMAT = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm");
-
     private final ThongBaoBUS service;
     private final TaiKhoan currentUser;
-
     private JTable tblThongBao;
     private DefaultTableModel modelThongBao;
     private List<ThongBao> danhSachThongBao;
-
     TabMyNotificationsPanel(ThongBaoBUS service, TaiKhoan currentUser) {
         this.service = service;
         this.currentUser = currentUser;
         setLayout(new BorderLayout(8, 8));
-        setBackground(UIColors.LIGHT_GRAY_BG);
+        setBackground(Color.WHITE);
         setBorder(new EmptyBorder(12, 12, 12, 12));
-
         JPanel toolbar = new JPanel(new FlowLayout(FlowLayout.LEFT, 8, 4));
         toolbar.setOpaque(false);
-
         JButton btnDanhDauDaDoc = UIHelper.createPrimaryButton("Đánh dấu đã đọc");
         JButton btnDanhDauTatCa = UIHelper.createDefaultButton("Đánh dấu tất cả đã đọc");
         JButton btnLamMoi = UIHelper.createDefaultButton("Làm mới");
-
         btnDanhDauDaDoc.addActionListener(e -> danhDauDaDoc());
         btnDanhDauTatCa.addActionListener(e -> danhDauTatCa());
         btnLamMoi.addActionListener(e -> loadThongBao());
-
         toolbar.add(btnDanhDauDaDoc);
         toolbar.add(btnDanhDauTatCa);
         toolbar.add(btnLamMoi);
-
         String[] cols = {"Mã", "Tiêu đề", "Loại", "Ngày tạo", "Trạng thái"};
         modelThongBao = new DefaultTableModel(cols, 0) {
             @Override public boolean isCellEditable(int row, int col) { return false; }
@@ -65,7 +58,6 @@ class TabMyNotificationsPanel extends JPanel {
         tblThongBao.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
         tblThongBao.setSelectionBackground(UIColors.LIGHT_PURPLE);
         tblThongBao.setSelectionForeground(UIColors.TEXT_DARK);
-
         tblThongBao.getColumnModel().getColumn(0).setMinWidth(0);
         tblThongBao.getColumnModel().getColumn(0).setMaxWidth(0);
         tblThongBao.getColumnModel().getColumn(0).setWidth(0);
@@ -73,7 +65,6 @@ class TabMyNotificationsPanel extends JPanel {
         tblThongBao.getColumnModel().getColumn(2).setPreferredWidth(150);
         tblThongBao.getColumnModel().getColumn(3).setPreferredWidth(160);
         tblThongBao.getColumnModel().getColumn(4).setPreferredWidth(100);
-
         tblThongBao.getColumnModel().getColumn(4).setCellRenderer(new DefaultTableCellRenderer() {
             @Override
             public Component getTableCellRendererComponent(JTable table, Object value,
@@ -94,7 +85,6 @@ class TabMyNotificationsPanel extends JPanel {
                 return c;
             }
         });
-
         tblThongBao.getSelectionModel().addListSelectionListener(e -> {
             if (!e.getValueIsAdjusting()) {
                 int row = tblThongBao.getSelectedRow();
@@ -105,13 +95,10 @@ class TabMyNotificationsPanel extends JPanel {
                 }
             }
         });
-
         JScrollPane scroll = new JScrollPane(tblThongBao);
         scroll.setBorder(new TitledBorder("Danh sách thông báo"));
-
         add(toolbar, BorderLayout.NORTH);
         add(scroll, BorderLayout.CENTER);
-
         loadThongBao();
     }
 
@@ -173,10 +160,10 @@ class TabMyNotificationsPanel extends JPanel {
     private void showNoiDung(ThongBao tb) {
         JTextArea area = new JTextArea(tb.getNoiDung() != null ? tb.getNoiDung() : "");
         area.setEditable(false);
-        area.setFont(com.hrm.util.UIFonts.TEXT_MEDIUM);
+        area.setFont(UIFonts.TEXT_NORMAL);
         area.setLineWrap(true);
         area.setWrapStyleWord(true);
-        area.setBackground(UIColors.LIGHT_GRAY_BG);
+        area.setBackground(Color.WHITE);
         area.setBorder(new EmptyBorder(8, 8, 8, 8));
         JScrollPane scroll = new JScrollPane(area);
         scroll.setPreferredSize(new Dimension(420, 200));

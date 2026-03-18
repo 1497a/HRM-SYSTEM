@@ -9,7 +9,6 @@ public class Quyen {
     private DataScope phamVi;
     /** TRUE nếu quyền có ý nghĩa scope (VIEW/APPROVE/REVIEW...); FALSE nếu là hành động nhị phân (CREATE/MANAGE...). */
     private boolean coPhamVi = true;
-
     public Quyen() {}
 
     public Quyen(String id, String tenQuyen, String nhomQuyen) {
@@ -30,13 +29,6 @@ public class Quyen {
     public void setPhamVi(DataScope phamVi) { this.phamVi = phamVi; }
     public boolean isCoPhamVi() { return coPhamVi; }
     public void setCoPhamVi(boolean coPhamVi) { this.coPhamVi = coPhamVi; }
-    /** Alias for getId() */
-    public String getCode() { return id; }
-    /** Alias for getTenQuyen() */
-    public String getName() { return tenQuyen; }
-    /** Alias for getNhomQuyen() */
-    public String getModule() { return nhomQuyen; }
-
     @Override
     public boolean equals(Object obj) {
         if (this == obj) return true;

@@ -5,6 +5,7 @@ import com.hrm.bus.TuyenDungBUS;
 import com.hrm.model.TinTuyenDung;
 import com.hrm.model.YeuCauTuyenDung;
 import com.hrm.util.PermissionCodes;
+import com.hrm.util.UIFonts;
 import com.hrm.util.SessionContext;
 import com.hrm.util.UIColors;
 import com.hrm.util.UIHelper;
@@ -26,56 +27,45 @@ import static javax.swing.SortOrder.ASCENDING;
 class TabTinPanel extends JPanel {
 
     private static final DateTimeFormatter DATE_FMT = DateTimeFormatter.ofPattern("dd/MM/yyyy");
-
     private final TuyenDungBUS service;
     private JTable tbl;
     private DefaultTableModel model;
     private JButton btnDangTin;
     private JButton btnDongTin;
-
     TabTinPanel(TuyenDungBUS service) {
         this.service = service;
         setLayout(new BorderLayout(8, 8));
-        setBackground(UIColors.LIGHT_GRAY_BG);
+        setBackground(Color.WHITE);
         setBorder(new EmptyBorder(12, 12, 12, 12));
-
         JPanel toolbar = new JPanel(new FlowLayout(FlowLayout.LEFT, 8, 4));
         toolbar.setOpaque(false);
-
         btnDangTin = UIHelper.createSuccessButton("Đăng tin");
         btnDongTin = UIHelper.createDangerButton("Đóng tin");
         JButton btnLamMoi = UIHelper.createDefaultButton("Làm mới");
-
         btnDangTin.addActionListener(e -> dangTin());
         btnDongTin.addActionListener(e -> dongTin());
         btnLamMoi.addActionListener(e -> load());
-
         JComboBox<String> cboTrangThai = new JComboBox<>(
                 new String[]{"Tất cả", "Đang tuyển", "Tạm dừng", "Đã đóng"});
-
         toolbar.add(btnDangTin);
         toolbar.add(btnDongTin);
         toolbar.add(btnLamMoi);
         toolbar.add(new JLabel("Trạng thái:"));
         toolbar.add(cboTrangThai);
-
         String[] cols = {"Mã tin", "Tiêu đề", "Phòng ban", "Chức vụ", "Hạn nộp", "Cần tuyển", "Số đơn", "Trạng thái"};
         model = new DefaultTableModel(cols, 0) {
             @Override
             public boolean isCellEditable(int r, int c) {
                 return false;
             }
-
             @Override
             public Class<?> getColumnClass(int col) {
                 return (col == 0 || col == 5 || col == 6) ? Integer.class : String.class;
             }
         };
-
         tbl = TabUtils.buildTable(model);
         TabUtils.applyColWidths(tbl, new int[]{60, 220, 160, 140, 110, 80, 70, 110});
         tbl.getColumnModel().getColumn(7).setCellRenderer(new RecruitmentStatusRenderer());
-
         TableRowSorter<DefaultTableModel> sorter = new TableRowSorter<>(model);
         tbl.setRowSorter(sorter);
         sorter.setComparator(0, Comparator.comparingInt(a -> (Integer) a));
@@ -84,17 +74,13 @@ class TabTinPanel extends JPanel {
         sorter.setComparator(4, TabUtils.dateComparator());
         sorter.setSortKeys(List.of(new SortKey(0, ASCENDING)));
         UIHelper.attachStatusFilter(sorter, cboTrangThai, 7);
-
         JScrollPane scroll = new JScrollPane(tbl);
         scroll.setBorder(new TitledBorder("Danh sách tin tuyển dụng"));
-
         add(toolbar, BorderLayout.NORTH);
         add(scroll, BorderLayout.CENTER);
-
         boolean canManage = SessionContext.getInstance().hasPermission(PermissionCodes.RECRUITMENT_MANAGE);
         btnDangTin.setVisible(canManage);
         btnDongTin.setVisible(canManage);
-
         load();
     }
 
@@ -127,7 +113,6 @@ class TabTinPanel extends JPanel {
                     "Thông báo", JOptionPane.WARNING_MESSAGE);
             return;
         }
-
         JComboBox<YeuCauTuyenDung> cboYeuCau = new JComboBox<>();
         for (YeuCauTuyenDung yc : dsYCDaDuyet) {
             cboYeuCau.addItem(yc);
@@ -138,20 +123,17 @@ class TabTinPanel extends JPanel {
             String cv = value.getTenChucVu() != null ? value.getTenChucVu() : value.getMaChucVu();
             return new JLabel("#" + value.getMaYeuCau() + " - " + pb + " - " + cv);
         });
-
         JTextField txtTieuDe = new JTextField(25);
         JTextField txtMucLuong = new JTextField(20);
         JTextField txtDiaDiem = new JTextField(20);
-        txtTieuDe.setFont(com.hrm.util.UIFonts.TEXT_MEDIUM);
-        txtMucLuong.setFont(com.hrm.util.UIFonts.TEXT_MEDIUM);
-        txtDiaDiem.setFont(com.hrm.util.UIFonts.TEXT_MEDIUM);
-
+        txtTieuDe.setFont(UIFonts.TEXT_NORMAL);
+        txtMucLuong.setFont(UIFonts.TEXT_NORMAL);
+        txtDiaDiem.setFont(UIFonts.TEXT_NORMAL);
         SpinnerDateModel dm = new SpinnerDateModel(
                 java.util.Date.from(LocalDate.now().plusMonths(1).atStartOfDay(java.time.ZoneId.systemDefault()).toInstant()),
                 null, null, java.util.Calendar.DAY_OF_MONTH);
         JSpinner spinHanNop = new JSpinner(dm);
         spinHanNop.setEditor(new JSpinner.DateEditor(spinHanNop, "dd/MM/yyyy"));
-
         // Pre-fill deadline from YeuCau when selection changes
         cboYeuCau.addActionListener(ev -> {
             YeuCauTuyenDung sel = (YeuCauTuyenDung) cboYeuCau.getSelectedItem();
@@ -165,7 +147,6 @@ class TabTinPanel extends JPanel {
             spinHanNop.setValue(java.util.Date.from(
                     dsYCDaDuyet.get(0).getHanTuyenDung().atStartOfDay(java.time.ZoneId.systemDefault()).toInstant()));
         }
-
         JPanel form = new JPanel(new GridLayout(5, 2, 8, 8));
         form.add(new JLabel("Yêu cầu tuyển dụng:"));
         form.add(cboYeuCau);
@@ -177,12 +158,10 @@ class TabTinPanel extends JPanel {
         form.add(txtDiaDiem);
         form.add(new JLabel("Hạn nộp hồ sơ:"));
         form.add(spinHanNop);
-
         if (JOptionPane.showConfirmDialog(this, form, "Đăng tin tuyển dụng",
                 JOptionPane.OK_CANCEL_OPTION, JOptionPane.PLAIN_MESSAGE) != JOptionPane.OK_OPTION) {
             return;
         }
-
         String tieuDe = txtTieuDe.getText().trim();
         if (tieuDe.isEmpty()) {
             JOptionPane.showMessageDialog(this, "Vui lòng nhập tiêu đề.", "Lỗi", JOptionPane.WARNING_MESSAGE);
@@ -193,10 +172,8 @@ class TabTinPanel extends JPanel {
             JOptionPane.showMessageDialog(this, "Vui lòng chọn yêu cầu tuyển dụng.", "Lỗi", JOptionPane.WARNING_MESSAGE);
             return;
         }
-
         LocalDate hanNop = ((java.util.Date) spinHanNop.getValue()).toInstant()
                 .atZone(java.time.ZoneId.systemDefault()).toLocalDate();
-
         try {
             TinTuyenDung tin = new TinTuyenDung();
             tin.setTieuDe(tieuDe);
@@ -204,7 +181,6 @@ class TabTinPanel extends JPanel {
             tin.setMucLuong(txtMucLuong.getText().trim());
             tin.setDiaDiem(txtDiaDiem.getText().trim());
             tin.setHanNopHoSo(hanNop);
-
             KetQua<?> sr = service.taoTin(tin);
             if (sr.isSuccess()) {
                 JOptionPane.showMessageDialog(this, "Đã đăng tin tuyển dụng!", "Thành công", JOptionPane.INFORMATION_MESSAGE);
@@ -228,7 +204,6 @@ class TabTinPanel extends JPanel {
                 JOptionPane.YES_NO_OPTION, JOptionPane.QUESTION_MESSAGE) != JOptionPane.YES_OPTION) {
             return;
         }
-
         try {
             KetQua<?> r = service.dongTin(maTin);
             if (r.isSuccess()) {

@@ -33,15 +33,12 @@ import java.util.function.Supplier;
 public class MainFrame extends JFrame {
     private static final Dimension SIDEBAR_SIZE = new Dimension(240, 0);
     private static final Dimension MENU_BUTTON_SIZE = new Dimension(220, 45);
-
     private final XacThucBUS authService;
-
     private JPanel headerPanel;
     private JPanel contentPanel;
     private JLabel lblUserName;
     private JLabel lblUserRole;
     private JButton currentActiveButton;
-
     private JButton btnDashboard;
     private JButton btnUsers;
     private JButton btnRoles;
@@ -58,7 +55,6 @@ public class MainFrame extends JFrame {
     private JButton btnReports;
     private JButton btnSettings;
     private JButton btnLogout;
-
     public MainFrame() {
         authService = XacThucBUS.getInstance();
         if (!authService.isLoggedIn()) {
@@ -67,7 +63,6 @@ public class MainFrame extends JFrame {
             new LoginFrame().setVisible(true);
             return;
         }
-
         initComponents();
         setupLayout();
         setupEvents();
@@ -81,14 +76,11 @@ public class MainFrame extends JFrame {
         setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
         setSize(1200, 750);
         setMinimumSize(new Dimension(1000, 650));
-
         headerPanel = new JPanel(new BorderLayout());
         headerPanel.setBackground(UIColors.PRIMARY_PURPLE);
         headerPanel.setPreferredSize(new Dimension(0, 65));
-
         contentPanel = new JPanel(new BorderLayout());
-        contentPanel.setBackground(UIColors.LIGHT_GRAY_BG);
-
+        contentPanel.setBackground(Color.WHITE);
         btnDashboard = createMenuButton("Trang chủ");
         btnEmployees = createMenuButton("Hồ sơ nhân viên");
         btnOrganization = createMenuButton("Phòng ban & Chức vụ");
@@ -110,9 +102,9 @@ public class MainFrame extends JFrame {
 
     private JButton createMenuButton(String text) {
         JButton button = new JButton(text);
-        button.setFont(UIFonts.TEXT_MEDIUM);
+        button.setFont(UIFonts.TEXT_NORMAL);
         button.setForeground(UIColors.TEXT_DARK);
-        button.setBackground(UIColors.WHITE);
+        button.setBackground(Color.WHITE);
         button.setBorderPainted(false);
         button.setFocusPainted(false);
         button.setOpaque(true);
@@ -129,7 +121,6 @@ public class MainFrame extends JFrame {
                     button.setForeground(UIColors.PRIMARY_PURPLE);
                 }
             }
-
             @Override
             public void mouseExited(java.awt.event.MouseEvent e) {
                 if (button != currentActiveButton) {
@@ -141,7 +132,7 @@ public class MainFrame extends JFrame {
     }
 
     private void resetMenuButton(JButton button) {
-        button.setBackground(UIColors.WHITE);
+        button.setBackground(Color.WHITE);
         button.setForeground(button == btnLogout ? UIColors.DANGER_RED : UIColors.TEXT_DARK);
         button.setBorder(new EmptyBorder(10, 20, 10, 10));
     }
@@ -163,11 +154,9 @@ public class MainFrame extends JFrame {
         TaiKhoan user = SessionContext.getInstance().getCurrentUser();
         String displayName = user != null ? user.getHoTen() : "Khách";
         String roleName = user != null ? user.getVaiTros().toString() : "";
-
         headerPanel.setBorder(new EmptyBorder(0, 20, 0, 20));
         headerPanel.add(createLogoPanel(), BorderLayout.WEST);
         headerPanel.add(createHeaderUserPanel(displayName, roleName), BorderLayout.EAST);
-
         add(headerPanel, BorderLayout.NORTH);
         add(createSidebar(displayName, roleName), BorderLayout.WEST);
         add(contentPanel, BorderLayout.CENTER);
@@ -177,8 +166,8 @@ public class MainFrame extends JFrame {
         JPanel panel = new JPanel(new FlowLayout(FlowLayout.LEFT, 0, 0));
         panel.setOpaque(false);
         JLabel label = new JLabel("HRM System");
-        label.setFont(UIFonts.HEADER_H2);
-        label.setForeground(UIColors.WHITE);
+        label.setFont(new Font("Segoe UI", Font.BOLD, 20));
+        label.setForeground(Color.WHITE);
         panel.add(label);
         return panel;
     }
@@ -186,18 +175,14 @@ public class MainFrame extends JFrame {
     private JPanel createHeaderUserPanel(String displayName, String roleName) {
         JPanel panel = new JPanel(new FlowLayout(FlowLayout.RIGHT, 15, 0));
         panel.setOpaque(false);
-
         JLabel lblHeaderUser = new JLabel(displayName);
-        lblHeaderUser.setFont(UIFonts.TEXT_MEDIUM);
-        lblHeaderUser.setForeground(UIColors.WHITE);
-
+        lblHeaderUser.setFont(UIFonts.TEXT_NORMAL);
+        lblHeaderUser.setForeground(Color.WHITE);
         JLabel lblHeaderRole = new JLabel(roleName);
-        lblHeaderRole.setFont(UIFonts.TEXT_SMALL);
+        lblHeaderRole.setFont(UIFonts.BOLD_SMALL);
         lblHeaderRole.setForeground(new Color(255, 255, 255, 180));
-
         JLabel separator = new JLabel(" | ");
         separator.setForeground(new Color(255, 255, 255, 100));
-
         panel.add(lblHeaderUser);
         panel.add(separator);
         panel.add(lblHeaderRole);
@@ -208,9 +193,9 @@ public class MainFrame extends JFrame {
 
     private JButton createHeaderLogoutButton() {
         JButton button = new JButton("Đăng xuất");
-        button.setFont(UIFonts.TEXT_SMALL);
-        button.setForeground(UIColors.WHITE);
-        button.setBackground(UIColors.DARK_PURPLE);
+        button.setFont(UIFonts.BOLD_SMALL);
+        button.setForeground(Color.WHITE);
+        button.setBackground(UIColors.PRIMARY_PURPLE.darker());
         button.setBorderPainted(false);
         button.setFocusPainted(false);
         button.setCursor(new Cursor(Cursor.HAND_CURSOR));
@@ -219,12 +204,11 @@ public class MainFrame extends JFrame {
         button.addMouseListener(new java.awt.event.MouseAdapter() {
             @Override
             public void mouseEntered(java.awt.event.MouseEvent e) {
-                button.setBackground(UIColors.PURPLE_HOVER);
+                button.setBackground(UIColors.PRIMARY_PURPLE.darker());
             }
-
             @Override
             public void mouseExited(java.awt.event.MouseEvent e) {
-                button.setBackground(UIColors.DARK_PURPLE);
+                button.setBackground(UIColors.PRIMARY_PURPLE.darker());
             }
         });
         return button;
@@ -233,7 +217,7 @@ public class MainFrame extends JFrame {
     private JScrollPane createSidebar(String displayName, String roleName) {
         JPanel sidebarContent = new JPanel();
         sidebarContent.setLayout(new BoxLayout(sidebarContent, BoxLayout.Y_AXIS));
-        sidebarContent.setBackground(UIColors.WHITE);
+        sidebarContent.setBackground(Color.WHITE);
         sidebarContent.add(createProfilePanel(displayName, roleName));
         sidebarContent.add(Box.createVerticalStrut(15));
         sidebarContent.add(createMenuLabel());
@@ -243,10 +227,9 @@ public class MainFrame extends JFrame {
         sidebarContent.add(Box.createVerticalGlue());
         sidebarContent.add(btnLogout);
         sidebarContent.add(Box.createVerticalStrut(15));
-
         JScrollPane scrollPane = new JScrollPane(sidebarContent);
         scrollPane.setPreferredSize(SIDEBAR_SIZE);
-        scrollPane.setBorder(BorderFactory.createMatteBorder(0, 0, 0, 1, UIColors.BORDER_GRAY));
+        scrollPane.setBorder(BorderFactory.createMatteBorder(0, 0, 0, 1, Color.LIGHT_GRAY));
         scrollPane.setHorizontalScrollBarPolicy(JScrollPane.HORIZONTAL_SCROLLBAR_NEVER);
         scrollPane.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED);
         scrollPane.getVerticalScrollBar().setUnitIncrement(16);
@@ -260,27 +243,23 @@ public class MainFrame extends JFrame {
         panel.setMaximumSize(new Dimension(240, 120));
         panel.setBorder(new EmptyBorder(20, 20, 20, 20));
         panel.setAlignmentX(Component.LEFT_ALIGNMENT);
-
         JLabel lblAvatar = new JLabel(getInitials(displayName));
-        lblAvatar.setFont(UIFonts.HEADER_H1);
-        lblAvatar.setForeground(UIColors.WHITE);
+        lblAvatar.setFont(new Font("Segoe UI", Font.BOLD, 24));
+        lblAvatar.setForeground(Color.WHITE);
         lblAvatar.setBackground(UIColors.PRIMARY_PURPLE);
         lblAvatar.setOpaque(true);
         lblAvatar.setPreferredSize(new Dimension(60, 60));
         lblAvatar.setMaximumSize(new Dimension(60, 60));
         lblAvatar.setHorizontalAlignment(SwingConstants.CENTER);
         lblAvatar.setAlignmentX(Component.LEFT_ALIGNMENT);
-
         lblUserName = new JLabel(displayName);
-        lblUserName.setFont(UIFonts.BOLD_MEDIUM);
+        lblUserName.setFont(UIFonts.BOLD_NORMAL);
         lblUserName.setForeground(UIColors.TEXT_DARK);
         lblUserName.setAlignmentX(Component.LEFT_ALIGNMENT);
-
         lblUserRole = new JLabel(roleName);
-        lblUserRole.setFont(UIFonts.TEXT_SMALL);
-        lblUserRole.setForeground(UIColors.TEXT_GRAY);
+        lblUserRole.setFont(UIFonts.BOLD_SMALL);
+        lblUserRole.setForeground(Color.GRAY);
         lblUserRole.setAlignmentX(Component.LEFT_ALIGNMENT);
-
         panel.add(lblAvatar);
         panel.add(Box.createVerticalStrut(10));
         panel.add(lblUserName);
@@ -292,7 +271,7 @@ public class MainFrame extends JFrame {
     private JLabel createMenuLabel() {
         JLabel lblMenu = new JLabel("MENU");
         lblMenu.setFont(new Font("Segoe UI", Font.BOLD, 11));
-        lblMenu.setForeground(UIColors.TEXT_GRAY);
+        lblMenu.setForeground(Color.GRAY);
         lblMenu.setBorder(new EmptyBorder(5, 20, 10, 0));
         lblMenu.setAlignmentX(Component.LEFT_ALIGNMENT);
         lblMenu.setMaximumSize(new Dimension(240, 30));
@@ -322,7 +301,6 @@ public class MainFrame extends JFrame {
                 confirmExit();
             }
         });
-
         bind(btnDashboard, this::showDashboard);
         bind(btnEmployees, this::showEmployeeManagement);
         bind(btnOrganization, this::showOrganization);
@@ -348,7 +326,6 @@ public class MainFrame extends JFrame {
     private void setupPermissions() {
         SessionContext sc = SessionContext.getInstance();
         DataScope none = DataScope.NONE;
-
         btnEmployees.setVisible(authService.getScopeForAction(PermissionCodes.EMPLOYEE_VIEW) != none);
         btnOrganization.setVisible(sc.hasPermission(PermissionCodes.DEPARTMENT_VIEW) || sc.hasPermission(PermissionCodes.POSITION_VIEW));
         btnAppointments.setVisible(authService.getScopeForAction(PermissionCodes.APPOINTMENT_VIEW) != none);
@@ -366,14 +343,12 @@ public class MainFrame extends JFrame {
 
     private JPanel createPageShell(String title, JComponent component) {
         JPanel wrapper = new JPanel(new BorderLayout());
-        wrapper.setBackground(UIColors.LIGHT_GRAY_BG);
+        wrapper.setBackground(Color.WHITE);
         wrapper.setBorder(new EmptyBorder(15, 15, 15, 15));
-
         JLabel header = new JLabel(title);
-        header.setFont(UIFonts.HEADER_H1);
+        header.setFont(new Font("Segoe UI", Font.BOLD, 24));
         header.setForeground(UIColors.TEXT_DARK);
         header.setBorder(new EmptyBorder(0, 10, 15, 0));
-
         wrapper.add(header, BorderLayout.NORTH);
         wrapper.add(component, BorderLayout.CENTER);
         return wrapper;
@@ -399,7 +374,7 @@ public class MainFrame extends JFrame {
                     JOptionPane.ERROR_MESSAGE
             );
             JPanel errorPanel = new JPanel(new BorderLayout());
-            errorPanel.setBackground(UIColors.WHITE);
+            errorPanel.setBackground(Color.WHITE);
             errorPanel.setBorder(new EmptyBorder(20, 20, 20, 20));
             errorPanel.add(new JLabel("Không tải được màn hình. Vui lòng xem log để biết chi tiết."), BorderLayout.NORTH);
             renderContent(createPageShell(title, errorPanel));
@@ -432,8 +407,8 @@ public class MainFrame extends JFrame {
     private void showOrganization() {
         setActiveButton(btnOrganization);
         JTabbedPane tabs = new JTabbedPane();
-        tabs.setFont(UIFonts.TEXT_MEDIUM);
-        tabs.setBackground(UIColors.WHITE);
+        tabs.setFont(UIFonts.TEXT_NORMAL);
+        tabs.setBackground(Color.WHITE);
         tabs.addTab("Phòng ban", new DepartmentPanel());
         tabs.addTab("Chức vụ", new PositionPanel());
         renderContent(createPageShell("Phòng ban & Chức vụ", tabs));

@@ -4,7 +4,9 @@ import com.hrm.model.TieuChiDanhGia;
 import com.hrm.model.DotDanhGia;
 import com.hrm.model.ChiTietDanhGia;
 import com.hrm.model.DanhGiaHieuSuat;
+import com.hrm.util.DaoHelper;
 import com.hrm.util.DatabaseConnection;
+import com.hrm.util.HRMConstants;
 
 import java.sql.*;
 import java.time.LocalDateTime;
@@ -24,7 +26,6 @@ import java.util.List;
 public class DanhGiaDAO {
 
     private static DanhGiaDAO instance;
-
     private DanhGiaDAO() {}
 
     public static synchronized DanhGiaDAO getInstance() {
@@ -37,7 +38,6 @@ public class DanhGiaDAO {
     // =====================================================================
     // DOTDANHGIA (Đợt đánh giá)
     // =====================================================================
-
     /** Thêm mới đợt đánh giá, trả về maDot được sinh tự động */
     public int insertCycle(DotDanhGia cycle) {
         String sql = "INSERT INTO DOTDANHGIA (tenDot, nam, kyDanhGia, tuNgay, denNgay, trangThai) "
@@ -51,7 +51,6 @@ public class DanhGiaDAO {
             ps.setDate(5, cycle.getDenNgay() != null ? Date.valueOf(cycle.getDenNgay()) : null);
             ps.setString(6, cycleStatusToDb(cycle.getTrangThai()));
             ps.executeUpdate();
-
             try (ResultSet keys = ps.getGeneratedKeys()) {
                 if (keys.next()) {
                     int maDot = keys.getInt(1);
@@ -154,7 +153,6 @@ public class DanhGiaDAO {
     // =====================================================================
     // TIEUCHIDANHGIA + DOTDANHGIA_TIEUCHI (Tiêu chí đánh giá)
     // =====================================================================
-
     /** Lấy danh sách tiêu chí của một đợt, kèm trọng số */
     public List<TieuChiDanhGia> findCriteriaByDot(int maDot) {
         String sql = "SELECT tc.maTieuChi, tc.tenTieuChi, tc.moTa, tc.nhomTieuChi, "
@@ -238,30 +236,28 @@ public class DanhGiaDAO {
         c.setNhomTieuChi(rs.getString("nhomTieuChi"));
         c.setDiemToiDa(rs.getDouble("diemToiDa"));
         String tt = rs.getString("trangThai");
-        c.setHoatDong(tt == null || "hoatDong".equals(tt));
+        c.setHoatDong(tt == null || HRMConstants.TRANG_THAI_HOAT_DONG.equals(tt));
         return c;
     }
 
     // =====================================================================
     // DANHGIAHIEUSUAT (Đánh giá hiệu suất)
     // =====================================================================
-
     /** Thêm mới một đánh giá hiệu suất, trả về maDanhGia */
     public int insertSubmission(DanhGiaHieuSuat sub) {
         String sql = "INSERT INTO DANHGIAHIEUSUAT (maDot, maNV, nguoiDanhGia, tongDiem, xepLoai, "
                    + "nhanXetChung, ngayDanhGia, trangThai) VALUES (?,?,?,?,?,?,?,?)";
         try (Connection conn = DatabaseConnection.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
-            ps.setInt(1, sub.getDotDanhGiaId());
-            ps.setString(2, sub.getNhanVienId()); // String
-            ps.setString(3, sub.getNguoiDanhGiaId()); // String
+            ps.setInt(1, sub.getMaDot());
+            ps.setString(2, sub.getMaNV()); // String
+            ps.setString(3, sub.getMaNguoiDanhGia()); // String
             ps.setDouble(4, sub.getTongDiem());
             ps.setString(5, ratingToDb(sub.getXepLoai()));
             ps.setString(6, sub.getNhanXetChung());
             ps.setTimestamp(7, sub.getNgayDanhGia() != null ? Timestamp.valueOf(sub.getNgayDanhGia()) : Timestamp.valueOf(LocalDateTime.now()));
             ps.setString(8, "da_danh_gia");
             ps.executeUpdate();
-
             try (ResultSet keys = ps.getGeneratedKeys()) {
                 if (keys.next()) {
                     int maDanhGia = keys.getInt(1);
@@ -362,18 +358,15 @@ public class DanhGiaDAO {
     public List<DanhGiaHieuSuat> findAllByScope(com.hrm.model.DataScope scope, String currentMaNV) {
         List<DanhGiaHieuSuat> result = new ArrayList<>();
         if (scope == com.hrm.model.DataScope.NONE) return result;
-
         if (scope == com.hrm.model.DataScope.DEPT) {
             return findAllByDeptSubtree(currentMaNV);
         }
-
         String sqlBase = "SELECT dg.*, t.hoTen as tenNhanVien, e.hoTen as tenNguoiDanhGia, d.tenDot "
                        + "FROM DANHGIAHIEUSUAT dg "
                        + "LEFT JOIN THONGTINCANHAN t ON dg.maNV = t.maNV "
                        + "LEFT JOIN THONGTINCANHAN e ON dg.nguoiDanhGia = e.maNV "
                        + "LEFT JOIN DOTDANHGIA d ON dg.maDot = d.maDot "
                        + "LEFT JOIN BONHIEM b ON dg.maNV = b.maNV AND b.trangThai = 'hieu_luc' AND b.loaiBoNhiem = 'chinh' ";
-
         String sqlCondition;
         switch (scope) {
             case ALL:
@@ -388,19 +381,15 @@ public class DanhGiaDAO {
             default:
                 return result;
         }
-
         String sql = sqlBase + sqlCondition + "ORDER BY dg.ngayDanhGia DESC";
-
         try (Connection conn = DatabaseConnection.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
-
             if (scope == com.hrm.model.DataScope.SELF) {
                 ps.setString(1, currentMaNV);
                 ps.setString(2, currentMaNV);
             } else if (scope != com.hrm.model.DataScope.ALL) {
                 ps.setString(1, currentMaNV);
             }
-
             try (ResultSet rs = ps.executeQuery()) {
                 while (rs.next()) {
                     result.add(mapSubmission(rs));
@@ -412,34 +401,10 @@ public class DanhGiaDAO {
         return result;
     }
 
-    private java.util.Set<String> getDeptSubtree(String currentMaNV, java.sql.Connection conn) throws SQLException {
-        String rootSql = "SELECT b.maPhongBan FROM BONHIEM b WHERE b.maNV=? AND b.trangThai='hieu_luc' AND b.loaiBoNhiem='chinh' LIMIT 1";
-        String rootDept = null;
-        try (PreparedStatement ps = conn.prepareStatement(rootSql)) {
-            ps.setString(1, currentMaNV);
-            try (ResultSet rs = ps.executeQuery()) { if (rs.next()) rootDept = rs.getString(1); }
-        }
-        java.util.Set<String> depts = new java.util.LinkedHashSet<>();
-        if (rootDept == null) return depts;
-        java.util.Queue<String> queue = new java.util.LinkedList<>();
-        queue.add(rootDept);
-        String childSql = "SELECT maPhongBan FROM PHONGBAN WHERE phongBanCha=?";
-        while (!queue.isEmpty()) {
-            String cur = queue.poll();
-            if (depts.add(cur)) {
-                try (PreparedStatement ps = conn.prepareStatement(childSql)) {
-                    ps.setString(1, cur);
-                    try (ResultSet rs = ps.executeQuery()) { while (rs.next()) queue.add(rs.getString(1)); }
-                }
-            }
-        }
-        return depts;
-    }
-
     private List<DanhGiaHieuSuat> findAllByDeptSubtree(String currentMaNV) {
         List<DanhGiaHieuSuat> result = new ArrayList<>();
         try (Connection conn = DatabaseConnection.getConnection()) {
-            java.util.Set<String> depts = getDeptSubtree(currentMaNV, conn);
+            java.util.Set<String> depts = DaoHelper.getDeptSubtree(currentMaNV, conn);
             if (depts.isEmpty()) return result;
             String ph = String.join(",", java.util.Collections.nCopies(depts.size(), "?"));
             String sql = "SELECT dg.*, t.hoTen as tenNhanVien, e.hoTen as tenNguoiDanhGia, d.tenDot "
@@ -462,9 +427,9 @@ public class DanhGiaDAO {
     private DanhGiaHieuSuat mapSubmission(ResultSet rs) throws SQLException {
         DanhGiaHieuSuat sub = new DanhGiaHieuSuat();
         sub.setId(rs.getInt("maDanhGia"));
-        sub.setDotDanhGiaId(rs.getInt("maDot"));
-        sub.setNhanVienId(rs.getString("maNV"));
-        sub.setNguoiDanhGiaId(rs.getString("nguoiDanhGia"));
+        sub.setMaDot(rs.getInt("maDot"));
+        sub.setMaNV(rs.getString("maNV"));
+        sub.setMaNguoiDanhGia(rs.getString("nguoiDanhGia"));
         sub.setTongDiem(rs.getDouble("tongDiem"));
         sub.setXepLoai(dbToRating(rs.getString("xepLoai")));
         sub.setNhanXetChung(rs.getString("nhanXetChung"));
@@ -502,7 +467,6 @@ public class DanhGiaDAO {
     // =====================================================================
     // CHITIETDANHGIA (Chi tiết đánh giá)
     // =====================================================================
-
     /** Xóa toàn bộ chi tiết cũ và thêm mới batch */
     public void saveScores(int maDanhGia, List<ChiTietDanhGia> scores) {
         String delSql = "DELETE FROM CHITIETDANHGIA WHERE maDanhGia=?";
@@ -517,7 +481,7 @@ public class DanhGiaDAO {
                 try (PreparedStatement ins = conn.prepareStatement(insSql)) {
                     for (ChiTietDanhGia score : scores) {
                         ins.setInt(1, maDanhGia);
-                        ins.setInt(2, score.getTieuChiId());
+                        ins.setInt(2, score.getMaTieuChi());
                         ins.setDouble(3, score.getDiem());
                         ins.setString(4, score.getNhanXet());
                         ins.addBatch();
@@ -552,7 +516,7 @@ public class DanhGiaDAO {
             try (ResultSet rs = ps.executeQuery()) {
                 while (rs.next()) {
                     ChiTietDanhGia score = new ChiTietDanhGia();
-                    score.setTieuChiId(rs.getInt("maTieuChi"));
+                    score.setMaTieuChi(rs.getInt("maTieuChi"));
                     score.setDiem(rs.getDouble("diem"));
                     score.setNhanXet(rs.getString("nhanXet"));
                     try { score.setTenTieuChi(rs.getString("tenTieuChi")); } catch (SQLException ignored) {}
@@ -569,7 +533,6 @@ public class DanhGiaDAO {
     // =====================================================================
     // Legacy / Helper methods (dùng cho GUI cũ nếu cần)
     // =====================================================================
-
     public List<DotDanhGia> getAllCycles() {
         return findAllCycles();
     }
@@ -630,7 +593,7 @@ public class DanhGiaDAO {
                 ps.setString(2, c.getMoTa());
                 ps.setString(3, c.getNhomTieuChi());
                 ps.setDouble(4, c.getDiemToiDa());
-                ps.setString(5, c.isHoatDong() ? "hoatDong" : "ngung_hoat_dong");
+                ps.setString(5, c.isHoatDong() ? HRMConstants.TRANG_THAI_HOAT_DONG : HRMConstants.TRANG_THAI_NGUNG_HOAT_DONG);
                 ps.executeUpdate();
                 try (ResultSet keys = ps.getGeneratedKeys()) {
                     if (keys.next()) c.setMaTieuChi(keys.getInt(1));
@@ -647,7 +610,7 @@ public class DanhGiaDAO {
                 ps.setString(2, c.getMoTa());
                 ps.setString(3, c.getNhomTieuChi());
                 ps.setDouble(4, c.getDiemToiDa());
-                ps.setString(5, c.isHoatDong() ? "hoatDong" : "ngung_hoat_dong");
+                ps.setString(5, c.isHoatDong() ? HRMConstants.TRANG_THAI_HOAT_DONG : HRMConstants.TRANG_THAI_NGUNG_HOAT_DONG);
                 ps.setInt(6, c.getMaTieuChi());
                 ps.executeUpdate();
             } catch (SQLException e) {
@@ -658,7 +621,7 @@ public class DanhGiaDAO {
     }
 
     public void deleteCriteria(int maTieuChi) {
-        String sql = "UPDATE TIEUCHIDANHGIA SET trangThai='ngung_hoat_dong' WHERE maTieuChi=?";
+        String sql = "UPDATE TIEUCHIDANHGIA SET trangThai='" + HRMConstants.TRANG_THAI_NGUNG_HOAT_DONG + "' WHERE maTieuChi=?";
         try (Connection conn = DatabaseConnection.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setInt(1, maTieuChi);
@@ -776,4 +739,5 @@ public class DanhGiaDAO {
         }
         return result;
     }
+
 }

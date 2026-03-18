@@ -5,6 +5,7 @@ import com.hrm.util.UIColors;
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
 import java.awt.*;
+import java.awt.Font;
 
 /**
  * StatusBadge - Colored badge for displaying status
@@ -30,30 +31,29 @@ public class StatusBadge extends JLabel {
         setHorizontalAlignment(CENTER);
         setFont(new Font("Segoe UI", Font.BOLD, 11));
         setBorder(new EmptyBorder(4, 10, 4, 10));
-
         switch (type) {
             case SUCCESS:
                 setBackground(UIColors.SUCCESS_GREEN);
-                setForeground(com.hrm.util.UIColors.WHITE);
+                setForeground(Color.WHITE);
                 break;
             case WARNING:
-                setBackground(UIColors.WARNING_YELLOW);
+                setBackground(new Color(255, 193, 7));
                 setForeground(UIColors.TEXT_DARK);
                 break;
             case DANGER:
                 setBackground(UIColors.DANGER_RED);
-                setForeground(com.hrm.util.UIColors.WHITE);
+                setForeground(Color.WHITE);
                 break;
             case INFO:
-                setBackground(UIColors.INFO_BLUE);
-                setForeground(com.hrm.util.UIColors.WHITE);
+                setBackground(new Color(23, 162, 184));
+                setForeground(Color.WHITE);
                 break;
             case PURPLE:
                 setBackground(UIColors.PRIMARY_PURPLE);
-                setForeground(com.hrm.util.UIColors.WHITE);
+                setForeground(Color.WHITE);
                 break;
             default:
-                setBackground(UIColors.BORDER_GRAY);
+                setBackground(Color.LIGHT_GRAY);
                 setForeground(UIColors.TEXT_DARK);
                 break;
         }
@@ -64,23 +64,19 @@ public class StatusBadge extends JLabel {
      */
     private static BadgeType getBadgeTypeFromStatus(String status) {
         if (status == null) return BadgeType.DEFAULT;
-
         String upper = status.toUpperCase();
-
         // Success statuses
         if (upper.contains("APPROVED") || upper.contains("ACTIVE") ||
             upper.contains("COMPLETED") || upper.contains("SUCCESS") ||
             upper.contains("OPEN") || upper.contains("DONE")) {
             return BadgeType.SUCCESS;
         }
-
         // Warning statuses
         if (upper.contains("PENDING") || upper.contains("WAITING") ||
             upper.contains("DRAFT") || upper.contains("IN_PROGRESS") ||
             upper.contains("REVIEW")) {
             return BadgeType.WARNING;
         }
-
         // Danger statuses
         if (upper.contains("REJECTED") || upper.contains("CANCELLED") ||
             upper.contains("LOCKED") || upper.contains("INACTIVE") ||
@@ -88,13 +84,11 @@ public class StatusBadge extends JLabel {
             upper.contains("CLOSED") || upper.contains("DELETED")) {
             return BadgeType.DANGER;
         }
-
         // Info statuses
         if (upper.contains("INFO") || upper.contains("NEW") ||
             upper.contains("SUBMITTED")) {
             return BadgeType.INFO;
         }
-
         return BadgeType.DEFAULT;
     }
 

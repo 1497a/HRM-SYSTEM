@@ -24,10 +24,8 @@ public class HopDongLaoDong {
     private LocalDate ngayThanhLy;        // Ngày thanh lý (nếu có)
     private String lyDoThanhLy;           // Lý do thanh lý/hủy
     private String ghiChu;                // Ghi chú bổ sung
-
     // Transient (không lưu DB) - dùng để hiển thị
     private transient String tenNV;
-
     public HopDongLaoDong() {
         this.trangThai = "cho_duyet";
     }
@@ -57,7 +55,6 @@ public class HopDongLaoDong {
     // ============================
     // Getters & Setters
     // ============================
-
     public int getMaHopDong() {
         return maHopDong;
     }
@@ -181,7 +178,6 @@ public class HopDongLaoDong {
     // ============================
     // Display & Business Helpers
     // ============================
-
     public String getLoaiHopDongDisplay() {
         if (loaiHopDong == null) return "Không xác định";
         return switch (loaiHopDong) {

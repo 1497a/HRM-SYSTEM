@@ -15,15 +15,12 @@ public class CauHinhPhuCap {
     public enum KieuTinh {
         CO_DINH("co_dinh", "Co dinh"),
         PHAN_TRAM("phan_tram", "% Luong CB");
-
         private final String dbValue;
         private final String displayName;
-
         KieuTinh(String dbValue, String displayName) {
             this.dbValue = dbValue;
             this.displayName = displayName;
         }
-
         public String getDbValue() { return dbValue; }
         public String getDisplayName() { return displayName; }
     }
@@ -35,7 +32,6 @@ public class CauHinhPhuCap {
     private double giaTri;              // So tien (neu co dinh) hoac % (neu phan tram)
     private String nguon;               // CongTy, LuatDinh, ChucVu...
     private boolean hoatDong;
-
     public CauHinhPhuCap() {
         this.hoatDong = true;
         this.kieuTinh = KieuTinh.CO_DINH;
@@ -74,10 +70,6 @@ public class CauHinhPhuCap {
     // Getters & Setters
     public int getId() { return id; }
     public void setId(int id) { this.id = id; }
-
-    // Legacy compatibility
-    public int getMaPC() { return id; }
-    public void setMaPC(int maPC) { this.id = maPC; }
 
     public ThanhPhanLuong.Loai getLoai() { return loai; }
     public void setLoai(ThanhPhanLuong.Loai loai) { this.loai = loai; }

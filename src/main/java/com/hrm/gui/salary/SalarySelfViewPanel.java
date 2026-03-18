@@ -4,6 +4,7 @@ import com.hrm.bus.LuongBUS;
 import com.hrm.model.BangLuong;
 import com.hrm.model.ChiTietLuong;
 import com.hrm.util.UIColors;
+import com.hrm.util.UIFonts;
 import com.hrm.util.UIHelper;
 
 import javax.swing.*;
@@ -25,36 +26,29 @@ import java.util.Locale;
 class SalarySelfViewPanel extends JPanel {
 
     private static final NumberFormat MONEY_FORMAT = NumberFormat.getNumberInstance(new Locale("vi", "VN"));
-
     private final LuongBUS salaryService;
     private final String maNVHienTai;
-
     private JTable tblChiTiet;
     private DefaultTableModel modelChiTiet;
     private List<ChiTietLuong> currentChiTietList = new ArrayList<>();
     private int selectedMaBL = -1;
-
     private JComboBox<BangLuong> cboKyLuong;
     private JButton btnXemChiTiet;
-
     SalarySelfViewPanel(LuongBUS salaryService, String maNVHienTai) {
         this.salaryService = salaryService;
         this.maNVHienTai = maNVHienTai;
         setLayout(new BorderLayout(12, 12));
-        setBackground(UIColors.LIGHT_GRAY_BG);
+        setBackground(Color.WHITE);
         setBorder(new EmptyBorder(12, 12, 12, 12));
-
         JPanel toolbar = new JPanel(new FlowLayout(FlowLayout.LEFT, 8, 4));
         toolbar.setOpaque(false);
-
         JLabel lblTitle = new JLabel("Phiếu lương của tôi");
-        lblTitle.setFont(com.hrm.util.UIFonts.HEADER_H3);
+        lblTitle.setFont(UIFonts.HEADER_SUB);
         toolbar.add(lblTitle);
         toolbar.add(Box.createHorizontalStrut(12));
         toolbar.add(new JLabel("Kỳ lương:"));
-
         cboKyLuong = new JComboBox<>();
-        cboKyLuong.setFont(com.hrm.util.UIFonts.TEXT_MEDIUM);
+        cboKyLuong.setFont(UIFonts.TEXT_NORMAL);
         cboKyLuong.setPreferredSize(new Dimension(260, 34));
         cboKyLuong.setRenderer(new javax.swing.DefaultListCellRenderer() {
             @Override
@@ -73,14 +67,11 @@ class SalarySelfViewPanel extends JPanel {
             }
         });
         toolbar.add(cboKyLuong);
-
         btnXemChiTiet = UIHelper.createPrimaryButton("Xem chi tiết");
         btnXemChiTiet.addActionListener(e -> showChiTietDialog());
         toolbar.add(btnXemChiTiet);
-
         add(toolbar, BorderLayout.NORTH);
         add(buildChiTietTablePanel("Phiếu lương cá nhân"), BorderLayout.CENTER);
-
         loadBangLuong();
     }
 
@@ -97,12 +88,10 @@ class SalarySelfViewPanel extends JPanel {
             }
             kyLuongCaNhan.sort(Comparator.comparingInt(BangLuong::getNam).reversed()
                     .thenComparing(Comparator.comparingInt(BangLuong::getThang).reversed()));
-
             DefaultComboBoxModel<BangLuong> comboModel = new DefaultComboBoxModel<>();
             for (BangLuong bl : kyLuongCaNhan) comboModel.addElement(bl);
             cboKyLuong.setModel(comboModel);
             btnXemChiTiet.setEnabled(comboModel.getSize() > 0);
-
             if (comboModel.getSize() > 0) {
                 cboKyLuong.setSelectedIndex(0);
                 BangLuong selected = (BangLuong) cboKyLuong.getSelectedItem();
@@ -143,7 +132,6 @@ class SalarySelfViewPanel extends JPanel {
             "Tiền OT", "Tổng thu nhập", "Khấu trừ", "Thực lãnh",
             "Số ngày công", "Số giờ OT", "Ghi chú"
         });
-
         tblChiTiet = new JTable(modelChiTiet);
         tblChiTiet.setRowHeight(28);
         tblChiTiet.setFont(com.hrm.util.UIFonts.TEXT_NORMAL);
@@ -153,7 +141,6 @@ class SalarySelfViewPanel extends JPanel {
         tblChiTiet.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
         tblChiTiet.setSelectionBackground(UIColors.LIGHT_PURPLE);
         tblChiTiet.setSelectionForeground(UIColors.TEXT_DARK);
-
         int[] widths = {70, 150, 125, 125, 110, 125, 110, 125, 95, 95, 220};
         for (int i = 0; i < widths.length; i++) {
             tblChiTiet.getColumnModel().getColumn(i).setPreferredWidth(widths[i]);
@@ -162,14 +149,12 @@ class SalarySelfViewPanel extends JPanel {
         rightRenderer.setHorizontalAlignment(SwingConstants.RIGHT);
         for (int i = 2; i <= 7; i++) tblChiTiet.getColumnModel().getColumn(i).setCellRenderer(rightRenderer);
         tblChiTiet.getColumnModel().getColumn(9).setCellRenderer(rightRenderer);
-
         tblChiTiet.addMouseListener(new java.awt.event.MouseAdapter() {
             @Override
             public void mouseClicked(java.awt.event.MouseEvent e) {
                 if (e.getClickCount() == 2 && selectedMaBL >= 0) showChiTietDialog();
             }
         });
-
         JScrollPane scroll = new JScrollPane(tblChiTiet);
         scroll.setBorder(new TitledBorder(title));
         return scroll;

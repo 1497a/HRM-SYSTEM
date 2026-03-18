@@ -16,14 +16,12 @@ public class ThongBao {
     private boolean daDoc;
     private LocalDateTime ngayDoc;
     private LocalDateTime ngayTao;
-
     public ThongBao() {
     }
 
     // ============================
     // Getters & Setters
     // ============================
-
     public int getMaThongBao() {
         return maThongBao;
     }

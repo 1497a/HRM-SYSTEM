@@ -9,7 +9,6 @@ public class DonXinNghiPhep {
         DA_DUYET("da_duyet", "Da duyet"),
         TU_CHOI("tu_choi", "Tu choi"),
         HUY("huy", "Da huy");
-
         private final String dbValue;
         private final String tenHienThi;
         TrangThai(String dbValue, String tenHienThi) {
@@ -18,7 +17,6 @@ public class DonXinNghiPhep {
         }
         public String getDbValue() { return dbValue; }
         public String getTenHienThi() { return tenHienThi; }
-
         public static TrangThai fromDb(String value) {
             for (TrangThai t : values()) {
                 if (t.dbValue.equals(value)) return t;
@@ -42,7 +40,6 @@ public class DonXinNghiPhep {
     private String lyDoTuChoi;
     private LocalDateTime ngayTao;
     private LocalDateTime ngayCapNhat;
-
     public DonXinNghiPhep() {
         this.trangThai = TrangThai.CHO_DUYET;
         this.ngayTao = LocalDateTime.now();
@@ -51,12 +48,12 @@ public class DonXinNghiPhep {
 
     public int getId() { return id; }
     public void setId(int id) { this.id = id; }
-    public String getNhanVienId() { return nhanVienId; }
-    public void setNhanVienId(String nhanVienId) { this.nhanVienId = nhanVienId; }
+    public String getMaNV() { return nhanVienId; }
+    public void setMaNV(String maNV) { this.nhanVienId = maNV; }
     public String getTenNhanVien() { return tenNhanVien; }
     public void setTenNhanVien(String tenNhanVien) { this.tenNhanVien = tenNhanVien; }
-    public String getLoaiPhepId() { return loaiPhepId; }
-    public void setLoaiPhepId(String loaiPhepId) { this.loaiPhepId = loaiPhepId; }
+    public String getMaLoaiPhep() { return loaiPhepId; }
+    public void setMaLoaiPhep(String maLoaiPhep) { this.loaiPhepId = maLoaiPhep; }
     public String getTenLoaiPhep() { return tenLoaiPhep; }
     public void setTenLoaiPhep(String tenLoaiPhep) { this.tenLoaiPhep = tenLoaiPhep; }
     public LocalDate getTuNgay() { return tuNgay; }
@@ -72,8 +69,8 @@ public class DonXinNghiPhep {
         this.trangThai = trangThai;
         this.ngayCapNhat = LocalDateTime.now();
     }
-    public String getNguoiDuyetId() { return nguoiDuyetId; }
-    public void setNguoiDuyetId(String nguoiDuyetId) { this.nguoiDuyetId = nguoiDuyetId; }
+    public String getMaNguoiDuyet() { return nguoiDuyetId; }
+    public void setMaNguoiDuyet(String maNguoiDuyet) { this.nguoiDuyetId = maNguoiDuyet; }
     public String getTenNguoiDuyet() { return tenNguoiDuyet; }
     public void setTenNguoiDuyet(String tenNguoiDuyet) { this.tenNguoiDuyet = tenNguoiDuyet; }
     public String getLyDoTuChoi() { return lyDoTuChoi; }
@@ -82,19 +79,4 @@ public class DonXinNghiPhep {
     public void setNgayTao(LocalDateTime ngayTao) { this.ngayTao = ngayTao; }
     public LocalDateTime getNgayCapNhat() { return ngayCapNhat; }
     public void setNgayCapNhat(LocalDateTime ngayCapNhat) { this.ngayCapNhat = ngayCapNhat; }
-
-    // Legacy compat
-    public String getEmployeeId() { return nhanVienId; }
-    public String getEmployeeName() { return tenNhanVien; }
-    public String getLeaveTypeCode() { return loaiPhepId; }
-    public String getLeaveTypeName() { return tenLoaiPhep; }
-    public LocalDate getStartDate() { return tuNgay; }
-    public LocalDate getEndDate() { return denNgay; }
-    public double getTotalDays() { return soNgayNghi; }
-    public String getReason() { return lyDo; }
-    public String getApproverId() { return nguoiDuyetId; }
-    public String getApproverName() { return tenNguoiDuyet; }
-    public String getApproverNote() { return lyDoTuChoi; }
-    public LocalDateTime getCreatedAt() { return ngayTao; }
-    public LocalDateTime getUpdatedAt() { return ngayCapNhat; }
 }

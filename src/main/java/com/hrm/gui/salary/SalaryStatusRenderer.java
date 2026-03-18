@@ -1,6 +1,7 @@
 package com.hrm.gui.salary;
 
 import com.hrm.util.UIColors;
+import com.hrm.util.UIFonts;
 
 import javax.swing.*;
 import javax.swing.table.DefaultTableCellRenderer;
@@ -21,9 +22,9 @@ class SalaryStatusRenderer extends DefaultTableCellRenderer {
             if (v.contains("Đã khóa")) {
                 c.setForeground(UIColors.SUCCESS_GREEN);
             } else if (v.contains("Đã duyệt")) {
-                c.setForeground(UIColors.WARNING_TEXT_AMBER);
+                c.setForeground(new Color(230, 120, 0));
             } else if (v.contains("Đã tính")) {
-                c.setForeground(UIColors.INFO_BLUE);
+                c.setForeground(new Color(23, 162, 184));
             } else {
                 c.setForeground(UIColors.TEXT_DARK);
             }

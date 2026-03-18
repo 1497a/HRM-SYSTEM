@@ -1,5 +1,7 @@
 package com.hrm.model;
 
+import com.hrm.util.HRMConstants;
+
 import java.time.LocalTime;
 import java.time.LocalDateTime;
 
@@ -20,20 +22,16 @@ import java.time.LocalDateTime;
 public class CaLam {
 
     public enum TrangThai {
-        HOAT_DONG("hoat_dong", "Hoat dong"),
-        NGUNG_HOAT_DONG("ngung_hoat_dong", "Ngung hoat dong");
-
+        HOAT_DONG(HRMConstants.TRANG_THAI_HOAT_DONG, "Hoat dong"),
+        NGUNG_HOAT_DONG(HRMConstants.TRANG_THAI_NGUNG_HOAT_DONG, "Ngung hoat dong");
         private final String dbValue;
         private final String displayName;
-
         TrangThai(String dbValue, String displayName) {
             this.dbValue = dbValue;
             this.displayName = displayName;
         }
-
         public String getDbValue() { return dbValue; }
         public String getDisplayName() { return displayName; }
-
         public static TrangThai fromDbValue(String value) {
             for (TrangThai tt : values()) {
                 if (tt.dbValue.equals(value)) {
@@ -53,7 +51,6 @@ public class CaLam {
     private String moTa;             // NULL OK     — NVARCHAR(255)
     private TrangThai trangThai;     // DEFAULT 'hoat_dong' — ENUM
     private LocalDateTime ngayTao;   // AUTO        — DATETIME
-
     public CaLam() {
         this.soGioChuan = 8.00;
         this.choPhepLamThem = true;
@@ -71,10 +68,6 @@ public class CaLam {
 
     public String getId() { return id; }
     public void setId(String id) { this.id = id; }
-
-    // Legacy compatibility
-    public String getMaCaLam() { return id; }
-    public void setMaCaLam(String maCaLam) { this.id = maCaLam; }
 
     public String getTenCaLam() { return tenCaLam; }
     public void setTenCaLam(String tenCaLam) { this.tenCaLam = tenCaLam; }

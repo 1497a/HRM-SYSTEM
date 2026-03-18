@@ -2,6 +2,9 @@ package com.hrm.util;
 
 import com.hrm.model.TaiKhoan;
 
+import static com.hrm.util.HRMConstants.ROLE_ADMIN;
+import static com.hrm.util.HRMConstants.USERNAME_ADMIN;
+
 /**
  * Session Context - Manages current user session
  * Singleton pattern
@@ -9,7 +12,6 @@ import com.hrm.model.TaiKhoan;
 public class SessionContext {
     private static SessionContext instance;
     private TaiKhoan currentUser;
-
     private SessionContext() {
     }
 
@@ -42,5 +44,10 @@ public class SessionContext {
 
     public boolean hasRole(String roleCode) {
         return currentUser != null && currentUser.coVaiTro(roleCode);
+    }
+
+    public boolean isAdmin() {
+        return isLoggedIn()
+                && (USERNAME_ADMIN.equalsIgnoreCase(currentUser.getTenDangNhap()) || hasRole(ROLE_ADMIN));
     }
 }

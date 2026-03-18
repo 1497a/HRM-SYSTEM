@@ -1,6 +1,7 @@
 package com.hrm.gui.recruitment;
 
 import com.hrm.util.UIColors;
+import com.hrm.util.UIFonts;
 
 import javax.swing.*;
 import javax.swing.table.DefaultTableModel;

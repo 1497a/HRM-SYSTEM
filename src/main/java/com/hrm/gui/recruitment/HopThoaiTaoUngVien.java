@@ -5,6 +5,7 @@ import com.hrm.bus.KetQua;
 import com.hrm.model.TinTuyenDung;
 import com.hrm.model.UngVien;
 import com.hrm.util.UIColors;
+import com.hrm.util.UIFonts;
 import com.hrm.util.UIHelper;
 import com.hrm.util.ValidationUtils;
 
@@ -23,7 +24,6 @@ public class HopThoaiTaoUngVien extends JDialog {
 
     private final TuyenDungBUS tuyenDungBUS;
     private boolean thanhCong = false;
-
     // Fields
     private JComboBox<TinTuyenDung> cboTin;
     private JTextField txtHoTen;
@@ -36,9 +36,7 @@ public class HopThoaiTaoUngVien extends JDialog {
     private JTextArea txtKinhNghiem;
     private JTextField txtNguonUngTuyen;
     private JTextArea txtNhanXet;
-
     private static final DateTimeFormatter DATE_FMT = DateTimeFormatter.ofPattern("dd/MM/yyyy");
-
     public HopThoaiTaoUngVien(Window owner, TuyenDungBUS tuyenDungBUS) {
         super(owner, "Tạo ứng viên mới", ModalityType.APPLICATION_MODAL);
         this.tuyenDungBUS = tuyenDungBUS;
@@ -51,11 +49,9 @@ public class HopThoaiTaoUngVien extends JDialog {
     private void initUI() {
         JPanel main = new JPanel(new BorderLayout(8, 8));
         main.setBorder(new EmptyBorder(16, 16, 8, 16));
-        main.setBackground(UIColors.WHITE);
-
+        main.setBackground(Color.WHITE);
         main.add(buildForm(), BorderLayout.CENTER);
         main.add(buildButtons(), BorderLayout.SOUTH);
-
         setContentPane(main);
     }
 
@@ -64,7 +60,6 @@ public class HopThoaiTaoUngVien extends JDialog {
         List<TinTuyenDung> dsTin = tuyenDungBUS.getAllTinTuyenDung().stream()
                 .filter(t -> "dang_tuyen".equals(t.getTrangThai()))
                 .collect(java.util.stream.Collectors.toList());
-
         cboTin = new JComboBox<>();
         TinTuyenDung placeholder = new TinTuyenDung();
         placeholder.setTieuDe("-- Chọn tin tuyển dụng --");
@@ -72,32 +67,25 @@ public class HopThoaiTaoUngVien extends JDialog {
         for (TinTuyenDung t : dsTin) cboTin.addItem(t);
         cboTin.setRenderer((list, value, index, sel, focus) ->
                 new JLabel(value != null ? value.getTieuDe() : ""));
-
         txtHoTen        = field(25);
         txtEmail        = field(25);
         txtDienThoai    = field(15);
         txtNgaySinh     = field(12);
         txtNgaySinh.setToolTipText("Định dạng: dd/MM/yyyy");
-
         cboGioiTinh = new JComboBox<>(new String[]{"nam", "nữ", "khác"});
         cboGioiTinh.setFont(com.hrm.util.UIFonts.TEXT_NORMAL);
-
         txtDiaChi = field(30);
-
         cboTrinhDo = new JComboBox<>(new String[]{
             "Trung học", "Trung cấp", "Cao đẳng", "Đại học", "Thạc sĩ", "Tiến sĩ", "Khác"
         });
         cboTrinhDo.setFont(com.hrm.util.UIFonts.TEXT_NORMAL);
-
         txtKinhNghiem   = area(4);
         txtNguonUngTuyen = field(20);
         txtNhanXet      = area(3);
-
         JPanel p = new JPanel(new GridBagLayout());
-        p.setBackground(UIColors.WHITE);
+        p.setBackground(Color.WHITE);
         GridBagConstraints lbl = labelGBC();
         GridBagConstraints fld = fieldGBC();
-
         int row = 0;
         addRow(p, row++, "Tin tuyển dụng (*):", cboTin,              lbl, fld);
         addRow(p, row++, "Họ tên (*):",         txtHoTen,            lbl, fld);
@@ -110,20 +98,16 @@ public class HopThoaiTaoUngVien extends JDialog {
         addRow(p, row++, "Kinh nghiệm:",         new JScrollPane(txtKinhNghiem), lbl, fld);
         addRow(p, row++, "Nguồn ứng tuyển:",     txtNguonUngTuyen,    lbl, fld);
         addRow(p, row++, "Nhận xét ban đầu:",    new JScrollPane(txtNhanXet),    lbl, fld);
-
         return p;
     }
 
     private JPanel buildButtons() {
         JPanel panel = new JPanel(new FlowLayout(FlowLayout.RIGHT, 8, 4));
-        panel.setBackground(UIColors.WHITE);
-
+        panel.setBackground(Color.WHITE);
         JButton btnLuu   = UIHelper.createSuccessButton("Lưu");
         JButton btnHuy   = UIHelper.createDefaultButton("Hủy");
-
         btnLuu.addActionListener(e -> luu());
         btnHuy.addActionListener(e -> dispose());
-
         panel.add(btnHuy);
         panel.add(btnLuu);
         return panel;
@@ -135,13 +119,11 @@ public class HopThoaiTaoUngVien extends JDialog {
             JOptionPane.showMessageDialog(this, "vui lòng nhập họ tên.", "Lỗi", JOptionPane.WARNING_MESSAGE);
             return;
         }
-
         TinTuyenDung tin = (TinTuyenDung) cboTin.getSelectedItem();
         if (tin == null || tin.getMaTin() == 0) {
             JOptionPane.showMessageDialog(this, "Vui lòng chọn tin tuyển dụng.", "Lỗi", JOptionPane.WARNING_MESSAGE);
             return;
         }
-
         LocalDate ngaySinh = null;
         String nsStr = txtNgaySinh.getText().trim();
         if (!nsStr.isEmpty()) {
@@ -157,7 +139,6 @@ public class HopThoaiTaoUngVien extends JDialog {
                 return;
             }
         }
-
         // Validate email and phone
         String emailErr = ValidationUtils.validateEmail(txtEmail.getText().trim());
         if (emailErr != null) {
@@ -169,7 +150,6 @@ public class HopThoaiTaoUngVien extends JDialog {
             JOptionPane.showMessageDialog(this, phoneErr, "Lỗi", JOptionPane.WARNING_MESSAGE);
             return;
         }
-
         UngVien uv = new UngVien();
         uv.setMaTin(tin.getMaTin());
         uv.setHoTen(hoTen);
@@ -184,7 +164,6 @@ public class HopThoaiTaoUngVien extends JDialog {
         uv.setNhanXet(txtNhanXet.getText().trim());
         uv.setTrangThai("moi");
         uv.setNgayTao(LocalDate.now());
-
         KetQua<?> kq = tuyenDungBUS.tiepNhanUngVien(uv);
         if (kq.isSuccess()) {
             JOptionPane.showMessageDialog(this, "Đã tạo ứng viên thành công!", "Thành công", JOptionPane.INFORMATION_MESSAGE);
@@ -200,7 +179,6 @@ public class HopThoaiTaoUngVien extends JDialog {
     }
 
     // ── helpers ──────────────────────────────────────────────────────────────
-
     private JTextField field(int cols) {
         JTextField f = new JTextField(cols);
         f.setFont(com.hrm.util.UIFonts.TEXT_NORMAL);

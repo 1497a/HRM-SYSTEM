@@ -11,29 +11,24 @@ public class DanhGiaHieuSuat {
         KHA("kha", "Khá", 6.5, 7.9),
         TRUNG_BINH("trung_binh", "Trung bình", 5.0, 6.4),
         YEU("yeu", "Yếu", 0.0, 4.9);
-
         private final String dbValue;
         private final String tenHienThi;
         private final double diemMin;
         private final double diemMax;
-
         XepLoai(String dbValue, String tenHienThi, double diemMin, double diemMax) {
             this.dbValue = dbValue;
             this.tenHienThi = tenHienThi;
             this.diemMin = diemMin;
             this.diemMax = diemMax;
         }
-
         public String getDbValue() { return dbValue; }
         public String getTenHienThi() { return tenHienThi; }
-
         public static XepLoai tuDiem(double diem) {
             for (XepLoai x : values()) {
                 if (diem >= x.diemMin && diem <= x.diemMax) return x;
             }
             return YEU;
         }
-
         public static XepLoai fromDb(String value) {
             for (XepLoai x : values()) {
                 if (x.dbValue.equals(value)) return x;
@@ -55,7 +50,6 @@ public class DanhGiaHieuSuat {
     private String nhanXetChung;
     private LocalDateTime ngayDanhGia;
     private String trangThai;
-
     public DanhGiaHieuSuat() {
         this.chiTietDanhGias = new ArrayList<>();
         this.ngayDanhGia = LocalDateTime.now();
@@ -71,16 +65,16 @@ public class DanhGiaHieuSuat {
 
     public int getId() { return id; }
     public void setId(int id) { this.id = id; }
-    public int getDotDanhGiaId() { return dotDanhGiaId; }
-    public void setDotDanhGiaId(int dotDanhGiaId) { this.dotDanhGiaId = dotDanhGiaId; }
+    public int getMaDot() { return dotDanhGiaId; }
+    public void setMaDot(int maDot) { this.dotDanhGiaId = maDot; }
     public String getTenDot() { return tenDot; }
     public void setTenDot(String tenDot) { this.tenDot = tenDot; }
-    public String getNhanVienId() { return nhanVienId; }
-    public void setNhanVienId(String nhanVienId) { this.nhanVienId = nhanVienId; }
+    public String getMaNV() { return nhanVienId; }
+    public void setMaNV(String maNV) { this.nhanVienId = maNV; }
     public String getTenNhanVien() { return tenNhanVien; }
     public void setTenNhanVien(String tenNhanVien) { this.tenNhanVien = tenNhanVien; }
-    public String getNguoiDanhGiaId() { return nguoiDanhGiaId; }
-    public void setNguoiDanhGiaId(String nguoiDanhGiaId) { this.nguoiDanhGiaId = nguoiDanhGiaId; }
+    public String getMaNguoiDanhGia() { return nguoiDanhGiaId; }
+    public void setMaNguoiDanhGia(String maNguoiDanhGia) { this.nguoiDanhGiaId = maNguoiDanhGia; }
     public String getTenNguoiDanhGia() { return tenNguoiDanhGia; }
     public void setTenNguoiDanhGia(String tenNguoiDanhGia) { this.tenNguoiDanhGia = tenNguoiDanhGia; }
     public List<ChiTietDanhGia> getChiTietDanhGias() { return chiTietDanhGias; }
@@ -95,14 +89,4 @@ public class DanhGiaHieuSuat {
     public void setNgayDanhGia(LocalDateTime ngayDanhGia) { this.ngayDanhGia = ngayDanhGia; }
     public String getTrangThai() { return trangThai; }
     public void setTrangThai(String trangThai) { this.trangThai = trangThai; }
-
-    // Legacy compat
-    public int getCycleId() { return dotDanhGiaId; }
-    public String getEmployeeId() { return nhanVienId; }
-    public String getEmployeeName() { return tenNhanVien; }
-    public String getEvaluatorId() { return nguoiDanhGiaId; }
-    public List<ChiTietDanhGia> getScores() { return chiTietDanhGias; }
-    public double getOverallScore() { return tongDiem; }
-    public String getGeneralComment() { return nhanXetChung; }
-    public LocalDateTime getSubmittedAt() { return ngayDanhGia; }
 }

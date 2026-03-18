@@ -6,6 +6,7 @@ import com.hrm.model.SoDungPhep;
 import com.hrm.model.TaiKhoan;
 import com.hrm.bus.NghiPhepBUS;
 import com.hrm.util.HRMConstants;
+import com.hrm.util.UIFonts;
 import com.hrm.util.PermissionCodes;
 import com.hrm.util.SessionContext;
 import com.hrm.util.UIHelper;
@@ -16,6 +17,7 @@ import javax.swing.border.TitledBorder;
 import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.table.DefaultTableModel;
 import javax.swing.table.TableRowSorter;
+
 import java.awt.*;
 import java.time.format.DateTimeFormatter;
 import java.util.Comparator;
@@ -25,11 +27,11 @@ import java.util.List;
  * Leave List Panel - displays leave requests
  */
 public class LeaveListPanel extends JPanel {
+
     private final NghiPhepBUS leaveService;
     private final TaiKhoan currentUser;
     private final boolean isManager;
     private final boolean canApprove;
-
     private JTable table;
     private DefaultTableModel tableModel;
     private TableRowSorter<DefaultTableModel> sorter;
@@ -37,11 +39,8 @@ public class LeaveListPanel extends JPanel {
     private JComboBox<Object> cboNhanVien;
     private JButton btnCreate;
     private JButton btnApprove;
-
     private JPanel balancePanel;
-
     private static final DateTimeFormatter DATE_FORMAT = DateTimeFormatter.ofPattern("dd/MM/yyyy");
-
     public LeaveListPanel() {
         this.leaveService = NghiPhepBUS.getInstance();
         this.currentUser = SessionContext.getInstance().getCurrentUser();
@@ -51,7 +50,6 @@ public class LeaveListPanel extends JPanel {
         this.isManager = leaveViewScope != com.hrm.model.DataScope.NONE
                       && leaveViewScope != com.hrm.model.DataScope.SELF;
         this.canApprove = leaveApproveScope != com.hrm.model.DataScope.NONE;
-
         initComponents();
         setupLayout();
         loadData();
@@ -60,19 +58,17 @@ public class LeaveListPanel extends JPanel {
     private void initComponents() {
         setLayout(new BorderLayout(10, 10));
         setBorder(new EmptyBorder(15, 15, 15, 15));
-
         // Status combo
         cboStatus = new JComboBox<>(new String[]{"Tất cả",
                 DonXinNghiPhep.TrangThai.CHO_DUYET.getTenHienThi(),
                 DonXinNghiPhep.TrangThai.DA_DUYET.getTenHienThi(),
                 DonXinNghiPhep.TrangThai.TU_CHOI.getTenHienThi()});
         cboStatus.addActionListener(e -> applyFilter());
-
         // Nhan vien combo (only for manager/hr/director)
         cboNhanVien = new JComboBox<>();
         if (isManager) {
             cboNhanVien.addItem("Tất cả");
-            String currentMaNV = currentUser.getNhanVienId();
+            String currentMaNV = currentUser.getMaNV();
             List<NhanVien> dsNV = com.hrm.bus.NhanVienBUS.getInstance().getAllByActionScope(PermissionCodes.LEAVE_VIEW, currentMaNV);
             for (NhanVien nv : dsNV) {
                 cboNhanVien.addItem(nv);
@@ -93,15 +89,12 @@ public class LeaveListPanel extends JPanel {
             });
             cboNhanVien.addActionListener(e -> loadData());
         }
-
         // Buttons
         btnCreate = UIHelper.createSuccessButton("Tạo đơn mới");
         btnCreate.addActionListener(e -> createRequest());
-
         btnApprove = UIHelper.createPrimaryButton("Xử lý đơn");
         btnApprove.setEnabled(canApprove);
         btnApprove.addActionListener(e -> approveRequest());
-
         // Table
         String[] columns = {"ID", "Nhân viên", "Loại phép", "Từ ngày", "Đến ngày",
                 "Số ngày", "Lý do", "Trạng thái", "Người duyệt"};
@@ -123,7 +116,6 @@ public class LeaveListPanel extends JPanel {
         table.getColumnModel().getColumn(6).setPreferredWidth(300);
         table.getColumnModel().getColumn(7).setPreferredWidth(120);
         table.getColumnModel().getColumn(8).setPreferredWidth(140);
-
         // Status cell renderer
         table.getColumnModel().getColumn(7).setCellRenderer(new DefaultTableCellRenderer() {
             @Override
@@ -133,23 +125,21 @@ public class LeaveListPanel extends JPanel {
                 if (!isSelected) {
                     String status = (String) value;
                     if (com.hrm.model.DonXinNghiPhep.TrangThai.DA_DUYET.getTenHienThi().equals(status)) {
-                        c.setBackground(com.hrm.util.UIColors.LIGHT_GREEN_BG);
+                        c.setBackground(new Color(200, 255, 200));
                     } else if (com.hrm.model.DonXinNghiPhep.TrangThai.TU_CHOI.getTenHienThi().equals(status)) {
-                        c.setBackground(com.hrm.util.UIColors.LIGHT_RED_BG);
+                        c.setBackground(new Color(255, 200, 200));
                     } else if (com.hrm.model.DonXinNghiPhep.TrangThai.CHO_DUYET.getTenHienThi().equals(status)) {
-                        c.setBackground(com.hrm.util.UIColors.LIGHT_YELLOW_BG);
+                        c.setBackground(new Color(255, 255, 200));
                     } else {
-                        c.setBackground(com.hrm.util.UIColors.WHITE);
+                        c.setBackground(Color.WHITE);
                     }
                 }
                 return c;
             }
         });
-
         // Sorter – sort by employee name (col 1) using Vietnamese locale
         sorter = new TableRowSorter<>(tableModel);
         table.setRowSorter(sorter);
-
         // Chỉ cho sort cột 0 (ID) và cột 1 (Nhân viên)
         for (int i = 0; i < 9; i++) {
             sorter.setSortable(i, false);
@@ -157,13 +147,10 @@ public class LeaveListPanel extends JPanel {
         sorter.setComparator(0,Comparator.comparingInt(a -> (Integer) a));
          // ID
         sorter.setSortable(1, true); // Nhân viên
-
         // Comparator tiếng Việt cho cột Nhân viên
         sorter.setComparator(1, UIHelper.vietnameseNameComparator());
-
         // Mặc định sort theo ID tăng dần
         sorter.setSortKeys(List.of(new RowSorter.SortKey(0, SortOrder.ASCENDING)));
-
         // Balance Panel
         balancePanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 20, 5));
         balancePanel.setBorder(new TitledBorder("Số ngày phép còn lại"));
@@ -173,7 +160,6 @@ public class LeaveListPanel extends JPanel {
         // Top panel
         JPanel topPanel = new JPanel(new BorderLayout(10, 10));
         topPanel.setBorder(new EmptyBorder(0, 0, 10, 0));
-
         JPanel filterPanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 10, 0));
         if (isManager) {
             filterPanel.add(new JLabel("Nhân viên:"));
@@ -181,7 +167,6 @@ public class LeaveListPanel extends JPanel {
         }
         filterPanel.add(new JLabel("Trạng thái:"));
         filterPanel.add(cboStatus);
-
         JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT, 10, 0));
         JButton btnLamMoi = new JButton("Làm mới");
         btnLamMoi.addActionListener(e -> loadData());
@@ -190,40 +175,34 @@ public class LeaveListPanel extends JPanel {
         if (canApprove) {
             buttonPanel.add(btnApprove);
         }
-
         topPanel.add(filterPanel, BorderLayout.WEST);
         topPanel.add(buttonPanel, BorderLayout.EAST);
         topPanel.add(balancePanel, BorderLayout.SOUTH);
-
         // Center panel - table
         JScrollPane scrollPane = new JScrollPane(table);
         scrollPane.setBorder(new TitledBorder("Danh sách đơn nghỉ phép"));
-
         add(topPanel, BorderLayout.NORTH);
         add(scrollPane, BorderLayout.CENTER);
     }
 
     private void loadData() {
         tableModel.setRowCount(0);
-        String empId = currentUser.getNhanVienId();
+        String empId = currentUser.getMaNV();
         String filterMaNV = isManager && cboNhanVien.getSelectedItem() instanceof NhanVien
                 ? ((NhanVien) cboNhanVien.getSelectedItem()).getMaNhanVien() : null;
-
         List<DonXinNghiPhep> requests = isManager
                 ? leaveService.getAllRequestsByScope(empId)
                 : leaveService.getMyRequests(empId);
-
         for (DonXinNghiPhep req : requests) {
-            if (filterMaNV != null && !filterMaNV.equals(req.getEmployeeId())) continue;
+            if (filterMaNV != null && !filterMaNV.equals(req.getMaNV())) continue;
             tableModel.addRow(new Object[]{
-                req.getId(), req.getEmployeeName(), req.getLeaveTypeName(),
-                req.getStartDate().format(DATE_FORMAT), req.getEndDate().format(DATE_FORMAT),
-                req.getTotalDays(), req.getReason(),
+                req.getId(), req.getTenNhanVien(), req.getTenLoaiPhep(),
+                req.getTuNgay().format(DATE_FORMAT), req.getDenNgay().format(DATE_FORMAT),
+                req.getSoNgayNghi(), req.getLyDo(),
                 req.getTrangThai().getTenHienThi(),
-                req.getApproverName() != null ? req.getApproverName() : "-"
+                req.getTenNguoiDuyet() != null ? req.getTenNguoiDuyet() : "-"
             });
         }
-
         applyFilter();
         String targetEmpId = filterMaNV != null ? filterMaNV : empId;
         if (targetEmpId != null) {
@@ -244,10 +223,10 @@ public class LeaveListPanel extends JPanel {
         balancePanel.removeAll();
         List<SoDungPhep> balances = leaveService.getBalances(empId);
         for (SoDungPhep balance : balances) {
-            JLabel lbl = new JLabel(getLeaveTypeName(balance.getLeaveTypeCode()) +
-                    ": " + balance.getRemainingDays() + "/" + balance.getTotalDays() + " ngay");
+            JLabel lbl = new JLabel(getLeaveTypeName(balance.getMaLoaiPhep()) +
+                    ": " + balance.getSoNgayConLai() + "/" + balance.getSoNgayDuocCap() + " ngay");
             lbl.setFont(com.hrm.util.UIFonts.BOLD_SMALL);
-            if (balance.getRemainingDays() <= 3) {
+            if (balance.getSoNgayConLai() <= 3) {
                 lbl.setForeground(com.hrm.util.UIColors.DANGER_RED);
             }
             balancePanel.add(lbl);
@@ -259,13 +238,13 @@ public class LeaveListPanel extends JPanel {
     private String getLeaveTypeName(String code) {
         return leaveService.getAllLeaveTypes().stream()
                 .filter(t -> t.getId().equals(code))
-                .map(t -> t.getName())
+                    .map(t -> t.getTenLoaiPhep())
                 .findFirst()
                 .orElse(code);
     }
 
     private void createRequest() {
-        if (currentUser.getNhanVienId() == null) {
+        if (currentUser.getMaNV() == null) {
             String message = SessionContext.getInstance().hasRole(HRMConstants.ROLE_ADMIN)
                     ? "Tài khoản admin không cần tạo yêu cầu nghỉ phép."
                    : "Tài khoản của bạn chưa gắn mã nhân viên nên không thể tạo đơn nghỉ phép.";
@@ -275,7 +254,6 @@ public class LeaveListPanel extends JPanel {
                     JOptionPane.INFORMATION_MESSAGE);
             return;
         }
-
         LeaveCreateDialog dialog = new LeaveCreateDialog(
                 (Frame) SwingUtilities.getWindowAncestor(this));
         dialog.setVisible(true);
@@ -293,11 +271,9 @@ public class LeaveListPanel extends JPanel {
                     JOptionPane.WARNING_MESSAGE);
             return;
         }
-
         int modelRow = table.convertRowIndexToModel(selectedRow);
         int requestId = (int) tableModel.getValueAt(modelRow, 0);
         String status = (String) tableModel.getValueAt(modelRow, 7);
-
         if (!DonXinNghiPhep.TrangThai.CHO_DUYET.getTenHienThi().equals(status)) {
             JOptionPane.showMessageDialog(this,
                     "Chỉ có thể duyệt đơn đang chờ duyệt",
@@ -305,10 +281,10 @@ public class LeaveListPanel extends JPanel {
                     JOptionPane.WARNING_MESSAGE);
             return;
         }
-
         LeaveApproveDialog dialog = new LeaveApproveDialog(
                 (Frame) SwingUtilities.getWindowAncestor(this), requestId);
         dialog.setVisible(true);
         loadData();
     }
+
 }

@@ -2,6 +2,7 @@ package com.hrm.gui.recruitment;
 
 import com.hrm.model.RecruitmentStatus;
 import com.hrm.util.UIColors;
+import com.hrm.util.UIFonts;
 
 import javax.swing.*;
 import javax.swing.table.DefaultTableCellRenderer;
@@ -18,19 +19,16 @@ class RecruitmentStatusRenderer extends DefaultTableCellRenderer {
             RecruitmentStatus.displayUngVien(RecruitmentStatus.UngVien.TRUNG_TUYEN, null),
             RecruitmentStatus.displayUngVien(RecruitmentStatus.UngVien.DA_CHUYEN_NHAN_VIEN, "NV")
     );
-
     private static final Set<String> WARNING_STATUSES = statusSet(
             RecruitmentStatus.displayYeuCau(RecruitmentStatus.YeuCau.CHO_DUYET),
             RecruitmentStatus.displayTin(RecruitmentStatus.Tin.TAM_DUNG),
             RecruitmentStatus.displayUngVien(RecruitmentStatus.UngVien.DANG_PHONG_VAN, null)
     );
-
     private static final Set<String> DANGER_STATUSES = statusSet(
             RecruitmentStatus.displayYeuCau(RecruitmentStatus.YeuCau.TU_CHOI),
             RecruitmentStatus.displayTin(RecruitmentStatus.Tin.DA_DONG),
             RecruitmentStatus.displayUngVien(RecruitmentStatus.UngVien.TU_CHOI, null)
     );
-
     private static Set<String> statusSet(String... values) {
         return Set.copyOf(new LinkedHashSet<>(Arrays.asList(values)));
     }
@@ -47,9 +45,9 @@ class RecruitmentStatusRenderer extends DefaultTableCellRenderer {
             } else if (DANGER_STATUSES.contains(v)) {
                 c.setForeground(UIColors.DANGER_RED);
             } else if (WARNING_STATUSES.contains(v)) {
-                c.setForeground(UIColors.WARNING_YELLOW);
+                c.setForeground(new Color(255, 193, 7));
             } else {
-                c.setForeground(UIColors.INFO_BLUE);
+                c.setForeground(new Color(23, 162, 184));
             }
             ((JLabel) c).setFont(com.hrm.util.UIFonts.BOLD_SMALL);
         }

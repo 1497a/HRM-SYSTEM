@@ -8,16 +8,20 @@ import com.hrm.model.TaiKhoan;
 import com.hrm.bus.DanhGiaBUS;
 import com.hrm.bus.KetQua;
 import com.hrm.bus.NhanVienBUS;
+import com.hrm.gui.components.BaseFormDialog;
 import com.hrm.util.HRMConstants;
 import com.hrm.util.PermissionCodes;
 import com.hrm.util.SessionContext;
 import com.hrm.util.UIColors;
+import com.hrm.util.UIFonts;
 import com.hrm.util.UIHelper;
 
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
 import javax.swing.border.TitledBorder;
+
 import java.awt.*;
+import java.awt.Font;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -27,14 +31,13 @@ import java.util.Map;
  * Dialog Đánh giá nhân viên.
  * Quan ly chon nhan vien (co hien thi chuc vu), nhap diem theo tieu chi, xem diem du kien.
  */
-public class EvalDoDialog extends JDialog {
+public class EvalDoDialog extends BaseFormDialog {
 
     private final DanhGiaBUS evalService;
     private final TaiKhoan currentUser;
     private final int cycleId;
     private final String cycleName;
     private final List<TieuChiDanhGia> cycleCriteria;
-
     private JComboBox<NhanVienItem> cboEmployee;
     private JLabel lblChucVu;
     private JPanel criteriaPanel;
@@ -44,9 +47,7 @@ public class EvalDoDialog extends JDialog {
     private JLabel lblDiemDuKien;
     private JButton btnLuu;
     private JButton btnHuy;
-
     private boolean successful = false;
-
     public EvalDoDialog(Frame parent, int cycleId, String cycleName) {
         super(parent, "Đánh giá nhân viên", true);
         this.evalService  = DanhGiaBUS.getInstance();
@@ -54,48 +55,39 @@ public class EvalDoDialog extends JDialog {
         this.cycleId   = cycleId;
         this.cycleName = cycleName;
         this.cycleCriteria = evalService.getCriteriaByCycle(cycleId);
-
         initComponents();
         setupLayout();
-
         setSize(720, 680);
         setMinimumSize(new Dimension(680, 580));
         setLocationRelativeTo(parent);
     }
-
 
     private void initComponents() {
         // Employee combo â€” show hoTen + tenChucVu, store maNV
         cboEmployee = new JComboBox<>();
         cboEmployee.setFont(com.hrm.util.UIFonts.TEXT_NORMAL);
         loadEmployees();
-
         lblChucVu = new JLabel(" ");
         lblChucVu.setFont(new Font("Segoe UI", Font.ITALIC, 12));
-        lblChucVu.setForeground(com.hrm.util.UIColors.TEXT_GRAY);
+        lblChucVu.setForeground(Color.GRAY);
         cboEmployee.addActionListener(e -> updateChucVuLabel());
-
         // Criteria
         criteriaPanel = new JPanel();
         criteriaPanel.setLayout(new BoxLayout(criteriaPanel, BoxLayout.Y_AXIS));
-        criteriaPanel.setBackground(UIColors.WHITE);
-
+        criteriaPanel.setBackground(Color.WHITE);
         for (TieuChiDanhGia c : cycleCriteria) {
             criteriaPanel.add(buildCriteriaRow(c));
             criteriaPanel.add(Box.createVerticalStrut(6));
         }
-
         // General comment
         txtNhanXetChung = new JTextArea(3, 40);
         txtNhanXetChung.setFont(com.hrm.util.UIFonts.TEXT_NORMAL);
         txtNhanXetChung.setLineWrap(true);
         txtNhanXetChung.setWrapStyleWord(true);
-
         // Preview
         lblDiemDuKien = new JLabel("Điểm dự kiến: 0.00 - Xếp loại: -");
         lblDiemDuKien.setFont(new Font("Segoe UI", Font.BOLD, 15));
-        lblDiemDuKien.setForeground(com.hrm.util.UIColors.INFO_BLUE_TEXT);
-
+        lblDiemDuKien.setForeground(new Color(23, 162, 184));
         // Buttons
         btnLuu  = UIHelper.createSuccessButton("Lưu đánh giá");
         btnHuy  = UIHelper.createDefaultButton("Hủy");
@@ -103,7 +95,6 @@ public class EvalDoDialog extends JDialog {
         btnHuy.setPreferredSize(new Dimension(90, 38));
         btnLuu.addActionListener(e -> luuDanhGia());
         btnHuy.addActionListener(e -> dispose());
-
         if (cycleCriteria.isEmpty()) {
             btnLuu.setEnabled(false);
             JOptionPane.showMessageDialog(this,
@@ -111,23 +102,19 @@ public class EvalDoDialog extends JDialog {
                     "Thông báo",
                     JOptionPane.WARNING_MESSAGE);
         }
-
         // Initial preview
         updatePreview();
     }
 
     private void loadEmployees() {
-        String currentMaNV = currentUser.getNhanVienId();
+        String currentMaNV = currentUser.getMaNV();
         List<NhanVien> employees = NhanVienBUS.getInstance()
                 .getAllByActionScope(PermissionCodes.EVAL_REVIEW, currentMaNV);
-
         List<String> alreadyEvaluated = evalService.getEvaluatedMaNVInCycle(cycleId);
-
         for (NhanVien nv : employees) {
             if ("nghi_viec".equals(nv.getTrangThai())) continue;
             if (nv.getMaNhanVien().equals(currentMaNV)) continue; // không tự đánh giá bản thân
             if (alreadyEvaluated.contains(nv.getMaNhanVien())) continue;
-
             cboEmployee.addItem(new NhanVienItem(
                     nv.getMaNhanVien(),
                     nv.getHoTen() != null ? nv.getHoTen() : nv.getMaNhanVien(),
@@ -135,7 +122,6 @@ public class EvalDoDialog extends JDialog {
                     nv.getTenPhongBanHienTai() != null ? nv.getTenPhongBanHienTai() : ""
             ));
         }
-
         if (cboEmployee.getItemCount() == 0) {
             JOptionPane.showMessageDialog(null,
                     "Tất cả nhân viên trong phạm vi của bạn đã được đánh giá.",
@@ -145,116 +131,96 @@ public class EvalDoDialog extends JDialog {
 
     private JPanel buildCriteriaRow(TieuChiDanhGia c) {
         JPanel panel = new JPanel(new BorderLayout(8, 4));
-        panel.setBackground(UIColors.WHITE);
+        panel.setBackground(Color.WHITE);
         panel.setBorder(BorderFactory.createCompoundBorder(
                 BorderFactory.createLineBorder(new Color(210, 210, 210)),
                 new EmptyBorder(8, 10, 8, 10)));
         panel.setMaximumSize(new Dimension(Integer.MAX_VALUE, 130));
-
         // Header: name + weight on left, score spinner on right
         JPanel headerRow = new JPanel(new BorderLayout());
         headerRow.setOpaque(false);
-
-        JLabel lblTen = new JLabel(c.getTenTieuChi() + "  [Trọng số: " + (int) c.getDiemToiDa() + "%]");
+        JLabel lblTen = new JLabel(c.getTenTieuChi() + "  [Trọng số: " + (int) c.getTrongSo() + "%]");
         lblTen.setFont(com.hrm.util.UIFonts.BOLD_NORMAL);
         headerRow.add(lblTen, BorderLayout.WEST);
-
         JSpinner spn = new JSpinner(new SpinnerNumberModel(5.0, 1.0, 10.0, 0.5));
         spn.setPreferredSize(new Dimension(75, 28));
         ((JSpinner.NumberEditor) spn.getEditor()).getFormat().setMaximumFractionDigits(1);
         spn.addChangeListener(e -> updatePreview());
         scoreSpinners.put(c.getId(), spn);
-
         JPanel scoreRow = new JPanel(new FlowLayout(FlowLayout.RIGHT, 4, 0));
         scoreRow.setOpaque(false);
         scoreRow.add(new JLabel("Điểm (1-10):"));
         scoreRow.add(spn);
         headerRow.add(scoreRow, BorderLayout.EAST);
-
         // Description
         JLabel lblMoTa = new JLabel("<html><i>"
                 + (c.getMoTa() != null && !c.getMoTa().isEmpty() ? c.getMoTa() : "&nbsp;")
                 + "</i></html>");
-        lblMoTa.setForeground(com.hrm.util.UIColors.TEXT_GRAY);
+        lblMoTa.setForeground(Color.GRAY);
         lblMoTa.setFont(new Font("Segoe UI", Font.ITALIC, 12));
-
         // Comment field
         JTextArea txtCmt = new JTextArea(2, 30);
-        txtCmt.setFont(com.hrm.util.UIFonts.TEXT_SMALL);
+        txtCmt.setFont(UIFonts.BOLD_SMALL);
         txtCmt.setLineWrap(true);
         txtCmt.setWrapStyleWord(true);
         commentFields.put(c.getId(), txtCmt);
-
         JPanel center = new JPanel(new BorderLayout(4, 4));
         center.setOpaque(false);
         center.add(lblMoTa, BorderLayout.NORTH);
         center.add(new JScrollPane(txtCmt), BorderLayout.CENTER);
-
         panel.add(headerRow, BorderLayout.NORTH);
         panel.add(center, BorderLayout.CENTER);
         return panel;
     }
 
-
     private void setupLayout() {
         JPanel main = new JPanel(new BorderLayout(10, 10));
         main.setBorder(new EmptyBorder(14, 14, 10, 14));
-        main.setBackground(UIColors.LIGHT_GRAY_BG);
-
+        main.setBackground(Color.WHITE);
         // â”€â”€ top: cycle info + employee selector â”€â”€
         JPanel topPanel = new JPanel(new GridBagLayout());
-        topPanel.setBackground(UIColors.WHITE);
+        topPanel.setBackground(Color.WHITE);
         topPanel.setBorder(new TitledBorder("Thông tin đánh giá"));
         GridBagConstraints gc = new GridBagConstraints();
         gc.insets = new Insets(5, 8, 5, 8);
         gc.anchor = GridBagConstraints.WEST;
-
         gc.gridx = 0; gc.gridy = 0;
         topPanel.add(new JLabel("Đợt đánh giá:"), gc);
         gc.gridx = 1; gc.weightx = 1; gc.fill = GridBagConstraints.HORIZONTAL;
         JLabel lblCycleName = new JLabel(cycleName);
         lblCycleName.setFont(com.hrm.util.UIFonts.BOLD_NORMAL);
         topPanel.add(lblCycleName, gc);
-
         gc.gridx = 0; gc.gridy = 1; gc.weightx = 0; gc.fill = GridBagConstraints.NONE;
         topPanel.add(new JLabel("Nhân viên được đánh giá:"), gc);
         gc.gridx = 1; gc.weightx = 1; gc.fill = GridBagConstraints.HORIZONTAL;
         topPanel.add(cboEmployee, gc);
-
         gc.gridx = 1; gc.gridy = 2;
         topPanel.add(lblChucVu, gc);
-
         // â”€â”€ center: criteria scroll â”€â”€
         JScrollPane criteriaScroll = new JScrollPane(criteriaPanel);
         criteriaScroll.setBorder(new TitledBorder("Tiêu chí đánh giá"));
         criteriaScroll.getVerticalScrollBar().setUnitIncrement(16);
-
         // â”€â”€ bottom: comment + preview + buttons â”€â”€
         JPanel commentPanel = new JPanel(new BorderLayout(5, 5));
         commentPanel.setOpaque(false);
         commentPanel.setBorder(new TitledBorder("Nhận xét chung"));
         commentPanel.add(new JScrollPane(txtNhanXetChung), BorderLayout.CENTER);
-
         JPanel btnRow = new JPanel(new FlowLayout(FlowLayout.CENTER, 20, 8));
         btnRow.setOpaque(false);
         btnRow.add(lblDiemDuKien);
         btnRow.add(Box.createHorizontalStrut(20));
         btnRow.add(btnHuy);
         btnRow.add(btnLuu);
-
         JPanel bottom = new JPanel(new BorderLayout(8, 8));
         bottom.setOpaque(false);
         bottom.add(commentPanel, BorderLayout.CENTER);
         bottom.add(btnRow, BorderLayout.SOUTH);
-
         main.add(topPanel, BorderLayout.NORTH);
         main.add(criteriaScroll, BorderLayout.CENTER);
         main.add(bottom, BorderLayout.SOUTH);
-
         setContentPane(main);
         updateChucVuLabel();
     }
-
 
     private void updateChucVuLabel() {
         NhanVienItem item = (NhanVienItem) cboEmployee.getSelectedItem();
@@ -271,10 +237,9 @@ public class EvalDoDialog extends JDialog {
         total = Math.round(total * 100.0) / 100.0;
         String xepLoai = DanhGiaHieuSuat.XepLoai.tuDiem(total).getTenHienThi();
         lblDiemDuKien.setText(String.format("Điểm dự kiến: %.2f - Xếp loại: %s", total, xepLoai));
-
         // Color hint
         if (total >= 9.0)      lblDiemDuKien.setForeground(new Color(0, 153, 51));
-        else if (total >= 8.0) lblDiemDuKien.setForeground(com.hrm.util.UIColors.INFO_BLUE_TEXT);
+        else if (total >= 8.0) lblDiemDuKien.setForeground(new Color(23, 162, 184));
         else if (total >= 6.5) lblDiemDuKien.setForeground(new Color(100, 140, 0));
         else if (total >= 5.0) lblDiemDuKien.setForeground(new Color(200, 130, 0));
         else                   lblDiemDuKien.setForeground(com.hrm.util.UIColors.DANGER_RED);
@@ -312,14 +277,12 @@ public class EvalDoDialog extends JDialog {
                     "Thông báo", JOptionPane.WARNING_MESSAGE);
             return;
         }
-
         String approverId = HRMConstants.USERNAME_ADMIN;
         String approverName = "Quản trị viên";
-        if (currentUser.getNhanVienId() != null && !currentUser.getNhanVienId().trim().isEmpty()) {
-            approverId = currentUser.getNhanVienId();
+        if (currentUser.getMaNV() != null && !currentUser.getMaNV().trim().isEmpty()) {
+            approverId = currentUser.getMaNV();
             approverName = currentUser.getHoTen();
         }
-
         KetQua<?> result = evalService.submitEvaluation(
                 cycleId,
                 selected.maNV,        // employee maNV (not taiKhoan.id!)
@@ -329,7 +292,6 @@ public class EvalDoDialog extends JDialog {
                 scores,
                 txtNhanXetChung.getText().trim()
         );
-
         if (result.isSuccess()) {
             JOptionPane.showMessageDialog(this, result.getMessage(),
                     "Thành công", JOptionPane.INFORMATION_MESSAGE);
@@ -344,20 +306,17 @@ public class EvalDoDialog extends JDialog {
     public boolean isSuccessful() { return successful; }
 
     // â”€â”€ inner class â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-
     private static class NhanVienItem {
         final String maNV;
         final String hoTen;
         final String tenChucVu;
         final String tenPhongBan;
-
         NhanVienItem(String maNV, String hoTen, String tenChucVu, String tenPhongBan) {
             this.maNV = maNV;
             this.hoTen = hoTen;
             this.tenChucVu = tenChucVu != null ? tenChucVu : "";
             this.tenPhongBan = tenPhongBan != null ? tenPhongBan : "";
         }
-
         @Override
         public String toString() {
             StringBuilder sb = new StringBuilder("[").append(maNV).append("] ").append(hoTen);
@@ -366,4 +325,5 @@ public class EvalDoDialog extends JDialog {
             return sb.toString();
         }
     }
+
 }

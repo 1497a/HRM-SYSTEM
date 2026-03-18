@@ -8,18 +8,15 @@ import com.hrm.model.TaiKhoan;
 import com.hrm.util.HRMConstants;
 import com.hrm.util.PermissionCodes;
 import com.hrm.util.SessionContext;
+import com.hrm.util.ValidationUtils;
 
 import java.util.List;
 import java.util.stream.Collectors;
 
 public class ChucVuBUS {
     private static final String ACTION_POSITION_MANAGE = PermissionCodes.POSITION_MANAGE;
-    private static final String TRANG_THAI_HOAT_DONG = "hoatdong";
-    private static final String TRANG_THAI_NGUNG_HOAT_DONG = "ngung_hoat_dong";
-
-    private final ChucVuDAO positionRepo = new ChucVuDAO();
+    private final ChucVuDAO positionRepo = ChucVuDAO.getInstance();
     private final BoNhiemDAO boNhiemRepo = BoNhiemDAO.getInstance();
-
     public List<ChucVu> getAllPositions() {
         return positionRepo.findAll();
     }
@@ -34,7 +31,7 @@ public class ChucVuBUS {
                 .collect(Collectors.toList());
     }
 
-    public ChucVu getById(String maChucVu) {
+    public ChucVu getByMaChucVu(String maChucVu) {
         return positionRepo.findById(maChucVu);
     }
 
@@ -48,10 +45,10 @@ public class ChucVuBUS {
         if (!permission.isSuccess()) {
             return permission;
         }
-        if (isBlank(maChucVu)) {
+        if (ValidationUtils.isBlank(maChucVu)) {
             return KetQua.error("Ma chuc vu khong duoc de trong.");
         }
-        if (isBlank(tenChucVu)) {
+        if (ValidationUtils.isBlank(tenChucVu)) {
             return KetQua.error("Ten chuc vu khong duoc de trong.");
         }
         if (positionRepo.existsById(maChucVu.trim())) {
@@ -60,14 +57,13 @@ public class ChucVuBUS {
         if (phuCapChucVu < 0) {
             return KetQua.error("Phu cap khong duoc am.");
         }
-
         ChucVu position = new ChucVu(
                 maChucVu.trim(),
                 tenChucVu.trim(),
                 capBac,
                 phuCapChucVu,
                 moTa,
-                TRANG_THAI_HOAT_DONG
+                HRMConstants.TRANG_THAI_HOAT_DONG
         );
         positionRepo.save(position);
         return KetQua.success(null, "Them chuc vu thanh cong.");
@@ -83,13 +79,12 @@ public class ChucVuBUS {
         if (position == null) {
             return KetQua.error("Khong tim thay chuc vu.");
         }
-        if (isBlank(tenMoi)) {
+        if (ValidationUtils.isBlank(tenMoi)) {
             return KetQua.error("Ten chuc vu khong duoc de trong.");
         }
         if (phuCapMoi < 0) {
             return KetQua.error("Phu cap khong duoc am.");
         }
-
         position.setTenChucVu(tenMoi.trim());
         position.setCapBac(capBacMoi);
         position.setPhuCapChucVu(phuCapMoi);
@@ -110,7 +105,7 @@ public class ChucVuBUS {
         if (boNhiemRepo.hasActiveBoNhiemByChucVu(maChucVu)) {
             return KetQua.error("Khong the ngung hoat dong chuc vu vi van con nhan vien dang giu chuc vu nay.");
         }
-        position.setTrangThai(TRANG_THAI_NGUNG_HOAT_DONG);
+        position.setTrangThai(HRMConstants.TRANG_THAI_NGUNG_HOAT_DONG);
         positionRepo.update(position);
         return KetQua.success(null, "Da ngung hoat dong chuc vu.");
     }
@@ -124,7 +119,7 @@ public class ChucVuBUS {
         if (position == null) {
             return KetQua.error("Khong tim thay chuc vu.");
         }
-        position.setTrangThai(TRANG_THAI_HOAT_DONG);
+        position.setTrangThai(HRMConstants.TRANG_THAI_HOAT_DONG);
         positionRepo.update(position);
         return KetQua.success(null, "Da kich hoat lai chuc vu.");
     }
@@ -134,7 +129,7 @@ public class ChucVuBUS {
         if (currentUser == null) {
             return KetQua.error("Phien dang nhap khong hop le.");
         }
-        if (HRMConstants.USERNAME_ADMIN.equalsIgnoreCase(currentUser.getTenDangNhap()) || currentUser.coVaiTro(HRMConstants.ROLE_ADMIN)) {
+        if (SessionContext.getInstance().isAdmin()) {
             return KetQua.success(null, "");
         }
         if (!currentUser.coQuyen(ACTION_POSITION_MANAGE)) {
@@ -146,7 +141,4 @@ public class ChucVuBUS {
         return KetQua.success(null, "");
     }
 
-    private boolean isBlank(String value) {
-        return value == null || value.trim().isEmpty();
-    }
 }

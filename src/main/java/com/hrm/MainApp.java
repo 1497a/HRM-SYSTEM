@@ -3,7 +3,6 @@ package com.hrm;
 import com.hrm.gui.LoginFrame;
 import javax.swing.*;
 
-
 public class MainApp {
 
     public static void main(String[] args) {
@@ -15,7 +14,6 @@ public class MainApp {
         } catch (Exception e) {
             e.printStackTrace();
         }
-
         // Open Login Frame on EDT
         SwingUtilities.invokeLater(() -> {
             LoginFrame loginFrame = new LoginFrame();

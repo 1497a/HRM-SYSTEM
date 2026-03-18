@@ -17,8 +17,23 @@ import java.util.List;
  */
 public class TuyenDungDAO {
 
+    private static final String YEUCAU_BASE_SELECT = "SELECT yc.*, pb.tenPhongBan, cv.tenChucVu "
+            + "FROM YEUCAUTUYENDUNG yc "
+            + "LEFT JOIN PHONGBAN pb ON yc.maPhongBan = pb.maPhongBan "
+            + "LEFT JOIN CHUCVU cv ON yc.maChucVu = cv.maChucVu ";
+    private static final String TIN_BASE_SELECT = "SELECT t.*, pb.tenPhongBan, cv.tenChucVu, yc.soLuong, "
+            + "(SELECT COUNT(*) FROM UNGVIEN uv WHERE uv.maTin = t.maTin) AS soUngVien "
+            + "FROM TINTUYENDUNG t "
+            + "JOIN YEUCAUTUYENDUNG yc ON t.maYeuCau = yc.maYeuCau "
+            + "LEFT JOIN PHONGBAN pb ON yc.maPhongBan = pb.maPhongBan "
+            + "LEFT JOIN CHUCVU cv ON yc.maChucVu = cv.maChucVu ";
+    private static final String UV_BASE_SELECT = "SELECT uv.*, t.tieuDe AS tenTin, cv.tenChucVu, pb.tenPhongBan "
+            + "FROM UNGVIEN uv "
+            + "LEFT JOIN TINTUYENDUNG t ON uv.maTin = t.maTin "
+            + "LEFT JOIN YEUCAUTUYENDUNG yc ON t.maYeuCau = yc.maYeuCau "
+            + "LEFT JOIN CHUCVU cv ON yc.maChucVu = cv.maChucVu "
+            + "LEFT JOIN PHONGBAN pb ON yc.maPhongBan = pb.maPhongBan ";
     private static TuyenDungDAO instance;
-
     private TuyenDungDAO() {
     }
 
@@ -32,7 +47,6 @@ public class TuyenDungDAO {
     // =====================================================================
     // ==================== YeuCauTuyenDung ================================
     // =====================================================================
-
     private YeuCauTuyenDung mapYeuCau(ResultSet rs) throws SQLException {
         YeuCauTuyenDung yc = new YeuCauTuyenDung();
         yc.setMaYeuCau(rs.getInt("maYeuCau"));
@@ -51,6 +65,17 @@ public class TuyenDungDAO {
         Timestamp ngayDuyet = rs.getTimestamp("ngayDuyet");
         if (ngayDuyet != null) yc.setNgayDuyet(ngayDuyet.toLocalDateTime());
         yc.setTrangThai(rs.getString("trangThai"));
+        return yc;
+    }
+
+    private void applyYeuCauDetails(YeuCauTuyenDung yc, ResultSet rs) throws SQLException {
+        yc.setTenPhongBan(rs.getString("tenPhongBan"));
+        yc.setTenChucVu(rs.getString("tenChucVu"));
+    }
+
+    private YeuCauTuyenDung mapYeuCauWithDetails(ResultSet rs) throws SQLException {
+        YeuCauTuyenDung yc = mapYeuCau(rs);
+        applyYeuCauDetails(yc, rs);
         return yc;
     }
 
@@ -110,19 +135,12 @@ public class TuyenDungDAO {
      */
     public List<YeuCauTuyenDung> findAllYeuCau() {
         List<YeuCauTuyenDung> list = new ArrayList<>();
-        String sql = "SELECT yc.*, pb.tenPhongBan, cv.tenChucVu "
-                + "FROM YEUCAUTUYENDUNG yc "
-                + "LEFT JOIN PHONGBAN pb ON yc.maPhongBan = pb.maPhongBan "
-                + "LEFT JOIN CHUCVU cv ON yc.maChucVu = cv.maChucVu "
-                + "ORDER BY yc.maYeuCau DESC";
+        String sql = YEUCAU_BASE_SELECT + "ORDER BY yc.maYeuCau DESC";
         try (Connection conn = DatabaseConnection.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql);
              ResultSet rs = ps.executeQuery()) {
             while (rs.next()) {
-                YeuCauTuyenDung yc = mapYeuCau(rs);
-                yc.setTenPhongBan(rs.getString("tenPhongBan"));
-                yc.setTenChucVu(rs.getString("tenChucVu"));
-                list.add(yc);
+                list.add(mapYeuCauWithDetails(rs));
             }
         } catch (SQLException e) {
             System.err.println("Lỗi findAllYeuCau: " + e.getMessage());
@@ -135,20 +153,13 @@ public class TuyenDungDAO {
      * Tìm yêu cầu tuyển dụng theo ID với transients.
      */
     public YeuCauTuyenDung findYeuCauById(int maYeuCau) {
-        String sql = "SELECT yc.*, pb.tenPhongBan, cv.tenChucVu "
-                + "FROM YEUCAUTUYENDUNG yc "
-                + "LEFT JOIN PHONGBAN pb ON yc.maPhongBan = pb.maPhongBan "
-                + "LEFT JOIN CHUCVU cv ON yc.maChucVu = cv.maChucVu "
-                + "WHERE yc.maYeuCau = ?";
+        String sql = YEUCAU_BASE_SELECT + "WHERE yc.maYeuCau = ?";
         try (Connection conn = DatabaseConnection.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setInt(1, maYeuCau);
             try (ResultSet rs = ps.executeQuery()) {
                 if (rs.next()) {
-                    YeuCauTuyenDung yc = mapYeuCau(rs);
-                    yc.setTenPhongBan(rs.getString("tenPhongBan"));
-                    yc.setTenChucVu(rs.getString("tenChucVu"));
-                    return yc;
+                    return mapYeuCauWithDetails(rs);
                 }
             }
         } catch (SQLException e) {
@@ -161,7 +172,6 @@ public class TuyenDungDAO {
     // =====================================================================
     // ==================== TinTuyenDung ===================================
     // =====================================================================
-
     private TinTuyenDung mapTin(ResultSet rs) throws SQLException {
         TinTuyenDung tin = new TinTuyenDung();
         tin.setMaTin(rs.getInt("maTin"));
@@ -175,6 +185,19 @@ public class TuyenDungDAO {
         tin.setTrangThai(rs.getString("trangThai"));
         Date ngayTao = rs.getDate("ngayTao");
         if (ngayTao != null) tin.setNgayTao(ngayTao.toLocalDate());
+        return tin;
+    }
+
+    private void applyTinDetails(TinTuyenDung tin, ResultSet rs) throws SQLException {
+        tin.setTenPhongBan(rs.getString("tenPhongBan"));
+        tin.setTenChucVu(rs.getString("tenChucVu"));
+        tin.setSoUngVien(rs.getInt("soUngVien"));
+        tin.setSoLuongCanTuyen(rs.getInt("soLuong"));
+    }
+
+    private TinTuyenDung mapTinWithDetails(ResultSet rs) throws SQLException {
+        TinTuyenDung tin = mapTin(rs);
+        applyTinDetails(tin, rs);
         return tin;
     }
 
@@ -231,23 +254,12 @@ public class TuyenDungDAO {
      */
     public List<TinTuyenDung> findAllTin() {
         List<TinTuyenDung> list = new ArrayList<>();
-        String sql = "SELECT t.*, pb.tenPhongBan, cv.tenChucVu, yc.soLuong, "
-                + "(SELECT COUNT(*) FROM UNGVIEN uv WHERE uv.maTin = t.maTin) AS soUngVien "
-                + "FROM TINTUYENDUNG t "
-                + "JOIN YEUCAUTUYENDUNG yc ON t.maYeuCau = yc.maYeuCau "
-                + "LEFT JOIN PHONGBAN pb ON yc.maPhongBan = pb.maPhongBan "
-                + "LEFT JOIN CHUCVU cv ON yc.maChucVu = cv.maChucVu "
-                + "ORDER BY t.maTin DESC";
+        String sql = TIN_BASE_SELECT + "ORDER BY t.maTin DESC";
         try (Connection conn = DatabaseConnection.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql);
              ResultSet rs = ps.executeQuery()) {
             while (rs.next()) {
-                TinTuyenDung tin = mapTin(rs);
-                tin.setTenPhongBan(rs.getString("tenPhongBan"));
-                tin.setTenChucVu(rs.getString("tenChucVu"));
-                tin.setSoUngVien(rs.getInt("soUngVien"));
-                tin.setSoLuongCanTuyen(rs.getInt("soLuong"));
-                list.add(tin);
+                list.add(mapTinWithDetails(rs));
             }
         } catch (SQLException e) {
             System.err.println("Loi findAllTin: " + e.getMessage());
@@ -260,24 +272,13 @@ public class TuyenDungDAO {
      * Tim tin tuyen dung theo ID voi transients.
      */
     public TinTuyenDung findTinById(int maTin) {
-        String sql = "SELECT t.*, pb.tenPhongBan, cv.tenChucVu, yc.soLuong, "
-                + "(SELECT COUNT(*) FROM UNGVIEN uv WHERE uv.maTin = t.maTin) AS soUngVien "
-                + "FROM TINTUYENDUNG t "
-                + "JOIN YEUCAUTUYENDUNG yc ON t.maYeuCau = yc.maYeuCau "
-                + "LEFT JOIN PHONGBAN pb ON yc.maPhongBan = pb.maPhongBan "
-                + "LEFT JOIN CHUCVU cv ON yc.maChucVu = cv.maChucVu "
-                + "WHERE t.maTin = ?";
+        String sql = TIN_BASE_SELECT + "WHERE t.maTin = ?";
         try (Connection conn = DatabaseConnection.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setInt(1, maTin);
             try (ResultSet rs = ps.executeQuery()) {
                 if (rs.next()) {
-                    TinTuyenDung tin = mapTin(rs);
-                    tin.setTenPhongBan(rs.getString("tenPhongBan"));
-                    tin.setTenChucVu(rs.getString("tenChucVu"));
-                    tin.setSoUngVien(rs.getInt("soUngVien"));
-                    tin.setSoLuongCanTuyen(rs.getInt("soLuong"));
-                    return tin;
+                    return mapTinWithDetails(rs);
                 }
             }
         } catch (SQLException e) {
@@ -290,7 +291,6 @@ public class TuyenDungDAO {
     // =====================================================================
     // ==================== UngVien ========================================
     // =====================================================================
-
     private UngVien mapUngVien(ResultSet rs) throws SQLException {
         UngVien uv = new UngVien();
         uv.setMaUngVien(rs.getInt("maUngVien"));
@@ -304,13 +304,25 @@ public class TuyenDungDAO {
         uv.setDiaChi(rs.getString("diaChi"));
         uv.setTrinhDoHocVan(rs.getString("trinhDoHocVan"));
         uv.setKinhNghiem(rs.getString("kinhNghiem"));
-        uv.setFileCv(rs.getString("fileCv"));
+            uv.setFileCv(rs.getString("fileCv"));
         uv.setNguonUngTuyen(rs.getString("nguonUngTuyen"));
         uv.setTrangThai(rs.getString("trangThai"));
         uv.setNhanXet(rs.getString("nhanXet"));
         uv.setMaNV(rs.getString("maNV"));
         Date ngayTao = rs.getDate("ngayTao");
         if (ngayTao != null) uv.setNgayTao(ngayTao.toLocalDate());
+        return uv;
+    }
+
+    private void applyUngVienDetails(UngVien uv, ResultSet rs) throws SQLException {
+        uv.setTenTin(rs.getString("tenTin"));
+        uv.setTenChucVu(rs.getString("tenChucVu"));
+        uv.setTenPhongBan(rs.getString("tenPhongBan"));
+    }
+
+    private UngVien mapUngVienWithDetails(ResultSet rs) throws SQLException {
+        UngVien uv = mapUngVien(rs);
+        applyUngVienDetails(uv, rs);
         return uv;
     }
 
@@ -374,21 +386,12 @@ public class TuyenDungDAO {
      */
     public List<UngVien> findAllUngVien() {
         List<UngVien> list = new ArrayList<>();
-        String sql = "SELECT uv.*, t.tieuDe AS tenTin, cv.tenChucVu, pb.tenPhongBan FROM UNGVIEN uv "
-                + "LEFT JOIN TINTUYENDUNG t ON uv.maTin = t.maTin "
-                + "LEFT JOIN YEUCAUTUYENDUNG yc ON t.maYeuCau = yc.maYeuCau "
-                + "LEFT JOIN CHUCVU cv ON yc.maChucVu = cv.maChucVu "
-                + "LEFT JOIN PHONGBAN pb ON yc.maPhongBan = pb.maPhongBan "
-                + "ORDER BY uv.maUngVien DESC";
+        String sql = UV_BASE_SELECT + "ORDER BY uv.maUngVien DESC";
         try (Connection conn = DatabaseConnection.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql);
              ResultSet rs = ps.executeQuery()) {
             while (rs.next()) {
-                UngVien uv = mapUngVien(rs);
-                uv.setTenTin(rs.getString("tenTin"));
-                uv.setTenChucVu(rs.getString("tenChucVu"));
-                uv.setTenPhongBan(rs.getString("tenPhongBan"));
-                list.add(uv);
+                list.add(mapUngVienWithDetails(rs));
             }
         } catch (SQLException e) {
             System.err.println("Lỗi findAllUngVien: " + e.getMessage());
@@ -402,22 +405,13 @@ public class TuyenDungDAO {
      */
     public List<UngVien> findByMaTin(int maTin) {
         List<UngVien> list = new ArrayList<>();
-        String sql = "SELECT uv.*, t.tieuDe AS tenTin, cv.tenChucVu, pb.tenPhongBan FROM UNGVIEN uv "
-                + "LEFT JOIN TINTUYENDUNG t ON uv.maTin = t.maTin "
-                + "LEFT JOIN YEUCAUTUYENDUNG yc ON t.maYeuCau = yc.maYeuCau "
-                + "LEFT JOIN CHUCVU cv ON yc.maChucVu = cv.maChucVu "
-                + "LEFT JOIN PHONGBAN pb ON yc.maPhongBan = pb.maPhongBan "
-                + "WHERE uv.maTin = ? ORDER BY uv.maUngVien DESC";
+        String sql = UV_BASE_SELECT + "WHERE uv.maTin = ? ORDER BY uv.maUngVien DESC";
         try (Connection conn = DatabaseConnection.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setInt(1, maTin);
             try (ResultSet rs = ps.executeQuery()) {
                 while (rs.next()) {
-                    UngVien uv = mapUngVien(rs);
-                    uv.setTenTin(rs.getString("tenTin"));
-                    uv.setTenChucVu(rs.getString("tenChucVu"));
-                    uv.setTenPhongBan(rs.getString("tenPhongBan"));
-                    list.add(uv);
+                    list.add(mapUngVienWithDetails(rs));
                 }
             }
         } catch (SQLException e) {
@@ -431,22 +425,13 @@ public class TuyenDungDAO {
      * Tìm ứng viên theo ID.
      */
     public UngVien findById(int maUngVien) {
-        String sql = "SELECT uv.*, t.tieuDe AS tenTin, cv.tenChucVu, pb.tenPhongBan FROM UNGVIEN uv "
-                + "LEFT JOIN TINTUYENDUNG t ON uv.maTin = t.maTin "
-                + "LEFT JOIN YEUCAUTUYENDUNG yc ON t.maYeuCau = yc.maYeuCau "
-                + "LEFT JOIN CHUCVU cv ON yc.maChucVu = cv.maChucVu "
-                + "LEFT JOIN PHONGBAN pb ON yc.maPhongBan = pb.maPhongBan "
-                + "WHERE uv.maUngVien = ?";
+        String sql = UV_BASE_SELECT + "WHERE uv.maUngVien = ?";
         try (Connection conn = DatabaseConnection.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setInt(1, maUngVien);
             try (ResultSet rs = ps.executeQuery()) {
                 if (rs.next()) {
-                    UngVien uv = mapUngVien(rs);
-                    uv.setTenTin(rs.getString("tenTin"));
-                    uv.setTenChucVu(rs.getString("tenChucVu"));
-                    uv.setTenPhongBan(rs.getString("tenPhongBan"));
-                    return uv;
+                    return mapUngVienWithDetails(rs);
                 }
             }
         } catch (SQLException e) {

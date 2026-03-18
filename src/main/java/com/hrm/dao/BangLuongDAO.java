@@ -32,7 +32,6 @@ import java.util.List;
 public class BangLuongDAO {
 
     private static BangLuongDAO instance;
-
     private BangLuongDAO() {}
 
     public static synchronized BangLuongDAO getInstance() {
@@ -45,7 +44,6 @@ public class BangLuongDAO {
     // =====================================================================
     // BANG_LUONGS
     // =====================================================================
-
     /** Insert a new BangLuong. Returns generated id (stored in maBL field). */
     public int insertBangLuong(BangLuong bl) {
         int thang = bl.getThang();
@@ -148,7 +146,6 @@ public class BangLuongDAO {
         int nam = rs.getInt("nam");
         if (thang > 0 && nam > 0) {
             bl.setThang(thang); bl.setNam(nam);
-
         }
         bl.setTenBangLuong(rs.getString("tenBangLuong"));
         String tt = rs.getString("trangThai");
@@ -249,7 +246,6 @@ public class BangLuongDAO {
     // =====================================================================
     // CHI_TIET_LUONGS
     // =====================================================================
-
     /** Insert a ChiTietLuong record. Returns generated id (stored in maChiTietLuong). */
     public int insertChiTiet(ChiTietLuong ctl) {
         String sql = "INSERT INTO CHITIETLUONG (maBangLuong, maNV, luongCoSo, tongLuongChucVu, "
@@ -379,7 +375,7 @@ public class BangLuongDAO {
         ctl.setTongLuong(rs.getDouble("tongThuNhap"));
         ctl.setTongKhauTru(rs.getDouble("tongKhauTru"));
         ctl.setLuongThucNhan(rs.getDouble("luongThucLanh"));
-        ctl.setSoNgayCong((int) rs.getDouble("soNgayCong"));
+        ctl.setSoNgayCong(rs.getInt("soNgayCong"));
         ctl.setTongGioOT(rs.getDouble("soGioLamThem"));
         ctl.setGhiChu(rs.getString("ghiChu"));
         // transient
@@ -390,7 +386,6 @@ public class BangLuongDAO {
     // =====================================================================
     // THANH_PHAN_LUONGS
     // =====================================================================
-
     /** Batch insert list of ThanhPhanLuong. */
     public void insertThanhPhanBatch(List<ThanhPhanLuong> list) {
         if (list == null || list.isEmpty()) return;
@@ -454,7 +449,6 @@ public class BangLuongDAO {
     // =====================================================================
     // Helpers for salary calculation
     // =====================================================================
-
     /**
      * Returns luongCoSo from the labour contract that was effective during the given pay period.
      * Checks both trangThai and actual date range so expired-but-not-yet-updated contracts

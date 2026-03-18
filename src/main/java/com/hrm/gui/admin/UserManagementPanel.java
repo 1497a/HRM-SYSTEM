@@ -26,7 +26,6 @@ import java.util.List;
 public class UserManagementPanel extends JPanel {
     private final XacThucBUS authService;
     private final SessionContext sessionContext;
-
     private JTable table;
     private DefaultTableModel tableModel;
     private TableRowSorter<DefaultTableModel> sorter;
@@ -36,12 +35,9 @@ public class UserManagementPanel extends JPanel {
     private JButton btnCreate;
     private JButton btnEdit;
     private JButton btnDelete;
-
-
     public UserManagementPanel() {
         this.authService = XacThucBUS.getInstance();
         this.sessionContext = SessionContext.getInstance();
-
         initComponents();
         setupLayout();
         loadData();
@@ -50,23 +46,18 @@ public class UserManagementPanel extends JPanel {
     private void initComponents() {
         setLayout(new BorderLayout(10, 10));
         setBorder(new EmptyBorder(15, 15, 15, 15));
-        setBackground(UIColors.LIGHT_GRAY_BG);
-
+        setBackground(Color.WHITE);
         // Search field
         txtSearch = new JTextField(20);
         txtSearch.putClientProperty("JTextField.placeholderText", "Tìm kiếm theo tên đăng nhập...");
         txtSearch.addActionListener(e -> searchUsers());
-
         // Buttons
         btnCreate = UIHelper.createPrimaryButton("Tạo mới");
         btnCreate.addActionListener(e -> createUser());
-
         btnEdit = UIHelper.createPrimaryButton("Sửa");
         btnEdit.addActionListener(e -> editUser());
-
         btnDelete = UIHelper.createDangerButton("Xóa");
         btnDelete.addActionListener(e -> deleteUser());
-
         // Table
         String[] columns = {"ID", "Tên đăng nhập", "Họ tên", "Email", "Vai trò", "Trạng thái"};
         tableModel = new DefaultTableModel(columns, 0) {
@@ -84,7 +75,6 @@ public class UserManagementPanel extends JPanel {
         table.getColumnModel().getColumn(3).setPreferredWidth(180);
         table.getColumnModel().getColumn(4).setPreferredWidth(150);
         table.getColumnModel().getColumn(5).setPreferredWidth(80);
-
         // Status cell renderer
         table.getColumnModel().getColumn(5).setCellRenderer(new DefaultTableCellRenderer() {
             @Override
@@ -94,40 +84,34 @@ public class UserManagementPanel extends JPanel {
                 if (!isSelected) {
                     String status = (String) value;
                     if ("Hoạt động".equals(status)) {
-                        c.setBackground(com.hrm.util.UIColors.LIGHT_GREEN_BG);
+                        c.setBackground(new Color(200, 255, 200));
                     } else if ("Bị khóa".equals(status)) {
-                        c.setBackground(com.hrm.util.UIColors.LIGHT_RED_BG);
+                        c.setBackground(new Color(255, 200, 200));
                     } else {
-                        c.setBackground(com.hrm.util.UIColors.LIGHT_YELLOW_BG);
+                        c.setBackground(new Color(255, 255, 200));
                     }
                 }
                 setHorizontalAlignment(SwingConstants.CENTER);
                 return c;
             }
         });
-
         // Sorter – sort by name (col 2) using Vietnamese locale
         sorter = new TableRowSorter<>(tableModel);
         table.setRowSorter(sorter);
-
         // Chỉ cho sort cột 0 (ID) và cột 2 (Họ tên)
         for (int i = 0; i < 6; i++) {
             sorter.setSortable(i, false);
         }
         sorter.setSortable(0, true); // ID
         sorter.setSortable(2, true); // Họ tên
-
         // Comparator đúng kiểu
         sorter.setComparator(0, Comparator.comparingInt(a -> (Integer) a)); // sort số nguyên
         sorter.setComparator(2, UIHelper.vietnameseNameComparator());       // sort tiếng Việt
-
         // Mặc định sort theo ID tăng dần
         sorter.setSortKeys(List.of(new RowSorter.SortKey(0, SortOrder.ASCENDING)));
-
         // Status filter combo
         cboTrangThai = new JComboBox<>(new String[]{"Tất cả", "Hoạt động", "Bị khóa"});
         cboTrangThai.addActionListener(e -> applyFilter());
-
         // Role filter combo
         cboVaiTro = new JComboBox<>();
         cboVaiTro.addItem("Tất cả vai trò");
@@ -141,7 +125,6 @@ public class UserManagementPanel extends JPanel {
         // Top panel - search and buttons
         JPanel topPanel = new JPanel(new BorderLayout(10, 10));
         topPanel.setOpaque(false);
-
         JPanel searchPanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 10, 0));
         searchPanel.setOpaque(false);
         searchPanel.add(new JLabel("Tìm kiếm:"));
@@ -150,7 +133,6 @@ public class UserManagementPanel extends JPanel {
         searchPanel.add(cboTrangThai);
         searchPanel.add(new JLabel("Vai trò:"));
         searchPanel.add(cboVaiTro);
-
         JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT, 10, 0));
         buttonPanel.setOpaque(false);
         JButton btnLamMoi = new JButton("Làm mới");
@@ -165,14 +147,11 @@ public class UserManagementPanel extends JPanel {
         if (sessionContext.hasPermission(PermissionCodes.USER_DELETE)) {
             buttonPanel.add(btnDelete);
         }
-
         topPanel.add(searchPanel, BorderLayout.WEST);
         topPanel.add(buttonPanel, BorderLayout.EAST);
-
         // Center - table
         JScrollPane scrollPane = new JScrollPane(table);
         scrollPane.setBorder(new TitledBorder("Danh sách tài khoản"));
-
         add(topPanel, BorderLayout.NORTH);
         add(scrollPane, BorderLayout.CENTER);
     }
@@ -180,7 +159,6 @@ public class UserManagementPanel extends JPanel {
     private void loadData() {
         tableModel.setRowCount(0);
         List<TaiKhoan> users = authService.getAllUsers();
-
         for (TaiKhoan user : users) {
             String status = user.isBiKhoa() ? "Bị khóa" : (user.isHoatDong() ? "Hoạt động" : "Ngừng");
             Object[] row = {
@@ -203,21 +181,16 @@ public class UserManagementPanel extends JPanel {
         String keyword = txtSearch.getText().toLowerCase().trim();
         String trangThai = (String) cboTrangThai.getSelectedItem();
         String vaiTro = (String) cboVaiTro.getSelectedItem();
-
         RowFilter<DefaultTableModel, Object> nameFilter = keyword.isEmpty() ? null :
             RowFilter.regexFilter("(?i)" + java.util.regex.Pattern.quote(keyword), 1, 2);
-
         RowFilter<DefaultTableModel, Object> statusFilter = (trangThai == null || "Tất cả".equals(trangThai)) ? null :
             RowFilter.regexFilter("(?i)" + java.util.regex.Pattern.quote(trangThai), 5);
-
         RowFilter<DefaultTableModel, Object> roleFilter = (vaiTro == null || "Tất cả vai trò".equals(vaiTro)) ? null :
             RowFilter.regexFilter("(?i)" + java.util.regex.Pattern.quote(vaiTro), 4);
-
         List<RowFilter<DefaultTableModel, Object>> active = new java.util.ArrayList<>();
         if (nameFilter != null) active.add(nameFilter);
         if (statusFilter != null) active.add(statusFilter);
         if (roleFilter != null) active.add(roleFilter);
-
         if (active.isEmpty()) {
             sorter.setRowFilter(null);
         } else if (active.size() == 1) {
@@ -245,7 +218,6 @@ public class UserManagementPanel extends JPanel {
                     JOptionPane.WARNING_MESSAGE);
             return;
         }
-
         int modelRow = table.convertRowIndexToModel(selectedRow);
         int userId = (int) tableModel.getValueAt(modelRow, 0);
         TaiKhoan user = authService.getAllUsers().stream()
@@ -271,17 +243,14 @@ public class UserManagementPanel extends JPanel {
                     JOptionPane.WARNING_MESSAGE);
             return;
         }
-
         int modelRow = table.convertRowIndexToModel(selectedRow);
         int userId = (int) tableModel.getValueAt(modelRow, 0);
         String username = (String) tableModel.getValueAt(modelRow, 1);
-
         int confirm = JOptionPane.showConfirmDialog(this,
                 "Bạn có chắc muốn xóa tài khoản '" + username + "'?",
                 "Xác nhận xóa",
                 JOptionPane.YES_NO_OPTION,
                 JOptionPane.WARNING_MESSAGE);
-
         if (confirm == JOptionPane.YES_OPTION) {
             KetQua<Void> result = authService.deleteUser(userId);
             if (result.isSuccess()) {
@@ -298,6 +267,5 @@ public class UserManagementPanel extends JPanel {
             }
         }
     }
-
 
 }

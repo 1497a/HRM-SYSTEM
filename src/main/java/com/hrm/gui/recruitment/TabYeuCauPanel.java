@@ -8,6 +8,7 @@ import com.hrm.model.ChucVu;
 import com.hrm.model.PhongBan;
 import com.hrm.model.YeuCauTuyenDung;
 import com.hrm.util.PermissionCodes;
+import com.hrm.util.UIFonts;
 import com.hrm.util.SessionContext;
 import com.hrm.util.UIColors;
 import com.hrm.util.UIHelper;
@@ -29,61 +30,49 @@ import static javax.swing.SortOrder.ASCENDING;
 class TabYeuCauPanel extends JPanel {
 
     private static final DateTimeFormatter DATE_FMT = DateTimeFormatter.ofPattern("dd/MM/yyyy");
-
     private final TuyenDungBUS service;
     private JTable tbl;
     private DefaultTableModel model;
     private JButton btnTao;
     private JButton btnPheDuyet;
     private JButton btnTuChoi;
-
     TabYeuCauPanel(TuyenDungBUS service) {
         this.service = service;
         setLayout(new BorderLayout(8, 8));
-        setBackground(UIColors.LIGHT_GRAY_BG);
+        setBackground(Color.WHITE);
         setBorder(new EmptyBorder(12, 12, 12, 12));
-
         JPanel toolbar = new JPanel(new FlowLayout(FlowLayout.LEFT, 8, 4));
         toolbar.setOpaque(false);
-
         btnTao = UIHelper.createPrimaryButton("Tạo yêu cầu");
         btnPheDuyet = UIHelper.createSuccessButton("Phê duyệt");
         btnTuChoi = UIHelper.createDangerButton("Từ chối");
-
         btnTao.addActionListener(e -> taoYeuCau());
         btnPheDuyet.addActionListener(e -> pheDuyet());
         btnTuChoi.addActionListener(e -> tuChoi());
-
         JComboBox<String> cboTrangThai = new JComboBox<>(
                 new String[]{"Tất cả", "Chờ duyệt", "Đã duyệt", "Từ chối", "Đã tuyển đủ"});
-
         JButton btnLamMoi = new JButton("Làm mới");
         btnLamMoi.addActionListener(e -> load());
-
         toolbar.add(btnTao);
         toolbar.add(btnPheDuyet);
         toolbar.add(btnTuChoi);
         toolbar.add(new JLabel("Trạng thái:"));
         toolbar.add(cboTrangThai);
         toolbar.add(btnLamMoi);
-
         String[] cols = {"Mã YC", "Vị trí", "Phòng ban", "Số lượng", "Hạn tuyển dụng", "Trạng thái"};
         model = new DefaultTableModel(cols, 0) {
             @Override
             public boolean isCellEditable(int r, int c) {
                 return false;
             }
-
             @Override
             public Class<?> getColumnClass(int col) {
                 return (col == 0 || col == 3) ? Integer.class : String.class;
             }
         };
-
         tbl = TabUtils.buildTable(model);
         TabUtils.applyColWidths(tbl, new int[]{70, 220, 180, 80, 120, 130});
         tbl.getColumnModel().getColumn(5).setCellRenderer(new RecruitmentStatusRenderer());
-
         TableRowSorter<DefaultTableModel> sorter = new TableRowSorter<>(model);
         tbl.setRowSorter(sorter);
         sorter.setComparator(0, Comparator.comparingInt(a -> (Integer) a));
@@ -91,13 +80,10 @@ class TabYeuCauPanel extends JPanel {
         sorter.setComparator(4, TabUtils.dateComparator());
         sorter.setSortKeys(List.of(new SortKey(0, ASCENDING)));
         UIHelper.attachStatusFilter(sorter, cboTrangThai, 5);
-
         JScrollPane scroll = new JScrollPane(tbl);
         scroll.setBorder(new TitledBorder("Danh sách yêu cầu tuyển dụng"));
-
         add(toolbar, BorderLayout.NORTH);
         add(scroll, BorderLayout.CENTER);
-
         setupPermissions();
         load();
     }
@@ -133,7 +119,6 @@ class TabYeuCauPanel extends JPanel {
     private void taoYeuCau() {
         List<PhongBan> dsPhongBan = new PhongBanBUS().getActiveDepartments();
         List<ChucVu> dsChucVu = new ChucVuBUS().getRecruitablePositions();
-
         JComboBox<PhongBan> cboPhongBan = new JComboBox<>();
         for (PhongBan pb : dsPhongBan) {
             // Bo qua phong ban goc (Cong ty) - chi cho chon phong ban thuc su
@@ -142,13 +127,11 @@ class TabYeuCauPanel extends JPanel {
             }
         }
         cboPhongBan.setRenderer((list, v, i, s, f) -> new JLabel(v != null ? v.getTenPhongBan() : ""));
-
         JComboBox<ChucVu> cboChucVu = new JComboBox<>();
         for (ChucVu cv : dsChucVu) {
             cboChucVu.addItem(cv);
         }
         cboChucVu.setRenderer((list, v, i, s, f) -> new JLabel(v != null ? v.getTenChucVu() : ""));
-
         JSpinner spinSoLuong = new JSpinner(new SpinnerNumberModel(1, 1, 100, 1));
         SpinnerDateModel dm = new SpinnerDateModel(
                 java.util.Date.from(LocalDate.now().plusMonths(1).atStartOfDay(java.time.ZoneId.systemDefault()).toInstant()),
@@ -157,7 +140,6 @@ class TabYeuCauPanel extends JPanel {
         spinHan.setEditor(new JSpinner.DateEditor(spinHan, "dd/MM/yyyy"));
         JTextField txtLyDo = new JTextField(20);
         txtLyDo.setFont(com.hrm.util.UIFonts.TEXT_NORMAL);
-
         JPanel form = new JPanel(new GridLayout(5, 2, 8, 8));
         form.add(new JLabel("Phòng ban (*):"));
         form.add(cboPhongBan);
@@ -169,22 +151,18 @@ class TabYeuCauPanel extends JPanel {
         form.add(spinHan);
         form.add(new JLabel("Lý do:"));
         form.add(txtLyDo);
-
         if (JOptionPane.showConfirmDialog(this, form, "Tạo yêu cầu tuyển dụng",
                 JOptionPane.OK_CANCEL_OPTION, JOptionPane.PLAIN_MESSAGE) != JOptionPane.OK_OPTION) {
             return;
         }
-
         PhongBan pb = (PhongBan) cboPhongBan.getSelectedItem();
         ChucVu cv = (ChucVu) cboChucVu.getSelectedItem();
         if (pb == null || cv == null) {
             JOptionPane.showMessageDialog(this, "Vui lòng chọn phòng ban và chức vụ.", "Lỗi", JOptionPane.WARNING_MESSAGE);
             return;
         }
-
         LocalDate hanTuyenDung = ((java.util.Date) spinHan.getValue()).toInstant()
                 .atZone(java.time.ZoneId.systemDefault()).toLocalDate();
-
         try {
             YeuCauTuyenDung yc = new YeuCauTuyenDung();
             yc.setId(pb.getId());
@@ -192,7 +170,6 @@ class TabYeuCauPanel extends JPanel {
             yc.setSoLuong((int) spinSoLuong.getValue());
             yc.setHanTuyenDung(hanTuyenDung);
             yc.setLyDo(txtLyDo.getText().trim());
-
             KetQua<?> sr = service.taoYeuCau(yc);
             if (sr.isSuccess()) {
                 JOptionPane.showMessageDialog(this, "Tạo yêu cầu thành công!", "Thành công", JOptionPane.INFORMATION_MESSAGE);

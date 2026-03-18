@@ -14,7 +14,6 @@ import java.util.List;
 public class ThongBaoDAO {
 
     private static ThongBaoDAO instance;
-
     private ThongBaoDAO() {
     }
 
@@ -28,7 +27,6 @@ public class ThongBaoDAO {
     // ============================
     // Mapping helper
     // ============================
-
     private ThongBao mapRow(ResultSet rs) throws SQLException {
         ThongBao tb = new ThongBao();
         tb.setMaThongBao(rs.getInt("maThongBao"));

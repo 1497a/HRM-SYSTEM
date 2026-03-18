@@ -15,15 +15,12 @@ public class ThanhPhanLuong {
     public enum Loai {
         PHU_CAP("phu_cap", "Phụ cấp"),
         KHAU_TRU("khau_tru", "Khấu trừ");
-
         private final String dbValue;
         private final String displayName;
-
         Loai(String dbValue, String displayName) {
             this.dbValue = dbValue;
             this.displayName = displayName;
         }
-
         public String getDbValue() { return dbValue; }
         public String getDisplayName() { return displayName; }
     }
@@ -34,7 +31,6 @@ public class ThanhPhanLuong {
     private String tenKhoan;
     private double soTien;
     private String nguon;        // Nguồn gốc: ChucVu, CongTy, LuatDinh...
-
     public ThanhPhanLuong() {}
 
     public ThanhPhanLuong(Loai loai, String tenKhoan, double soTien, String nguon) {

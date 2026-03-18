@@ -31,15 +31,12 @@ class HopThoaiChiTietUngVien extends JDialog {
             RecruitmentStatus.UngVien.TRUNG_TUYEN,
             RecruitmentStatus.UngVien.TU_CHOI
     };
-
     private final TuyenDungBUS service;
     private UngVien ungVien;
     private boolean daThayDoi = false;
-
     // Labels hiển thị
     private JLabel lblTrangThai;
     private JLabel lblMaNV;
-
     HopThoaiChiTietUngVien(Window owner, TuyenDungBUS service, int maUngVien) {
         super(owner, "Chi tiết ứng viên", ModalityType.APPLICATION_MODAL);
         this.service = service;
@@ -53,11 +50,9 @@ class HopThoaiChiTietUngVien extends JDialog {
     private void initUI() {
         JPanel main = new JPanel(new BorderLayout(8, 8));
         main.setBorder(new EmptyBorder(16, 16, 8, 16));
-        main.setBackground(UIColors.WHITE);
-
+        main.setBackground(Color.WHITE);
         main.add(buildInfo(), BorderLayout.CENTER);
         main.add(buildButtons(), BorderLayout.SOUTH);
-
         setContentPane(main);
     }
 
@@ -67,19 +62,15 @@ class HopThoaiChiTietUngVien extends JDialog {
             p.add(new JLabel("Không tìm thấy thông tin ứng viên."));
             return p;
         }
-
         JPanel wrapper = new JPanel(new BorderLayout(0, 12));
-        wrapper.setBackground(UIColors.WHITE);
-
+        wrapper.setBackground(Color.WHITE);
         // ── Thông tin cá nhân ─────────────────────────────────────────────
         JPanel pCaNhan = new JPanel(new GridBagLayout());
-        pCaNhan.setBackground(UIColors.WHITE);
+        pCaNhan.setBackground(Color.WHITE);
         pCaNhan.setBorder(new TitledBorder("Thông tin cá nhân"));
-
         GridBagConstraints lc = labelGBC();
         GridBagConstraints fc = fieldGBC();
         int row = 0;
-
         String pb = ungVien.getTenPhongBan();
         String cv = ungVien.getTenChucVu();
         String viTri = "";
@@ -87,7 +78,6 @@ class HopThoaiChiTietUngVien extends JDialog {
         if (pb != null && !pb.isBlank() && cv != null && !cv.isBlank()) viTri += " - ";
         if (cv != null && !cv.isBlank()) viTri += cv;
         if (viTri.isBlank()) viTri = "[Chưa xác định]";
-
         addRow(pCaNhan, row++, "Mã ứng viên:",   val(String.valueOf(ungVien.getMaUngVien())), lc, fc);
         addRow(pCaNhan, row++, "Họ tên:",         val(ungVien.getHoTen()), lc, fc);
         addRow(pCaNhan, row++, "Email:",           val(ungVien.getEmail()), lc, fc);
@@ -96,16 +86,13 @@ class HopThoaiChiTietUngVien extends JDialog {
                 val(ungVien.getNgaySinh() != null ? ungVien.getNgaySinh().format(DATE_FMT) : ""), lc, fc);
         addRow(pCaNhan, row++, "Giới tính:",       val(formatGioiTinh(ungVien.getGioiTinh())), lc, fc);
         addRow(pCaNhan, row++, "Địa chỉ:",         val(ungVien.getDiaChi()), lc, fc);
-
         // ── Thông tin ứng tuyển ───────────────────────────────────────────
         JPanel pUngTuyen = new JPanel(new GridBagLayout());
-        pUngTuyen.setBackground(UIColors.WHITE);
+        pUngTuyen.setBackground(Color.WHITE);
         pUngTuyen.setBorder(new TitledBorder("Thông tin ứng tuyển"));
-
         GridBagConstraints lc2 = labelGBC();
         GridBagConstraints fc2 = fieldGBC();
         row = 0;
-
         addRow(pUngTuyen, row++, "Vị trí:",             val(viTri), lc2, fc2);
         addRow(pUngTuyen, row++, "Tin tuyển dụng:",
                 val(ungVien.getTenTin() != null ? ungVien.getTenTin() : ""), lc2, fc2);
@@ -113,68 +100,53 @@ class HopThoaiChiTietUngVien extends JDialog {
         addRow(pUngTuyen, row++, "Nguồn ứng tuyển:",    val(ungVien.getNguonUngTuyen()), lc2, fc2);
         addRow(pUngTuyen, row++, "Ngày nộp hồ sơ:",
                 val(ungVien.getNgayTao() != null ? ungVien.getNgayTao().format(DATE_FMT) : ""), lc2, fc2);
-
         lblTrangThai = statusLabel(ungVien.getTrangThaiDisplay());
         addRow(pUngTuyen, row++, "Trạng thái:",         lblTrangThai, lc2, fc2);
-
         lblMaNV = val(ungVien.getMaNV() != null ? ungVien.getMaNV() : "");
         addRow(pUngTuyen, row++, "Mã nhân viên:",        lblMaNV, lc2, fc2);
-
         // ── Kinh nghiệm & nhận xét ────────────────────────────────────────
         JPanel pMoTa = new JPanel(new GridBagLayout());
-        pMoTa.setBackground(UIColors.WHITE);
+        pMoTa.setBackground(Color.WHITE);
         pMoTa.setBorder(new TitledBorder("Kinh nghiệm & Nhận xét"));
-
         GridBagConstraints lc3 = labelGBC();
         GridBagConstraints fc3 = fieldGBC();
         row = 0;
-
         addRow(pMoTa, row++, "Kinh nghiệm:", buildTextArea(ungVien.getKinhNghiem()), lc3, fc3);
         addRow(pMoTa, row++, "Nhận xét:",    buildTextArea(ungVien.getNhanXet()), lc3, fc3);
-
         wrapper.add(pCaNhan,  BorderLayout.NORTH);
         JPanel mid = new JPanel(new GridLayout(2, 1, 0, 8));
-        mid.setBackground(UIColors.WHITE);
+        mid.setBackground(Color.WHITE);
         mid.add(pUngTuyen);
         mid.add(pMoTa);
         wrapper.add(mid, BorderLayout.CENTER);
-
         return wrapper;
     }
 
     private JPanel buildButtons() {
         JPanel panel = new JPanel(new FlowLayout(FlowLayout.RIGHT, 8, 4));
-        panel.setBackground(UIColors.WHITE);
-
+        panel.setBackground(Color.WHITE);
         boolean canManage = SessionContext.getInstance().hasPermission(PermissionCodes.RECRUITMENT_MANAGE);
-
         if (canManage && ungVien != null) {
             JButton btnChuyenTT = UIHelper.createPrimaryButton("Chuyển trạng thái");
             JButton btnChuyenNV = UIHelper.createSuccessButton("Chuyển thành NV");
-
             btnChuyenTT.addActionListener(e -> chuyenTrangThai());
             btnChuyenNV.addActionListener(e -> chuyenThanhNV());
-
             panel.add(btnChuyenTT);
             panel.add(btnChuyenNV);
         }
-
         JButton btnDong = UIHelper.createDefaultButton("Đóng");
         btnDong.addActionListener(e -> dispose());
         panel.add(btnDong);
-
         return panel;
     }
 
     private void chuyenTrangThai() {
         JComboBox<String> cbo = new JComboBox<>(TRANG_THAI_LABELS);
-        cbo.setFont(UIFonts.TEXT_MEDIUM);
-
+        cbo.setFont(UIFonts.TEXT_NORMAL);
         if (JOptionPane.showConfirmDialog(this, new Object[]{"Trạng thái mới:", cbo},
                 "Chuyển trạng thái ứng viên", JOptionPane.OK_CANCEL_OPTION) != JOptionPane.OK_OPTION) {
             return;
         }
-
         KetQua<?> r = service.capNhatTrangThaiUV(ungVien.getMaUngVien(), TRANG_THAI_CODES[cbo.getSelectedIndex()]);
         if (r.isSuccess()) {
             ungVien = service.getUngVienById(ungVien.getMaUngVien());
@@ -195,12 +167,10 @@ class HopThoaiChiTietUngVien extends JDialog {
             TabUtils.showError(this, preview.getMessage());
             return;
         }
-
         if (JOptionPane.showConfirmDialog(this, preview.getData(), "Xác nhận chuyển thành nhân viên",
                 JOptionPane.YES_NO_OPTION, JOptionPane.QUESTION_MESSAGE) != JOptionPane.YES_OPTION) {
             return;
         }
-
         KetQua<?> r = service.chuyenUVThanhNV(ungVien.getMaUngVien());
         if (r.isSuccess()) {
             ungVien = service.getUngVienById(ungVien.getMaUngVien());
@@ -222,7 +192,6 @@ class HopThoaiChiTietUngVien extends JDialog {
     }
 
     // ── helpers ──────────────────────────────────────────────────────────────
-
     private JLabel val(String text) {
         JLabel lbl = new JLabel(text != null ? text : "");
         lbl.setFont(UIFonts.TEXT_NORMAL);
@@ -247,9 +216,9 @@ class HopThoaiChiTietUngVien extends JDialog {
         } else if (displayText.equals(tuChoi)) {
             lbl.setForeground(UIColors.DANGER_RED);
         } else if (displayText.equals(phongVan)) {
-            lbl.setForeground(UIColors.WARNING_YELLOW);
+            lbl.setForeground(new Color(255, 193, 7));
         } else {
-            lbl.setForeground(UIColors.INFO_BLUE);
+            lbl.setForeground(new Color(23, 162, 184));
         }
     }
 
@@ -259,7 +228,7 @@ class HopThoaiChiTietUngVien extends JDialog {
         area.setLineWrap(true);
         area.setWrapStyleWord(true);
         area.setEditable(false);
-        area.setBackground(UIColors.LIGHT_GRAY_BG);
+        area.setBackground(Color.WHITE);
         JScrollPane sp = new JScrollPane(area);
         sp.setPreferredSize(new Dimension(300, 60));
         return sp;

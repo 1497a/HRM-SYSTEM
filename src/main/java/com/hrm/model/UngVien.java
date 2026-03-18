@@ -23,19 +23,16 @@ public class UngVien {
     private String nhanXet;
     private String maNV;       // null = chưa liên kết nhân viên
     private LocalDate ngayTao;
-
     // Transient - dùng để hiển thị
     private transient String tenTin;
     private transient String tenChucVu;
     private transient String tenPhongBan;
-
     public UngVien() {
     }
 
     // ============================
     // Getters & Setters
     // ============================
-
     public int getMaUngVien() {
         return maUngVien;
     }
@@ -120,12 +117,8 @@ public class UngVien {
         return fileCv;
     }
 
-    public String getFileCV() {
-        return fileCv;
-    }
-
-    public void setFileCv(String fileCv) {
-        this.fileCv = fileCv;
+    public void setFileCv(String fileCV) {
+        this.fileCv = fileCV;
     }
 
     public String getNguonUngTuyen() {
@@ -204,6 +197,3 @@ public class UngVien {
         return hoTen != null ? hoTen : "UngVien#" + maUngVien;
     }
 }
-
-
-

@@ -1,56 +1,45 @@
 package com.hrm.dao;
-
 import com.hrm.model.BoNhiem;
+import com.hrm.util.DaoHelper;
 import com.hrm.util.DatabaseConnection;
-
 import java.sql.*;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
-
 /**
  * Repository cho bảng BONHIEM.
  * Singleton pattern - sử dụng MySQL JDBC.
  */
 public class BoNhiemDAO {
-
     private static BoNhiemDAO instance;
-
     private BoNhiemDAO() {
     }
-
     public static synchronized BoNhiemDAO getInstance() {
         if (instance == null) {
             instance = new BoNhiemDAO();
         }
         return instance;
     }
-
     // ============================
     // Mapping helper
     // ============================
-
     private BoNhiem mapRow(ResultSet rs) throws SQLException {
         BoNhiem bn = new BoNhiem();
-        bn.setMaBoNhiem(rs.getInt("maBoNhiem"));
+        bn.setId(rs.getInt("maBoNhiem"));
         bn.setMaNV(rs.getString("maNV"));
-        bn.setPhongBanId(rs.getString("maPhongBan"));
-        bn.setChucVuId(rs.getString("maChucVu"));
+        bn.setMaPhongBan(rs.getString("maPhongBan"));
+        bn.setMaChucVu(rs.getString("maChucVu"));
         bn.setLoaiBoNhiem(rs.getString("loaiBoNhiem"));
         bn.setTyLeHuongLuong(rs.getDouble("tyLeHuongLuong"));
         bn.setMaQuanLy(rs.getString("maQuanLy"));
         bn.setNguoiDuyet(rs.getString("nguoiDuyet"));
-
         Date tuNgay = rs.getDate("tuNgay");
         if (tuNgay != null) bn.setTuNgay(tuNgay.toLocalDate());
-
         Date denNgay = rs.getDate("denNgay");
         if (denNgay != null) bn.setDenNgay(denNgay.toLocalDate());
-
         Timestamp ngayPheDuyet = rs.getTimestamp("ngayPheDuyet");
         if (ngayPheDuyet != null) bn.setNgayPheDuyet(ngayPheDuyet.toLocalDateTime());
-
         bn.setLyDo(rs.getString("lyDo"));
         bn.setTrangThai(rs.getString("trangThai"));
         return bn;
@@ -58,17 +47,14 @@ public class BoNhiemDAO {
 
     private void trySetTransient(ResultSet rs, BoNhiem bn) {
         try { bn.setTenNV(rs.getString("hoTen")); } catch (SQLException ignored) {}
-        try { bn.setMaNhanVien(rs.getString("maNhanVien")); } catch (SQLException ignored) {}
         try { bn.setTenPhongBan(rs.getString("tenPhongBan")); } catch (SQLException ignored) {}
         try { bn.setTenChucVu(rs.getString("tenChucVu")); } catch (SQLException ignored) {}
         try { bn.setTenQuanLy(rs.getString("tenQuanLy")); } catch (SQLException ignored) {}
         try { bn.setTenNguoiDuyet(rs.getString("tenNguoiDuyet")); } catch (SQLException ignored) {}
     }
-
     // ============================
     // insert - returns generated maBoNhiem
     // ============================
-
     public int insert(BoNhiem bn) throws SQLException {
         String sql = "INSERT INTO BONHIEM "
                 + "(maNV, maPhongBan, maChucVu, loaiBoNhiem, tyLeHuongLuong, maQuanLy, "
@@ -81,7 +67,7 @@ public class BoNhiemDAO {
             try (ResultSet keys = ps.getGeneratedKeys()) {
                 if (keys.next()) {
                     int id = keys.getInt(1);
-                    bn.setMaBoNhiem(id);
+                    bn.setId(id);
                     return id;
                 }
             }
@@ -92,7 +78,6 @@ public class BoNhiemDAO {
     // ============================
     // findById
     // ============================
-
     public BoNhiem findById(int maBoNhiem) {
         String sql = buildJoinQuery("WHERE b.maBoNhiem = ?", "LIMIT 1");
         try (Connection conn = DatabaseConnection.getConnection();
@@ -114,11 +99,10 @@ public class BoNhiemDAO {
     // ============================
     // updateTrangThai
     // ============================
-
     public void updateTrangThai(int maBoNhiem, String trangThai, LocalDateTime ngayPheDuyet) {
         String sql = "UPDATE BONHIEM SET trangThai=?, ngayPheDuyet=? WHERE maBoNhiem=?";
         try (Connection conn = DatabaseConnection.getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql)) {
+            PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setString(1, trangThai);
             ps.setTimestamp(2, ngayPheDuyet != null ? Timestamp.valueOf(ngayPheDuyet) : null);
             ps.setInt(3, maBoNhiem);
@@ -131,7 +115,6 @@ public class BoNhiemDAO {
     // ============================
     // updateLyDoTuChoi
     // ============================
-
     public void updateLyDoTuChoi(int maBoNhiem, String lyDo) {
         String sql = "UPDATE BONHIEM SET lyDo=? WHERE maBoNhiem=?";
         try (Connection conn = DatabaseConnection.getConnection();
@@ -143,15 +126,13 @@ public class BoNhiemDAO {
             System.err.println("Lỗi updateLyDoTuChoi: " + e.getMessage());
         }
     }
-
     // ============================
     // updateNguoiDuyet
     // ============================
-
     public void updateNguoiDuyet(int maBoNhiem, String nguoiDuyetId) {
         String sql = "UPDATE BONHIEM SET nguoiDuyet=? WHERE maBoNhiem=?";
         try (Connection conn = DatabaseConnection.getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql)) {
+            PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setString(1, nguoiDuyetId);
             ps.setInt(2, maBoNhiem);
             ps.executeUpdate();
@@ -159,11 +140,9 @@ public class BoNhiemDAO {
             throw new RuntimeException("Lỗi cập nhật người duyệt: " + e.getMessage(), e);
         }
     }
-
-    // ============================
+    // ===========================
     // findByMaNV - with transient names
     // ============================
-
     public List<BoNhiem> findByMaNV(String maNV) {
         String sql = buildJoinQuery("WHERE b.maNV = ?", "ORDER BY b.tuNgay DESC");
         List<BoNhiem> result = new ArrayList<>();
@@ -182,18 +161,16 @@ public class BoNhiemDAO {
         }
         return result;
     }
-
     // ============================
     // findBoNhiemChinhHieuLuc
     // ============================
-
     public BoNhiem findBoNhiemChinhHieuLuc(String maNV) {
         String sql = buildJoinQuery(
                 "WHERE b.maNV = ? AND b.trangThai = 'hieu_luc' AND b.loaiBoNhiem = 'chinh'"
                 + " AND (b.denNgay IS NULL OR b.denNgay >= CURDATE())",
                 "LIMIT 1");
         try (Connection conn = DatabaseConnection.getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql)) {
+            PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setString(1, maNV);
             try (ResultSet rs = ps.executeQuery()) {
                 if (rs.next()) {
@@ -207,17 +184,15 @@ public class BoNhiemDAO {
         }
         return null;
     }
-
     // ============================
     // findChoDuyet
     // ============================
-
     public List<BoNhiem> findChoDuyet() {
         String sql = buildJoinQuery("WHERE b.trangThai = 'cho_duyet'", "ORDER BY b.maBoNhiem ASC");
         List<BoNhiem> result = new ArrayList<>();
         try (Connection conn = DatabaseConnection.getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql);
-             ResultSet rs = ps.executeQuery()) {
+            PreparedStatement ps = conn.prepareStatement(sql);
+            ResultSet rs = ps.executeQuery()) {
             while (rs.next()) {
                 BoNhiem bn = mapRow(rs);
                 trySetTransient(rs, bn);
@@ -232,7 +207,6 @@ public class BoNhiemDAO {
     // ============================
     // findAll - all with transient names
     // ============================
-
     public List<BoNhiem> findAll() {
         String sql = buildJoinQuery("", "ORDER BY b.maBoNhiem DESC");
         List<BoNhiem> result = new ArrayList<>();
@@ -253,11 +227,9 @@ public class BoNhiemDAO {
     public List<BoNhiem> findAllByScope(com.hrm.model.DataScope scope, String currentMaNV) {
         List<BoNhiem> result = new ArrayList<>();
         if (scope == com.hrm.model.DataScope.NONE) return result;
-
         if (scope == com.hrm.model.DataScope.DEPT) {
             return findAllByDeptSubtree(currentMaNV);
         }
-
         String whereClause;
         switch (scope) {
             case ALL:
@@ -272,7 +244,6 @@ public class BoNhiemDAO {
             default:
                 return result;
         }
-
         String sql = buildJoinQuery(whereClause, "ORDER BY b.maBoNhiem DESC");
         try (Connection conn = DatabaseConnection.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
@@ -282,7 +253,6 @@ public class BoNhiemDAO {
             } else if (scope != com.hrm.model.DataScope.ALL) {
                 ps.setString(1, currentMaNV);
             }
-
             try (ResultSet rs = ps.executeQuery()) {
                 while (rs.next()) {
                     BoNhiem bn = mapRow(rs);
@@ -296,34 +266,10 @@ public class BoNhiemDAO {
         return result;
     }
 
-    private java.util.Set<String> getDeptSubtree(String currentMaNV, java.sql.Connection conn) throws SQLException {
-        String rootSql = "SELECT b.maPhongBan FROM BONHIEM b WHERE b.maNV=? AND b.trangThai='hieu_luc' AND b.loaiBoNhiem='chinh' LIMIT 1";
-        String rootDept = null;
-        try (PreparedStatement ps = conn.prepareStatement(rootSql)) {
-            ps.setString(1, currentMaNV);
-            try (ResultSet rs = ps.executeQuery()) { if (rs.next()) rootDept = rs.getString(1); }
-        }
-        java.util.Set<String> depts = new java.util.LinkedHashSet<>();
-        if (rootDept == null) return depts;
-        java.util.Queue<String> queue = new java.util.LinkedList<>();
-        queue.add(rootDept);
-        String childSql = "SELECT maPhongBan FROM PHONGBAN WHERE phongBanCha=?";
-        while (!queue.isEmpty()) {
-            String cur = queue.poll();
-            if (depts.add(cur)) {
-                try (PreparedStatement ps = conn.prepareStatement(childSql)) {
-                    ps.setString(1, cur);
-                    try (ResultSet rs = ps.executeQuery()) { while (rs.next()) queue.add(rs.getString(1)); }
-                }
-            }
-        }
-        return depts;
-    }
-
     private List<BoNhiem> findAllByDeptSubtree(String currentMaNV) {
         List<BoNhiem> result = new ArrayList<>();
         try (Connection conn = DatabaseConnection.getConnection()) {
-            java.util.Set<String> depts = getDeptSubtree(currentMaNV, conn);
+            java.util.Set<String> depts = DaoHelper.getDeptSubtree(currentMaNV, conn);
             if (depts.isEmpty()) return result;
             String ph = String.join(",", java.util.Collections.nCopies(depts.size(), "?"));
             String sql = buildJoinQuery("WHERE b.maPhongBan IN (" + ph + ")", "ORDER BY b.maBoNhiem DESC");
@@ -338,11 +284,9 @@ public class BoNhiemDAO {
         }
         return result;
     }
-
     // ============================
     // hasConflictingChinhBoNhiem
     // ============================
-
     public boolean hasConflictingChinhBoNhiem(String maNV, LocalDate tuNgay, LocalDate denNgay, int excludeId) {
         // Kiểm tra overlap với bổ nhiệm chính đang hiệu lực hoặc chờ duyệt
         String sql = "SELECT COUNT(*) FROM BONHIEM "
@@ -473,7 +417,6 @@ public class BoNhiemDAO {
     // ============================
     // endBoNhiem - set denNgay + trangThai=het_hieu_luc
     // ============================
-
     public void endBoNhiem(int maBoNhiem, LocalDate denNgay) {
         String sql = "UPDATE BONHIEM SET denNgay=?, trangThai='het_hieu_luc' WHERE maBoNhiem=?";
         try (Connection conn = DatabaseConnection.getConnection();
@@ -548,7 +491,6 @@ public class BoNhiemDAO {
     // ============================
     // Private helper: build SELECT with JOINs
     // ============================
-
     private String buildJoinQuery(String whereClause, String orderAndLimit) {
         return "SELECT b.*, t.hoTen, b.maNV AS maNhanVien, pb.tenPhongBan, cv.tenChucVu, t_ql.hoTen AS tenQuanLy, t_nd.hoTen AS tenNguoiDuyet "
                 + "FROM BONHIEM b "
@@ -563,8 +505,8 @@ public class BoNhiemDAO {
 
     private void setInsertParams(PreparedStatement ps, BoNhiem bn) throws SQLException {
         ps.setString(1, bn.getMaNV());
-        ps.setString(2, bn.getPhongBanId());   // maPhongBan  ← FIXED (was chucVuId)
-        ps.setString(3, bn.getChucVuId());     // maChucVu
+        ps.setString(2, bn.getMaPhongBan());   // maPhongBan  ← FIXED (was chucVuId)
+        ps.setString(3, bn.getMaChucVu());     // maChucVu
         ps.setString(4, bn.getLoaiBoNhiem());
         ps.setDouble(5, bn.getTyLeHuongLuong());
         if (bn.getMaQuanLy() != null && !bn.getMaQuanLy().isEmpty()) {
@@ -583,4 +525,5 @@ public class BoNhiemDAO {
         ps.setString(11, bn.getLyDo());
         ps.setString(12, bn.getTrangThai());
     }
+
 }

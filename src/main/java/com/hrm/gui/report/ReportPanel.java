@@ -12,6 +12,7 @@ import com.hrm.model.NhanVien;
 import com.hrm.model.SoDungPhep;
 import com.hrm.model.TaiKhoan;
 import com.hrm.util.PermissionCodes;
+import com.hrm.util.UIFonts;
 import com.hrm.util.SessionContext;
 import com.hrm.util.UIColors;
 import com.hrm.util.UIHelper;
@@ -20,6 +21,7 @@ import javax.swing.*;
 import javax.swing.border.EmptyBorder;
 import javax.swing.border.TitledBorder;
 import javax.swing.table.DefaultTableModel;
+
 import java.awt.*;
 import java.text.NumberFormat;
 import java.util.ArrayList;
@@ -32,6 +34,7 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 public class ReportPanel extends JPanel {
+
     private final NhanVienBUS nvService;
     private final LuongBUS luongService;
     private final NghiPhepBUS leaveService;
@@ -39,54 +42,45 @@ public class ReportPanel extends JPanel {
     private final String currentMaNV;
     private final List<NhanVien> scopedEmployees;
     private final Set<String> scopedEmployeeIds;
-
     private static final NumberFormat MONEY_FORMAT = NumberFormat.getNumberInstance(new Locale("vi", "VN"));
-
     public ReportPanel() {
         this.nvService = NhanVienBUS.getInstance();
         this.luongService = LuongBUS.getInstance();
         this.leaveService = NghiPhepBUS.getInstance();
-
         TaiKhoan currentUser = SessionContext.getInstance().getCurrentUser();
-        this.currentMaNV = currentUser != null ? currentUser.getNhanVienId() : null;
+        this.currentMaNV = currentUser != null ? currentUser.getMaNV() : null;
         this.reportScope = XacThucBUS.getInstance().getScopeForAction(PermissionCodes.REPORT_VIEW);
         this.scopedEmployees = loadScopedEmployees();
         this.scopedEmployeeIds = scopedEmployees.stream()
                 .map(NhanVien::getMaNhanVien)
                 .collect(Collectors.toSet());
-
         setLayout(new BorderLayout());
-        setBackground(UIColors.LIGHT_GRAY_BG);
-
+        setBackground(Color.WHITE);
         JTabbedPane tabbedPane = new JTabbedPane();
-        tabbedPane.setFont(com.hrm.util.UIFonts.TEXT_MEDIUM);
-        tabbedPane.setBackground(UIColors.WHITE);
+        tabbedPane.setFont(UIFonts.TEXT_NORMAL);
+        tabbedPane.setBackground(Color.WHITE);
         tabbedPane.addTab("Tổng quan nhân sự", buildTongQuanTab());
         tabbedPane.addTab("Báo cáo nghỉ phép", buildLeaveReportTab());
         tabbedPane.addTab("Báo cáo lương", buildSalaryReportTab());
-
         add(tabbedPane, BorderLayout.CENTER);
     }
 
     private JPanel buildTongQuanTab() {
         JPanel panel = new JPanel(new BorderLayout(12, 12));
-        panel.setBackground(UIColors.LIGHT_GRAY_BG);
+        panel.setBackground(Color.WHITE);
         panel.setBorder(new EmptyBorder(16, 16, 16, 16));
-
         List<NhanVien> allNV = new ArrayList<>(scopedEmployees);
         int tongNV = allNV.size();
         long dangLam = allNV.stream().filter(nv -> "dang_lam_viec".equals(nv.getTrangThai())).count();
         long tamNghi = allNV.stream().filter(nv -> "tam_nghi".equals(nv.getTrangThai())).count();
         long nghiViec = allNV.stream().filter(nv -> "nghi_viec".equals(nv.getTrangThai())).count();
-
         JPanel cardsPanel = new JPanel(new GridLayout(1, 4, 16, 0));
         cardsPanel.setOpaque(false);
         cardsPanel.setBorder(new EmptyBorder(0, 0, 16, 0));
         cardsPanel.add(RoundedPanel.createStatCard("Tổng nhân viên", String.valueOf(tongNV), UIColors.PRIMARY_PURPLE));
         cardsPanel.add(RoundedPanel.createStatCard("Đang làm việc", String.valueOf(dangLam), UIColors.SUCCESS_GREEN));
-        cardsPanel.add(RoundedPanel.createStatCard("Tạm nghỉ", String.valueOf(tamNghi), UIColors.WARNING_YELLOW));
+        cardsPanel.add(RoundedPanel.createStatCard("Tạm nghỉ", String.valueOf(tamNghi), new Color(255, 193, 7)));
         cardsPanel.add(RoundedPanel.createStatCard("Đã nghỉ việc", String.valueOf(nghiViec), UIColors.DANGER_RED));
-
         Map<String, Integer> countByDept = new LinkedHashMap<>();
         for (NhanVien nv : allNV) {
             String department = nv.getTenPhongBanHienTai();
@@ -95,7 +89,6 @@ public class ReportPanel extends JPanel {
             }
             countByDept.merge(department, 1, Integer::sum);
         }
-
         DefaultTableModel model = new DefaultTableModel(new String[]{"Phòng ban", "Số nhân viên"}, 0) {
             @Override
             public boolean isCellEditable(int row, int column) {
@@ -108,25 +101,20 @@ public class ReportPanel extends JPanel {
         if (model.getRowCount() == 0) {
             model.addRow(new Object[]{"Không có dữ liệu trong phạm vi báo cáo", 0});
         }
-
         JTable table = buildStyledTable(model);
         table.getColumnModel().getColumn(0).setPreferredWidth(300);
         table.getColumnModel().getColumn(1).setPreferredWidth(120);
-
         JScrollPane scroll = new JScrollPane(table);
         scroll.setBorder(new TitledBorder("Số nhân viên theo phòng ban"));
-
         JPanel toolbar = new JPanel(new FlowLayout(FlowLayout.RIGHT, 8, 4));
         toolbar.setOpaque(false);
         JButton btnRefresh = UIHelper.createDefaultButton("Làm mới");
         btnRefresh.addActionListener(e -> refreshTab(panel, "Tổng quan nhân sự", 0));
         toolbar.add(btnRefresh);
-
         JPanel north = new JPanel(new BorderLayout());
         north.setOpaque(false);
         north.add(cardsPanel, BorderLayout.CENTER);
         north.add(toolbar, BorderLayout.EAST);
-
         panel.add(north, BorderLayout.NORTH);
         panel.add(scroll, BorderLayout.CENTER);
         return panel;
@@ -134,9 +122,8 @@ public class ReportPanel extends JPanel {
 
     private JPanel buildLeaveReportTab() {
         JPanel panel = new JPanel(new BorderLayout(8, 8));
-        panel.setBackground(UIColors.LIGHT_GRAY_BG);
+        panel.setBackground(Color.WHITE);
         panel.setBorder(new EmptyBorder(16, 16, 16, 16));
-
         DefaultTableModel model = new DefaultTableModel(
                 new String[]{"Nhân viên", "Loại phép", "Được cấp", "Đã dùng", "Còn lại"}, 0) {
             @Override
@@ -144,7 +131,6 @@ public class ReportPanel extends JPanel {
                 return false;
             }
         };
-
         for (NhanVien nv : scopedEmployees) {
             try {
                 List<SoDungPhep> balances = leaveService.getBalances(nv.getMaNhanVien());
@@ -154,10 +140,10 @@ public class ReportPanel extends JPanel {
                     for (SoDungPhep balance : balances) {
                         model.addRow(new Object[]{
                                 displayEmployee(nv),
-                                mapLeaveTypeCode(balance.getLeaveTypeCode()),
-                                balance.getTotalDays(),
-                                balance.getUsedDays(),
-                                balance.getRemainingDays()
+                                mapLeaveTypeCode(balance.getMaLoaiPhep()),
+                                balance.getSoNgayDuocCap(),
+                                balance.getSoNgayDaDung(),
+                                balance.getSoNgayConLai()
                         });
                     }
                 }
@@ -167,17 +153,14 @@ public class ReportPanel extends JPanel {
         if (model.getRowCount() == 0) {
             model.addRow(new Object[]{"Không có dữ liệu trong phạm vi báo cáo", "", "", "", ""});
         }
-
         JTable table = buildStyledTable(model);
         table.getColumnModel().getColumn(0).setPreferredWidth(200);
         table.getColumnModel().getColumn(1).setPreferredWidth(130);
         table.getColumnModel().getColumn(2).setPreferredWidth(90);
         table.getColumnModel().getColumn(3).setPreferredWidth(90);
         table.getColumnModel().getColumn(4).setPreferredWidth(90);
-
         JScrollPane scroll = new JScrollPane(table);
         scroll.setBorder(new TitledBorder("Báo cáo sử dụng phép nghỉ"));
-
         panel.add(buildRefreshToolbar(panel, "Báo cáo nghỉ phép", 1), BorderLayout.NORTH);
         panel.add(scroll, BorderLayout.CENTER);
         return panel;
@@ -185,9 +168,8 @@ public class ReportPanel extends JPanel {
 
     private JPanel buildSalaryReportTab() {
         JPanel panel = new JPanel(new BorderLayout(8, 8));
-        panel.setBackground(UIColors.LIGHT_GRAY_BG);
+        panel.setBackground(Color.WHITE);
         panel.setBorder(new EmptyBorder(16, 16, 16, 16));
-
         DefaultTableModel model = new DefaultTableModel(
                 new String[]{"Tháng/Năm", "Trạng thái", "Tổng lương (thực nhận)"}, 0) {
             @Override
@@ -195,7 +177,6 @@ public class ReportPanel extends JPanel {
                 return false;
             }
         };
-
         try {
             List<BangLuong> payrolls = luongService.getAll();
             for (BangLuong bangLuong : payrolls) {
@@ -218,19 +199,15 @@ public class ReportPanel extends JPanel {
         if (model.getRowCount() == 0) {
             model.addRow(new Object[]{"Không có dữ liệu trong phạm vi báo cáo", "", ""});
         }
-
         JTable table = buildStyledTable(model);
         table.getColumnModel().getColumn(0).setPreferredWidth(120);
         table.getColumnModel().getColumn(1).setPreferredWidth(150);
         table.getColumnModel().getColumn(2).setPreferredWidth(200);
-
         javax.swing.table.DefaultTableCellRenderer right = new javax.swing.table.DefaultTableCellRenderer();
         right.setHorizontalAlignment(SwingConstants.RIGHT);
         table.getColumnModel().getColumn(2).setCellRenderer(right);
-
         JScrollPane scroll = new JScrollPane(table);
         scroll.setBorder(new TitledBorder("Báo cáo tổng hợp bảng lương"));
-
         panel.add(buildRefreshToolbar(panel, "Báo cáo lương", 2), BorderLayout.NORTH);
         panel.add(scroll, BorderLayout.CENTER);
         return panel;
@@ -265,7 +242,7 @@ public class ReportPanel extends JPanel {
         table.getTableHeader().setOpaque(true);
         table.setSelectionBackground(UIColors.LIGHT_PURPLE);
         table.setSelectionForeground(UIColors.TEXT_DARK);
-        table.setGridColor(UIColors.BORDER_GRAY);
+        table.setGridColor(Color.LIGHT_GRAY);
         return table;
     }
 
@@ -339,4 +316,5 @@ public class ReportPanel extends JPanel {
     private String formatMoney(double value) {
         return MONEY_FORMAT.format(value) + " đ";
     }
+
 }

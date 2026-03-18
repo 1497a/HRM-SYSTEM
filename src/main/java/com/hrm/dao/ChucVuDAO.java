@@ -2,6 +2,7 @@ package com.hrm.dao;
 
 import com.hrm.model.ChucVu;
 import com.hrm.util.DatabaseConnection;
+import com.hrm.util.HRMConstants;
 
 import java.sql.*;
 import java.util.ArrayList;
@@ -11,6 +12,13 @@ import java.util.List;
  * Repository JDBC cho bảng CHUCVU.
  */
 public class ChucVuDAO {
+    private static ChucVuDAO instance;
+    public static synchronized ChucVuDAO getInstance() {
+        if (instance == null) {
+            instance = new ChucVuDAO();
+        }
+        return instance;
+    }
 
     /**
      * Lấy tất cả chức vụ.
@@ -59,7 +67,7 @@ public class ChucVuDAO {
     public List<ChucVu> findActive() {
         List<ChucVu> list = new ArrayList<>();
         String sql = "SELECT maChucVu, tenChucVu, capBac, phuCapChucVu, moTa, trangThai "
-                   + "FROM CHUCVU WHERE trangThai = 'hoatDong' ORDER BY capBac, maChucVu";
+                   + "FROM CHUCVU WHERE trangThai = '" + HRMConstants.TRANG_THAI_HOAT_DONG + "' ORDER BY capBac, maChucVu";
         try (Connection conn = DatabaseConnection.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql);
              ResultSet rs = ps.executeQuery()) {
@@ -77,7 +85,7 @@ public class ChucVuDAO {
      * Kiểm tra mã chức vụ đang hoạt động đã tồn tại chưa (chống tạo trùng).
      */
     public boolean existsActiveByCode(String maChucVu) {
-        String sql = "SELECT COUNT(*) FROM CHUCVU WHERE maChucVu = ? AND trangThai = 'hoat_dong'";
+        String sql = "SELECT COUNT(*) FROM CHUCVU WHERE maChucVu = ? AND trangThai = '" + HRMConstants.TRANG_THAI_HOAT_DONG + "'";
         try (Connection conn = DatabaseConnection.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setString(1, maChucVu);
@@ -154,7 +162,6 @@ public class ChucVuDAO {
     // =====================================================================
     // ==================== Private Helpers ================================
     // =====================================================================
-
     private ChucVu mapRow(ResultSet rs) throws SQLException {
         return new ChucVu(
                 rs.getString("maChucVu"),

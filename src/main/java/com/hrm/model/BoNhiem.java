@@ -22,15 +22,12 @@ public class BoNhiem {
     private LocalDateTime ngayPheDuyet;
     private String lyDo;
     private String trangThai;         // "cho_duyet", "hieu_luc", "het_hieu_luc", "tu_choi"
-
     // Transient display fields - khong luu trong DB, load tu JOIN
     private transient String tenNV;
-    private transient String maNhanVien;   // e.g. "NV001"
     private transient String tenPhongBan;
     private transient String tenChucVu;
     private transient String tenQuanLy;
     private transient String tenNguoiDuyet;
-
     public BoNhiem() {
     }
 
@@ -56,32 +53,17 @@ public class BoNhiem {
     // ============================
     // Getters & Setters - core fields
     // ============================
-
     public int getId() { return id; }
     public void setId(int id) { this.id = id; }
 
-    // Legacy compatibility
-    public int getMaBoNhiem() { return id; }
-    public void setMaBoNhiem(int maBoNhiem) { this.id = maBoNhiem; }
-
-    public String getNhanVienId() { return nhanVienId; }
-    public void setNhanVienId(String nhanVienId) { this.nhanVienId = nhanVienId; }
-
-    // Legacy compatibility
     public String getMaNV() { return nhanVienId; }
-    public void setMaNV(String maNV) { this.nhanVienId = maNV; }
+    public void setMaNV(String nhanVienId) { this.nhanVienId = nhanVienId; }
 
-    public String getPhongBanId() { return phongBanId; }
-    public void setPhongBanId(String phongBanId) { this.phongBanId = phongBanId; }
+    public String getMaPhongBan() { return phongBanId; }
+    public void setMaPhongBan(String phongBanId) { this.phongBanId = phongBanId; }
 
-    // Legacy compatibility
-
-    public String getChucVuId() { return chucVuId; }
-    public void setChucVuId(String chucVuId) { this.chucVuId = chucVuId; }
-
-    // Legacy compatibility
     public String getMaChucVu() { return chucVuId; }
-    public void setMaChucVu(String maChucVu) { this.chucVuId = maChucVu; }
+    public void setMaChucVu(String chucVuId) { this.chucVuId = chucVuId; }
 
     public String getLoaiBoNhiem() { return loaiBoNhiem; }
     public void setLoaiBoNhiem(String loaiBoNhiem) { this.loaiBoNhiem = loaiBoNhiem; }
@@ -89,12 +71,8 @@ public class BoNhiem {
     public double getTyLeHuongLuong() { return tyLeHuongLuong; }
     public void setTyLeHuongLuong(double tyLeHuongLuong) { this.tyLeHuongLuong = tyLeHuongLuong; }
 
-    public String getQuanLyId() { return quanLyId; }
-    public void setQuanLyId(String quanLyId) { this.quanLyId = quanLyId; }
-
-    // Legacy compatibility
     public String getMaQuanLy() { return quanLyId; }
-    public void setMaQuanLy(String maQuanLy) { this.quanLyId = maQuanLy; }
+    public void setMaQuanLy(String quanLyId) { this.quanLyId = quanLyId; }
 
     public String getNguoiDuyet() { return nguoiDuyet; }
     public void setNguoiDuyet(String nguoiDuyet) { this.nguoiDuyet = nguoiDuyet; }
@@ -117,12 +95,8 @@ public class BoNhiem {
     // ============================
     // Getters & Setters - transient fields
     // ============================
-
     public String getTenNV() { return tenNV; }
     public void setTenNV(String tenNV) { this.tenNV = tenNV; }
-
-    public String getMaNhanVien() { return maNhanVien; }
-    public void setMaNhanVien(String maNhanVien) { this.maNhanVien = maNhanVien; }
 
     public String getTenPhongBan() { return tenPhongBan; }
     public void setTenPhongBan(String tenPhongBan) { this.tenPhongBan = tenPhongBan; }
@@ -139,7 +113,6 @@ public class BoNhiem {
     // ============================
     // Display helpers
     // ============================
-
     public String getTrangThaiDisplay() {
         if (trangThai == null) return "";
         switch (trangThai) {

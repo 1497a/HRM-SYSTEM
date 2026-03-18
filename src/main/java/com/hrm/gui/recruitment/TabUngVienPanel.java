@@ -23,54 +23,43 @@ import static javax.swing.SortOrder.ASCENDING;
 class TabUngVienPanel extends JPanel {
 
     private static final DateTimeFormatter DATE_FMT = DateTimeFormatter.ofPattern("dd/MM/yyyy");
-
     private final TuyenDungBUS service;
     private JTable tbl;
     private DefaultTableModel model;
     private JButton btnTaoUV;
-
     TabUngVienPanel(TuyenDungBUS service) {
         this.service = service;
         setLayout(new BorderLayout(8, 8));
-        setBackground(UIColors.LIGHT_GRAY_BG);
+        setBackground(Color.WHITE);
         setBorder(new EmptyBorder(12, 12, 12, 12));
-
         JPanel toolbar = new JPanel(new FlowLayout(FlowLayout.LEFT, 8, 4));
         toolbar.setOpaque(false);
-
         btnTaoUV = UIHelper.createPrimaryButton("+ Tạo ứng viên");
         JButton btnXemChiTiet = UIHelper.createDefaultButton("Xem chi tiết");
         JButton btnLamMoi = UIHelper.createDefaultButton("Làm mới");
-
         btnTaoUV.addActionListener(e -> taoUngVien());
         btnXemChiTiet.addActionListener(e -> xemChiTiet());
         btnLamMoi.addActionListener(e -> load());
-
         JComboBox<String> cboTrangThai = new JComboBox<>(new String[]{
                 "Tất cả", "Mới", "Đang phỏng vấn", "Trúng tuyển", "Từ chối", "Đã chuyển thành nhân viên"
         });
-
         toolbar.add(btnTaoUV);
         toolbar.add(btnXemChiTiet);
         toolbar.add(btnLamMoi);
         toolbar.add(new JLabel("Trạng thái:"));
         toolbar.add(cboTrangThai);
-
         String[] cols = {"Mã UV", "Họ tên", "Email", "Điện thoại", "Vị trí", "Ngày nộp", "Trạng thái"};
         model = new DefaultTableModel(cols, 0) {
             @Override
             public boolean isCellEditable(int r, int c) { return false; }
-
             @Override
             public Class<?> getColumnClass(int col) {
                 return col == 0 ? Integer.class : String.class;
             }
         };
-
         tbl = TabUtils.buildTable(model);
         TabUtils.applyColWidths(tbl, new int[]{70, 180, 220, 130, 250, 110, 140});
         tbl.getColumnModel().getColumn(6).setCellRenderer(new RecruitmentStatusRenderer());
-
         TableRowSorter<DefaultTableModel> sorter = new TableRowSorter<>(model);
         tbl.setRowSorter(sorter);
         for (int i = 0; i < model.getColumnCount(); i++) sorter.setSortable(i, false);
@@ -83,7 +72,6 @@ class TabUngVienPanel extends JPanel {
         sorter.setComparator(5, TabUtils.dateComparator());
         sorter.setSortKeys(List.of(new SortKey(0, ASCENDING)));
         UIHelper.attachStatusFilter(sorter, cboTrangThai, 6);
-
         // Mở chi tiết khi double-click
         tbl.addMouseListener(new java.awt.event.MouseAdapter() {
             @Override
@@ -91,15 +79,11 @@ class TabUngVienPanel extends JPanel {
                 if (e.getClickCount() == 2) xemChiTiet();
             }
         });
-
         JScrollPane scroll = new JScrollPane(tbl);
         scroll.setBorder(new TitledBorder("Danh sách ứng viên"));
-
         add(toolbar, BorderLayout.NORTH);
         add(scroll, BorderLayout.CENTER);
-
         btnTaoUV.setVisible(SessionContext.getInstance().hasPermission(PermissionCodes.RECRUITMENT_MANAGE));
-
         load();
     }
 

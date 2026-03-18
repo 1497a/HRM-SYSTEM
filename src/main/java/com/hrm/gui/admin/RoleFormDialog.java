@@ -2,6 +2,7 @@ package com.hrm.gui.admin;
 
 import com.hrm.bus.KetQua;
 import com.hrm.bus.XacThucBUS;
+import com.hrm.gui.components.BaseFormDialog;
 import com.hrm.model.DataScope;
 import com.hrm.model.Quyen;
 import com.hrm.model.VaiTro;
@@ -21,7 +22,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-public class RoleFormDialog extends JDialog {
+public class RoleFormDialog extends BaseFormDialog {
     private static final ScopeOption[] SCOPE_OPTIONS = {
             new ScopeOption(DataScope.NONE, "Không cấp quyền"),
             new ScopeOption(DataScope.SELF, "Cá nhân"),
@@ -34,32 +35,27 @@ public class RoleFormDialog extends JDialog {
             new ScopeOption(DataScope.NONE, "Không cấp quyền"),
             new ScopeOption(DataScope.ALL,  "Có quyền")
     };
-
     private final XacThucBUS authService;
     private final VaiTro editingRole;
     private final Map<String, Quyen> allPermMap = new HashMap<>();
     /** modelRow → true nếu quyền đó cần scope (coPhamVi=true), false nếu là quyền nhị phân. */
     private final Map<Integer, Boolean> rowCoPhamVi = new HashMap<>();
     private boolean successful = false;
-
     private JTextField txtCode;
     private JTextField txtName;
     private JTextArea txtDescription;
     private JTable permissionTable;
     private DefaultTableModel permissionTableModel;
-
     public RoleFormDialog(Frame parent, VaiTro role) {
         super(parent, role == null ? "Tạo vai trò mới" : "Sửa vai trò", true);
         this.authService = XacThucBUS.getInstance();
         this.editingRole = role;
-
         initComponents();
         setupLayout();
         loadPermissionRows();
         if (role != null) {
             loadRoleData();
         }
-
         setSize(960, 720);
         setLocationRelativeTo(parent);
     }
@@ -83,17 +79,14 @@ public class RoleFormDialog extends JDialog {
     private void initComponents() {
         txtCode = new JTextField(20);
         txtCode.setEditable(false);
-        txtCode.setBackground(com.hrm.util.UIColors.LIGHT_GRAY_BG);
-
+        txtCode.setBackground(Color.WHITE);
         txtName = new JTextField(20);
         txtDescription = new JTextArea(3, 20);
         txtDescription.setLineWrap(true);
         txtDescription.setWrapStyleWord(true);
-
         if (editingRole == null) {
             txtCode.setText(generateRoleCode());
         }
-
         permissionTableModel = new DefaultTableModel(
                 new Object[]{"Mã quyền", "Tên quyền", "Mô tả quyền", "Nhóm quyền", "Phạm vi"}, 0) {
             @Override
@@ -101,31 +94,23 @@ public class RoleFormDialog extends JDialog {
                 return column == 4;
             }
         };
-
         permissionTable = new JTable(permissionTableModel);
         permissionTable.setRowHeight(28);
         permissionTable.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
         permissionTable.setAutoCreateRowSorter(true);
-
         TableRowSorter<DefaultTableModel> sorter = new TableRowSorter<>(permissionTableModel);
         sorter.setComparator(1, Comparator.nullsLast(String::compareToIgnoreCase));
         sorter.setComparator(3, Comparator.nullsLast(String::compareToIgnoreCase));
         permissionTable.setRowSorter(sorter);
-
         TableColumn scopeColumn = permissionTable.getColumnModel().getColumn(4);
         scopeColumn.setCellEditor(new ScopeCellEditor());
         scopeColumn.setCellRenderer(new ScopeCellRenderer());
     }
 
     private void setupLayout() {
-        JPanel mainPanel = new JPanel(new BorderLayout(10, 10));
-        mainPanel.setBorder(new EmptyBorder(15, 15, 15, 15));
-
+        JPanel mainPanel = createMainPanel();
         JPanel formPanel = new JPanel(new GridBagLayout());
-        GridBagConstraints gbc = new GridBagConstraints();
-        gbc.insets = new Insets(5, 5, 5, 5);
-        gbc.anchor = GridBagConstraints.WEST;
-
+        GridBagConstraints gbc = UIHelper.gbc(0, 0);
         gbc.gridx = 0;
         gbc.gridy = 0;
         formPanel.add(new JLabel("Mã vai trò:"), gbc);
@@ -133,7 +118,6 @@ public class RoleFormDialog extends JDialog {
         gbc.fill = GridBagConstraints.HORIZONTAL;
         gbc.weightx = 1.0;
         formPanel.add(txtCode, gbc);
-
         gbc.gridx = 0;
         gbc.gridy = 1;
         gbc.weightx = 0;
@@ -143,7 +127,6 @@ public class RoleFormDialog extends JDialog {
         gbc.fill = GridBagConstraints.HORIZONTAL;
         gbc.weightx = 1.0;
         formPanel.add(txtName, gbc);
-
         gbc.gridx = 0;
         gbc.gridy = 2;
         gbc.weightx = 0;
@@ -154,26 +137,21 @@ public class RoleFormDialog extends JDialog {
         gbc.fill = GridBagConstraints.HORIZONTAL;
         gbc.weightx = 1.0;
         formPanel.add(new JScrollPane(txtDescription), gbc);
-
-        JScrollPane tableScroll = new JScrollPane(permissionTable);
+        JScrollPane tableScroll = createScrollPane(permissionTable);
         tableScroll.setBorder(new TitledBorder("Danh sách quyền và phạm vi"));
-
         JPanel notePanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 0, 0));
         notePanel.setOpaque(false);
         notePanel.add(new JLabel("Nếu chọn \"Không cấp quyền\" thì quyền đó sẽ không được gán cho vai trò."));
-
         JPanel scopeHelpPanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 0, 0));
         scopeHelpPanel.setOpaque(false);
         scopeHelpPanel.add(new JLabel("Phạm vi: Cá nhân = chỉ bản thân, Nhóm trực tiếp = cấp dưới trực tiếp, Phòng ban = toàn bộ nhân sự trong phòng, Toàn bộ = toàn công ty. Quyền hành động (tạo/quản lý...) chỉ có Không cấp / Có quyền."));
-
-        JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT));
+        JPanel buttonPanel = createButtonPanel();
         JButton btnSave = UIHelper.createSuccessButton("Lưu");
         btnSave.addActionListener(e -> save());
         JButton btnCancel = UIHelper.createDefaultButton("Hủy");
         btnCancel.addActionListener(e -> dispose());
         buttonPanel.add(btnSave);
         buttonPanel.add(btnCancel);
-
         JPanel topPanel = new JPanel(new BorderLayout(0, 8));
         topPanel.add(formPanel, BorderLayout.NORTH);
         JPanel helpPanel = new JPanel(new GridLayout(2, 1, 0, 4));
@@ -181,7 +159,6 @@ public class RoleFormDialog extends JDialog {
         helpPanel.add(notePanel);
         helpPanel.add(scopeHelpPanel);
         topPanel.add(helpPanel, BorderLayout.SOUTH);
-
         mainPanel.add(topPanel, BorderLayout.NORTH);
         mainPanel.add(tableScroll, BorderLayout.CENTER);
         mainPanel.add(buttonPanel, BorderLayout.SOUTH);
@@ -193,9 +170,8 @@ public class RoleFormDialog extends JDialog {
         rowCoPhamVi.clear();
         List<Quyen> permissions = new ArrayList<>(authService.getAllPermissions());
         permissions.sort(Comparator
-                .comparing(Quyen::getModule, Comparator.nullsLast(String::compareToIgnoreCase))
-                .thenComparing(Quyen::getName, Comparator.nullsLast(String::compareToIgnoreCase)));
-
+                .comparing(Quyen::getNhomQuyen, Comparator.nullsLast(String::compareToIgnoreCase))
+                .thenComparing(Quyen::getTenQuyen, Comparator.nullsLast(String::compareToIgnoreCase)));
         for (Quyen permission : permissions) {
             allPermMap.put(permission.getId(), permission);
             int row = permissionTableModel.getRowCount();
@@ -214,12 +190,10 @@ public class RoleFormDialog extends JDialog {
         txtCode.setText(editingRole.getId());
         txtName.setText(editingRole.getTenVaiTro());
         txtDescription.setText(editingRole.getMoTa() != null ? editingRole.getMoTa() : "");
-
         Map<String, DataScope> scopeByPermission = new HashMap<>();
         for (Quyen permission : editingRole.getQuyens()) {
             scopeByPermission.put(permission.getId(), permission.getPhamVi() != null ? permission.getPhamVi() : DataScope.NONE);
         }
-
         for (int row = 0; row < permissionTableModel.getRowCount(); row++) {
             String permissionCode = String.valueOf(permissionTableModel.getValueAt(row, 0));
             DataScope scope = scopeByPermission.getOrDefault(permissionCode, DataScope.NONE);
@@ -235,16 +209,13 @@ public class RoleFormDialog extends JDialog {
         String code = txtCode.getText().trim().toUpperCase();
         String name = txtName.getText().trim();
         String description = txtDescription.getText().trim();
-
         if (name.isEmpty()) {
             JOptionPane.showMessageDialog(this, "Vui lòng nhập tên vai trò.", "Lỗi", JOptionPane.ERROR_MESSAGE);
             return;
         }
-
         if (permissionTable.isEditing()) {
             permissionTable.getCellEditor().stopCellEditing();
         }
-
         List<Quyen> selectedPermissions = new ArrayList<>();
         for (int row = 0; row < permissionTableModel.getRowCount(); row++) {
             String permissionCode = String.valueOf(permissionTableModel.getValueAt(row, 0));
@@ -265,7 +236,6 @@ public class RoleFormDialog extends JDialog {
             permission.setPhamVi(scope);
             selectedPermissions.add(permission);
         }
-
         if (editingRole == null) {
             KetQua<Void> createResult = authService.createRole(code, name, description.isEmpty() ? null : description);
             if (!createResult.isSuccess()) {
@@ -295,7 +265,6 @@ public class RoleFormDialog extends JDialog {
                         JOptionPane.WARNING_MESSAGE);
             }
         }
-
         successful = true;
         JOptionPane.showMessageDialog(this,
                 editingRole == null ? "Đã tạo vai trò thành công." : "Đã cập nhật vai trò thành công.",
@@ -333,7 +302,6 @@ public class RoleFormDialog extends JDialog {
         private final JComboBox<ScopeOption> fullCombo = new JComboBox<>(SCOPE_OPTIONS);
         private final JComboBox<ScopeOption> binaryCombo = new JComboBox<>(BINARY_SCOPE_OPTIONS);
         private JComboBox<ScopeOption> activeCombo = fullCombo;
-
         @Override
         public Component getTableCellEditorComponent(JTable table, Object value, boolean isSelected, int row, int column) {
             int modelRow = table.convertRowIndexToModel(row);
@@ -352,7 +320,6 @@ public class RoleFormDialog extends JDialog {
             activeCombo.setSelectedItem(selected);
             return activeCombo;
         }
-
         @Override
         public Object getCellEditorValue() {
             return activeCombo.getSelectedItem();
@@ -383,7 +350,6 @@ public class RoleFormDialog extends JDialog {
             }
             return this;
         }
-
         private String toLabel(DataScope scope) {
             for (ScopeOption option : SCOPE_OPTIONS) {
                 if (option.scope == scope) {
@@ -397,12 +363,10 @@ public class RoleFormDialog extends JDialog {
     private static class ScopeOption {
         private final DataScope scope;
         private final String label;
-
         private ScopeOption(DataScope scope, String label) {
             this.scope = scope;
             this.label = label;
         }
-
         @Override
         public String toString() {
             return label;

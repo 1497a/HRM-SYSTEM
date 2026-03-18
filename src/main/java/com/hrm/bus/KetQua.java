@@ -41,7 +41,6 @@ public class KetQua<T> {
     private final boolean success;
     private final String message;
     private final T data;
-
     private KetQua(boolean success, String message, T data) {
         this.success = success;
         this.message = message;

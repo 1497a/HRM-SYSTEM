@@ -5,7 +5,9 @@ import com.hrm.model.CauHinhPhuCap;
 import com.hrm.model.ChamCong;
 import com.hrm.model.DangKyLamThem;
 import com.hrm.model.ThanhPhanLuong;
+import com.hrm.util.DaoHelper;
 import com.hrm.util.DatabaseConnection;
+import com.hrm.util.HRMConstants;
 
 import java.sql.*;
 import java.time.LocalDate;
@@ -19,8 +21,20 @@ import java.util.List;
  */
 public class ChamCongDAO {
 
+    private static final String CHAMCONG_SELECT = "SELECT c.maChamCong, c.maNV, c.ngay, c.maCaLam, c.gioVao, c.gioRa, "
+            + "c.soGioLam, c.gioLamThem, c.trangThai, c.phuongThucChamCong, c.ghiChu, t.hoTen, ca.tenCaLam "
+            + "FROM CHAMCONG c "
+            + "LEFT JOIN THONGTINCANHAN t ON c.maNV = t.maNV "
+            + "LEFT JOIN CALAM ca ON c.maCaLam = ca.maCaLam ";
+    private static final String CHAMCONG_SELECT_WITH_BONHIEM = CHAMCONG_SELECT
+            + "LEFT JOIN BONHIEM b ON c.maNV = b.maNV AND b.trangThai = 'hieu_luc' AND b.loaiBoNhiem = 'chinh' ";
+    private static final String DANGKY_SELECT = "SELECT d.maDK, d.maNV, d.ngay, d.soGio, d.heSoOT, d.lyDo, "
+            + "d.trangThai, d.nguoiDuyet, d.ngayDuyet, t.hoTen "
+            + "FROM DANGKY_LAMTHEM d "
+            + "LEFT JOIN THONGTINCANHAN t ON d.maNV = t.maNV ";
+    private static final String DANGKY_SELECT_WITH_BONHIEM = DANGKY_SELECT
+            + "LEFT JOIN BONHIEM b ON d.maNV = b.maNV AND b.trangThai = 'hieu_luc' AND b.loaiBoNhiem = 'chinh' ";
     private static ChamCongDAO instance;
-
     private ChamCongDAO() {}
 
     public static synchronized ChamCongDAO getInstance() {
@@ -33,7 +47,6 @@ public class ChamCongDAO {
     // =====================================================================
     // CA_LAMS
     // =====================================================================
-
     public List<CaLam> findAllCaLam() {
         String sql = "SELECT maCaLam, tenCaLam, gioBatDau, gioKetThuc, soGioChuan, "
                 + "choPhepLamThem, moTa, trangThai FROM CALAM ORDER BY maCaLam";
@@ -52,7 +65,7 @@ public class ChamCongDAO {
 
     public List<CaLam> findActiveCaLam() {
         String sql = "SELECT maCaLam, tenCaLam, gioBatDau, gioKetThuc, soGioChuan, "
-                + "choPhepLamThem, moTa, trangThai FROM CALAM WHERE trangThai = 'hoatDong' ORDER BY maCaLam";
+                + "choPhepLamThem, moTa, trangThai FROM CALAM WHERE trangThai = '" + HRMConstants.TRANG_THAI_HOAT_DONG + "' ORDER BY maCaLam";
         List<CaLam> result = new ArrayList<>();
         try (Connection conn = DatabaseConnection.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql);
@@ -87,7 +100,7 @@ public class ChamCongDAO {
      * INSERT or UPDATE depending on whether the record already exists.
      */
     public void saveCaLam(CaLam caLam) {
-        boolean exists = findCaLamById(caLam.getMaCaLam()) != null;
+        boolean exists = findCaLamById(caLam.getId()) != null;
         if (exists) {
             String sql = "UPDATE CALAM SET tenCaLam=?, gioBatDau=?, gioKetThuc=?, soGioChuan=?, "
                     + "choPhepLamThem=?, moTa=?, trangThai=? WHERE maCaLam=?";
@@ -99,8 +112,8 @@ public class ChamCongDAO {
                 ps.setDouble(4, caLam.getSoGioChuan());
                 ps.setBoolean(5, caLam.isChoPhepLamThem());
                 ps.setString(6, caLam.getMoTa());
-                ps.setString(7, caLam.getTrangThai() != null ? caLam.getTrangThai().getDbValue() : "hoatDong");
-                ps.setString(8, caLam.getMaCaLam());
+                ps.setString(7, caLam.getTrangThai() != null ? caLam.getTrangThai().getDbValue() : HRMConstants.TRANG_THAI_HOAT_DONG);
+                ps.setString(8, caLam.getId());
                 ps.executeUpdate();
             } catch (SQLException e) {
                 throw new RuntimeException("Lỗi cập nhật ca làm: " + e.getMessage(), e);
@@ -110,14 +123,14 @@ public class ChamCongDAO {
                     + "choPhepLamThem, moTa, trangThai) VALUES (?,?,?,?,?,?,?,?)";
             try (Connection conn = DatabaseConnection.getConnection();
                  PreparedStatement ps = conn.prepareStatement(sql)) {
-                ps.setString(1, caLam.getMaCaLam());
+                ps.setString(1, caLam.getId());
                 ps.setString(2, caLam.getTenCaLam());
                 ps.setTime(3, Time.valueOf(caLam.getGioBatDau()));
                 ps.setTime(4, Time.valueOf(caLam.getGioKetThuc()));
                 ps.setDouble(5, caLam.getSoGioChuan());
                 ps.setBoolean(6, caLam.isChoPhepLamThem());
                 ps.setString(7, caLam.getMoTa());
-                ps.setString(8, caLam.getTrangThai() != null ? caLam.getTrangThai().getDbValue() : "hoatDong");
+                ps.setString(8, caLam.getTrangThai() != null ? caLam.getTrangThai().getDbValue() : HRMConstants.TRANG_THAI_HOAT_DONG);
                 ps.executeUpdate();
             } catch (SQLException e) {
                 throw new RuntimeException("Lỗi thêm ca làm: " + e.getMessage(), e);
@@ -126,7 +139,7 @@ public class ChamCongDAO {
     }
 
     public void deleteCaLam(String id) {
-        String sql = "UPDATE CALAM SET trangThai='ngung_hoat_dong' WHERE maCaLam=?";
+        String sql = "UPDATE CALAM SET trangThai='" + HRMConstants.TRANG_THAI_NGUNG_HOAT_DONG + "' WHERE maCaLam=?";
         try (Connection conn = DatabaseConnection.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setString(1, id);
@@ -138,7 +151,7 @@ public class ChamCongDAO {
 
     private CaLam mapCaLam(ResultSet rs) throws SQLException {
         CaLam ca = new CaLam();
-        ca.setMaCaLam(rs.getString("maCaLam")); // column name is maCaLam
+        ca.setId(rs.getString("maCaLam")); // column name is maCaLam
         ca.setTenCaLam(rs.getString("tenCaLam"));
         Time gioBD = rs.getTime("gioBatDau");
         if (gioBD != null) ca.setGioBatDau(gioBD.toLocalTime());
@@ -161,7 +174,6 @@ public class ChamCongDAO {
     // =====================================================================
     // CHAM_CONGS
     // =====================================================================
-
     /**
      * INSERT a new ChamCong record. Returns the generated id.
      */
@@ -185,7 +197,7 @@ public class ChamCongDAO {
             try (ResultSet keys = ps.getGeneratedKeys()) {
                 if (keys.next()) {
                     int id = keys.getInt(1);
-                    cc.setMaChamCong(id);
+                    cc.setId(id);
                     return id;
                 }
             }
@@ -207,7 +219,7 @@ public class ChamCongDAO {
             ps.setString(5, cc.getTrangThai() != null ? cc.getTrangThai().getDbValue() : "dung_gio");
             ps.setString(6, cc.getPhuongThucChamCong() != null ? cc.getPhuongThucChamCong().getDbValue() : "thu_cong");
             ps.setString(7, cc.getGhiChu());
-            ps.setInt(8, cc.getMaChamCong());
+            ps.setInt(8, cc.getId());
             ps.executeUpdate();
         } catch (SQLException e) {
             throw new RuntimeException("Lỗi cập nhật chấm công: " + e.getMessage(), e);
@@ -215,10 +227,7 @@ public class ChamCongDAO {
     }
 
     public ChamCong findChamCongByNVAndNgay(String nhanVienId, LocalDate ngay) {
-        String sql = "SELECT c.maChamCong, c.maNV, c.ngay, c.maCaLam, c.gioVao, c.gioRa, c.soGioLam, c.gioLamThem, c.trangThai, c.phuongThucChamCong, c.ghiChu, t.hoTen, ca.tenCaLam FROM CHAMCONG c "
-                + "LEFT JOIN THONGTINCANHAN t ON c.maNV = t.maNV "
-                + "LEFT JOIN CALAM ca ON c.maCaLam = ca.maCaLam "
-                + "WHERE c.maNV=? AND c.ngay=?";
+        String sql = CHAMCONG_SELECT + "WHERE c.maNV=? AND c.ngay=?";
         try (Connection conn = DatabaseConnection.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setString(1, nhanVienId);
@@ -235,10 +244,7 @@ public class ChamCongDAO {
     }
 
     public List<ChamCong> findByNVAndThang(String nhanVienId, int thang, int nam) {
-        String sql = "SELECT c.maChamCong, c.maNV, c.ngay, c.maCaLam, c.gioVao, c.gioRa, c.soGioLam, c.gioLamThem, c.trangThai, c.phuongThucChamCong, c.ghiChu, t.hoTen, ca.tenCaLam FROM CHAMCONG c "
-                + "LEFT JOIN THONGTINCANHAN t ON c.maNV = t.maNV "
-                + "LEFT JOIN CALAM ca ON c.maCaLam = ca.maCaLam "
-                + "WHERE c.maNV=? AND MONTH(c.ngay)=? AND YEAR(c.ngay)=? ORDER BY c.ngay";
+        String sql = CHAMCONG_SELECT + "WHERE c.maNV=? AND MONTH(c.ngay)=? AND YEAR(c.ngay)=? ORDER BY c.ngay";
         List<ChamCong> result = new ArrayList<>();
         try (Connection conn = DatabaseConnection.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
@@ -257,10 +263,7 @@ public class ChamCongDAO {
     }
 
     public List<ChamCong> findByThang(int thang, int nam) {
-        String sql = "SELECT c.maChamCong, c.maNV, c.ngay, c.maCaLam, c.gioVao, c.gioRa, c.soGioLam, c.gioLamThem, c.trangThai, c.phuongThucChamCong, c.ghiChu, t.hoTen, ca.tenCaLam FROM CHAMCONG c "
-                + "LEFT JOIN THONGTINCANHAN t ON c.maNV = t.maNV "
-                + "LEFT JOIN CALAM ca ON c.maCaLam = ca.maCaLam "
-                + "WHERE MONTH(c.ngay)=? AND YEAR(c.ngay)=? ORDER BY c.ngay, c.maNV";
+        String sql = CHAMCONG_SELECT + "WHERE MONTH(c.ngay)=? AND YEAR(c.ngay)=? ORDER BY c.ngay, c.maNV";
         List<ChamCong> result = new ArrayList<>();
         try (Connection conn = DatabaseConnection.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
@@ -280,17 +283,10 @@ public class ChamCongDAO {
     public List<ChamCong> findByThangByScope(int thang, int nam, com.hrm.model.DataScope scope, String currentMaNV) {
         List<ChamCong> result = new ArrayList<>();
         if (scope == com.hrm.model.DataScope.NONE) return result;
-
         if (scope == com.hrm.model.DataScope.DEPT) {
             return findChamCongByDeptSubtree(thang, nam, currentMaNV);
         }
-
-        String sqlBase = "SELECT c.maChamCong, c.maNV, c.ngay, c.maCaLam, c.gioVao, c.gioRa, c.soGioLam, c.gioLamThem, c.trangThai, c.phuongThucChamCong, c.ghiChu, t.hoTen, ca.tenCaLam FROM CHAMCONG c "
-                + "LEFT JOIN THONGTINCANHAN t ON c.maNV = t.maNV "
-                + "LEFT JOIN CALAM ca ON c.maCaLam = ca.maCaLam "
-                + "LEFT JOIN BONHIEM b ON c.maNV = b.maNV AND b.trangThai = 'hieu_luc' AND b.loaiBoNhiem = 'chinh' "
-                + "WHERE MONTH(c.ngay)=? AND YEAR(c.ngay)=? ";
-
+        String sqlBase = CHAMCONG_SELECT_WITH_BONHIEM + "WHERE MONTH(c.ngay)=? AND YEAR(c.ngay)=? ";
         String sqlCondition = "";
         switch (scope) {
             case ALL:
@@ -304,9 +300,7 @@ public class ChamCongDAO {
             default:
                 return result;
         }
-
         String sql = sqlBase + sqlCondition + " ORDER BY c.ngay, c.maNV";
-
         try (Connection conn = DatabaseConnection.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setInt(1, thang);
@@ -325,40 +319,13 @@ public class ChamCongDAO {
         return result;
     }
 
-    private java.util.Set<String> getDeptSubtree(String currentMaNV, java.sql.Connection conn) throws SQLException {
-        String rootSql = "SELECT b.maPhongBan FROM BONHIEM b WHERE b.maNV=? AND b.trangThai='hieu_luc' AND b.loaiBoNhiem='chinh' LIMIT 1";
-        String rootDept = null;
-        try (PreparedStatement ps = conn.prepareStatement(rootSql)) {
-            ps.setString(1, currentMaNV);
-            try (ResultSet rs = ps.executeQuery()) { if (rs.next()) rootDept = rs.getString(1); }
-        }
-        java.util.Set<String> depts = new java.util.LinkedHashSet<>();
-        if (rootDept == null) return depts;
-        java.util.Queue<String> queue = new java.util.LinkedList<>();
-        queue.add(rootDept);
-        String childSql = "SELECT maPhongBan FROM PHONGBAN WHERE phongBanCha=?";
-        while (!queue.isEmpty()) {
-            String cur = queue.poll();
-            if (depts.add(cur)) {
-                try (PreparedStatement ps = conn.prepareStatement(childSql)) {
-                    ps.setString(1, cur);
-                    try (ResultSet rs = ps.executeQuery()) { while (rs.next()) queue.add(rs.getString(1)); }
-                }
-            }
-        }
-        return depts;
-    }
-
     private List<ChamCong> findChamCongByDeptSubtree(int thang, int nam, String currentMaNV) {
         List<ChamCong> result = new ArrayList<>();
         try (Connection conn = DatabaseConnection.getConnection()) {
-            java.util.Set<String> depts = getDeptSubtree(currentMaNV, conn);
+            java.util.Set<String> depts = DaoHelper.getDeptSubtree(currentMaNV, conn);
             if (depts.isEmpty()) return result;
             String ph = String.join(",", java.util.Collections.nCopies(depts.size(), "?"));
-            String sql = "SELECT c.maChamCong, c.maNV, c.ngay, c.maCaLam, c.gioVao, c.gioRa, c.soGioLam, c.gioLamThem, c.trangThai, c.phuongThucChamCong, c.ghiChu, t.hoTen, ca.tenCaLam FROM CHAMCONG c "
-                    + "LEFT JOIN THONGTINCANHAN t ON c.maNV = t.maNV "
-                    + "LEFT JOIN CALAM ca ON c.maCaLam = ca.maCaLam "
-                    + "LEFT JOIN BONHIEM b ON c.maNV = b.maNV AND b.trangThai = 'hieu_luc' AND b.loaiBoNhiem = 'chinh' "
+            String sql = CHAMCONG_SELECT_WITH_BONHIEM
                     + "WHERE MONTH(c.ngay)=? AND YEAR(c.ngay)=? AND b.maPhongBan IN (" + ph + ") ORDER BY c.ngay, c.maNV";
             try (PreparedStatement ps = conn.prepareStatement(sql)) {
                 ps.setInt(1, thang); ps.setInt(2, nam);
@@ -390,15 +357,12 @@ public class ChamCongDAO {
 
     private ChamCong mapChamCong(ResultSet rs) throws SQLException {
         ChamCong cc = new ChamCong();
-        cc.setMaChamCong(rs.getInt("maChamCong"));
+        cc.setId(rs.getInt("maChamCong"));
         cc.setMaNV(rs.getString("maNV"));
         Date ngay = rs.getDate("ngay");
         if (ngay != null) cc.setNgay(ngay.toLocalDate());
         cc.setMaCaLam(rs.getString("maCaLam"));
-        // tenCaLam from JOIN
-        try { cc.setTenCaLam(rs.getString("tenCaLam")); } catch (SQLException ignored) {}
-        // employeeName from JOIN
-        try { cc.setEmployeeName(rs.getString("hoTen")); } catch (SQLException ignored) {}
+        applyChamCongDetails(cc, rs);
         Timestamp gioVao = rs.getTimestamp("gioVao");
         if (gioVao != null) cc.setGioVao(gioVao.toLocalDateTime());
         Timestamp gioRa = rs.getTimestamp("gioRa");
@@ -419,10 +383,18 @@ public class ChamCongDAO {
         return cc;
     }
 
+    private void applyChamCongDetails(ChamCong cc, ResultSet rs) {
+        try {
+            cc.setTenCaLam(rs.getString("tenCaLam"));
+        } catch (SQLException ignored) {}
+        try {
+            cc.setTenNhanVien(rs.getString("hoTen"));
+        } catch (SQLException ignored) {}
+    }
+
     // =====================================================================
     // DANG_KY_LAM_THEMS
     // =====================================================================
-
     /**
      * INSERT a new DangKyLamThem. Returns generated id.
      */
@@ -465,9 +437,7 @@ public class ChamCongDAO {
     }
 
     public List<DangKyLamThem> findByMaNV(String nhanVienId) {
-        String sql = "SELECT d.maDK, d.maNV, d.ngay, d.soGio, d.heSoOT, d.lyDo, d.trangThai, d.nguoiDuyet, d.ngayDuyet, t.hoTen FROM DANGKY_LAMTHEM d "
-                + "LEFT JOIN THONGTINCANHAN t ON d.maNV = t.maNV "
-                + "WHERE d.maNV=? ORDER BY d.ngay DESC";
+        String sql = DANGKY_SELECT + "WHERE d.maNV=? ORDER BY d.ngay DESC";
         List<DangKyLamThem> result = new ArrayList<>();
         try (Connection conn = DatabaseConnection.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
@@ -485,9 +455,7 @@ public class ChamCongDAO {
 
     /** Returns all pending OT requests with tenNV transient filled. */
     public List<DangKyLamThem> findChoDuyet() {
-        String sql = "SELECT d.maDK, d.maNV, d.ngay, d.soGio, d.heSoOT, d.lyDo, d.trangThai, d.nguoiDuyet, d.ngayDuyet, t.hoTen FROM DANGKY_LAMTHEM d "
-                + "LEFT JOIN THONGTINCANHAN t ON d.maNV = t.maNV "
-                + "WHERE d.trangThai='cho_duyet' ORDER BY d.ngay DESC";
+        String sql = DANGKY_SELECT + "WHERE d.trangThai='cho_duyet' ORDER BY d.ngay DESC";
         List<DangKyLamThem> result = new ArrayList<>();
         try (Connection conn = DatabaseConnection.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql);
@@ -502,9 +470,7 @@ public class ChamCongDAO {
     }
 
     public DangKyLamThem findById(int id) {
-        String sql = "SELECT d.maDK, d.maNV, d.ngay, d.soGio, d.heSoOT, d.lyDo, d.trangThai, d.nguoiDuyet, d.ngayDuyet, t.hoTen FROM DANGKY_LAMTHEM d "
-                + "LEFT JOIN THONGTINCANHAN t ON d.maNV = t.maNV "
-                + "WHERE d.maDK=?";
+        String sql = DANGKY_SELECT + "WHERE d.maDK=?";
         try (Connection conn = DatabaseConnection.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setInt(1, id);
@@ -571,15 +537,19 @@ public class ChamCongDAO {
             try { dk.setTrangThai(DangKyLamThem.TrangThai.fromDbValue(tt)); }
             catch (IllegalArgumentException ignored) {}
         }
-        // transient
-        try { dk.setEmployeeName(rs.getString("hoTen")); } catch (SQLException ignored) {}
+        applyDangKyLamThemDetails(dk, rs);
         return dk;
+    }
+
+    private void applyDangKyLamThemDetails(DangKyLamThem dk, ResultSet rs) {
+        try {
+            dk.setTenNhanVien(rs.getString("hoTen"));
+        } catch (SQLException ignored) {}
     }
 
     // =====================================================================
     // Count working days in a month for a specific employee (not absent)
     // =====================================================================
-
     public int countNgayCong(String nhanVienId, int thang, int nam) {
         String sql = "SELECT COUNT(*) FROM CHAMCONG WHERE maNV=? AND MONTH(ngay)=? AND YEAR(ngay)=? "
                 + "AND trangThai != 'vang_mat'";
@@ -600,12 +570,9 @@ public class ChamCongDAO {
     // =====================================================================
     // DANG_KY_LAM_THEMS — findAll
     // =====================================================================
-
     /** Returns all OT requests (all statuses), newest first. */
     public List<DangKyLamThem> findAllDangKyLamThem() {
-        String sql = "SELECT d.maDK, d.maNV, d.ngay, d.soGio, d.heSoOT, d.lyDo, d.trangThai, d.nguoiDuyet, d.ngayDuyet, t.hoTen FROM DANGKY_LAMTHEM d "
-                + "LEFT JOIN THONGTINCANHAN t ON d.maNV = t.maNV "
-                + "ORDER BY d.ngay DESC";
+        String sql = DANGKY_SELECT + "ORDER BY d.ngay DESC";
         List<DangKyLamThem> result = new ArrayList<>();
         try (Connection conn = DatabaseConnection.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql);
@@ -630,15 +597,10 @@ public class ChamCongDAO {
     private List<DangKyLamThem> getOTByScopeAndStatus(com.hrm.model.DataScope scope, String currentMaNV, String statusValue) {
         List<DangKyLamThem> result = new ArrayList<>();
         if (scope == com.hrm.model.DataScope.NONE) return result;
-
         if (scope == com.hrm.model.DataScope.DEPT) {
             return getOTByDeptSubtree(currentMaNV, statusValue);
         }
-
-        String sqlBase = "SELECT d.maDK, d.maNV, d.ngay, d.soGio, d.heSoOT, d.lyDo, d.trangThai, d.nguoiDuyet, d.ngayDuyet, t.hoTen FROM DANGKY_LAMTHEM d "
-                + "LEFT JOIN THONGTINCANHAN t ON d.maNV = t.maNV "
-                + "LEFT JOIN BONHIEM b ON d.maNV = b.maNV AND b.trangThai = 'hieu_luc' AND b.loaiBoNhiem = 'chinh' ";
-
+        String sqlBase = DANGKY_SELECT_WITH_BONHIEM;
         String sqlCondition = "";
         switch (scope) {
             case ALL:
@@ -653,11 +615,9 @@ public class ChamCongDAO {
             default:
                 return result;
         }
-
         if (statusValue != null) {
             sqlCondition += " AND d.trangThai = '" + statusValue + "' ";
         }
-
         String sql = sqlBase + sqlCondition + " ORDER BY d.ngay DESC";
         try (Connection conn = DatabaseConnection.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
@@ -678,13 +638,11 @@ public class ChamCongDAO {
     private List<DangKyLamThem> getOTByDeptSubtree(String currentMaNV, String statusValue) {
         List<DangKyLamThem> result = new ArrayList<>();
         try (Connection conn = DatabaseConnection.getConnection()) {
-            java.util.Set<String> depts = getDeptSubtree(currentMaNV, conn);
+            java.util.Set<String> depts = DaoHelper.getDeptSubtree(currentMaNV, conn);
             if (depts.isEmpty()) return result;
             String ph = String.join(",", java.util.Collections.nCopies(depts.size(), "?"));
             String statusClause = statusValue != null ? " AND d.trangThai = '" + statusValue + "'" : "";
-            String sql = "SELECT d.maDK, d.maNV, d.ngay, d.soGio, d.heSoOT, d.lyDo, d.trangThai, d.nguoiDuyet, d.ngayDuyet, t.hoTen FROM DANGKY_LAMTHEM d "
-                    + "LEFT JOIN THONGTINCANHAN t ON d.maNV = t.maNV "
-                    + "LEFT JOIN BONHIEM b ON d.maNV = b.maNV AND b.trangThai = 'hieu_luc' AND b.loaiBoNhiem = 'chinh' "
+            String sql = DANGKY_SELECT_WITH_BONHIEM
                     + "WHERE b.maPhongBan IN (" + ph + ")" + statusClause + " ORDER BY d.ngay DESC";
             try (PreparedStatement ps = conn.prepareStatement(sql)) {
                 int i = 1; for (String d : depts) ps.setString(i++, d);
@@ -712,7 +670,6 @@ public class ChamCongDAO {
     // =====================================================================
     // CAU_HINH_PHU_CAPS
     // =====================================================================
-
     public List<CauHinhPhuCap> findAllCauHinhPC() {
         String sql = "SELECT maCauHinh, loai, tenKhoan, kieuTinh, giaTri, nguon, hoatDong "
                 + "FROM CAUHINH_PHUCAP ORDER BY loai, tenKhoan";
@@ -758,7 +715,7 @@ public class ChamCongDAO {
             try (ResultSet keys = ps.getGeneratedKeys()) {
                 if (keys.next()) {
                     int id = keys.getInt(1);
-                    pc.setMaPC(id);
+                    pc.setId(id);
                     return id;
                 }
             }
@@ -777,7 +734,7 @@ public class ChamCongDAO {
             ps.setString(3, pc.getKieuTinh() == CauHinhPhuCap.KieuTinh.CO_DINH ? "co_dinh" : "phan_tram");
             ps.setDouble(4, pc.getGiaTri());
             ps.setString(5, pc.getNguon());
-            ps.setInt(6, pc.getMaPC());
+            ps.setInt(6, pc.getId());
             ps.executeUpdate();
         } catch (SQLException e) {
             throw new RuntimeException("Lỗi cập nhật cấu hình phụ cấp: " + e.getMessage(), e);
@@ -797,7 +754,7 @@ public class ChamCongDAO {
 
     private CauHinhPhuCap mapCauHinhPC(ResultSet rs) throws SQLException {
         CauHinhPhuCap pc = new CauHinhPhuCap();
-        pc.setMaPC(rs.getInt("maCauHinh"));
+        pc.setId(rs.getInt("maCauHinh"));
         String loaiStr = rs.getString("loai");
         pc.setLoai("phu_cap".equals(loaiStr) ? ThanhPhanLuong.Loai.PHU_CAP : ThanhPhanLuong.Loai.KHAU_TRU);
         pc.setTenKhoan(rs.getString("tenKhoan"));
@@ -812,7 +769,6 @@ public class ChamCongDAO {
     // =====================================================================
     // UTILITY — NhanVienInfo, mã hiển thị, tài khoản → nhân viên
     // =====================================================================
-
     /** Thông tin nhân viên dùng để hiển thị trong panel chấm công. */
     public static class NhanVienInfo {
         public final String maNV;        // VD: "NV001"
@@ -822,7 +778,6 @@ public class ChamCongDAO {
         public final String tenChucVu;
         public final String tenPhongBan;
         public final String trangThai;
-
         public NhanVienInfo(String maNV, String hoTen,
                             String email, String tenChucVu, String tenPhongBan, String trangThai) {
             this.maNV        = maNV        != null ? maNV        : "";
@@ -940,8 +895,7 @@ public class ChamCongDAO {
                     }
                 }
             }
-
-            java.util.Set<String> depts = getDeptSubtree(currentMaNV, conn);
+            java.util.Set<String> depts = DaoHelper.getDeptSubtree(currentMaNV, conn);
             if (!depts.isEmpty()) {
                 String placeholders = String.join(",", java.util.Collections.nCopies(depts.size(), "?"));
                 String sqlDept = "SELECT COUNT(*) FROM BONHIEM b "
@@ -970,4 +924,5 @@ public class ChamCongDAO {
     public List<com.hrm.model.CaLam> findCaLamHoatDong() {
         return findActiveCaLam();
     }
+
 }

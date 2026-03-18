@@ -5,12 +5,15 @@ import com.hrm.model.HopDongLaoDong;
 import com.hrm.model.NhanVien;
 import com.hrm.model.ThongTinCaNhan;
 import com.hrm.util.UIColors;
+import com.hrm.util.UIFonts;
 import com.hrm.util.ValidationUtils;
 
 import javax.swing.*;
 import javax.swing.border.Border;
 import javax.swing.text.JTextComponent;
+
 import java.awt.*;
+import java.awt.Font;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
@@ -24,10 +27,8 @@ class TabThongTinCaNhanPanel extends JPanel {
 
     private static final DateTimeFormatter DATE_FMT = DateTimeFormatter.ofPattern("dd/MM/yyyy");
     private static final String[] STATUS_OPTIONS_ALL = {"dang_lam_viec", "tam_nghi", "nghi_viec"};
-
     private final String maNV;
     private ThongTinCaNhan ttcn;
-
     private JTextField txtHoTen;
     private JTextField txtNgaySinh;
     private JTextField txtCCCD;
@@ -42,17 +43,14 @@ class TabThongTinCaNhanPanel extends JPanel {
     private JComboBox<String> cboGioiTinh;
     private JComboBox<String> cboTinhTrangHonNhan;
     JComboBox<String> cboTrangThaiNhanVien;
-
     TabThongTinCaNhanPanel(String maNV, NhanVien nhanVien, ThongTinCaNhan ttcn, HopDongLaoDong hopDong) {
         this.maNV = maNV;
         this.ttcn = ttcn;
         setLayout(new BorderLayout());
-
         JPanel content = new JPanel();
         content.setLayout(new BoxLayout(content, BoxLayout.Y_AXIS));
-        content.setBackground(UIColors.WHITE);
+        content.setBackground(Color.WHITE);
         content.setBorder(BorderFactory.createEmptyBorder(16, 20, 16, 20));
-
         content.add(buildSectionTitle("Thông tin nhân viên"));
         content.add(Box.createVerticalStrut(8));
         JPanel nvPanel = buildInfoGrid();
@@ -77,7 +75,6 @@ class TabThongTinCaNhanPanel extends JPanel {
         addInfoRow(nvPanel, 3, "Trạng thái:", cboTrangThaiNhanVien);
         content.add(nvPanel);
         content.add(Box.createVerticalStrut(16));
-
         content.add(buildSectionTitle("Thông tin cá nhân"));
         content.add(Box.createVerticalStrut(8));
         JPanel ttcnPanel = buildInfoGrid();
@@ -95,7 +92,6 @@ class TabThongTinCaNhanPanel extends JPanel {
             txtTrinhDoHocVan = createReadOnlyTextField();
             txtFileCV = createReadOnlyTextField();
             txtKinhNghiem = createReadOnlyTextArea();
-
             addInfoRow(ttcnPanel, 0, "Họ và tên:", txtHoTen);
             addInfoRow(ttcnPanel, 1, "Ngày sinh:", txtNgaySinh);
             addInfoRow(ttcnPanel, 2, "Giới tính:", cboGioiTinh);
@@ -114,12 +110,11 @@ class TabThongTinCaNhanPanel extends JPanel {
         } else {
             JLabel noData = new JLabel("  Không có thông tin cá nhân.");
             noData.setFont(new Font("Segoe UI", Font.ITALIC, 13));
-            noData.setForeground(UIColors.TEXT_GRAY);
+            noData.setForeground(Color.GRAY);
             ttcnPanel.add(noData, buildGbc(0, 0, 2));
         }
         content.add(ttcnPanel);
         content.add(Box.createVerticalStrut(16));
-
         content.add(buildSectionTitle("Hợp đồng lao động"));
         content.add(Box.createVerticalStrut(8));
         JPanel hdPanel = buildInfoGrid();
@@ -137,12 +132,11 @@ class TabThongTinCaNhanPanel extends JPanel {
         } else {
             JLabel noHd = new JLabel("  Chưa có hợp đồng hiệu lực.");
             noHd.setFont(new Font("Segoe UI", Font.ITALIC, 13));
-            noHd.setForeground(UIColors.TEXT_GRAY);
+            noHd.setForeground(Color.GRAY);
             hdPanel.add(noHd, buildGbc(0, 0, 2));
         }
         content.add(hdPanel);
         content.add(Box.createVerticalGlue());
-
         JScrollPane scroll = new JScrollPane(content);
         scroll.setBorder(BorderFactory.createEmptyBorder());
         scroll.getVerticalScrollBar().setUnitIncrement(16);
@@ -164,11 +158,10 @@ class TabThongTinCaNhanPanel extends JPanel {
         txtTrinhDoHocVan.setEditable(editable);
         txtFileCV.setEditable(editable);
         txtKinhNghiem.setEditable(editable);
-
-        Color bg = editable ? UIColors.WHITE : new Color(242, 242, 242);
+        Color bg = editable ? Color.WHITE : new Color(242, 242, 242);
         Border border = editable
                 ? BorderFactory.createLineBorder(UIColors.PRIMARY_PURPLE, 1)
-                : BorderFactory.createLineBorder(UIColors.BORDER_GRAY, 1);
+                : BorderFactory.createLineBorder(Color.LIGHT_GRAY, 1);
         applyVisual(txtHoTen, bg, border);
         applyVisual(txtNgaySinh, bg, border);
         applyVisual(txtCCCD, bg, border);
@@ -192,7 +185,7 @@ class TabThongTinCaNhanPanel extends JPanel {
         cboTrangThaiNhanVien.setBorder(editable
                 ? BorderFactory.createLineBorder(UIColors.PRIMARY_PURPLE, 1)
                 : BorderFactory.createEmptyBorder(1, 1, 1, 1));
-        cboTrangThaiNhanVien.setBackground(editable ? UIColors.WHITE : UIColors.LIGHT_GRAY_BG);
+        cboTrangThaiNhanVien.setBackground(editable ? Color.WHITE : Color.WHITE);
     }
 
     boolean hasChanges() {
@@ -209,7 +202,7 @@ class TabThongTinCaNhanPanel extends JPanel {
             || !eq(txtQueQuan.getText(), ttcn.getQueQuan())
             || !eq((String) cboTinhTrangHonNhan.getSelectedItem(), ttcn.getTinhTrangHonNhan())
             || !eq(txtTrinhDoHocVan.getText(), ttcn.getTrinhDoHocVan())
-            || !eq(txtFileCV.getText(), ttcn.getFileCV())
+            || !eq(txtFileCV.getText(), ttcn.getFileCv())
             || !eq(txtKinhNghiem.getText(), ttcn.getKinhNghiem());
     }
 
@@ -220,7 +213,6 @@ class TabThongTinCaNhanPanel extends JPanel {
         }
         String hoTen = txtHoTen.getText().trim();
         if (hoTen.isEmpty()) return KetQua.error("Họ tên không được để trống.");
-
         String ngaySinhStr = txtNgaySinh.getText().trim();
         LocalDate ngaySinh = null;
         if (!ngaySinhStr.isEmpty()) {
@@ -232,15 +224,12 @@ class TabThongTinCaNhanPanel extends JPanel {
             String birthErr = ValidationUtils.validateBirthDate(ngaySinh);
             if (birthErr != null) return KetQua.error(birthErr);
         }
-
         String email = txtEmail.getText().trim();
         String emailErr = ValidationUtils.validateEmail(email);
         if (emailErr != null) return KetQua.error(emailErr);
-
         String sdt = txtDienThoai.getText().trim();
         String phoneErr = ValidationUtils.validatePhone(sdt);
         if (phoneErr != null) return KetQua.error(phoneErr);
-
         ttcn.setHoTen(hoTen);
         ttcn.setNgaySinh(ngaySinh);
         ttcn.setGioiTinh((String) cboGioiTinh.getSelectedItem());
@@ -252,7 +241,7 @@ class TabThongTinCaNhanPanel extends JPanel {
         ttcn.setQueQuan(empty(txtQueQuan.getText().trim()));
         ttcn.setTinhTrangHonNhan((String) cboTinhTrangHonNhan.getSelectedItem());
         ttcn.setTrinhDoHocVan(empty(txtTrinhDoHocVan.getText().trim()));
-        ttcn.setFileCV(empty(txtFileCV.getText().trim()));
+        ttcn.setFileCv(empty(txtFileCV.getText().trim()));
         ttcn.setKinhNghiem(empty(txtKinhNghiem.getText().trim()));
         return com.hrm.bus.NhanVienBUS.getInstance().capNhatThongTinCaNhan(ttcn);
     }
@@ -302,7 +291,7 @@ class TabThongTinCaNhanPanel extends JPanel {
         txtQueQuan.setText(safe(ttcn.getQueQuan()));
         cboTinhTrangHonNhan.setSelectedItem(ttcn.getTinhTrangHonNhan() != null ? ttcn.getTinhTrangHonNhan() : "doc_than");
         txtTrinhDoHocVan.setText(safe(ttcn.getTrinhDoHocVan()));
-        txtFileCV.setText(safe(ttcn.getFileCV()));
+        txtFileCV.setText(safe(ttcn.getFileCv()));
         txtKinhNghiem.setText(safe(ttcn.getKinhNghiem()));
     }
 
@@ -311,7 +300,7 @@ class TabThongTinCaNhanPanel extends JPanel {
         f.setFont(com.hrm.util.UIFonts.TEXT_NORMAL);
         f.setEditable(false);
         f.setBorder(BorderFactory.createEmptyBorder(2, 0, 2, 0));
-        f.setBackground(UIColors.WHITE);
+        f.setBackground(Color.WHITE);
         return f;
     }
 
@@ -322,7 +311,7 @@ class TabThongTinCaNhanPanel extends JPanel {
         a.setWrapStyleWord(true);
         a.setEditable(false);
         a.setBorder(BorderFactory.createEmptyBorder(2, 0, 2, 0));
-        a.setBackground(UIColors.WHITE);
+        a.setBackground(Color.WHITE);
         return a;
     }
 
@@ -351,7 +340,7 @@ class TabThongTinCaNhanPanel extends JPanel {
 
     private JPanel buildInfoGrid() {
         JPanel p = new JPanel(new GridBagLayout());
-        p.setBackground(UIColors.WHITE);
+        p.setBackground(Color.WHITE);
         p.setAlignmentX(Component.LEFT_ALIGNMENT);
         return p;
     }
@@ -366,16 +355,14 @@ class TabThongTinCaNhanPanel extends JPanel {
     private void addInfoRow(JPanel grid, int row, String labelText, Component valueComponent) {
         JLabel lbl = new JLabel(labelText);
         lbl.setFont(com.hrm.util.UIFonts.BOLD_NORMAL);
-        lbl.setForeground(UIColors.TEXT_GRAY);
+        lbl.setForeground(Color.GRAY);
         lbl.setPreferredSize(new Dimension(170, 24));
-
         GridBagConstraints gl = new GridBagConstraints();
         gl.gridx = 0;
         gl.gridy = row;
         gl.anchor = GridBagConstraints.WEST;
         gl.insets = new Insets(3, 0, 3, 12);
         gl.fill = GridBagConstraints.NONE;
-
         GridBagConstraints gv = new GridBagConstraints();
         gv.gridx = 1;
         gv.gridy = row;
@@ -383,7 +370,6 @@ class TabThongTinCaNhanPanel extends JPanel {
         gv.insets = new Insets(3, 0, 3, 0);
         gv.fill = GridBagConstraints.HORIZONTAL;
         gv.weightx = 1.0;
-
         grid.add(lbl, gl);
         grid.add(valueComponent, gv);
     }
@@ -415,23 +401,23 @@ class TabThongTinCaNhanPanel extends JPanel {
         };
         lbl.setOpaque(false);
         lbl.setFont(com.hrm.util.UIFonts.BOLD_SMALL);
-        lbl.setForeground(UIColors.WHITE);
+        lbl.setForeground(Color.WHITE);
         lbl.setBackground(bg);
         lbl.setBorder(BorderFactory.createEmptyBorder(3, 8, 3, 8));
         return lbl;
     }
 
     static Color resolveColor(String key) {
-        if (key == null) return UIColors.TEXT_GRAY;
+        if (key == null) return Color.GRAY;
         return switch (key) {
             case "dang_lam_viec", "hieu_luc", "dung_gio" -> UIColors.SUCCESS_GREEN;
-            case "tam_nghi", "cho_duyet", "di_muon", "ve_som" -> UIColors.WARNING_TEXT_AMBER;
+            case "tam_nghi", "cho_duyet", "di_muon", "ve_som" -> new Color(230, 120, 0);
             case "nghi_viec", "tu_choi", "huy", "vang_mat" -> UIColors.DANGER_RED;
-            case "het_han", "het_hieu_luc" -> UIColors.TEXT_GRAY;
+            case "het_han", "het_hieu_luc" -> Color.GRAY;
             case "thanh_ly" -> new Color(23, 162, 184);
             case "nghi_phep" -> new Color(0, 123, 200);
             case "cong_tac" -> new Color(100, 60, 200);
-            default -> UIColors.TEXT_GRAY;
+            default -> Color.GRAY;
         };
     }
 
@@ -457,4 +443,5 @@ class TabThongTinCaNhanPanel extends JPanel {
     private static String empty(String s) {
         return (s == null || s.isEmpty()) ? null : s;
     }
+
 }

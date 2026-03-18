@@ -21,15 +21,12 @@ public class ChiTietLuong {
         CHUA_TINH("chua_tinh", "Chưa tính"),
         DA_TINH("da_tinh", "Đã tính"),
         DA_DUYET("da_duyet", "Đã duyệt");
-
         private final String dbValue;
         private final String displayName;
-
         TrangThai(String dbValue, String displayName) {
             this.dbValue = dbValue;
             this.displayName = displayName;
         }
-
         public String getDbValue() { return dbValue; }
         public String getDisplayName() { return displayName; }
     }
@@ -38,7 +35,6 @@ public class ChiTietLuong {
     private int maBL;            // FK → BANGLUONG
     private String maNV;         // FK → NHANVIEN
     private String tenNV;        // Transient — để hiển thị
-
     // Các khoản lương
     private double luongCoBan;
     private double tongLuongChucVu;   // Phụ cấp chức vụ
@@ -46,16 +42,13 @@ public class ChiTietLuong {
     private double tongKhauTru;       // BHXH, BHYT, thuế...
     private double tongLuong;         // = luongCoBan + tongLuongChucVu + tienOT
     private double luongThucNhan;     // = tongLuong - tongKhauTru
-
     // Thông tin chấm công
     private int soNgayCong;
     private double tongGioLam;
     private double tongGioOT;
     private String ghiChu;
-
     private TrangThai trangThai;
     private List<ThanhPhanLuong> danhSachThanhPhan;
-
     public ChiTietLuong() {
         this.trangThai = TrangThai.CHUA_TINH;
         this.danhSachThanhPhan = new ArrayList<>();
@@ -67,12 +60,10 @@ public class ChiTietLuong {
         double tongPhuCap = danhSachThanhPhan.stream()
                 .filter(tp -> tp.getLoai() == ThanhPhanLuong.Loai.PHU_CAP)
                 .mapToDouble(ThanhPhanLuong::getSoTien).sum();
-
         // Tổng khấu trừ
         double tongTru = danhSachThanhPhan.stream()
                 .filter(tp -> tp.getLoai() == ThanhPhanLuong.Loai.KHAU_TRU)
                 .mapToDouble(ThanhPhanLuong::getSoTien).sum();
-
         this.tongLuongChucVu = tongPhuCap;
         this.tongKhauTru = tongTru;
         this.tongLuong = luongCoBan + tongLuongChucVu + tienOT;

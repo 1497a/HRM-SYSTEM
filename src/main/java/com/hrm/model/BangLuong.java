@@ -16,23 +16,18 @@ public class BangLuong {
         DA_TINH("da_tinh", "Đã tính"),
         DA_DUYET("da_duyet", "Đã duyệt"),
         DA_KHOA("da_khoa", "Đã khóa");
-
         private final String dbValue;
         private final String displayName;
-
         TrangThai(String dbValue, String displayName) {
             this.dbValue = dbValue;
             this.displayName = displayName;
         }
-
         public String getDbValue() {
             return dbValue;
         }
-
         public String getDisplayName() {
             return displayName;
         }
-
         public static TrangThai fromDbValue(String value) {
             if (value == null) return NHAP;
             for (TrangThai t : values()) {
@@ -42,7 +37,6 @@ public class BangLuong {
             }
             return NHAP; // fallback
         }
-
         @Override
         public String toString() {
             return displayName;
@@ -65,7 +59,6 @@ public class BangLuong {
     private String ghiChu;                // Ghi chú chung cho bảng lương
     private Double tongThuNhap;           // Tổng thu nhập tất cả nhân viên (tùy chọn, có thể tính động)
     private Double tongThucNhan;          // Tổng thực nhận tất cả nhân viên (tùy chọn)
-
     // Constructor mặc định
     public BangLuong() {
         this.trangThai = TrangThai.NHAP;

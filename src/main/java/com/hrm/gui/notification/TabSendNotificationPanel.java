@@ -11,12 +11,14 @@ import com.hrm.model.NhanVien;
 import com.hrm.model.PhongBan;
 import com.hrm.model.TaiKhoan;
 import com.hrm.util.PermissionCodes;
+import com.hrm.util.UIFonts;
 import com.hrm.util.SessionContext;
 import com.hrm.util.UIColors;
 import com.hrm.util.UIHelper;
 
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
+
 import java.awt.*;
 import java.util.ArrayList;
 import java.util.List;
@@ -32,11 +34,9 @@ class TabSendNotificationPanel extends JPanel {
     private static final String RECIPIENT_DEPARTMENT = "Phòng ban";
     private static final String RECIPIENT_POSITION = "Chức vụ";
     private static final String RECIPIENT_SELF = "Chính tôi";
-
     private final ThongBaoBUS service;
     private final TaiKhoan currentUser;
     private final DataScope sendScope;
-
     private JTextField txtTieuDe;
     private JTextArea txtNoiDung;
     private JComboBox<String> cboLoai;
@@ -45,13 +45,12 @@ class TabSendNotificationPanel extends JPanel {
     private JComboBox<NhanVien> cboNhanVien;
     private JComboBox<PhongBan> cboPhongBan;
     private JComboBox<ChucVu> cboChucVu;
-
     TabSendNotificationPanel(ThongBaoBUS service, TaiKhoan currentUser, DataScope sendScope) {
         this.service = service;
         this.currentUser = currentUser;
         this.sendScope = sendScope;
         setLayout(new BorderLayout(12, 12));
-        setBackground(UIColors.LIGHT_GRAY_BG);
+        setBackground(Color.WHITE);
         setBorder(new EmptyBorder(20, 20, 20, 20));
         if (!SessionContext.getInstance().hasPermission(PermissionCodes.NOTIFICATION_SEND)) {
             add(buildNoPermissionPanel(), BorderLayout.CENTER);
@@ -62,12 +61,12 @@ class TabSendNotificationPanel extends JPanel {
 
     private JPanel buildNoPermissionPanel() {
         JPanel panel = new JPanel(new GridBagLayout());
-        panel.setBackground(UIColors.WHITE);
+        panel.setBackground(Color.WHITE);
         panel.setBorder(BorderFactory.createCompoundBorder(
-                BorderFactory.createLineBorder(UIColors.BORDER_GRAY),
+                BorderFactory.createLineBorder(Color.LIGHT_GRAY),
                 new EmptyBorder(24, 24, 24, 24)));
         JLabel label = new JLabel("Bạn không có quyền gửi thông báo.");
-        label.setFont(com.hrm.util.UIFonts.TEXT_MEDIUM);
+        label.setFont(UIFonts.TEXT_NORMAL);
         label.setForeground(UIColors.TEXT_DARK);
         panel.add(label);
         return panel;
@@ -75,15 +74,13 @@ class TabSendNotificationPanel extends JPanel {
 
     private JPanel buildForm() {
         JPanel form = new JPanel(new GridBagLayout());
-        form.setBackground(UIColors.WHITE);
+        form.setBackground(Color.WHITE);
         form.setBorder(BorderFactory.createCompoundBorder(
-                BorderFactory.createLineBorder(UIColors.BORDER_GRAY),
+                BorderFactory.createLineBorder(Color.LIGHT_GRAY),
                 new EmptyBorder(20, 20, 20, 20)));
-
         GridBagConstraints gbc = new GridBagConstraints();
         gbc.insets = new Insets(8, 8, 8, 8);
         gbc.anchor = GridBagConstraints.WEST;
-
         JLabel lblTitle = new JLabel("Gửi thông báo");
         lblTitle.setFont(com.hrm.util.UIFonts.HEADER_SUB);
         lblTitle.setForeground(UIColors.PRIMARY_PURPLE);
@@ -91,60 +88,53 @@ class TabSendNotificationPanel extends JPanel {
         gbc.gridy = 0;
         gbc.gridwidth = 2;
         form.add(lblTitle, gbc);
-
         JLabel lblScope = new JLabel("Phạm vi gửi: " + getScopeDisplayName());
         lblScope.setFont(com.hrm.util.UIFonts.TEXT_NORMAL);
         lblScope.setForeground(UIColors.TEXT_DARK);
         gbc.gridy = 1;
         form.add(lblScope, gbc);
         gbc.gridwidth = 1;
-
         gbc.gridy = 2;
         gbc.gridx = 0;
         form.add(new JLabel("Tiêu đề:"), gbc);
         txtTieuDe = new JTextField(35);
-        txtTieuDe.setFont(com.hrm.util.UIFonts.TEXT_MEDIUM);
+        txtTieuDe.setFont(UIFonts.TEXT_NORMAL);
         gbc.gridx = 1;
         gbc.fill = GridBagConstraints.HORIZONTAL;
         form.add(txtTieuDe, gbc);
         gbc.fill = GridBagConstraints.NONE;
-
         gbc.gridy = 3;
         gbc.gridx = 0;
         form.add(new JLabel("Nội dung:"), gbc);
         txtNoiDung = new JTextArea(5, 35);
-        txtNoiDung.setFont(com.hrm.util.UIFonts.TEXT_MEDIUM);
+        txtNoiDung.setFont(UIFonts.TEXT_NORMAL);
         txtNoiDung.setLineWrap(true);
         txtNoiDung.setWrapStyleWord(true);
         gbc.gridx = 1;
         gbc.fill = GridBagConstraints.BOTH;
         form.add(new JScrollPane(txtNoiDung), gbc);
         gbc.fill = GridBagConstraints.NONE;
-
         gbc.gridy = 4;
         gbc.gridx = 0;
         form.add(new JLabel("Loại thông báo:"), gbc);
         cboLoai = new JComboBox<>(new String[]{"Hệ thống", "Đơn từ", "Thông báo chung"});
-        cboLoai.setFont(com.hrm.util.UIFonts.TEXT_MEDIUM);
+        cboLoai.setFont(UIFonts.TEXT_NORMAL);
         cboLoai.setPreferredSize(new Dimension(250, 32));
         gbc.gridx = 1;
         form.add(cboLoai, gbc);
-
         gbc.gridy = 5;
         gbc.gridx = 0;
         form.add(new JLabel("Gửi đến:"), gbc);
         cboRecipientType = new JComboBox<>();
-        cboRecipientType.setFont(com.hrm.util.UIFonts.TEXT_MEDIUM);
+        cboRecipientType.setFont(UIFonts.TEXT_NORMAL);
         cboRecipientType.setPreferredSize(new Dimension(220, 32));
         gbc.gridx = 1;
         form.add(cboRecipientType, gbc);
-
         recipientDetailPanel = new JPanel(new CardLayout());
         recipientDetailPanel.setOpaque(false);
         recipientDetailPanel.add(new JPanel(), RECIPIENT_ALL_COMPANY);
         recipientDetailPanel.add(new JPanel(), RECIPIENT_SCOPE);
         recipientDetailPanel.add(new JPanel(), RECIPIENT_SELF);
-
         cboNhanVien = new JComboBox<>();
         cboNhanVien.setFont(com.hrm.util.UIFonts.TEXT_NORMAL);
         cboNhanVien.setPreferredSize(new Dimension(300, 32));
@@ -162,7 +152,6 @@ class TabSendNotificationPanel extends JPanel {
         cardNV.setOpaque(false);
         cardNV.add(cboNhanVien);
         recipientDetailPanel.add(cardNV, RECIPIENT_EMPLOYEE);
-
         cboPhongBan = new JComboBox<>();
         cboPhongBan.setFont(com.hrm.util.UIFonts.TEXT_NORMAL);
         cboPhongBan.setPreferredSize(new Dimension(300, 32));
@@ -183,7 +172,6 @@ class TabSendNotificationPanel extends JPanel {
         cardPB.setOpaque(false);
         cardPB.add(cboPhongBan);
         recipientDetailPanel.add(cardPB, RECIPIENT_DEPARTMENT);
-
         cboChucVu = new JComboBox<>();
         cboChucVu.setFont(com.hrm.util.UIFonts.TEXT_NORMAL);
         cboChucVu.setPreferredSize(new Dimension(300, 32));
@@ -204,24 +192,20 @@ class TabSendNotificationPanel extends JPanel {
         cardCV.setOpaque(false);
         cardCV.add(cboChucVu);
         recipientDetailPanel.add(cardCV, RECIPIENT_POSITION);
-
         cboRecipientType.addActionListener(e -> {
             String sel = (String) cboRecipientType.getSelectedItem();
             if (sel != null) {
                 ((CardLayout) recipientDetailPanel.getLayout()).show(recipientDetailPanel, sel);
             }
         });
-
         gbc.gridy = 6;
         gbc.gridx = 1;
         form.add(recipientDetailPanel, gbc);
-
         JButton btnGui = UIHelper.createSuccessButton("Gửi thông báo");
         btnGui.addActionListener(e -> guiThongBao());
         gbc.gridy = 7;
         gbc.insets = new Insets(16, 8, 8, 8);
         form.add(btnGui, gbc);
-
         loadScopedNhanVienOptions();
         updateRecipientTypeOptions();
         return form;
@@ -254,11 +238,11 @@ class TabSendNotificationPanel extends JPanel {
 
     private void loadScopedNhanVienOptions() {
         cboNhanVien.removeAllItems();
-        if (currentUser == null || currentUser.getNhanVienId() == null) {
+        if (currentUser == null || currentUser.getMaNV() == null) {
             return;
         }
         for (NhanVien nv : NhanVienBUS.getInstance()
-                .getAllByActionScope(PermissionCodes.NOTIFICATION_SEND, currentUser.getNhanVienId())) {
+                .getAllByActionScope(PermissionCodes.NOTIFICATION_SEND, currentUser.getMaNV())) {
             cboNhanVien.addItem(nv);
         }
     }
@@ -281,7 +265,6 @@ class TabSendNotificationPanel extends JPanel {
         if (recipientType == null) {
             return;
         }
-
         if (RECIPIENT_EMPLOYEE.equals(recipientType) && cboNhanVien.getSelectedItem() == null) {
             JOptionPane.showMessageDialog(this, "Vui lòng chọn nhân viên để gửi.", "Lỗi", JOptionPane.WARNING_MESSAGE);
             return;
@@ -294,7 +277,6 @@ class TabSendNotificationPanel extends JPanel {
             JOptionPane.showMessageDialog(this, "Vui lòng chọn chức vụ để gửi.", "Lỗi", JOptionPane.WARNING_MESSAGE);
             return;
         }
-
         String target;
         if (RECIPIENT_ALL_COMPANY.equals(recipientType)) {
             target = "toàn công ty";
@@ -310,7 +292,6 @@ class TabSendNotificationPanel extends JPanel {
         } else {
             target = "chức vụ: " + ((ChucVu) cboChucVu.getSelectedItem()).getTenChucVu();
         }
-
         if (JOptionPane.showConfirmDialog(
                 this,
                 "Gửi thông báo \"" + tieuDe + "\" đến " + target + "?",
@@ -318,7 +299,6 @@ class TabSendNotificationPanel extends JPanel {
                 JOptionPane.YES_NO_OPTION) != JOptionPane.YES_OPTION) {
             return;
         }
-
         String loai = getSelectedLoaiCode();
         try {
             KetQua<Void> result;
@@ -348,12 +328,10 @@ class TabSendNotificationPanel extends JPanel {
                         noiDung,
                         loai);
             }
-
             if (!result.isSuccess()) {
                 JOptionPane.showMessageDialog(this, result.getMessage(), "Lỗi", JOptionPane.ERROR_MESSAGE);
                 return;
             }
-
             JOptionPane.showMessageDialog(this, result.getMessage(), "Thành công", JOptionPane.INFORMATION_MESSAGE);
             txtTieuDe.setText("");
             txtNoiDung.setText("");
@@ -389,4 +367,5 @@ class TabSendNotificationPanel extends JPanel {
             default -> "Không có quyền gửi";
         };
     }
+
 }

@@ -12,7 +12,6 @@ import java.sql.*;
 public class ThongTinCaNhanDAO {
 
     private static ThongTinCaNhanDAO instance;
-
     private ThongTinCaNhanDAO() {
     }
 
@@ -26,7 +25,6 @@ public class ThongTinCaNhanDAO {
     // ============================
     // Mapping helper
     // ============================
-
     private ThongTinCaNhan mapRow(ResultSet rs) throws SQLException {
         ThongTinCaNhan ttcn = new ThongTinCaNhan();
         ttcn.setMaNV(rs.getString("maNV"));
@@ -43,7 +41,7 @@ public class ThongTinCaNhanDAO {
         ttcn.setDiaChiThuongTru(rs.getString("diaChiThuongTru"));
         ttcn.setQueQuan(rs.getString("queQuan"));
         ttcn.setTinhTrangHonNhan(rs.getString("tinhTrangHonNhan"));
-        ttcn.setFileCV(rs.getString("fileCV"));
+        ttcn.setFileCv(rs.getString("fileCV"));
         ttcn.setTrinhDoHocVan(rs.getString("trinhDoHocVan"));
         ttcn.setKinhNghiem(rs.getString("kinhNghiem"));
         return ttcn;
@@ -52,7 +50,6 @@ public class ThongTinCaNhanDAO {
     // ============================
     // findByMaNV
     // ============================
-
     public ThongTinCaNhan findByMaNV(String maNV) {
         String sql = "SELECT * FROM THONGTINCANHAN WHERE maNV = ?";
         try (Connection conn = DatabaseConnection.getConnection();
@@ -72,7 +69,6 @@ public class ThongTinCaNhanDAO {
     // ============================
     // insert (upsert using ON DUPLICATE KEY)
     // ============================
-
     public void insert(ThongTinCaNhan ttcn) throws SQLException {
         String sql = "INSERT INTO THONGTINCANHAN "
                 + "(maNV, hoTen, ngaySinh, gioiTinh, CCCD, dienThoai, email, "
@@ -114,7 +110,6 @@ public class ThongTinCaNhanDAO {
     // ============================
     // update
     // ============================
-
     public void update(ThongTinCaNhan ttcn) {
         String sql = "UPDATE THONGTINCANHAN SET "
                 + "hoTen=?, ngaySinh=?, gioiTinh=?, CCCD=?, dienThoai=?, email=?, "
@@ -133,7 +128,7 @@ public class ThongTinCaNhanDAO {
             ps.setString(8, ttcn.getDiaChiThuongTru());
             ps.setString(9, ttcn.getQueQuan());
             ps.setString(10, ttcn.getTinhTrangHonNhan());
-            ps.setString(11, ttcn.getFileCV());
+            ps.setString(11, ttcn.getFileCv());
             ps.setString(12, ttcn.getTrinhDoHocVan());
             ps.setString(13, ttcn.getKinhNghiem());
             ps.setString(14, ttcn.getMaNV());
@@ -146,7 +141,6 @@ public class ThongTinCaNhanDAO {
     // ============================
     // existsByCCCD - check uniqueness excluding current NV
     // ============================
-
     public boolean existsByCCCD(String cccd, String excludeMaNV) {
         String sql = "SELECT COUNT(*) FROM THONGTINCANHAN WHERE CCCD = ? AND maNV <> ?";
         try (Connection conn = DatabaseConnection.getConnection();
@@ -167,7 +161,6 @@ public class ThongTinCaNhanDAO {
     // ============================
     // Private helper
     // ============================
-
     private void setParams(PreparedStatement ps, ThongTinCaNhan ttcn) throws SQLException {
         ps.setString(1, ttcn.getMaNV());
         ps.setString(2, ttcn.getHoTen());
@@ -180,7 +173,7 @@ public class ThongTinCaNhanDAO {
         ps.setString(9, ttcn.getDiaChiThuongTru());
         ps.setString(10, ttcn.getQueQuan());
         ps.setString(11, ttcn.getTinhTrangHonNhan());
-        ps.setString(12, ttcn.getFileCV());
+        ps.setString(12, ttcn.getFileCv());
         ps.setString(13, ttcn.getTrinhDoHocVan());
         ps.setString(14, ttcn.getKinhNghiem());
     }

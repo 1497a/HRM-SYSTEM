@@ -7,10 +7,12 @@ import com.hrm.gui.components.RoundedPanel;
 import com.hrm.model.TaiKhoan;
 import com.hrm.util.UIColors;
 import com.hrm.util.UIFonts;
+import com.hrm.util.UIHelper;
 
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
 import java.awt.*;
+import java.awt.Font;
 
 /**
  * Panel cai dat tai khoan - cho phep doi mat khau.
@@ -18,18 +20,15 @@ import java.awt.*;
 class SettingsPanel extends JPanel {
 
     private final XacThucBUS authService;
-
     SettingsPanel(XacThucBUS authService) {
         this.authService = authService;
         setLayout(new BorderLayout());
-        setBackground(UIColors.LIGHT_GRAY_BG);
+        setBackground(Color.WHITE);
         setBorder(new EmptyBorder(25, 25, 25, 25));
-
         JLabel title = new JLabel("Cài đặt tài khoản");
-        title.setFont(UIFonts.HEADER_H1);
+        title.setFont(new Font("Segoe UI", Font.BOLD, 24));
         title.setForeground(UIColors.TEXT_DARK);
         add(title, BorderLayout.NORTH);
-
         JPanel center = new JPanel(new FlowLayout(FlowLayout.LEFT));
         center.setOpaque(false);
         center.setBorder(new EmptyBorder(25, 0, 0, 0));
@@ -41,17 +40,13 @@ class SettingsPanel extends JPanel {
         RoundedPanel card = RoundedPanel.createFlatCard();
         card.setLayout(new GridBagLayout());
         card.setBorder(new EmptyBorder(25, 25, 25, 25));
-
-        GridBagConstraints gbc = new GridBagConstraints();
+        GridBagConstraints gbc = UIHelper.gbc(0, 0);
         gbc.insets = new Insets(8, 8, 8, 8);
-        gbc.anchor = GridBagConstraints.WEST;
-        gbc.gridx = 0; gbc.gridy = 0; gbc.gridwidth = 2;
-
+        gbc.gridwidth = 2;
         JLabel heading = new JLabel("Đổi mật khẩu");
-        heading.setFont(UIFonts.HEADER_H3);
+        heading.setFont(UIFonts.HEADER_SUB);
         heading.setForeground(UIColors.PRIMARY_PURPLE);
         card.add(heading, gbc);
-
         gbc.gridwidth = 1;
         JPasswordField current = new JPasswordField(20);
         JPasswordField next    = new JPasswordField(20);
@@ -59,7 +54,6 @@ class SettingsPanel extends JPanel {
         addPasswordRow(card, gbc, 1, "Mật khẩu hiện tại:", current);
         addPasswordRow(card, gbc, 2, "Mật khẩu mới:",      next);
         addPasswordRow(card, gbc, 3, "Xác nhận mật khẩu:", confirm);
-
         PurpleButton changeButton = new PurpleButton("Đổi mật khẩu");
         gbc.gridx = 1; gbc.gridy = 4;
         gbc.insets = new Insets(20, 8, 8, 8);
@@ -71,9 +65,9 @@ class SettingsPanel extends JPanel {
     private void addPasswordRow(JPanel panel, GridBagConstraints gbc, int row, String labelText, JPasswordField field) {
         gbc.gridx = 0; gbc.gridy = row;
         JLabel label = new JLabel(labelText);
-        label.setFont(UIFonts.TEXT_MEDIUM);
+        label.setFont(UIFonts.TEXT_NORMAL);
         panel.add(label, gbc);
-        field.setFont(UIFonts.TEXT_MEDIUM);
+        field.setFont(UIFonts.TEXT_NORMAL);
         gbc.gridx = 1;
         panel.add(field, gbc);
     }

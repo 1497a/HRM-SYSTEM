@@ -12,6 +12,14 @@ import java.util.List;
  */
 public class PhongBanDAO {
 
+    private static PhongBanDAO instance;
+    public static synchronized PhongBanDAO getInstance() {
+        if (instance == null) {
+            instance = new PhongBanDAO();
+        }
+        return instance;
+    }
+
     /**
      * Lấy tất cả phòng ban.
      */
@@ -188,7 +196,6 @@ public class PhongBanDAO {
     // =====================================================================
     // ==================== Private Helpers ================================
     // =====================================================================
-
     private PhongBan mapRow(ResultSet rs) throws SQLException {
         return new PhongBan(
                 rs.getString("maPhongBan"),

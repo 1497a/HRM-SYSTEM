@@ -5,7 +5,6 @@ public class PhongBan {
     private String tenPhongBan;
     private String phongBanChaId;
     private String trangThai;
-
     public PhongBan() {}
 
     public PhongBan(String id, String tenPhongBan, String phongBanChaId, String trangThai) {

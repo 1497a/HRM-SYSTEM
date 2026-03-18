@@ -19,12 +19,9 @@ public class LuongBUS {
     private static final double BHYT_RATE = 0.015;
     private static final double BHTN_RATE = 0.01;
     private static final double GIAM_TRU_BAN_THAN = 11_000_000.0;
-
     private static LuongBUS instance;
-
     private final BangLuongDAO bangLuongRepo = BangLuongDAO.getInstance();
     private final NhanVienDAO nvRepo = NhanVienDAO.getInstance();
-
     private LuongBUS() {
     }
 
@@ -53,7 +50,6 @@ public class LuongBUS {
         if (!laKyLuongDaKetThuc(thang, nam)) {
             return KetQua.error("Chỉ được tính lương cho kỳ đã kết thúc.");
         }
-
         try {
             BangLuong bangLuong = bangLuongRepo.findByThangNam(thang, nam);
             if (bangLuong == null) {
@@ -67,11 +63,9 @@ public class LuongBUS {
                 bangLuong.setTrangThai(BangLuong.TrangThai.DA_TINH);
                 bangLuongRepo.insertBangLuong(bangLuong);
             }
-
             for (NhanVien nv : nvRepo.findDangLamViec()) {
                 tinhLuongChoNhanVien(bangLuong.getMaBL(), thang, nam, nv, false);
             }
-
             return KetQua.success(bangLuong, "Tính lương tháng " + thang + "/" + nam + " thành công.");
         } catch (Exception e) {
             return KetQua.error("Lỗi khi tính lương: " + e.getMessage());
@@ -85,7 +79,6 @@ public class LuongBUS {
                     bl, maBangLuong, BangLuong.TrangThai.DA_TINH,
                     "Chỉ có thể duyệt bảng lương ở trạng thái 'Đã tính'.");
             if (!validation.isSuccess()) return validation;
-
             int userId = getCurrentUserId();
             bangLuongRepo.approveBangLuong(maBangLuong, userId);
             return KetQua.success(null, "Đã duyệt bảng lương #" + maBangLuong);
@@ -100,7 +93,6 @@ public class LuongBUS {
             KetQua<Void> validation = validateBangLuongState(
                     bl, maBangLuong, BangLuong.TrangThai.DA_DUYET, "Cần duyệt bảng lương trước khi khóa.");
             if (!validation.isSuccess()) return validation;
-
             int userId = getCurrentUserId();
             bangLuongRepo.lockBangLuong(maBangLuong, userId);
             return KetQua.success(null, "Đã khóa bảng lương #" + maBangLuong);
@@ -116,7 +108,6 @@ public class LuongBUS {
                     bl, maBangLuong, BangLuong.TrangThai.DA_TINH,
                     "Chỉ được tính lại khi bảng lương đang ở trạng thái 'Đã tính'.");
             if (!validation.isSuccess()) return validation;
-
             bangLuongRepo.deleteChiTietByBangLuong(maBangLuong);
             tinhLaiChiTietChoTatCaNhanVien(maBangLuong, bl);
             return KetQua.success(null, "Đã tính lại toàn bộ bảng lương #" + maBangLuong);
@@ -135,12 +126,10 @@ public class LuongBUS {
             if (maNV == null || maNV.trim().isEmpty()) {
                 return KetQua.error("Mã nhân viên không hợp lệ.");
             }
-
             NhanVien target = timNhanVienDangLamViec(maNV);
             if (target == null) {
                 return KetQua.error("Không tìm thấy nhân viên đang làm việc: " + maNV);
             }
-
             bangLuongRepo.deleteChiTietByBangLuongAndNV(maBangLuong, maNV);
             tinhLuongChoNhanVien(maBangLuong, bl.getThang(), bl.getNam(), target, true);
             return KetQua.success(null, "Đã tính lại lương cho nhân viên " + maNV);
@@ -210,12 +199,10 @@ public class LuongBUS {
                 return;
             }
         }
-
         LocalDate ngayBatDauKy = LocalDate.of(nam, thang, 1);
         LocalDate ngayCuoiKy = ngayBatDauKy.withDayOfMonth(ngayBatDauKy.lengthOfMonth());
         double luongCoBan = bangLuongRepo.getLuongCoSoFromHopDong(maNV, ngayBatDauKy, ngayCuoiKy);
         double tongLuongChucVu = bangLuongRepo.getTongLuongChucVu(maNV, luongCoBan);
-
         int soNgayCong = tinhSoNgayCong(maNV, thang, nam);
         double tienTruNgayVang = soNgayCong < NGAY_CONG_CHUAN
                 ? luongCoBan / NGAY_CONG_CHUAN * (NGAY_CONG_CHUAN - soNgayCong)
@@ -223,15 +210,12 @@ public class LuongBUS {
         double tongGioLam = bangLuongRepo.getTongGioLam(maNV, thang, nam);
         double tongGioOT = bangLuongRepo.getTongGioOT(maNV, thang, nam);
         double tienOT = bangLuongRepo.getTienOT(maNV, thang, nam, luongCoBan);
-
         BonusSummary bonusSummary = tinhPhuCapTheoCauHinh(luongCoBan);
-
         double tongThuNhap = luongCoBan + tongLuongChucVu + tienOT + bonusSummary.tongTien;
         double thueTNCN = tinhThueTNCN(tongThuNhap);
         KhauTruSummary khauTru = tinhKhauTruBatBuoc(luongCoBan, thueTNCN);
         double tongKhauTruThucTe = khauTru.tongKhauTru + tienTruNgayVang;
         double luongThucNhan = tongThuNhap - tongKhauTruThucTe;
-
         ChiTietLuong ctl = new ChiTietLuong();
         ctl.setMaBL(maBL);
         ctl.setMaNV(maNV);
@@ -246,15 +230,12 @@ public class LuongBUS {
         ctl.setTongGioLam(tongGioLam);
         ctl.setTongGioOT(tongGioOT);
         ctl.setTrangThai(ChiTietLuong.TrangThai.DA_TINH);
-
         for (ThanhPhanLuong bonus : bonusSummary.items) {
             ctl.themThanhPhan(bonus);
         }
-
         themThanhPhanNgayVangNeuCo(ctl, soNgayCong, luongCoBan);
         themThanhPhanOtNeuCo(ctl, tienOT, tongGioOT);
         themThanhPhanKhauTruCoDinh(ctl, thueTNCN, khauTru);
-
         int maChiTiet = bangLuongRepo.insertChiTiet(ctl);
         if (maChiTiet > 0) {
             for (ThanhPhanLuong tp : ctl.getDanhSachThanhPhan()) {
@@ -279,48 +260,40 @@ public class LuongBUS {
 
     private double tinhThueTNCN(double tongThuNhap) {
         double thuNhapChiuThue = tongThuNhap - GIAM_TRU_BAN_THAN;
-
         if (thuNhapChiuThue <= 0) {
             return 0.0;
         }
-
         double thue = 0.0;
         double bac1 = Math.min(thuNhapChiuThue, 5_000_000.0);
         thue += bac1 * 0.05;
         if (thuNhapChiuThue <= 5_000_000) {
             return thue;
         }
-
         double bac2 = Math.min(thuNhapChiuThue - 5_000_000, 5_000_000.0);
         thue += bac2 * 0.10;
         if (thuNhapChiuThue <= 10_000_000) {
             return thue;
         }
-
         double bac3 = Math.min(thuNhapChiuThue - 10_000_000, 8_000_000.0);
         thue += bac3 * 0.15;
         if (thuNhapChiuThue <= 18_000_000) {
             return thue;
         }
-
         double bac4 = Math.min(thuNhapChiuThue - 18_000_000, 14_000_000.0);
         thue += bac4 * 0.20;
         if (thuNhapChiuThue <= 32_000_000) {
             return thue;
         }
-
         double bac5 = Math.min(thuNhapChiuThue - 32_000_000, 20_000_000.0);
         thue += bac5 * 0.25;
         if (thuNhapChiuThue <= 52_000_000) {
             return thue;
         }
-
         double bac6 = Math.min(thuNhapChiuThue - 52_000_000, 28_000_000.0);
         thue += bac6 * 0.30;
         if (thuNhapChiuThue <= 80_000_000) {
             return thue;
         }
-
         double bac7 = thuNhapChiuThue - 80_000_000;
         thue += bac7 * 0.35;
         return thue;
@@ -391,7 +364,6 @@ public class LuongBUS {
     private static class BonusSummary {
         private final double tongTien;
         private final List<ThanhPhanLuong> items;
-
         private BonusSummary(double tongTien, List<ThanhPhanLuong> items) {
             this.tongTien = tongTien;
             this.items = items;
@@ -403,7 +375,6 @@ public class LuongBUS {
         private final double bhyt;
         private final double bhtn;
         private final double tongKhauTru;
-
         private KhauTruSummary(double bhxh, double bhyt, double bhtn, double tongKhauTru) {
             this.bhxh = bhxh;
             this.bhyt = bhyt;

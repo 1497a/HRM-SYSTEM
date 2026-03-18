@@ -13,14 +13,15 @@ public final class ValidationUtils {
     private static final int DEFAULT_TEXT_LIMIT = 255;
     private static final int NOTIFICATION_TITLE_LIMIT = 200;
     private static final int NOTIFICATION_CONTENT_LIMIT = 4000;
-
     private ValidationUtils() {}
+
+    public static boolean isBlank(String s) {
+        return s == null || s.isBlank();
+    }
 
     private static final Pattern EMAIL = Pattern.compile(
         "^[\\w.+\\-]+@[\\w\\-]+(\\.[\\w\\-]+)*\\.[a-zA-Z]{2,}$");
-
     private static final Pattern PHONE = Pattern.compile("^0\\d{9,10}$");
-
     /**
      * Validates email format. Blank/null is treated as valid (optional field).
      * @return null if valid, error message if invalid
@@ -56,7 +57,7 @@ public final class ValidationUtils {
     }
     public static String validateRequired(String value, String fieldName) {
         if (value == null || value.trim().isEmpty()) {
-            return fieldName + " khong duoc de trong.";
+            return fieldName + " không được để trống.";
         }
         return null;
     }
@@ -65,23 +66,23 @@ public final class ValidationUtils {
         if (value == null || value.isBlank()) return null;
         return value.trim().length() <= maxLength
             ? null
-            : fieldName + " khong duoc vuot qua " + maxLength + " ky tu.";
+            : fieldName + " không được vượt quá " + maxLength + " ký tự.";
     }
 
     public static String validatePositive(long value, String fieldName) {
-        return value > 0 ? null : fieldName + " phai lon hon 0.";
+        return value > 0 ? null : fieldName + " phải lớn hơn 0.";
     }
 
     public static String validateNotificationTitle(String title) {
-        String required = validateRequired(title, "Tieu de thong bao");
+        String required = validateRequired(title, "Tiêu đề thông báo");
         if (required != null) return required;
-        return validateMaxLength(title, NOTIFICATION_TITLE_LIMIT, "Tieu de thong bao");
+        return validateMaxLength(title, NOTIFICATION_TITLE_LIMIT, "Tiêu đề thông báo");
     }
 
     public static String validateNotificationContent(String content) {
-        String required = validateRequired(content, "Noi dung thong bao");
+        String required = validateRequired(content, "Nội dung thông báo");
         if (required != null) return required;
-        return validateMaxLength(content, NOTIFICATION_CONTENT_LIMIT, "Noi dung thong bao");
+        return validateMaxLength(content, NOTIFICATION_CONTENT_LIMIT, "Nội dung thông báo");
     }
 
     public static String validateFreeText(String value, String fieldName) {

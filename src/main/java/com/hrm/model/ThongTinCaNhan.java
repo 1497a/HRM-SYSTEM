@@ -22,7 +22,6 @@ public class ThongTinCaNhan {
     private String fileCV;
     private String trinhDoHocVan;
     private String kinhNghiem;
-
     public ThongTinCaNhan() {
     }
 
@@ -46,7 +45,6 @@ public class ThongTinCaNhan {
     // ============================
     // Getters & Setters
     // ============================
-
     public String getMaNV() {
         return maNV;
     }
@@ -135,12 +133,12 @@ public class ThongTinCaNhan {
         this.tinhTrangHonNhan = tinhTrangHonNhan;
     }
 
-    public String getFileCV() {
+    public String getFileCv() {
         return fileCV;
     }
 
-    public void setFileCV(String fileCV) {
-        this.fileCV = fileCV;
+    public void setFileCv(String fileCv) {
+        this.fileCV = fileCv;
     }
 
     public String getTrinhDoHocVan() {

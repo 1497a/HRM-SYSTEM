@@ -9,27 +9,24 @@ import com.hrm.model.NhanVien;
 import com.hrm.model.TaiKhoan;
 import com.hrm.util.HRMConstants;
 import com.hrm.util.PermissionCodes;
+import com.hrm.util.SessionContext;
+import com.hrm.util.ValidationUtils;
 
 import java.time.LocalDate;
 import java.time.temporal.ChronoUnit;
 import java.util.List;
 
 public class HopDongBUS {
+
     private static final String ACTION_CONTRACT_CREATE  = PermissionCodes.CONTRACT_CREATE;
     private static final String ACTION_CONTRACT_APPROVE = PermissionCodes.CONTRACT_APPROVE;
     private static final String ACTION_CONTRACT_MANAGE  = PermissionCodes.CONTRACT_MANAGE;
     private static final String LOAI_THU_VIEC = "thu_viec";
     private static final String LOAI_XAC_DINH_THOI_HAN = "xac_dinh_thoi_han";
     private static final String LOAI_KHONG_XAC_DINH_THOI_HAN = "khong_xac_dinh";
-    private static final String TRANG_THAI_CHO_DUYET = "cho_duyet";
-    private static final String TRANG_THAI_HIEU_LUC  = "hieu_luc";
-    private static final String TRANG_THAI_THANH_LY  = "thanh_ly";
-
     private static HopDongBUS instance;
-
     private final HopDongDAO hopDongRepo = HopDongDAO.getInstance();
     private final NhanVienDAO nvRepo = NhanVienDAO.getInstance();
-
     private HopDongBUS() {
     }
 
@@ -57,7 +54,6 @@ public class HopDongBUS {
         if (pending != null) {
             return KetQua.error("Nhan vien da co hop dong cho duyet.");
         }
-
         HopDongLaoDong hd = new HopDongLaoDong();
         hd.setMaNV(maNV);
         hd.setSoHopDong(generateSoHopDong());
@@ -66,9 +62,8 @@ public class HopDongBUS {
         hd.setNgayKy(LocalDate.now());
         hd.setNgayHieuLuc(LocalDate.now());
         hd.setNgayHetHieuLuc(LocalDate.now().plusDays(60));
-        hd.setTrangThai(TRANG_THAI_CHO_DUYET);
+        hd.setTrangThai(HRMConstants.TRANG_THAI_CHO_DUYET);
         hd.setGhiChu(ghiChu);
-
         try {
             hopDongRepo.insert(hd);
             return KetQua.success(hd, "Tao hop dong thu viec thanh cong (cho phe duyet).");
@@ -78,7 +73,7 @@ public class HopDongBUS {
     }
 
     public KetQua<HopDongLaoDong> taoHopDong(HopDongLaoDong hd) {
-        if (hd == null || isBlank(hd.getMaNV())) {
+        if (hd == null || ValidationUtils.isBlank(hd.getMaNV())) {
             return KetQua.error("Nhan vien hop dong khong hop le.");
         }
         KetQua<Void> permission = validateContractPermission(ACTION_CONTRACT_CREATE, hd.getMaNV());
@@ -89,7 +84,6 @@ public class HopDongBUS {
                 && !SelfApprovalGuard.currentUserCanBypassSelfRestriction()) {
             return KetQua.error("Ban khong the tu ky hop dong cho chinh minh.");
         }
-
         NhanVien nv = nvRepo.findByMaNhanVien(hd.getMaNV());
         if (nv == null) {
             return KetQua.error("Khong tim thay nhan vien.");
@@ -97,9 +91,7 @@ public class HopDongBUS {
         if (hd.getLuongCoSo() <= 0) {
             return KetQua.error("Luong co so phai lon hon 0.");
         }
-
         hd.setSoHopDong(generateSoHopDong());
-
         KetQua<Void> dateValidation = validateNgayKyVaNgayHieuLuc(hd);
         if (!dateValidation.isSuccess()) {
             return KetQua.error(dateValidation.getMessage());
@@ -108,7 +100,6 @@ public class HopDongBUS {
         if (!typeValidation.isSuccess()) {
             return KetQua.error(typeValidation.getMessage());
         }
-
         HopDongLaoDong existing = hopDongRepo.findHieuLuc(hd.getMaNV());
         if (existing != null) {
             return KetQua.error("Nhan vien da co hop dong dang hieu luc (so HD: " + existing.getSoHopDong() + ").");
@@ -117,9 +108,7 @@ public class HopDongBUS {
         if (pending != null) {
             return KetQua.error("Nhan vien da co hop dong dang cho phe duyet (so HD: " + pending.getSoHopDong() + ").");
         }
-
-        hd.setTrangThai(TRANG_THAI_CHO_DUYET);
-
+        hd.setTrangThai(HRMConstants.TRANG_THAI_CHO_DUYET);
         try {
             hopDongRepo.insert(hd);
             return KetQua.success(hd, "Tao hop dong thanh cong. Hop dong dang cho phe duyet.");
@@ -129,19 +118,18 @@ public class HopDongBUS {
     }
 
     public KetQua<Void> pheDuyetHopDong(int maHopDong) {
-        TaiKhoan currentUser = com.hrm.util.SessionContext.getInstance().getCurrentUser();
+        TaiKhoan currentUser = SessionContext.getInstance().getCurrentUser();
         if (currentUser == null) return KetQua.error("Phien dang nhap khong hop le.");
-        if (!HRMConstants.USERNAME_ADMIN.equalsIgnoreCase(currentUser.getTenDangNhap())
-                && !currentUser.coVaiTro(HRMConstants.ROLE_ADMIN)
+        if (!SessionContext.getInstance().isAdmin()
                 && !currentUser.coQuyen(ACTION_CONTRACT_APPROVE)) {
             return KetQua.error("Ban khong co quyen phe duyet hop dong.");
         }
         HopDongLaoDong hd = findById(maHopDong);
         if (hd == null) return KetQua.error("Khong tim thay hop dong.");
-        if (!TRANG_THAI_CHO_DUYET.equals(hd.getTrangThai())) {
+        if (!HRMConstants.TRANG_THAI_CHO_DUYET.equals(hd.getTrangThai())) {
             return KetQua.error("Chi phe duyet hop dong dang o trang thai 'cho phe duyet'.");
         }
-        hopDongRepo.updateTrangThai(maHopDong, TRANG_THAI_HIEU_LUC);
+        hopDongRepo.updateTrangThai(maHopDong, HRMConstants.TRANG_THAI_HIEU_LUC);
         NhanVien nv = nvRepo.findByMaNhanVien(hd.getMaNV());
         if (nv != null) {
             nv.setLoaiHopDong(hd.getLoaiHopDong());
@@ -159,13 +147,13 @@ public class HopDongBUS {
         if (!permission.isSuccess()) {
             return permission;
         }
-        if (TRANG_THAI_THANH_LY.equals(hd.getTrangThai())) {
+        if (HRMConstants.TRANG_THAI_THANH_LY.equals(hd.getTrangThai())) {
             return KetQua.error("Hop dong da duoc thanh ly.");
         }
         if ("het_han".equals(hd.getTrangThai())) {
             return KetQua.error("Khong the thanh ly hop dong da het han. Chi thanh ly hop dong dang hieu luc.");
         }
-        hopDongRepo.updateTrangThai(maHopDong, TRANG_THAI_THANH_LY);
+        hopDongRepo.updateTrangThai(maHopDong, HRMConstants.TRANG_THAI_THANH_LY);
         if (hd.getMaNV() != null) {
             BoNhiemDAO.getInstance().endAllActiveBoNhiemForNV(hd.getMaNV(), LocalDate.now());
         }
@@ -196,17 +184,17 @@ public class HopDongBUS {
     }
 
     private KetQua<Void> validateContractPermission(String action, String targetMaNV) {
-        TaiKhoan currentUser = com.hrm.util.SessionContext.getInstance().getCurrentUser();
+        TaiKhoan currentUser = SessionContext.getInstance().getCurrentUser();
         if (currentUser == null) {
             return KetQua.error("Phien dang nhap khong hop le.");
         }
-        if (HRMConstants.USERNAME_ADMIN.equalsIgnoreCase(currentUser.getTenDangNhap()) || currentUser.coVaiTro(HRMConstants.ROLE_ADMIN)) {
+        if (SessionContext.getInstance().isAdmin()) {
             return KetQua.success(null, "");
         }
         if (!currentUser.coQuyen(action)) {
             return KetQua.error("Ban khong co quyen thao tac hop dong nay.");
         }
-        if (!isTargetWithinActionScope(action, currentUser.getNhanVienId(), targetMaNV)) {
+        if (!isTargetWithinActionScope(action, currentUser.getMaNV(), targetMaNV)) {
             return KetQua.error("Ban khong co pham vi thao tac tren nhan vien nay.");
         }
         return KetQua.success(null, "");
@@ -217,7 +205,7 @@ public class HopDongBUS {
         if (scope == DataScope.ALL) {
             return true;
         }
-        if (scope == DataScope.NONE || isBlank(currentMaNV) || isBlank(targetMaNV)) {
+        if (scope == DataScope.NONE || ValidationUtils.isBlank(currentMaNV) || ValidationUtils.isBlank(targetMaNV)) {
             return false;
         }
         if (scope == DataScope.SELF) {
@@ -255,7 +243,7 @@ public class HopDongBUS {
 
     private KetQua<Void> validateTheoLoaiHopDong(HopDongLaoDong hd) {
         String loai = hd.getLoaiHopDong();
-        if (isBlank(loai)) {
+        if (ValidationUtils.isBlank(loai)) {
             return KetQua.error("Loai hop dong khong duoc de trong.");
         }
         if (LOAI_THU_VIEC.equals(loai)) {
@@ -299,8 +287,8 @@ public class HopDongBUS {
     }
 
     private String getCurrentUserNhanVienId() {
-        TaiKhoan currentUser = com.hrm.util.SessionContext.getInstance().getCurrentUser();
-        return currentUser != null ? currentUser.getNhanVienId() : null;
+        TaiKhoan currentUser = SessionContext.getInstance().getCurrentUser();
+        return currentUser != null ? currentUser.getMaNV() : null;
     }
 
     private String generateSoHopDong() {
@@ -309,7 +297,4 @@ public class HopDongBUS {
         return String.format("HD-%04d%02d-%04d", today.getYear(), today.getMonthValue(), seq);
     }
 
-    private boolean isBlank(String value) {
-        return value == null || value.trim().isEmpty();
-    }
 }

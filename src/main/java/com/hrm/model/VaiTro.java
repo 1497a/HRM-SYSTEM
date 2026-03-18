@@ -9,7 +9,6 @@ public class VaiTro {
     private String moTa;
     private boolean laHeThong;
     private List<Quyen> quyens;
-
     public VaiTro() {
         this.laHeThong = false;
         this.quyens = new ArrayList<>();

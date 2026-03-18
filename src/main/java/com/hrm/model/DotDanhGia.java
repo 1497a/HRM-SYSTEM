@@ -7,7 +7,6 @@ public class DotDanhGia {
         CHUA_BAT_DAU("chua_bat_dau", "Chua bat dau"),
         DANG_DIEN_RA("dang_dien_ra", "Dang dien ra"),
         DA_KET_THUC("da_ket_thuc", "Da ket thuc");
-
         private final String dbValue;
         private final String tenHienThi;
         TrangThai(String dbValue, String tenHienThi) {
@@ -16,7 +15,6 @@ public class DotDanhGia {
         }
         public String getDbValue() { return dbValue; }
         public String getTenHienThi() { return tenHienThi; }
-
         public static TrangThai fromDb(String value) {
             for (TrangThai t : values()) {
                 if (t.dbValue.equals(value)) return t;
@@ -32,7 +30,6 @@ public class DotDanhGia {
     private LocalDate tuNgay;
     private LocalDate denNgay;
     private TrangThai trangThai;
-
     public DotDanhGia() { this.trangThai = TrangThai.CHUA_BAT_DAU; }
 
     public DotDanhGia(int id, String tenDot, int nam, String kyDanhGia, LocalDate tuNgay, LocalDate denNgay) {
@@ -62,12 +59,6 @@ public class DotDanhGia {
 
     public boolean dangDienRa() { return trangThai == TrangThai.DANG_DIEN_RA; }
     public boolean daKetThuc() { return trangThai == TrangThai.DA_KET_THUC; }
-
-    // Legacy compatibility
-    public String getName() { return tenDot; }
-    public int getYear() { return nam; }
-    public LocalDate getStartDate() { return tuNgay; }
-    public LocalDate getEndDate() { return denNgay; }
 
     @Override
     public String toString() { return tenDot + " (" + kyDanhGia + "/" + nam + ")"; }

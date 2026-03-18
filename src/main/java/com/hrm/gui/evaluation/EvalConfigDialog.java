@@ -3,7 +3,9 @@ package com.hrm.gui.evaluation;
 import com.hrm.model.TieuChiDanhGia;
 import com.hrm.bus.DanhGiaBUS;
 import com.hrm.bus.KetQua;
+import com.hrm.gui.components.BaseFormDialog;
 import com.hrm.util.UIHelper;
+import com.hrm.util.UIFonts;
 
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
@@ -15,9 +17,8 @@ import java.util.List;
 /**
  * Evaluation Configuration Dialog - manage criteria
  */
-public class EvalConfigDialog extends JDialog {
+public class EvalConfigDialog extends BaseFormDialog {
     private final DanhGiaBUS evalService;
-
     private enum FormMode { ADD, EDIT }
 
     private JTable table;
@@ -31,19 +32,15 @@ public class EvalConfigDialog extends JDialog {
     private JButton btnNew;
     private JLabel lblTotalWeight;
     private JLabel lblMode;
-
     private int selectedId = -1;
     private FormMode formMode = FormMode.ADD;
-
     public EvalConfigDialog(Frame parent) {
         super(parent, "Cấu Hình Tiêu Chí Đánh Giá", true);
         this.evalService = DanhGiaBUS.getInstance();
-
         initComponents();
         setupLayout();
         setupEvents();
         loadData();
-
         setSize(700, 500);
         setLocationRelativeTo(parent);
     }
@@ -63,42 +60,31 @@ public class EvalConfigDialog extends JDialog {
         table.getColumnModel().getColumn(1).setPreferredWidth(150);
         table.getColumnModel().getColumn(2).setPreferredWidth(250);
         table.getColumnModel().getColumn(3).setPreferredWidth(80);
-
         txtName = new JTextField(20);
         txtDescription = new JTextArea(3, 20);
         txtDescription.setLineWrap(true);
         txtDescription.setWrapStyleWord(true);
         spnWeight = new JSpinner(new SpinnerNumberModel(10, 1, 100, 1));
-
         btnAdd = UIHelper.createSuccessButton("Thêm mới");
         btnUpdate = UIHelper.createPrimaryButton("Cập nhật");
         btnDelete = UIHelper.createDangerButton("Xóa");
         btnNew = UIHelper.createPrimaryButton("Làm mới");
-
         btnUpdate.setEnabled(false);
         btnDelete.setEnabled(false);
-
         lblTotalWeight = new JLabel("Tổng trọng số: 0%");
-        lblTotalWeight.setFont(com.hrm.util.UIFonts.BOLD_MEDIUM);
-
+        lblTotalWeight.setFont(UIFonts.BOLD_NORMAL);
         lblMode = new JLabel();
         lblMode.setFont(com.hrm.util.UIFonts.BOLD_NORMAL);
         updateModeLabel();
     }
 
     private void setupLayout() {
-        JPanel mainPanel = new JPanel(new BorderLayout(10, 10));
-        mainPanel.setBorder(new EmptyBorder(15, 15, 15, 15));
-
-        JScrollPane tableScroll = new JScrollPane(table);
+        JPanel mainPanel = createMainPanel();
+        JScrollPane tableScroll = createScrollPane(table);
         tableScroll.setBorder(new TitledBorder("Danh sách tiêu chí"));
-
         JPanel formPanel = new JPanel(new GridBagLayout());
         formPanel.setBorder(new TitledBorder("Thông tin tiêu chí"));
-        GridBagConstraints gbc = new GridBagConstraints();
-        gbc.insets = new Insets(5, 5, 5, 5);
-        gbc.anchor = GridBagConstraints.WEST;
-
+        GridBagConstraints gbc = UIHelper.gbc(0, 0);
         gbc.gridx = 0;
         gbc.gridy = 0;
         formPanel.add(new JLabel("Tên tiêu chí:"), gbc);
@@ -106,7 +92,6 @@ public class EvalConfigDialog extends JDialog {
         gbc.fill = GridBagConstraints.HORIZONTAL;
         gbc.weightx = 1.0;
         formPanel.add(txtName, gbc);
-
         gbc.gridx = 0;
         gbc.gridy = 1;
         gbc.fill = GridBagConstraints.NONE;
@@ -118,7 +103,6 @@ public class EvalConfigDialog extends JDialog {
         gbc.weightx = 1.0;
         gbc.weighty = 1.0;
         formPanel.add(new JScrollPane(txtDescription), gbc);
-
         gbc.gridx = 0;
         gbc.gridy = 2;
         gbc.fill = GridBagConstraints.NONE;
@@ -128,34 +112,27 @@ public class EvalConfigDialog extends JDialog {
         formPanel.add(new JLabel("Trọng số (%):"), gbc);
         gbc.gridx = 1;
         formPanel.add(spnWeight, gbc);
-
         gbc.gridx = 0; gbc.gridy = 3; gbc.gridwidth = 2;
         gbc.fill = GridBagConstraints.HORIZONTAL;
         formPanel.add(lblMode, gbc);
-
         JPanel buttonPanel = new JPanel(new GridLayout(2, 2, 6, 6));
         buttonPanel.add(btnAdd);
         buttonPanel.add(btnNew);
         buttonPanel.add(btnUpdate);
         buttonPanel.add(btnDelete);
-
         gbc.gridy = 4;
         formPanel.add(buttonPanel, gbc);
-
         JPanel rightPanel = new JPanel(new BorderLayout());
         rightPanel.setPreferredSize(new Dimension(350, 0));
         rightPanel.add(formPanel, BorderLayout.CENTER);
-
         JPanel notePanel = new JPanel(new BorderLayout(5, 0));
-        notePanel.setBackground(com.hrm.util.UIColors.LIGHT_YELLOW_BG);
+        notePanel.setBackground(new Color(255, 255, 200));
         notePanel.setBorder(new EmptyBorder(8, 10, 8, 10));
         notePanel.add(new JLabel("<html><b>Lưu ý:</b> Tổng trọng số của tất cả tiêu chí phải bằng 100%</html>"), BorderLayout.CENTER);
         notePanel.add(lblTotalWeight, BorderLayout.EAST);
-
         mainPanel.add(tableScroll, BorderLayout.CENTER);
         mainPanel.add(rightPanel, BorderLayout.EAST);
         mainPanel.add(notePanel, BorderLayout.SOUTH);
-
         setContentPane(mainPanel);
     }
 
@@ -172,7 +149,6 @@ public class EvalConfigDialog extends JDialog {
                 setFormMode(FormMode.ADD);
             }
         });
-
         btnAdd.addActionListener(e -> addCriteria());
         btnUpdate.addActionListener(e -> updateCriteria());
         btnDelete.addActionListener(e -> deleteCriteria());
@@ -182,12 +158,10 @@ public class EvalConfigDialog extends JDialog {
     private void loadData() {
         tableModel.setRowCount(0);
         List<TieuChiDanhGia> criteriaList = evalService.getAllCriteria();
-
         for (TieuChiDanhGia c : criteriaList) {
-            Object[] row = {c.getId(), c.getName(), c.getDescription(), c.getDiemToiDa()};
+                Object[] row = {c.getId(), c.getTenTieuChi(), c.getMoTa(), c.getDiemToiDa()};
             tableModel.addRow(row);
         }
-
         updateTotalWeight();
         clearForm();
     }
@@ -239,12 +213,10 @@ public class EvalConfigDialog extends JDialog {
         if (selectedId < 0) {
             return;
         }
-
         int confirm = JOptionPane.showConfirmDialog(this,
                 "Bạn có chắc muốn xóa tiêu chí này?",
                 "Xác nhận",
                 JOptionPane.YES_NO_OPTION);
-
         if (confirm == JOptionPane.YES_OPTION) {
             KetQua<?> result = evalService.deleteCriteria(selectedId);
             if (result.isSuccess()) {
@@ -260,7 +232,6 @@ public class EvalConfigDialog extends JDialog {
         selectedId = (int) tableModel.getValueAt(row, 0);
         txtName.setText((String) tableModel.getValueAt(row, 1));
         txtDescription.setText((String) tableModel.getValueAt(row, 2));
-
         Object weightObj = tableModel.getValueAt(row, 3);
         if (weightObj instanceof Number) {
             spnWeight.setValue(((Number) weightObj).intValue());

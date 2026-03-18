@@ -19,8 +19,7 @@ final class SelfApprovalGuard {
         if (currentUser == null) {
             return false;
         }
-        return HRMConstants.USERNAME_ADMIN.equalsIgnoreCase(currentUser.getTenDangNhap())
-                || currentUser.coVaiTro(HRMConstants.ROLE_ADMIN)
-                || currentUser.coVaiTro("TONG_GIAM_DOC");
+        return SessionContext.getInstance().isAdmin()
+                || currentUser.coVaiTro(HRMConstants.ROLE_TONG_GIAM_DOC);
     }
 }

@@ -13,13 +13,11 @@ public class NhanVien {
     private LocalDate ngayVaoLam;
     private String trangThai;   // "dang_lam_viec", "tam_nghi", "nghi_viec"
     private String ghiChu;
-
     // Transient - dung de hien thi, khong luu truc tiep trong bang nhan_viens
     private transient String hoTen;
     private transient String phongBanHienTaiId;
     private transient String tenPhongBanHienTai;
     private transient String tenChucVuHienTai;
-
     public NhanVien() {
     }
 
@@ -34,7 +32,6 @@ public class NhanVien {
     // ============================
     // Getters & Setters - core fields
     // ============================
-
     public String getMaNhanVien() {
         return maNhanVien;
     }
@@ -78,7 +75,6 @@ public class NhanVien {
     // ============================
     // Getters & Setters - transient display fields
     // ============================
-
     public String getHoTen() {
         return hoTen;
     }
@@ -87,15 +83,6 @@ public class NhanVien {
         this.hoTen = hoTen;
     }
 
-    public String getPhongBanHienTaiId() {
-        return phongBanHienTaiId;
-    }
-
-    public void setPhongBanHienTaiId(String phongBanHienTaiId) {
-        this.phongBanHienTaiId = phongBanHienTaiId;
-    }
-
-    // Legacy compatibility
     public String getMaPhongBanHienTai() {
         return phongBanHienTaiId;
     }
@@ -103,7 +90,6 @@ public class NhanVien {
     public void setMaPhongBanHienTai(String maPhongBanHienTai) {
         this.phongBanHienTaiId = maPhongBanHienTai;
     }
-
     public String getTenPhongBanHienTai() {
         return tenPhongBanHienTai;
     }
@@ -123,7 +109,6 @@ public class NhanVien {
     // ============================
     // Display helpers
     // ============================
-
     public String getTrangThaiDisplay() {
         if (trangThai == null) return "";
         switch (trangThai) {

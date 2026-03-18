@@ -1,5 +1,6 @@
 package com.hrm.gui.appointment;
 
+import com.hrm.gui.components.BaseFormDialog;
 import com.hrm.gui.components.PurpleButton;
 import com.hrm.model.BoNhiem;
 import com.hrm.model.PhongBan;
@@ -11,6 +12,7 @@ import com.hrm.bus.NhanVienBUS;
 import com.hrm.bus.KetQua;
 import com.hrm.bus.PhongBanBUS;
 import com.hrm.util.HRMConstants;
+import com.hrm.util.UIFonts;
 import com.hrm.util.PermissionCodes;
 import com.hrm.util.SessionContext;
 import com.hrm.util.UIColors;
@@ -24,49 +26,50 @@ import java.util.Date;
 import java.util.List;
 
 /**
+ * 
  * Dialog tạo/xem bổ nhiệm nhân viên.
+ * 
  */
-public class AppointmentFormDialog extends JDialog {
+public class AppointmentFormDialog extends BaseFormDialog {
 
     private boolean saved = false;
     private boolean actionTaken = false;
-
     // Mode: view (read-only khi có boNhiem)
     private final BoNhiem boNhiemHienThi;
-
     // Services
     private final PhongBanBUS departmentService = new PhongBanBUS();
     private final ChucVuBUS positionService = new ChucVuBUS();
-
     // Form fields
     private JComboBox<NhanVien> cboNhanVien;
     private JComboBox<PhongBan> cboPhongBan;
     private JComboBox<ChucVu> cboChucVu;
     private JComboBox<String> cboLoaiBoNhiem;
-    private JComboBox<Object> cboQuanLy;   // cap tren truc tiep (nullable)
+    private JComboBox<Object> cboQuanLy; // cap tren truc tiep (nullable)
     private JSpinner spnTyLe;
     private JSpinner spnTuNgay;
     private JTextArea txtGhiChu;
     private JTextField txtDenNgay;
     private JTextField txtNguoiDuyet;
     private JTextField txtNgayDuyet;
-
     // Buttons
     private PurpleButton btnLuu;
     private JButton btnHuy;
-
     /**
+     * 
      * Constructor tạo mới bổ nhiệm.
+     * 
      */
     public AppointmentFormDialog(Frame parent) {
         this(parent, null);
     }
 
     /**
+     * 
      * Constructor xem/hiển thị bổ nhiệm đã có.
+     * 
      */
     public AppointmentFormDialog(Frame parent, BoNhiem boNhiem) {
-        super(parent, boNhiem == null ? "Tạo Bổ Nhiệm Mới" : "Chi Tiết Bổ Nhiệm #" + boNhiem.getMaBoNhiem(), true);
+        super(parent, boNhiem == null ? "Tạo Bổ Nhiệm Mới" : "Chi Tiết Bổ Nhiệm #" + boNhiem.getId(), true);
         this.boNhiemHienThi = boNhiem;
         initComponents();
         layoutComponents();
@@ -82,32 +85,27 @@ public class AppointmentFormDialog extends JDialog {
     // ============================
     // Init components
     // ============================
-
     private void initComponents() {
         // Nhân viên
         cboNhanVien = new JComboBox<>();
-        cboNhanVien.setFont(com.hrm.util.UIFonts.TEXT_MEDIUM);
+        cboNhanVien.setFont(UIFonts.TEXT_NORMAL);
         loadNhanVien();
-
         // Phòng ban
         cboPhongBan = new JComboBox<>();
-        cboPhongBan.setFont(com.hrm.util.UIFonts.TEXT_MEDIUM);
+        cboPhongBan.setFont(UIFonts.TEXT_NORMAL);
         loadDepartments();
-
         // Chức vụ
         cboChucVu = new JComboBox<>();
-        cboChucVu.setFont(com.hrm.util.UIFonts.TEXT_MEDIUM);
+        cboChucVu.setFont(UIFonts.TEXT_NORMAL);
         loadPositions();
-
         // Cấp trên trực tiếp
         cboQuanLy = new JComboBox<>();
-        cboQuanLy.setFont(com.hrm.util.UIFonts.TEXT_MEDIUM);
+        cboQuanLy.setFont(UIFonts.TEXT_NORMAL);
         loadQuanLy();
-
         // Loại bổ nhiệm
         // DB ENUM: 'chinh', 'kiem_nhiem'
-        cboLoaiBoNhiem = new JComboBox<>(new String[]{"chinh", "kiem_nhiem"});
-        cboLoaiBoNhiem.setFont(com.hrm.util.UIFonts.TEXT_MEDIUM);
+        cboLoaiBoNhiem = new JComboBox<>(new String[] { "chinh", "kiem_nhiem" });
+        cboLoaiBoNhiem.setFont(UIFonts.TEXT_NORMAL);
         cboLoaiBoNhiem.setRenderer(new DefaultListCellRenderer() {
             @Override
             public Component getListCellRendererComponent(JList<?> list, Object value,
@@ -115,55 +113,52 @@ public class AppointmentFormDialog extends JDialog {
                 super.getListCellRendererComponent(list, value, index, isSelected, cellHasFocus);
                 if (value != null) {
                     switch (value.toString()) {
-                        case "chinh":      setText("Chính thức");  break;
-                        case "kiem_nhiem": setText("Kiêm nhiệm");  break;
-                        default:           setText(value.toString());
+                        case "chinh":
+                            setText("Chính thức");
+                            break;
+                        case "kiem_nhiem":
+                            setText("Kiêm nhiệm");
+                            break;
+                        default:
+                            setText(value.toString());
                     }
                 }
                 return this;
             }
         });
-
         // Tỷ lệ hưởng lương (0-100%)
         SpinnerNumberModel tyLeModel = new SpinnerNumberModel(100, 0, 100, 1);
         spnTyLe = new JSpinner(tyLeModel);
-        spnTyLe.setFont(com.hrm.util.UIFonts.TEXT_MEDIUM);
+        spnTyLe.setFont(UIFonts.TEXT_NORMAL);
         spnTyLe.setPreferredSize(new Dimension(80, 32));
-
         // Từ ngày
         SpinnerDateModel tuNgayModel = new SpinnerDateModel(new Date(), null, null, java.util.Calendar.DAY_OF_MONTH);
         spnTuNgay = new JSpinner(tuNgayModel);
         spnTuNgay.setEditor(new JSpinner.DateEditor(spnTuNgay, "dd/MM/yyyy"));
-        spnTuNgay.setFont(com.hrm.util.UIFonts.TEXT_MEDIUM);
-
+        spnTuNgay.setFont(UIFonts.TEXT_NORMAL);
         // Ghi chú
         txtGhiChu = new JTextArea(3, 20);
-        txtGhiChu.setFont(com.hrm.util.UIFonts.TEXT_MEDIUM);
+        txtGhiChu.setFont(UIFonts.TEXT_NORMAL);
         txtGhiChu.setLineWrap(true);
         txtGhiChu.setWrapStyleWord(true);
-
         txtDenNgay = new JTextField();
-        txtDenNgay.setFont(com.hrm.util.UIFonts.BOLD_MEDIUM);
+        txtDenNgay.setFont(UIFonts.BOLD_NORMAL);
         txtDenNgay.setEditable(false);
-        txtDenNgay.setBackground(com.hrm.util.UIColors.LIGHT_GRAY_BG);
-
+        txtDenNgay.setBackground(Color.WHITE);
         // Người duyệt, Ngày duyệt
         txtNguoiDuyet = new JTextField();
-        txtNguoiDuyet.setFont(com.hrm.util.UIFonts.BOLD_MEDIUM);
+        txtNguoiDuyet.setFont(UIFonts.BOLD_NORMAL);
         txtNguoiDuyet.setEditable(false);
-        txtNguoiDuyet.setBackground(com.hrm.util.UIColors.LIGHT_GRAY_BG);
-
+        txtNguoiDuyet.setBackground(Color.WHITE);
         txtNgayDuyet = new JTextField();
-        txtNgayDuyet.setFont(com.hrm.util.UIFonts.BOLD_MEDIUM);
+        txtNgayDuyet.setFont(UIFonts.BOLD_NORMAL);
         txtNgayDuyet.setEditable(false);
-        txtNgayDuyet.setBackground(com.hrm.util.UIColors.LIGHT_GRAY_BG);
-
+        txtNgayDuyet.setBackground(Color.WHITE);
         // Buttons
         btnLuu = new PurpleButton("Lưu");
         btnHuy = new JButton("Hủy");
-        btnHuy.setFont(com.hrm.util.UIFonts.TEXT_MEDIUM);
+        btnHuy.setFont(UIFonts.TEXT_NORMAL);
         btnHuy.setCursor(new Cursor(Cursor.HAND_CURSOR));
-
         btnLuu.addActionListener(e -> luuBoNhiem());
         btnHuy.addActionListener(e -> dispose());
     }
@@ -249,33 +244,30 @@ public class AppointmentFormDialog extends JDialog {
     // ============================
     // Layout
     // ============================
-
     private void layoutComponents() {
         JPanel mainPanel = new JPanel(new BorderLayout(10, 10));
-        mainPanel.setBackground(UIColors.LIGHT_GRAY_BG);
+        mainPanel.setBackground(Color.WHITE);
         mainPanel.setBorder(new EmptyBorder(16, 16, 16, 16));
-
         // Form panel
         JPanel formPanel = new JPanel(new GridBagLayout());
-        formPanel.setBackground(UIColors.WHITE);
+        formPanel.setBackground(Color.WHITE);
         formPanel.setBorder(BorderFactory.createCompoundBorder(
-                BorderFactory.createLineBorder(UIColors.BORDER_GRAY),
+                BorderFactory.createLineBorder(Color.LIGHT_GRAY),
                 new EmptyBorder(16, 16, 16, 16)));
-
         GridBagConstraints gbc = new GridBagConstraints();
         gbc.insets = new Insets(6, 8, 6, 8);
         gbc.anchor = GridBagConstraints.WEST;
-
         // Tiêu đề form
         JLabel lblTitle = new JLabel("THÔNG TIN BỔ NHIỆM");
         lblTitle.setFont(com.hrm.util.UIFonts.HEADER_SUB);
         lblTitle.setForeground(UIColors.PRIMARY_PURPLE);
-        gbc.gridx = 0; gbc.gridy = 0; gbc.gridwidth = 2;
+        gbc.gridx = 0;
+        gbc.gridy = 0;
+        gbc.gridwidth = 2;
         gbc.insets = new Insets(0, 8, 12, 8);
         formPanel.add(lblTitle, gbc);
         gbc.gridwidth = 1;
         gbc.insets = new Insets(6, 8, 6, 8);
-
         // Nhân viên
         addFormRow(formPanel, gbc, 1, "Nhân viên (*)", cboNhanVien);
         // Phòng ban
@@ -290,15 +282,15 @@ public class AppointmentFormDialog extends JDialog {
         addFormRow(formPanel, gbc, 6, "Tỷ lệ hưởng lương (%)", spnTyLe);
         // Từ ngày
         addFormRow(formPanel, gbc, 7, "Từ ngày (*)", spnTuNgay);
-
         // Ghi chú
-        gbc.gridx = 0; gbc.gridy = 8;
+        gbc.gridx = 0;
+        gbc.gridy = 8;
         JLabel lblGhiChu = new JLabel("Ghi chú:");
-        lblGhiChu.setFont(com.hrm.util.UIFonts.TEXT_MEDIUM);
+        lblGhiChu.setFont(UIFonts.TEXT_NORMAL);
         lblGhiChu.setForeground(UIColors.TEXT_DARK);
         formPanel.add(lblGhiChu, gbc);
-
-        gbc.gridx = 1; gbc.gridy = 8;
+        gbc.gridx = 1;
+        gbc.gridy = 8;
         gbc.fill = GridBagConstraints.BOTH;
         gbc.weightx = 1.0;
         JScrollPane scrollGhiChu = new JScrollPane(txtGhiChu);
@@ -306,23 +298,19 @@ public class AppointmentFormDialog extends JDialog {
         formPanel.add(scrollGhiChu, gbc);
         gbc.fill = GridBagConstraints.NONE;
         gbc.weightx = 0;
-
         // Chỉ hiển thị người duyệt / ngày duyệt nếu có boNhiemHienThi
         if (boNhiemHienThi != null) {
             addFormRow(formPanel, gbc, 11, "Ngày kết thúc", txtDenNgay);
             addFormRow(formPanel, gbc, 9, "Người duyệt", txtNguoiDuyet);
             addFormRow(formPanel, gbc, 10, "Ngày duyệt", txtNgayDuyet);
         }
-
         mainPanel.add(formPanel, BorderLayout.CENTER);
-
         // Button panel
         JPanel btnPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT, 8, 0));
         btnPanel.setOpaque(false);
         btnPanel.setBorder(new EmptyBorder(8, 0, 0, 0));
         btnPanel.add(btnHuy);
         btnPanel.add(btnLuu);
-
         // Action buttons for view mode (conditionally shown by status + permission)
         if (boNhiemHienThi != null && SessionContext.getInstance().hasPermission(PermissionCodes.APPOINTMENT_APPROVE)) {
             String status = boNhiemHienThi.getTrangThai();
@@ -330,11 +318,9 @@ public class AppointmentFormDialog extends JDialog {
                 JButton btnTuChoi = new JButton("Từ chối");
                 styleActionButton(btnTuChoi, new Color(192, 57, 43));
                 btnTuChoi.addActionListener(e -> tuChoiBoNhiem());
-
                 JButton btnPheDuyet = new JButton("Phê duyệt");
                 styleActionButton(btnPheDuyet, new Color(46, 164, 79));
                 btnPheDuyet.addActionListener(e -> pheDuyetBoNhiem());
-
                 btnPanel.add(btnTuChoi);
                 btnPanel.add(btnPheDuyet);
             } else if ("hieu_luc".equals(status)) {
@@ -344,20 +330,19 @@ public class AppointmentFormDialog extends JDialog {
                 btnPanel.add(btnKetThuc);
             }
         }
-
         mainPanel.add(btnPanel, BorderLayout.SOUTH);
-
         setContentPane(mainPanel);
     }
 
     private void addFormRow(JPanel panel, GridBagConstraints gbc, int row, String label, JComponent field) {
-        gbc.gridx = 0; gbc.gridy = row;
+        gbc.gridx = 0;
+        gbc.gridy = row;
         JLabel lbl = new JLabel(label + ":");
-        lbl.setFont(com.hrm.util.UIFonts.TEXT_MEDIUM);
+        lbl.setFont(UIFonts.TEXT_NORMAL);
         lbl.setForeground(UIColors.TEXT_DARK);
         panel.add(lbl, gbc);
-
-        gbc.gridx = 1; gbc.gridy = row;
+        gbc.gridx = 1;
+        gbc.gridy = row;
         gbc.fill = GridBagConstraints.HORIZONTAL;
         gbc.weightx = 1.0;
         panel.add(field, gbc);
@@ -368,7 +353,6 @@ public class AppointmentFormDialog extends JDialog {
     // ============================
     // Fill form (view mode)
     // ============================
-
     private void fillForm(BoNhiem bn) {
         // Pre-select nhân viên
         for (int i = 0; i < cboNhanVien.getItemCount(); i++) {
@@ -377,25 +361,22 @@ public class AppointmentFormDialog extends JDialog {
                 break;
             }
         }
-
         // Chọn phòng ban
         for (int i = 0; i < cboPhongBan.getItemCount(); i++) {
             PhongBan dept = cboPhongBan.getItemAt(i);
-            if (dept.getId() == bn.getPhongBanId()) {
+            if (dept.getId() == bn.getMaPhongBan()) {
                 cboPhongBan.setSelectedIndex(i);
                 break;
             }
         }
-
         // Chọn chức vụ
         for (int i = 0; i < cboChucVu.getItemCount(); i++) {
             ChucVu pos = cboChucVu.getItemAt(i);
-            if (pos.getId().equals(bn.getChucVuId())) {
+            if (pos.getId().equals(bn.getMaChucVu())) {
                 cboChucVu.setSelectedIndex(i);
                 break;
             }
         }
-
         // Loại bổ nhiệm
         String loai = bn.getLoaiBoNhiem() != null ? bn.getLoaiBoNhiem() : "chinh_thuc";
         for (int i = 0; i < cboLoaiBoNhiem.getItemCount(); i++) {
@@ -404,23 +385,20 @@ public class AppointmentFormDialog extends JDialog {
                 break;
             }
         }
-
         // Tỷ lệ
         spnTyLe.setValue((int) bn.getTyLeHuongLuong());
-
         // Từ ngày
         if (bn.getTuNgay() != null) {
             Date date = Date.from(bn.getTuNgay().atStartOfDay(ZoneId.systemDefault()).toInstant());
             spnTuNgay.setValue(date);
         }
-
         if (bn.getDenNgay() != null) {
-            java.time.format.DateTimeFormatter ngayFormatter = java.time.format.DateTimeFormatter.ofPattern("dd/MM/yyyy");
+            java.time.format.DateTimeFormatter ngayFormatter = java.time.format.DateTimeFormatter
+                    .ofPattern("dd/MM/yyyy");
             txtDenNgay.setText(bn.getDenNgay().format(ngayFormatter));
         } else {
             txtDenNgay.setText("Không thời hạn");
         }
-
         // Cấp trên trực tiếp
         if (bn.getMaQuanLy() != null && !bn.getMaQuanLy().isEmpty()) {
             for (int i = 1; i < cboQuanLy.getItemCount(); i++) {
@@ -431,10 +409,8 @@ public class AppointmentFormDialog extends JDialog {
                 }
             }
         }
-
         // Ghi chú
         txtGhiChu.setText(bn.getLyDo() != null ? bn.getLyDo() : "");
-
         // Hiển thị người duyệt, ngày duyệt
         String nguoiDuyet = bn.getTenNguoiDuyet();
         if (nguoiDuyet == null || nguoiDuyet.isEmpty()) {
@@ -445,9 +421,9 @@ public class AppointmentFormDialog extends JDialog {
             nguoiDuyet = "Quản trị viên";
         }
         txtNguoiDuyet.setText(nguoiDuyet != null ? nguoiDuyet : "Chưa duyệt");
-
         if (bn.getNgayPheDuyet() != null) {
-            java.time.format.DateTimeFormatter formatter = java.time.format.DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm");
+            java.time.format.DateTimeFormatter formatter = java.time.format.DateTimeFormatter
+                    .ofPattern("dd/MM/yyyy HH:mm");
             txtNgayDuyet.setText(bn.getNgayPheDuyet().format(formatter));
         } else {
             txtNgayDuyet.setText("Chưa phê duyệt");
@@ -470,7 +446,6 @@ public class AppointmentFormDialog extends JDialog {
     // ============================
     // Save action
     // ============================
-
     private void luuBoNhiem() {
         // Validate nhân viên
         NhanVien selectedNV = (NhanVien) cboNhanVien.getSelectedItem();
@@ -480,7 +455,6 @@ public class AppointmentFormDialog extends JDialog {
             return;
         }
         String maNV = selectedNV.getMaNhanVien();
-
         // Validate phòng ban
         PhongBan selectedDept = (PhongBan) cboPhongBan.getSelectedItem();
         if (selectedDept == null) {
@@ -488,7 +462,6 @@ public class AppointmentFormDialog extends JDialog {
                     "Lỗi nhập liệu", JOptionPane.ERROR_MESSAGE);
             return;
         }
-
         // Validate chức vụ
         ChucVu selectedPos = (ChucVu) cboChucVu.getSelectedItem();
         if (selectedPos == null) {
@@ -496,41 +469,33 @@ public class AppointmentFormDialog extends JDialog {
                     "Lỗi nhập liệu", JOptionPane.ERROR_MESSAGE);
             return;
         }
-
         // Lấy loại bổ nhiệm (giá trị đã là DB value: 'chinh', 'kiem_nhiem')
         String loaiBoNhiem = (String) cboLoaiBoNhiem.getSelectedItem();
-
         // Tỷ lệ hưởng lương
         int tyLe = (int) spnTyLe.getValue();
-
         // Từ ngày
         Date tuNgayDate = (Date) spnTuNgay.getValue();
         LocalDate tuNgay = tuNgayDate.toInstant().atZone(ZoneId.systemDefault()).toLocalDate();
-
         // Ghi chú / lý do
         String ghiChu = txtGhiChu.getText().trim();
-
         // Cấp trên trực tiếp
         String maQuanLy = null;
         Object quanLyItem = cboQuanLy.getSelectedItem();
         if (quanLyItem instanceof NhanVien) {
             maQuanLy = ((NhanVien) quanLyItem).getMaNhanVien();
         }
-
         // Tạo BoNhiem object
         BoNhiem bn = new BoNhiem();
         bn.setMaNV(maNV);
-        bn.setPhongBanId(selectedDept.getId());
-        bn.setChucVuId(selectedPos.getId());
+        bn.setMaPhongBan(selectedDept.getId());
+        bn.setMaChucVu(selectedPos.getId());
         bn.setMaQuanLy(maQuanLy);
         bn.setLoaiBoNhiem(loaiBoNhiem);
         bn.setTyLeHuongLuong(tyLe);
         bn.setTuNgay(tuNgay);
         bn.setLyDo(ghiChu.isEmpty() ? null : ghiChu);
-
         // Gọi service
         KetQua<BoNhiem> result = BoNhiemBUS.getInstance().taoBoNhiem(bn);
-
         if (result.isSuccess()) {
             JOptionPane.showMessageDialog(this, result.getMessage(),
                     "Thành công", JOptionPane.INFORMATION_MESSAGE);
@@ -545,7 +510,7 @@ public class AppointmentFormDialog extends JDialog {
     private static void styleActionButton(JButton btn, Color bg) {
         btn.setFont(com.hrm.util.UIFonts.BOLD_NORMAL);
         btn.setBackground(bg);
-        btn.setForeground(com.hrm.util.UIColors.WHITE);
+        btn.setForeground(Color.WHITE);
         btn.setFocusPainted(false);
         btn.setBorderPainted(false);
         btn.setOpaque(true);
@@ -555,30 +520,32 @@ public class AppointmentFormDialog extends JDialog {
     // ============================
     // Getters
     // ============================
+    public boolean isSaved() {
+        return saved;
+    }
 
-    public boolean isSaved() { return saved; }
-
-    public boolean isActionTaken() { return actionTaken; }
+    public boolean isActionTaken() {
+        return actionTaken;
+    }
 
     // ============================
     // Action methods (view mode)
     // ============================
-
     private void pheDuyetBoNhiem() {
         int confirm = JOptionPane.showConfirmDialog(this,
-                "Xác nhận phê duyệt bổ nhiệm #" + boNhiemHienThi.getMaBoNhiem() + "?",
+                "Xác nhận phê duyệt bổ nhiệm #" + boNhiemHienThi.getId() + "?",
                 "Xác nhận phê duyệt", JOptionPane.YES_NO_OPTION);
-        if (confirm != JOptionPane.YES_OPTION) return;
-
+        if (confirm != JOptionPane.YES_OPTION)
+            return;
         String userId = HRMConstants.USERNAME_ADMIN;
         if (SessionContext.getInstance().getCurrentUser() != null) {
-            String nvId = SessionContext.getInstance().getCurrentUser().getNhanVienId();
+            String nvId = SessionContext.getInstance().getCurrentUser().getMaNV();
             if (nvId != null && !nvId.trim().isEmpty()) {
                 userId = nvId;
             }
         }
         KetQua<BoNhiem> result = BoNhiemBUS.getInstance().pheDuyetBoNhiem(
-                boNhiemHienThi.getMaBoNhiem(), userId);
+                boNhiemHienThi.getId(), userId);
         if (result.isSuccess()) {
             JOptionPane.showMessageDialog(this, result.getMessage(), "Thành công", JOptionPane.INFORMATION_MESSAGE);
             actionTaken = true;
@@ -590,14 +557,14 @@ public class AppointmentFormDialog extends JDialog {
 
     private void tuChoiBoNhiem() {
         JTextField txtLyDo = new JTextField(30);
-        txtLyDo.setFont(com.hrm.util.UIFonts.TEXT_MEDIUM);
-        int confirm = JOptionPane.showConfirmDialog(this, new Object[]{"Lý do từ chối:", txtLyDo},
-                "Từ chối bổ nhiệm #" + boNhiemHienThi.getMaBoNhiem(),
+        txtLyDo.setFont(UIFonts.TEXT_NORMAL);
+        int confirm = JOptionPane.showConfirmDialog(this, new Object[] { "Lý do từ chối:", txtLyDo },
+                "Từ chối bổ nhiệm #" + boNhiemHienThi.getId(),
                 JOptionPane.OK_CANCEL_OPTION, JOptionPane.PLAIN_MESSAGE);
-        if (confirm != JOptionPane.OK_OPTION) return;
-
+        if (confirm != JOptionPane.OK_OPTION)
+            return;
         KetQua<BoNhiem> result = BoNhiemBUS.getInstance().tuChoiBoNhiem(
-                boNhiemHienThi.getMaBoNhiem(), txtLyDo.getText().trim());
+                boNhiemHienThi.getId(), txtLyDo.getText().trim());
         if (result.isSuccess()) {
             JOptionPane.showMessageDialog(this, result.getMessage(), "Thành công", JOptionPane.INFORMATION_MESSAGE);
             actionTaken = true;
@@ -611,18 +578,17 @@ public class AppointmentFormDialog extends JDialog {
         SpinnerDateModel dateModel = new SpinnerDateModel(new Date(), null, null, java.util.Calendar.DAY_OF_MONTH);
         JSpinner spnDenNgay = new JSpinner(dateModel);
         spnDenNgay.setEditor(new JSpinner.DateEditor(spnDenNgay, "dd/MM/yyyy"));
-        spnDenNgay.setFont(com.hrm.util.UIFonts.TEXT_MEDIUM);
-
+        spnDenNgay.setFont(UIFonts.TEXT_NORMAL);
         int confirm = JOptionPane.showConfirmDialog(this,
-                new Object[]{"Ngày kết thúc:", spnDenNgay},
-                "Kết thúc bổ nhiệm #" + boNhiemHienThi.getMaBoNhiem(),
+                new Object[] { "Ngày kết thúc:", spnDenNgay },
+                "Kết thúc bổ nhiệm #" + boNhiemHienThi.getId(),
                 JOptionPane.OK_CANCEL_OPTION, JOptionPane.PLAIN_MESSAGE);
-        if (confirm != JOptionPane.OK_OPTION) return;
-
+        if (confirm != JOptionPane.OK_OPTION)
+            return;
         LocalDate denNgay = ((Date) spnDenNgay.getValue())
                 .toInstant().atZone(ZoneId.systemDefault()).toLocalDate();
         KetQua<BoNhiem> result = BoNhiemBUS.getInstance().ketThucBoNhiem(
-                boNhiemHienThi.getMaBoNhiem(), denNgay);
+                boNhiemHienThi.getId(), denNgay);
         if (result.isSuccess()) {
             JOptionPane.showMessageDialog(this, result.getMessage(), "Thành công", JOptionPane.INFORMATION_MESSAGE);
             actionTaken = true;
@@ -631,4 +597,5 @@ public class AppointmentFormDialog extends JDialog {
             JOptionPane.showMessageDialog(this, result.getMessage(), "Lỗi", JOptionPane.ERROR_MESSAGE);
         }
     }
+
 }

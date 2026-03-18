@@ -7,6 +7,7 @@ import com.hrm.model.TaiKhoan;
 import com.hrm.bus.NhanVienBUS;
 import com.hrm.bus.XacThucBUS;
 import com.hrm.bus.KetQua;
+import com.hrm.gui.components.BaseFormDialog;
 import com.hrm.util.HRMConstants;
 import com.hrm.util.SessionContext;
 import com.hrm.util.UIHelper;
@@ -15,7 +16,9 @@ import com.hrm.util.ValidationUtils;
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
 import javax.swing.border.TitledBorder;
+
 import java.awt.*;
+import java.awt.Font;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
 
@@ -24,52 +27,45 @@ import java.util.List;
  * Khi tao moi: chon nhan vien, mat khau mac dinh = ngaySinh (ddMMyyyy).
  * Khi sua: hien thi ma NV, trang thai dung radio button (chi chon 1 trong 3).
  */
-public class UserFormDialog extends JDialog {
+public class UserFormDialog extends BaseFormDialog {
+
     private final XacThucBUS authService;
     private final NhanVienBUS nhanVienService;
     private final TaiKhoan editingUser;
     private final TaiKhoan currentUser;
     private boolean successful = false;
-
     // Create mode
     private JComboBox<NhanVien> cboNhanVien;
     private JLabel lblDefaultPassword;
-
     // Edit mode
     private JTextField txtUsername;
     private JTextField txtMaNV;
     private JTextField txtFullName;
     private JTextField txtEmail;
-
     private JPasswordField txtPassword;
     private JPanel rolesPanel;
     private ButtonGroup roleGroup;
-
     // Status (edit mode) - radio buttons, mutually exclusive
     private JRadioButton rdoHoatDong;
     private JRadioButton rdoBiKhoa;
     private ButtonGroup statusGroup;
-
     public UserFormDialog(Frame parent, TaiKhoan user) {
         super(parent, user == null ? "Tạo tài khoản mới" : "Sửa tài khoản", true);
         this.authService = XacThucBUS.getInstance();
         this.nhanVienService = NhanVienBUS.getInstance();
         this.editingUser = user;
         this.currentUser = SessionContext.getInstance().getCurrentUser();
-
         initComponents();
         setupLayout();
         if (user != null) {
             loadUserData();
         }
-
         setSize(500, user == null ? 560 : 540);
         setLocationRelativeTo(parent);
     }
 
     private void initComponents() {
         txtPassword = new JPasswordField(20);
-
         if (editingUser == null) {
             // CREATE mode
             List<NhanVien> dsNV = nhanVienService.getDangLamViec();
@@ -89,25 +85,21 @@ public class UserFormDialog extends JDialog {
                 }
                 return label;
             });
-
             // When employee changes, auto-fill default password from DOB
             lblDefaultPassword = new JLabel("Mật khẩu mặc định: (chưa chọn nhân viên)");
             lblDefaultPassword.setFont(new Font("Segoe UI", Font.ITALIC, 12));
             lblDefaultPassword.setForeground(new Color(100, 100, 200));
-
             cboNhanVien.addActionListener(e -> updateDefaultPassword());
             updateDefaultPassword();
-
         } else {
             // EDIT mode
             txtUsername = new JTextField(20);
             txtUsername.setEditable(false);
             txtMaNV = new JTextField(10);
             txtMaNV.setEditable(false);
-            txtMaNV.setBackground(com.hrm.util.UIColors.LIGHT_GRAY_BG);
+            txtMaNV.setBackground(Color.WHITE);
             txtFullName = new JTextField(20);
             txtEmail = new JTextField(20);
-
             // Status: radio buttons (mutually exclusive)
             rdoHoatDong = new JRadioButton("Hoạt động");
             rdoBiKhoa = new JRadioButton("Bị khóa");
@@ -115,12 +107,10 @@ public class UserFormDialog extends JDialog {
             statusGroup.add(rdoHoatDong);
             statusGroup.add(rdoBiKhoa);
         }
-
         // Roles panel
         rolesPanel = new JPanel();
         rolesPanel.setLayout(new BoxLayout(rolesPanel, BoxLayout.Y_AXIS));
         roleGroup = new ButtonGroup();
-
         List<VaiTro> roles = authService.getAllRoles();
         for (VaiTro role : roles) {
             JRadioButton rb = new JRadioButton(role.getTenVaiTro() + " (" + role.getId() + ")");
@@ -128,7 +118,6 @@ public class UserFormDialog extends JDialog {
             roleGroup.add(rb);
             rolesPanel.add(rb);
         }
-
         if (editingUser == null && rolesPanel.getComponentCount() > 0) {
             Component first = rolesPanel.getComponent(0);
             if (first instanceof JRadioButton) {
@@ -145,7 +134,6 @@ public class UserFormDialog extends JDialog {
             txtPassword.setText("");
             return;
         }
-
         String dob = "";
         try {
             ThongTinCaNhan ttcn = nhanVienService.getThongTinCaNhan(selectedNV.getMaNhanVien());
@@ -153,7 +141,6 @@ public class UserFormDialog extends JDialog {
                 dob = ttcn.getNgaySinh().format(DateTimeFormatter.ofPattern("ddMMyyyy"));
             }
         } catch (Exception ignored) {}
-
         if (!dob.isEmpty()) {
             txtPassword.setText(dob);
             lblDefaultPassword.setText("Mật khẩu mặc định: " + dob + " (ngày sinh)");
@@ -165,16 +152,10 @@ public class UserFormDialog extends JDialog {
     }
 
     private void setupLayout() {
-        JPanel mainPanel = new JPanel(new BorderLayout(10, 10));
-        mainPanel.setBorder(new EmptyBorder(15, 15, 15, 15));
-
+        JPanel mainPanel = createMainPanel();
         JPanel formPanel = new JPanel(new GridBagLayout());
-        GridBagConstraints gbc = new GridBagConstraints();
-        gbc.insets = new Insets(5, 5, 5, 5);
-        gbc.anchor = GridBagConstraints.WEST;
-
+        GridBagConstraints gbc = UIHelper.gbc(0, 0);
         int row = 0;
-
         if (editingUser == null) {
             gbc.gridx = 0; gbc.gridy = row; gbc.anchor = GridBagConstraints.NORTHWEST;
             formPanel.add(new JLabel("Nhân viên:"), gbc);
@@ -182,11 +163,9 @@ public class UserFormDialog extends JDialog {
             cboNhanVien.setPreferredSize(new Dimension(280, 28));
             formPanel.add(cboNhanVien, gbc);
             row++;
-
             gbc.gridx = 1; gbc.gridy = row; gbc.fill = GridBagConstraints.HORIZONTAL;
             formPanel.add(lblDefaultPassword, gbc);
             row++;
-
             gbc.gridx = 0; gbc.gridy = row; gbc.fill = GridBagConstraints.NONE; gbc.weightx = 0;
             gbc.anchor = GridBagConstraints.WEST;
             formPanel.add(new JLabel("Mật khẩu:"), gbc);
@@ -196,23 +175,20 @@ public class UserFormDialog extends JDialog {
             gbc.gridx = 1; gbc.gridy = row;
             JLabel hint = new JLabel("(Có thể thay đổi mật khẩu mặc định trước khi lưu)");
             hint.setFont(new Font("Segoe UI", Font.ITALIC, 11));
-            hint.setForeground(com.hrm.util.UIColors.TEXT_GRAY);
+            hint.setForeground(Color.GRAY);
             formPanel.add(hint, gbc);
             row++;
-
         } else {
             gbc.gridx = 0; gbc.gridy = row;
             formPanel.add(new JLabel("Tên đăng nhập:"), gbc);
             gbc.gridx = 1; gbc.fill = GridBagConstraints.HORIZONTAL; gbc.weightx = 1;
             formPanel.add(txtUsername, gbc);
             row++;
-
             gbc.gridx = 0; gbc.gridy = row; gbc.fill = GridBagConstraints.NONE; gbc.weightx = 0;
             formPanel.add(new JLabel("Mã nhân viên:"), gbc);
             gbc.gridx = 1; gbc.fill = GridBagConstraints.HORIZONTAL;
             formPanel.add(txtMaNV, gbc);
             row++;
-
             gbc.gridx = 0; gbc.gridy = row; gbc.fill = GridBagConstraints.NONE; gbc.weightx = 0;
             formPanel.add(new JLabel("Mat khau moi:"), gbc);
             gbc.gridx = 1; gbc.fill = GridBagConstraints.HORIZONTAL;
@@ -221,23 +197,20 @@ public class UserFormDialog extends JDialog {
             gbc.gridx = 1; gbc.gridy = row;
             JLabel pwHint = new JLabel("(Để trống nếu không muốn thay đổi mật khẩu)");
             pwHint.setFont(new Font("Segoe UI", Font.ITALIC, 11));
-            pwHint.setForeground(com.hrm.util.UIColors.TEXT_GRAY);
+            pwHint.setForeground(Color.GRAY);
             formPanel.add(pwHint, gbc);
             row++;
-
             gbc.gridx = 0; gbc.gridy = row; gbc.fill = GridBagConstraints.NONE; gbc.weightx = 0;
             formPanel.add(new JLabel("Họ tên:"), gbc);
             gbc.gridx = 1; gbc.fill = GridBagConstraints.HORIZONTAL;
             formPanel.add(txtFullName, gbc);
             row++;
-
             gbc.gridx = 0; gbc.gridy = row; gbc.fill = GridBagConstraints.NONE; gbc.weightx = 0;
             formPanel.add(new JLabel("Email:"), gbc);
             gbc.gridx = 1; gbc.fill = GridBagConstraints.HORIZONTAL;
             formPanel.add(txtEmail, gbc);
             row++;
         }
-
         // Roles
         gbc.gridx = 0; gbc.gridy = row; gbc.fill = GridBagConstraints.NONE; gbc.weightx = 0;
         gbc.anchor = GridBagConstraints.NORTHWEST;
@@ -248,7 +221,6 @@ public class UserFormDialog extends JDialog {
         rolesScroll.setBorder(new TitledBorder(""));
         formPanel.add(rolesScroll, gbc);
         row++;
-
         // Status (edit mode only)
         if (editingUser != null) {
             gbc.gridx = 0; gbc.gridy = row; gbc.fill = GridBagConstraints.NONE; gbc.weightx = 0;
@@ -260,15 +232,13 @@ public class UserFormDialog extends JDialog {
             statusPanel.add(rdoBiKhoa);
             formPanel.add(statusPanel, gbc);
         }
-
-        JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT));
+        JPanel buttonPanel = createButtonPanel();
         JButton btnSave = UIHelper.createSuccessButton("Lưu");
         btnSave.addActionListener(e -> save());
         JButton btnCancel = UIHelper.createDefaultButton("Hủy");
         btnCancel.addActionListener(e -> dispose());
         buttonPanel.add(btnSave);
         buttonPanel.add(btnCancel);
-
         mainPanel.add(formPanel, BorderLayout.CENTER);
         mainPanel.add(buttonPanel, BorderLayout.SOUTH);
         setContentPane(mainPanel);
@@ -279,24 +249,21 @@ public class UserFormDialog extends JDialog {
         txtUsername.setText(editingUser.getTenDangNhap());
         txtFullName.setText(editingUser.getHoTen() != null ? editingUser.getHoTen() : "");
         txtEmail.setText(editingUser.getEmail() != null ? editingUser.getEmail() : "");
-
-        if (editingUser.getNhanVienId() != null) {
+        if (editingUser.getMaNV() != null) {
             try {
-                NhanVien nv = nhanVienService.getById(editingUser.getNhanVienId());
-                txtMaNV.setText(nv != null ? nv.getMaNhanVien() + " - " + editingUser.getNhanVienId() : editingUser.getNhanVienId());
+                NhanVien nv = nhanVienService.getByMaNhanVien(editingUser.getMaNV());
+                txtMaNV.setText(nv != null ? nv.getMaNhanVien() + " - " + editingUser.getMaNV() : editingUser.getMaNV());
             } catch (Exception e) {
-                txtMaNV.setText(editingUser.getNhanVienId());
+                txtMaNV.setText(editingUser.getMaNV());
             }
         } else {
             txtMaNV.setText("(Chưa liên kết nhân viên)");
         }
-
         if (editingUser.isBiKhoa()) {
             rdoBiKhoa.setSelected(true);
         } else {
             rdoHoatDong.setSelected(true);
         }
-
         String currentRoleCode = null;
         if (editingUser.getVaiTros() != null && !editingUser.getVaiTros().isEmpty()) {
             currentRoleCode = editingUser.getVaiTros().get(0).getId();
@@ -310,7 +277,6 @@ public class UserFormDialog extends JDialog {
                 }
             }
         }
-
         if (isEditingProtectedAdminAccount()) {
             if (rdoHoatDong != null) {
                 rdoHoatDong.setSelected(true);
@@ -330,7 +296,6 @@ public class UserFormDialog extends JDialog {
 
     private void save() {
         String password = new String(txtPassword.getPassword());
-
         String selectedRoleCode = null;
         ButtonModel selectedModel = roleGroup.getSelection();
         if (selectedModel != null) selectedRoleCode = selectedModel.getActionCommand();
@@ -338,7 +303,6 @@ public class UserFormDialog extends JDialog {
             JOptionPane.showMessageDialog(this, "Vui lòng chọn vai trò", "Lỗi", JOptionPane.ERROR_MESSAGE);
             return;
         }
-
         if (editingUser == null) {
             NhanVien selectedNV = (NhanVien) cboNhanVien.getSelectedItem();
             if (selectedNV == null) {
@@ -349,14 +313,12 @@ public class UserFormDialog extends JDialog {
                 JOptionPane.showMessageDialog(this, "Vui lòng nhập mật khẩu", "Lỗi", JOptionPane.ERROR_MESSAGE);
                 return;
             }
-
             String username = selectedNV.getMaNhanVien();
             String email = null;
             try {
                 ThongTinCaNhan ttcn = nhanVienService.getThongTinCaNhan(selectedNV.getMaNhanVien());
                 if (ttcn != null) email = ttcn.getEmail();
             } catch (Exception ex) { /* ignore */ }
-
             KetQua<Integer> result = authService.createUser(username, password, selectedNV.getMaNhanVien(), selectedRoleCode, email);
             if (!result.isSuccess()) {
                 JOptionPane.showMessageDialog(this, result.getMessage(), "Lỗi", JOptionPane.ERROR_MESSAGE);
@@ -367,7 +329,6 @@ public class UserFormDialog extends JDialog {
                     "Đã tạo tài khoản thành công!\nên đăng nhập: " + username + "\nật khẩu: " + password,
                     "Thông báo", JOptionPane.INFORMATION_MESSAGE);
             dispose();
-
         } else {
             String fullName = txtFullName.getText().trim();
             String email = txtEmail.getText().trim();
@@ -380,14 +341,12 @@ public class UserFormDialog extends JDialog {
                 JOptionPane.showMessageDialog(this, emailErr, "Lỗi", JOptionPane.WARNING_MESSAGE);
                 return;
             }
-
             editingUser.setHoTen(fullName);
             editingUser.setEmail(email);
             if (!isEditingProtectedAdminAccount()) {
                 boolean biKhoa = rdoBiKhoa.isSelected();
                 editingUser.setHoatDong(!biKhoa);
                 editingUser.setBiKhoa(biKhoa);
-
                 final String roleCode = selectedRoleCode;
                 VaiTro selectedRole = authService.getAllRoles().stream()
                         .filter(r -> r.getId().equals(roleCode))
@@ -397,17 +356,14 @@ public class UserFormDialog extends JDialog {
                     editingUser.getVaiTros().add(selectedRole);
                 }
             }
-
             KetQua<Void> result = authService.updateUser(editingUser);
             if (!result.isSuccess()) {
                 JOptionPane.showMessageDialog(this, result.getMessage(), "Loi", JOptionPane.ERROR_MESSAGE);
                 return;
             }
-
             if (!password.isEmpty()) {
                 authService.resetPassword(editingUser.getId(), password);
             }
-
             JOptionPane.showMessageDialog(this, "Đã cập nhật tài khoản thành công!", "Thông báo", JOptionPane.INFORMATION_MESSAGE);
             successful = true;
             dispose();
@@ -423,4 +379,5 @@ public class UserFormDialog extends JDialog {
     }
 
     public boolean isSuccessful() { return successful; }
+
 }

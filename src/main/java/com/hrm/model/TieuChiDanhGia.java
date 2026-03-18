@@ -18,10 +18,8 @@ public class TieuChiDanhGia {
     private boolean hoatDong;           // Trạng thái hoạt động (true = đang dùng, false = ngừng sử dụng)
     private LocalDateTime ngayTao;      // Thời điểm tạo tiêu chí
     private String nguoiTao;            // Mã NV hoặc username người tạo
-
     // Transient (không lưu DB) - dùng để hiển thị
     private transient String tenNhomHienThi;
-
     public TieuChiDanhGia() {
         this.diemToiDa = 10.0;
         this.trongSo = 0.0;
@@ -43,7 +41,6 @@ public class TieuChiDanhGia {
     // ============================
     // Getters & Setters
     // ============================
-
     public int getMaTieuChi() {
         return maTieuChi;
     }
@@ -124,10 +121,6 @@ public class TieuChiDanhGia {
         this.tenNhomHienThi = tenNhomHienThi;
     }
 
-    // ============================
-    // Legacy compatibility (cho code cũ/GUI cũ)
-    // ============================
-
     public int getId() {
         return maTieuChi;
     }
@@ -136,26 +129,9 @@ public class TieuChiDanhGia {
         this.maTieuChi = id;
     }
 
-    public String getName() {
-        return tenTieuChi;
-    }
-
-    public String getDescription() {
-        return moTa;
-    }
-
-    public double getMaxScore() {
-        return diemToiDa;
-    }
-
-    public boolean isActive() {
-        return hoatDong;
-    }
-
     // ============================
     // Display & Business Helpers
     // ============================
-
     public String getTrangThaiDisplay() {
         return hoatDong ? "Đang hoạt động" : "Ngừng hoạt động";
     }

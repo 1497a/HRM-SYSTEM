@@ -17,10 +17,8 @@ public class ThongBaoBUS {
     private static final String LOAI_HE_THONG = "he_thong";
     private static final String LOAI_DON_TU = "don_tu";
     private static final String LOAI_CHUNG = "thong_bao_chung";
-
     private static ThongBaoBUS instance;
     private final ThongBaoDAO thongBaoRepo;
-
     private ThongBaoBUS() {
         this.thongBaoRepo = ThongBaoDAO.getInstance();
     }
@@ -106,7 +104,6 @@ public class ThongBaoBUS {
         if (dsMaNV == null || dsMaNV.isEmpty()) {
             return KetQua.error("Danh sach nguoi nhan khong duoc de trong.");
         }
-
         Set<Integer> maTaiKhoanSet = new LinkedHashSet<>();
         for (String maNV : dsMaNV) {
             if (maNV == null || maNV.trim().isEmpty()) {
@@ -117,7 +114,6 @@ public class ThongBaoBUS {
                 maTaiKhoanSet.add(maTaiKhoanNhan);
             }
         }
-
         return sendBulk(nguoiGui, new ArrayList<>(maTaiKhoanSet), tieuDe, noiDung, loai);
     }
 

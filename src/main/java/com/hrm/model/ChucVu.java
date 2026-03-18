@@ -7,7 +7,6 @@ public class ChucVu {
     private double phuCapChucVu;
     private String moTa;
     private String trangThai;
-
     public ChucVu() {}
 
     public ChucVu(String id, String tenChucVu, int capBac, double phuCapChucVu, String moTa, String trangThai) {

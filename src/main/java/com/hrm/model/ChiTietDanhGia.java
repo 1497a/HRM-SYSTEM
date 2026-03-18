@@ -8,7 +8,6 @@ public class ChiTietDanhGia {
     private double trongSo;
     private double diem;
     private String nhanXet;
-
     public ChiTietDanhGia() {}
 
     public ChiTietDanhGia(int tieuChiId, String tenTieuChi, double trongSo, double diem) {
@@ -22,10 +21,10 @@ public class ChiTietDanhGia {
 
     public int getId() { return id; }
     public void setId(int id) { this.id = id; }
-    public int getDanhGiaId() { return danhGiaId; }
-    public void setDanhGiaId(int danhGiaId) { this.danhGiaId = danhGiaId; }
-    public int getTieuChiId() { return tieuChiId; }
-    public void setTieuChiId(int tieuChiId) { this.tieuChiId = tieuChiId; }
+    public int getMaDanhGia() { return danhGiaId; }
+    public void setMaDanhGia(int maDanhGia) { this.danhGiaId = maDanhGia; }
+    public int getMaTieuChi() { return tieuChiId; }
+    public void setMaTieuChi(int maTieuChi) { this.tieuChiId = maTieuChi; }
     public String getTenTieuChi() { return tenTieuChi; }
     public void setTenTieuChi(String tenTieuChi) { this.tenTieuChi = tenTieuChi; }
     public double getTrongSo() { return trongSo; }
@@ -34,11 +33,4 @@ public class ChiTietDanhGia {
     public void setDiem(double diem) { this.diem = diem; }
     public String getNhanXet() { return nhanXet; }
     public void setNhanXet(String nhanXet) { this.nhanXet = nhanXet; }
-
-    // Legacy compat
-    public int getCriteriaId() { return tieuChiId; }
-    public String getCriteriaName() { return tenTieuChi; }
-    public double getScore() { return diem; }
-    public String getComment() { return nhanXet; }
-    public double getWeightedScore() { return getDiemCoTrong(); }
 }

@@ -17,11 +17,10 @@ import java.util.Set;
  * Đã cập nhật để maNV là String (ví dụ: "NV001", "NV002", ...).
  */
 public class DanhGiaBUS {
-    private static final String ACTION_EVAL_VIEW = PermissionCodes.EVAL_VIEW;
 
+    private static final String ACTION_EVAL_VIEW = PermissionCodes.EVAL_VIEW;
     private static DanhGiaBUS instance;
     private final DanhGiaDAO repository;
-
     private DanhGiaBUS() {
         this.repository = DanhGiaDAO.getInstance();
     }
@@ -36,7 +35,6 @@ public class DanhGiaBUS {
     // ============================
     // Quản lý đợt đánh giá (Cycle)
     // ============================
-
     public List<DotDanhGia> getAllCycles() {
         return repository.findAllCycles();
     }
@@ -60,7 +58,6 @@ public class DanhGiaBUS {
         if (dot.getTrangThai() == DotDanhGia.TrangThai.DA_KET_THUC) {
             return KetQua.error("Đợt đánh giá đã kết thúc, không thể mở lại.");
         }
-
         dot.setTrangThai(DotDanhGia.TrangThai.DANG_DIEN_RA);
         repository.updateCycle(dot);
         return KetQua.success(dot, "Đã mở đợt đánh giá thành công.");
@@ -74,7 +71,6 @@ public class DanhGiaBUS {
         if (dot.getTrangThai() != DotDanhGia.TrangThai.DANG_DIEN_RA) {
             return KetQua.error("Chỉ có thể đóng đợt đang diễn ra.");
         }
-
         dot.setTrangThai(DotDanhGia.TrangThai.DA_KET_THUC);
         repository.updateCycle(dot);
         return KetQua.success(dot, "Đã đóng đợt đánh giá thành công.");
@@ -85,7 +81,6 @@ public class DanhGiaBUS {
                                             List<TieuChiDanhGia> selectedCriteria) {
         KetQua<Void> cycleValidation = validateCycleInput(tenDot, tuNgay, denNgay, selectedCriteria);
         if (!cycleValidation.isSuccess()) return KetQua.error(cycleValidation.getMessage());
-
         // Kiểm tra tổng trọng số = 100% (cho phép sai số nhỏ)
         double tongTrongSo = selectedCriteria.stream()
                 .mapToDouble(TieuChiDanhGia::getTrongSo)
@@ -93,7 +88,6 @@ public class DanhGiaBUS {
         if (Math.abs(tongTrongSo - 100.0) > 0.01) {
             return KetQua.error(String.format("Tổng trọng số phải bằng 100%% (hiện tại: %.2f%%)", tongTrongSo));
         }
-
         DotDanhGia dot = new DotDanhGia();
         dot.setTenDot(tenDot.trim());
         dot.setNam(nam);
@@ -101,15 +95,12 @@ public class DanhGiaBUS {
         dot.setTuNgay(tuNgay);
         dot.setDenNgay(denNgay);
         dot.setTrangThai(DotDanhGia.TrangThai.CHUA_BAT_DAU);
-
         int maDot = repository.insertCycle(dot);
         if (maDot <= 0) {
             return KetQua.error("Không thể tạo đợt đánh giá.");
         }
-
         // Gán tiêu chí cho đợt
         repository.setCriteriasForDot(maDot, selectedCriteria);
-
         dot.setId(maDot);
         return KetQua.success(dot, "Đã tạo đợt đánh giá thành công.");
     }
@@ -117,7 +108,6 @@ public class DanhGiaBUS {
     // ============================
     // Quản lý tiêu chí đánh giá (Criteria)
     // ============================
-
     public List<TieuChiDanhGia> getAllCriteria() {
         return repository.findAllCriteria();
     }
@@ -130,7 +120,6 @@ public class DanhGiaBUS {
                                                double diemToiDa, double trongSo) {
         KetQua<Void> criteriaValidation = validateCriteriaInput(tenTieuChi, diemToiDa, trongSo);
         if (!criteriaValidation.isSuccess()) return KetQua.error(criteriaValidation.getMessage());
-
         TieuChiDanhGia tc = new TieuChiDanhGia();
         tc.setTenTieuChi(tenTieuChi.trim());
         tc.setMoTa(moTa != null ? moTa.trim() : "");
@@ -138,7 +127,6 @@ public class DanhGiaBUS {
         tc.setDiemToiDa(diemToiDa);
         tc.setTrongSo(trongSo);
         tc.setHoatDong(true);
-
         repository.saveCriteria(tc);
         return KetQua.success(tc, "Đã lưu tiêu chí đánh giá thành công.");
     }
@@ -149,16 +137,13 @@ public class DanhGiaBUS {
         if (tc == null) {
             return KetQua.error("Không tìm thấy tiêu chí #" + maTieuChi);
         }
-
         KetQua<Void> criteriaValidation = validateCriteriaInput(tenTieuChi, diemToiDa, trongSo);
         if (!criteriaValidation.isSuccess()) return KetQua.error(criteriaValidation.getMessage());
-
         tc.setTenTieuChi(tenTieuChi.trim());
         tc.setMoTa(moTa != null ? moTa.trim() : tc.getMoTa());
         tc.setNhomTieuChi(nhomTieuChi != null ? nhomTieuChi.trim() : tc.getNhomTieuChi());
         tc.setDiemToiDa(diemToiDa);
         tc.setTrongSo(trongSo);
-
         repository.saveCriteria(tc);
         return KetQua.success(tc, "Đã cập nhật tiêu chí đánh giá thành công.");
     }
@@ -175,14 +160,13 @@ public class DanhGiaBUS {
     public int getTotalWeight() {
         return repository.getAllCriteria().stream()
                 .filter(TieuChiDanhGia::isHoatDong)
-                .mapToInt(c -> (int) c.getTrongSo())
+                .mapToInt(c -> (int) c.getDiemToiDa())
                 .sum();
     }
 
     // ============================
     // Nộp đánh giá (Submission)
     // ============================
-
     public KetQua<DanhGiaHieuSuat> submitEvaluation(int maDot, String maNV, String tenNV,
                                                     String maNguoiDanhGia, String tenNguoiDanhGia,
                                                     List<ChiTietDanhGia> chiTiets, String nhanXetChung) {
@@ -190,59 +174,48 @@ public class DanhGiaBUS {
         if (dot == null) {
             return KetQua.error("Không tìm thấy đợt đánh giá #" + maDot);
         }
-
         if (!dot.dangDienRa()) {
             return KetQua.error("Đợt đánh giá chưa mở hoặc đã kết thúc.");
         }
-
         // Kiểm tra đã đánh giá chưa
         if (SelfApprovalGuard.isSelfAction(maNguoiDanhGia, maNV)
                 && !SelfApprovalGuard.currentUserCanBypassSelfRestriction()) {
             return KetQua.error("Bạn không thể tự đánh giá hiệu suất của chính mình.");
         }
-
         DanhGiaHieuSuat existing = repository.findSubmissionByDotAndNV(maDot, maNV);
         if (existing != null) {
             return KetQua.error("Nhân viên này đã được đánh giá trong đợt này.");
         }
-
         if (chiTiets == null || chiTiets.isEmpty()) {
             return KetQua.error("Vui lòng nhập điểm cho các tiêu chí.");
         }
-
         List<TieuChiDanhGia> tieuChis = repository.findCriteriaByDot(maDot);
         if (tieuChis == null || tieuChis.isEmpty()) {
             return KetQua.error("Đợt đánh giá chưa được cấu hình tiêu chí.");
         }
-
         Set<Integer> validTieuChiIds = taoTapTieuChiHopLe(tieuChis);
-
         KetQua<Double> tongDiemResult = tinhTongDiem(chiTiets, validTieuChiIds);
         if (!tongDiemResult.isSuccess()) return KetQua.error(tongDiemResult.getMessage());
         double tongDiem = tongDiemResult.getData();
-
         // Tạo đánh giá
         DanhGiaHieuSuat dg = new DanhGiaHieuSuat();
-        dg.setDotDanhGiaId(maDot);
+        dg.setMaDot(maDot);
         dg.setTenDot(dot.getTenDot());
-        dg.setNhanVienId(maNV);
+        dg.setMaNV(maNV);
         dg.setTenNhanVien(tenNV);
-        dg.setNguoiDanhGiaId(maNguoiDanhGia);
+        dg.setMaNguoiDanhGia(maNguoiDanhGia);
         dg.setTenNguoiDanhGia(tenNguoiDanhGia);
         dg.setChiTietDanhGias(new ArrayList<>(chiTiets));
         dg.setNhanXetChung(nhanXetChung != null ? nhanXetChung.trim() : "");
         dg.setTongDiem(tongDiem);
         dg.setXepLoai(DanhGiaHieuSuat.XepLoai.tuDiem(tongDiem));
         dg.setNgayDanhGia(LocalDateTime.now());
-
         int maDanhGia = repository.insertSubmission(dg);
         if (maDanhGia <= 0) {
             return KetQua.error("Không thể lưu đánh giá.");
         }
-
         // Lưu chi tiết điểm
         repository.saveScores(maDanhGia, chiTiets);
-
         dg.setId(maDanhGia);
         return KetQua.success(dg, String.format("Đã lưu đánh giá thành công. Tổng điểm: %.2f - Xếp loại: %s",
                 tongDiem, dg.getXepLoai().name()));
@@ -251,7 +224,6 @@ public class DanhGiaBUS {
     // ============================
     // Truy vấn đánh giá
     // ============================
-
     public List<DanhGiaHieuSuat> getSubmissionsByCycle(int maDot) {
         List<DanhGiaHieuSuat> list = repository.findByDot(maDot);
         loadChiTietForList(list);
@@ -361,7 +333,7 @@ public class DanhGiaBUS {
     private KetQua<Double> tinhTongDiem(List<ChiTietDanhGia> chiTiets, Set<Integer> validTieuChiIds) {
         double tongDiem = 0.0;
         for (ChiTietDanhGia ct : chiTiets) {
-            if (!validTieuChiIds.contains(ct.getTieuChiId())) {
+            if (!validTieuChiIds.contains(ct.getMaTieuChi())) {
                 return KetQua.error("Có tiêu chí không thuộc đợt đánh giá này.");
             }
             if (ct.getDiem() < 0 || ct.getDiem() > 10) {

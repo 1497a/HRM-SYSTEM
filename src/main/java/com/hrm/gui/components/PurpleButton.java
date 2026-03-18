@@ -1,6 +1,7 @@
 package com.hrm.gui.components;
 
 import com.hrm.util.UIColors;
+import com.hrm.util.UIFonts;
 
 import javax.swing.*;
 import java.awt.*;
@@ -16,12 +17,11 @@ public class PurpleButton extends JButton {
     private Color normalBackground;
     private Color hoverBackground;
     private Color pressedBackground;
-
     /**
      * Create a primary purple button
      */
     public PurpleButton(String text) {
-        this(text, UIColors.PRIMARY_PURPLE, UIColors.PURPLE_HOVER, UIColors.DARK_PURPLE);
+        this(text, UIColors.PRIMARY_PURPLE, UIColors.PRIMARY_PURPLE.darker(), UIColors.PRIMARY_PURPLE.darker());
     }
 
     /**
@@ -32,14 +32,13 @@ public class PurpleButton extends JButton {
         this.normalBackground = normalBg;
         this.hoverBackground = hoverBg;
         this.pressedBackground = pressedBg;
-
         initStyle();
         setupHoverEffect();
     }
 
     private void initStyle() {
-        setFont(com.hrm.util.UIFonts.BOLD_MEDIUM);
-        setForeground(com.hrm.util.UIColors.WHITE);
+        setFont(UIFonts.BOLD_NORMAL);
+        setForeground(Color.WHITE);
         setBackground(normalBackground);
         setFocusPainted(false);
         setBorderPainted(false);
@@ -57,21 +56,18 @@ public class PurpleButton extends JButton {
                     setBackground(hoverBackground);
                 }
             }
-
             @Override
             public void mouseExited(MouseEvent e) {
                 if (isEnabled()) {
                     setBackground(normalBackground);
                 }
             }
-
             @Override
             public void mousePressed(MouseEvent e) {
                 if (isEnabled()) {
                     setBackground(pressedBackground);
                 }
             }
-
             @Override
             public void mouseReleased(MouseEvent e) {
                 if (isEnabled()) {
@@ -86,10 +82,10 @@ public class PurpleButton extends JButton {
         super.setEnabled(enabled);
         if (enabled) {
             setBackground(normalBackground);
-            setForeground(com.hrm.util.UIColors.WHITE);
+            setForeground(Color.WHITE);
         } else {
-            setBackground(UIColors.BORDER_GRAY);
-            setForeground(UIColors.TEXT_GRAY);
+            setBackground(Color.LIGHT_GRAY);
+            setForeground(Color.GRAY);
         }
     }
 
@@ -118,9 +114,9 @@ public class PurpleButton extends JButton {
      */
     public static PurpleButton warning(String text) {
         PurpleButton btn = new PurpleButton(text,
-            UIColors.WARNING_YELLOW,
-            UIColors.darker(UIColors.WARNING_YELLOW),
-            UIColors.darker(UIColors.darker(UIColors.WARNING_YELLOW)));
+            new Color(255, 193, 7),
+            UIColors.darker(new Color(255, 193, 7)),
+            UIColors.darker(UIColors.darker(new Color(255, 193, 7))));
         btn.setForeground(UIColors.TEXT_DARK);
         return btn;
     }
@@ -130,9 +126,9 @@ public class PurpleButton extends JButton {
      */
     public static PurpleButton info(String text) {
         return new PurpleButton(text,
-            UIColors.INFO_BLUE,
-            UIColors.darker(UIColors.INFO_BLUE),
-            UIColors.darker(UIColors.darker(UIColors.INFO_BLUE)));
+            new Color(23, 162, 184),
+            UIColors.darker(new Color(23, 162, 184)),
+            UIColors.darker(UIColors.darker(new Color(23, 162, 184))));
     }
 
     /**
@@ -140,9 +136,9 @@ public class PurpleButton extends JButton {
      */
     public static PurpleButton secondary(String text) {
         PurpleButton btn = new PurpleButton(text,
-            UIColors.BORDER_GRAY,
-            UIColors.darker(UIColors.BORDER_GRAY),
-            UIColors.darker(UIColors.darker(UIColors.BORDER_GRAY)));
+            Color.LIGHT_GRAY,
+            UIColors.darker(Color.LIGHT_GRAY),
+            UIColors.darker(UIColors.darker(Color.LIGHT_GRAY)));
         btn.setForeground(UIColors.TEXT_DARK);
         return btn;
     }

@@ -7,7 +7,6 @@ public class SoDungPhep {
     private int nam;
     private double soNgayDuocCap;
     private double soNgayDaDung;
-
     public SoDungPhep() {}
 
     public SoDungPhep(String nhanVienId, String loaiPhepId, int nam, double soNgayDuocCap) {
@@ -24,22 +23,14 @@ public class SoDungPhep {
 
     public int getId() { return id; }
     public void setId(int id) { this.id = id; }
-    public String getNhanVienId() { return nhanVienId; }
-    public void setNhanVienId(String nhanVienId) { this.nhanVienId = nhanVienId; }
-    public String getLoaiPhepId() { return loaiPhepId; }
-    public void setLoaiPhepId(String loaiPhepId) { this.loaiPhepId = loaiPhepId; }
+    public String getMaNV() { return nhanVienId; }
+    public void setMaNV(String maNV) { this.nhanVienId = maNV; }
+    public String getMaLoaiPhep() { return loaiPhepId; }
+    public void setMaLoaiPhep(String maLoaiPhep) { this.loaiPhepId = maLoaiPhep; }
     public int getNam() { return nam; }
     public void setNam(int nam) { this.nam = nam; }
     public double getSoNgayDuocCap() { return soNgayDuocCap; }
     public void setSoNgayDuocCap(double soNgayDuocCap) { this.soNgayDuocCap = soNgayDuocCap; }
     public double getSoNgayDaDung() { return soNgayDaDung; }
     public void setSoNgayDaDung(double soNgayDaDung) { this.soNgayDaDung = soNgayDaDung; }
-
-    // Legacy compat
-    public String getEmployeeId() { return nhanVienId; }
-    public String getLeaveTypeCode() { return loaiPhepId; }
-    public int getYear() { return nam; }
-    public double getTotalDays() { return soNgayDuocCap; }
-    public double getUsedDays() { return soNgayDaDung; }
-    public double getRemainingDays() { return getSoNgayConLai(); }
 }

@@ -30,32 +30,26 @@ public class DatabaseConnection {
     private static String url;
     private static String username;
     private static String password;
-
     static {
         try {
             Properties props = new Properties();
-
             // getResourceAsStream đọc file từ thư mục resources/
             // ClassLoader tìm file trong classpath, không phụ thuộc vào vị trí chạy app
             InputStream input = DatabaseConnection.class
                     .getClassLoader()
                     .getResourceAsStream("database.properties");
-
             if (input == null) {
                 throw new RuntimeException("Không tìm thấy file database.properties trong resources/");
             }
-
             props.load(input);
             url = props.getProperty("db.url");
             username = props.getProperty("db.username");
             password = props.getProperty("db.password");
-
             // Nạp MySQL JDBC Driver
             // Từ JDBC 4.0+ (Java 6+), dòng này KHÔNG BẮT BUỘC
             // vì driver tự đăng ký qua ServiceLoader
             // Nhưng để AN TOÀN với mọi môi trường (XAMPP cũ), nên giữ
             Class.forName("com.mysql.cj.jdbc.Driver");
-
         } catch (IOException e) {
             throw new RuntimeException("Lỗi đọc file database.properties: " + e.getMessage(), e);
         } catch (ClassNotFoundException e) {

@@ -7,17 +7,15 @@ import com.hrm.model.PhongBan;
 import com.hrm.model.TaiKhoan;
 import com.hrm.util.HRMConstants;
 import com.hrm.util.PermissionCodes;
+import com.hrm.util.SessionContext;
+import com.hrm.util.ValidationUtils;
 
 import java.util.List;
 
 public class PhongBanBUS {
     private static final String ACTION_DEPARTMENT_MANAGE = PermissionCodes.DEPARTMENT_MANAGE;
-    private static final String TRANG_THAI_HOAT_DONG = "hoatDong";
-    private static final String TRANG_THAI_NGUNG_HOAT_DONG = "ngung_hoat_dong";
-
-    private final PhongBanDAO repository = new PhongBanDAO();
+    private final PhongBanDAO repository = PhongBanDAO.getInstance();
     private final BoNhiemDAO boNhiemRepo = BoNhiemDAO.getInstance();
-
     public List<PhongBan> getAllDepartments() {
         return repository.findAll();
     }
@@ -26,7 +24,7 @@ public class PhongBanBUS {
         return repository.findActive();
     }
 
-    public PhongBan getById(String maPhongBan) {
+    public PhongBan getByMaPhongBan(String maPhongBan) {
         return repository.findById(maPhongBan);
     }
 
@@ -35,17 +33,16 @@ public class PhongBanBUS {
         if (!permission.isSuccess()) {
             return permission;
         }
-        if (isBlank(maPhongBan)) {
+        if (ValidationUtils.isBlank(maPhongBan)) {
             return KetQua.error("Ma phong ban khong duoc de trong.");
         }
-        if (isBlank(tenPhongBan)) {
+        if (ValidationUtils.isBlank(tenPhongBan)) {
             return KetQua.error("Ten phong ban khong duoc de trong.");
         }
         if (repository.existsById(maPhongBan.trim())) {
             return KetQua.error("Ma phong ban '" + maPhongBan.trim() + "' da ton tai trong he thong.");
         }
-
-        if (!isBlank(phongBanCha)) {
+        if (!ValidationUtils.isBlank(phongBanCha)) {
             PhongBan cha = repository.findById(phongBanCha.trim());
             if (cha == null) {
                 return KetQua.error("Phong ban cha khong ton tai.");
@@ -54,9 +51,8 @@ public class PhongBanBUS {
                 return KetQua.error("Phong ban cha '" + cha.getTenPhongBan() + "' da ngung hoat dong.");
             }
         }
-
         String maCha = normalizeOptional(phongBanCha);
-        PhongBan department = new PhongBan(maPhongBan.trim(), tenPhongBan.trim(), maCha, TRANG_THAI_HOAT_DONG);
+        PhongBan department = new PhongBan(maPhongBan.trim(), tenPhongBan.trim(), maCha, HRMConstants.TRANG_THAI_HOAT_DONG);
         repository.save(department);
         return KetQua.success(null, "Them phong ban thanh cong.");
     }
@@ -70,11 +66,10 @@ public class PhongBanBUS {
         if (department == null) {
             return KetQua.error("Khong tim thay phong ban.");
         }
-        if (isBlank(tenMoi)) {
+        if (ValidationUtils.isBlank(tenMoi)) {
             return KetQua.error("Ten phong ban khong duoc de trong.");
         }
-
-        if (!isBlank(phongBanChaMoi)) {
+        if (!ValidationUtils.isBlank(phongBanChaMoi)) {
             PhongBan cha = repository.findById(phongBanChaMoi.trim());
             if (cha == null) {
                 return KetQua.error("Phong ban cha khong ton tai.");
@@ -86,7 +81,6 @@ public class PhongBanBUS {
                 return KetQua.error("Khong the chon phong ban con/chau lam phong ban cha.");
             }
         }
-
         department.setTenPhongBan(tenMoi.trim());
         department.setPhongBanChaId(normalizeOptional(phongBanChaMoi));
         repository.update(department);
@@ -102,19 +96,16 @@ public class PhongBanBUS {
         if (department == null) {
             return KetQua.error("Khong tim thay phong ban.");
         }
-
         List<PhongBan> children = repository.findChildren(maPhongBan);
         for (PhongBan child : children) {
             if (isActiveStatus(child.getTrangThai())) {
                 return KetQua.error("Khong the ngung hoat dong khi phong ban con van dang hoat dong.");
             }
         }
-
         if (boNhiemRepo.hasActiveBoNhiemInDepartment(maPhongBan)) {
             return KetQua.error("Khong the ngung hoat dong khi phong ban van con bo nhiem hieu luc.");
         }
-
-        department.setTrangThai(TRANG_THAI_NGUNG_HOAT_DONG);
+        department.setTrangThai(HRMConstants.TRANG_THAI_NGUNG_HOAT_DONG);
         repository.update(department);
         return KetQua.success(null, "Da ngung hoat dong phong ban.");
     }
@@ -128,26 +119,24 @@ public class PhongBanBUS {
         if (department == null) {
             return KetQua.error("Khong tim thay phong ban.");
         }
-
         String maCha = department.getPhongBanChaId();
-        if (!isBlank(maCha)) {
+        if (!ValidationUtils.isBlank(maCha)) {
             PhongBan cha = repository.findById(maCha.trim());
             if (cha != null && !isActiveStatus(cha.getTrangThai())) {
                 return KetQua.error("Khong the kich hoat khi phong ban cha dang ngung hoat dong.");
             }
         }
-
-        department.setTrangThai(TRANG_THAI_HOAT_DONG);
+        department.setTrangThai(HRMConstants.TRANG_THAI_HOAT_DONG);
         repository.update(department);
         return KetQua.success(null, "Da kich hoat lai phong ban.");
     }
 
     private KetQua<Void> validateManagePermission() {
-        TaiKhoan currentUser = com.hrm.util.SessionContext.getInstance().getCurrentUser();
+        TaiKhoan currentUser = SessionContext.getInstance().getCurrentUser();
         if (currentUser == null) {
             return KetQua.error("Phien dang nhap khong hop le.");
         }
-        if (HRMConstants.USERNAME_ADMIN.equalsIgnoreCase(currentUser.getTenDangNhap()) || currentUser.coVaiTro(HRMConstants.ROLE_ADMIN)) {
+        if (SessionContext.getInstance().isAdmin()) {
             return KetQua.success(null, "");
         }
         if (!currentUser.coQuyen(ACTION_DEPARTMENT_MANAGE)) {
@@ -160,7 +149,7 @@ public class PhongBanBUS {
     }
 
     private boolean isActiveStatus(String status) {
-        return "hoatdong".equals(normalizeStatus(status));
+        return normalizeStatus(HRMConstants.TRANG_THAI_HOAT_DONG).equals(normalizeStatus(status));
     }
 
     private String normalizeStatus(String status) {
@@ -170,12 +159,8 @@ public class PhongBanBUS {
         return status.toLowerCase().replace("_", "").replace(" ", "").replace("-", "");
     }
 
-    private boolean isBlank(String value) {
-        return value == null || value.trim().isEmpty();
-    }
-
     private String normalizeOptional(String value) {
-        if (isBlank(value)) {
+        if (ValidationUtils.isBlank(value)) {
             return null;
         }
         return value.trim();

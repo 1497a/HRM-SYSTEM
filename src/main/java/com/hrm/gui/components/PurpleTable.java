@@ -1,6 +1,7 @@
 package com.hrm.gui.components;
 
 import com.hrm.util.UIColors;
+import com.hrm.util.UIFonts;
 
 import javax.swing.*;
 import javax.swing.table.*;
@@ -35,28 +36,25 @@ public class PurpleTable extends JTable {
     private void initStyle() {
         // Header style
         JTableHeader header = getTableHeader();
-        header.setBackground(UIColors.TABLE_HEADER_BG);
-        header.setForeground(UIColors.TABLE_HEADER_FG);
+        header.setBackground(UIColors.PRIMARY_PURPLE);
+        header.setForeground(UIColors.TEXT_DARK);
         header.setFont(com.hrm.util.UIFonts.BOLD_NORMAL);
         header.setPreferredSize(new Dimension(header.getWidth(), 40));
         header.setReorderingAllowed(false);
-
         // Make header renderer opaque and styled
         DefaultTableCellRenderer renderer = (DefaultTableCellRenderer) header.getDefaultRenderer();
         renderer.setHorizontalAlignment(SwingConstants.CENTER);
-        renderer.setBackground(UIColors.TABLE_HEADER_BG);
-        renderer.setForeground(UIColors.TABLE_HEADER_FG);
-
+        renderer.setBackground(UIColors.PRIMARY_PURPLE);
+        renderer.setForeground(UIColors.TEXT_DARK);
         // Table body style
         setRowHeight(35);
         setFont(com.hrm.util.UIFonts.TEXT_NORMAL);
-        setSelectionBackground(UIColors.TABLE_SELECTION_BG);
-        setSelectionForeground(UIColors.TABLE_SELECTION_FG);
-        setGridColor(UIColors.BORDER_GRAY);
+        setSelectionBackground(UIColors.LIGHT_PURPLE);
+        setSelectionForeground(UIColors.PRIMARY_PURPLE);
+        setGridColor(Color.LIGHT_GRAY);
         setShowHorizontalLines(true);
         setShowVerticalLines(false);
         setIntercellSpacing(new Dimension(0, 1));
-
         // Alternating row renderer
         setDefaultRenderer(Object.class, new AlternatingRowRenderer());
     }
@@ -68,24 +66,19 @@ public class PurpleTable extends JTable {
         @Override
         public Component getTableCellRendererComponent(JTable table, Object value,
                 boolean isSelected, boolean hasFocus, int row, int column) {
-
             Component c = super.getTableCellRendererComponent(table, value,
                     isSelected, hasFocus, row, column);
-
             if (isSelected) {
-                c.setBackground(UIColors.TABLE_SELECTION_BG);
-                c.setForeground(UIColors.TABLE_SELECTION_FG);
+                c.setBackground(UIColors.LIGHT_PURPLE);
+                c.setForeground(UIColors.PRIMARY_PURPLE);
             } else {
-                c.setBackground(row % 2 == 0 ? com.hrm.util.UIColors.WHITE : UIColors.TABLE_ALT_ROW);
+                c.setBackground(row % 2 == 0 ? Color.WHITE : new Color(250, 248, 255));
                 c.setForeground(UIColors.TEXT_DARK);
             }
-
             // Center align by default
             setHorizontalAlignment(SwingConstants.CENTER);
-
             // Add padding
             setBorder(BorderFactory.createEmptyBorder(0, 10, 0, 10));
-
             return c;
         }
     }
@@ -99,18 +92,15 @@ public class PurpleTable extends JTable {
             @Override
             public Component getTableCellRendererComponent(JTable table, Object value,
                     boolean isSelected, boolean hasFocus, int row, int col) {
-
                 Component c = super.getTableCellRendererComponent(table, value,
                         isSelected, hasFocus, row, col);
-
                 if (isSelected) {
-                    c.setBackground(UIColors.TABLE_SELECTION_BG);
-                    c.setForeground(UIColors.TABLE_SELECTION_FG);
+                    c.setBackground(UIColors.LIGHT_PURPLE);
+                    c.setForeground(UIColors.PRIMARY_PURPLE);
                 } else {
-                    c.setBackground(row % 2 == 0 ? com.hrm.util.UIColors.WHITE : UIColors.TABLE_ALT_ROW);
+                    c.setBackground(row % 2 == 0 ? Color.WHITE : new Color(250, 248, 255));
                     c.setForeground(UIColors.TEXT_DARK);
                 }
-
                 return c;
             }
         };
@@ -152,23 +142,20 @@ public class PurpleTable extends JTable {
         @Override
         public Component getTableCellRendererComponent(JTable table, Object value,
                 boolean isSelected, boolean hasFocus, int row, int column) {
-
             if (value == null) {
                 return super.getTableCellRendererComponent(table, value,
                         isSelected, hasFocus, row, column);
             }
-
             StatusBadge badge = new StatusBadge(value.toString());
-
             // Handle selection
             if (isSelected) {
                 JPanel panel = new JPanel(new FlowLayout(FlowLayout.CENTER, 0, 5));
-                panel.setBackground(UIColors.TABLE_SELECTION_BG);
+                panel.setBackground(UIColors.LIGHT_PURPLE);
                 panel.add(badge);
                 return panel;
             } else {
                 JPanel panel = new JPanel(new FlowLayout(FlowLayout.CENTER, 0, 5));
-                panel.setBackground(row % 2 == 0 ? com.hrm.util.UIColors.WHITE : UIColors.TABLE_ALT_ROW);
+                panel.setBackground(row % 2 == 0 ? Color.WHITE : new Color(250, 248, 255));
                 panel.add(badge);
                 return panel;
             }

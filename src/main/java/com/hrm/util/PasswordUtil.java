@@ -13,7 +13,6 @@ import java.util.Base64;
 public class PasswordUtil {
 
     private static final String SALT_PREFIX = "$sha256$";
-
     private PasswordUtil() {
         // Private constructor to prevent instantiation
     }
@@ -27,17 +26,14 @@ public class PasswordUtil {
         if (plainPassword == null || plainPassword.isEmpty()) {
             throw new IllegalArgumentException("Password cannot be null or empty");
         }
-
         try {
             // Generate random salt
             SecureRandom random = new SecureRandom();
             byte[] saltBytes = new byte[16];
             random.nextBytes(saltBytes);
             String salt = Base64.getEncoder().encodeToString(saltBytes);
-
             // Hash password with salt
             String hash = hashWithSalt(plainPassword, salt);
-
             return SALT_PREFIX + salt + "$" + hash;
         } catch (NoSuchAlgorithmException e) {
             throw new RuntimeException("SHA-256 not available", e);
@@ -54,7 +50,6 @@ public class PasswordUtil {
         if (plainPassword == null || hashedPassword == null) {
             return false;
         }
-
         try {
             // Handle SHA-256 hashes (starts with $sha256$)
             if (hashedPassword.startsWith(SALT_PREFIX)) {
@@ -67,9 +62,7 @@ public class PasswordUtil {
                 String actualHash = hashWithSalt(plainPassword, salt);
                 return expectedHash.equals(actualHash);
             }
-            
             return plainPassword.equals(hashedPassword);
-
         } catch (Exception e) {
             return false;
         }

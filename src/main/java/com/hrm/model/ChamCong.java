@@ -27,18 +27,14 @@ public class ChamCong {
         VANG_MAT("vang_mat", "Vang mat"),
         NGHI_PHEP("nghi_phep", "Nghi phep"),
         CONG_TAC("cong_tac", "Cong tac");
-
         private final String dbValue;
         private final String displayName;
-
         TrangThai(String dbValue, String displayName) {
             this.dbValue = dbValue;
             this.displayName = displayName;
         }
-
         public String getDbValue() { return dbValue; }
         public String getDisplayName() { return displayName; }
-
         public static TrangThai fromDbValue(String value) {
             for (TrangThai tt : values()) {
                 if (tt.dbValue.equals(value)) {
@@ -55,18 +51,14 @@ public class ChamCong {
         THE_TU("the_tu", "The tu"),
         GPS("gps", "GPS"),
         THU_CONG("thu_cong", "Thu cong");
-
         private final String dbValue;
         private final String displayName;
-
         PhuongThuc(String dbValue, String displayName) {
             this.dbValue = dbValue;
             this.displayName = displayName;
         }
-
         public String getDbValue() { return dbValue; }
         public String getDisplayName() { return displayName; }
-
         public static PhuongThuc fromDbValue(String value) {
             for (PhuongThuc pt : values()) {
                 if (pt.dbValue.equals(value)) {
@@ -91,7 +83,6 @@ public class ChamCong {
     private PhuongThuc phuongThucChamCong; // Cach cham cong
     private String ghiChu;                 // Ghi chu — co the NULL
     private LocalDateTime ngayTao;         // Thoi diem tao ban ghi
-
     public ChamCong() {
         this.soGioLam = 0;
         this.gioLamThem = 0;
@@ -111,29 +102,17 @@ public class ChamCong {
     public int getId() { return id; }
     public void setId(int id) { this.id = id; }
 
-    // Legacy compatibility
-    public int getMaChamCong() { return id; }
-    public void setMaChamCong(int maChamCong) { this.id = maChamCong; }
-
-    public String getNhanVienId() { return nhanVienId; }
-    public void setNhanVienId(String nhanVienId) { this.nhanVienId = nhanVienId; }
-
-    // Legacy compatibility
     public String getMaNV() { return nhanVienId; }
-    public void setMaNV(String maNV) { this.nhanVienId = maNV; }
+    public void setMaNV(String nhanVienId) { this.nhanVienId = nhanVienId; }
 
-    public String getEmployeeName() { return employeeName; }
-    public void setEmployeeName(String employeeName) { this.employeeName = employeeName; }
+    public String getTenNhanVien() { return employeeName; }
+    public void setTenNhanVien(String tenNhanVien) { this.employeeName = tenNhanVien; }
 
     public LocalDate getNgay() { return ngay; }
     public void setNgay(LocalDate ngay) { this.ngay = ngay; }
 
-    public String getCaLamId() { return caLamId; }
-    public void setCaLamId(String caLamId) { this.caLamId = caLamId; }
-
-    // Legacy compatibility
     public String getMaCaLam() { return caLamId; }
-    public void setMaCaLam(String maCaLam) { this.caLamId = maCaLam; }
+    public void setMaCaLam(String caLamId) { this.caLamId = caLamId; }
 
     public String getTenCaLam() { return tenCaLam; }
     public void setTenCaLam(String tenCaLam) { this.tenCaLam = tenCaLam; }

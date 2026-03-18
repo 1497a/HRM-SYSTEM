@@ -17,18 +17,14 @@ public class DangKyLamThem {
         CHO_DUYET("cho_duyet", "Chờ duyệt"),
         DA_DUYET("da_duyet", "Đã duyệt"),
         TU_CHOI("tu_choi", "Từ chối");
-
         private final String dbValue;
         private final String displayName;
-
         TrangThai(String dbValue, String displayName) {
             this.dbValue = dbValue;
             this.displayName = displayName;
         }
-
         public String getDbValue() { return dbValue; }
         public String getDisplayName() { return displayName; }
-
         public static TrangThai fromDbValue(String value) {
             for (TrangThai tt : values()) {
                 if (tt.dbValue.equals(value)) return tt;
@@ -47,13 +43,11 @@ public class DangKyLamThem {
     private String lyDo;
     private double heSoOT;
     private String nhanXet;           // Nhận xét của người duyệt
-
     private String nguoiDuyet;
     private String approverName;
     private LocalDateTime ngayDuyet;
     private TrangThai trangThai;
     private LocalDateTime ngayTao;
-
     public DangKyLamThem() {
         this.trangThai = TrangThai.CHO_DUYET;
         this.heSoOT = 1.5;
@@ -92,8 +86,8 @@ public class DangKyLamThem {
     public String getMaNV() { return maNV; }
     public void setMaNV(String maNV) { this.maNV = maNV; }
 
-    public String getEmployeeName() { return employeeName; }
-    public void setEmployeeName(String employeeName) { this.employeeName = employeeName; }
+    public String getTenNhanVien() { return employeeName; }
+    public void setTenNhanVien(String tenNhanVien) { this.employeeName = tenNhanVien; }
 
     public LocalDate getNgay() { return ngay; }
     public void setNgay(LocalDate ngay) { this.ngay = ngay; }
@@ -125,8 +119,8 @@ public class DangKyLamThem {
     public String getNguoiDuyet() { return nguoiDuyet; }
     public void setNguoiDuyet(String nguoiDuyet) { this.nguoiDuyet = nguoiDuyet; }
 
-    public String getApproverName() { return approverName; }
-    public void setApproverName(String approverName) { this.approverName = approverName; }
+    public String getTenNguoiDuyet() { return approverName; }
+    public void setTenNguoiDuyet(String tenNguoiDuyet) { this.approverName = tenNguoiDuyet; }
 
     public LocalDateTime getNgayDuyet() { return ngayDuyet; }
     public void setNgayDuyet(LocalDateTime ngayDuyet) { this.ngayDuyet = ngayDuyet; }

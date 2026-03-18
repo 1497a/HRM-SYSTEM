@@ -4,6 +4,7 @@ import javax.swing.*;
 import javax.swing.table.TableRowSorter;
 import javax.swing.RowFilter;
 import java.awt.*;
+import java.awt.Font;
 import java.text.Collator;
 import java.util.Comparator;
 import java.util.Locale;
@@ -49,7 +50,7 @@ public class UIHelper {
      * Create a warning button (orange)
      */
     public static JButton createWarningButton(String text) {
-        return createStyledButton(text, UIColors.WARNING_YELLOW, Color.WHITE);
+        return createStyledButton(text, new Color(255, 193, 7), Color.WHITE);
     }
 
     /**
@@ -64,7 +65,6 @@ public class UIHelper {
         btn.setContentAreaFilled(true);
         btn.setCursor(new Cursor(Cursor.HAND_CURSOR));
         btn.setBorder(BorderFactory.createEmptyBorder(8, 15, 8, 15));
-
         // Add hover effect
         final Color originalBg = bgColor;
         btn.addMouseListener(new java.awt.event.MouseAdapter() {
@@ -84,35 +84,6 @@ public class UIHelper {
     }
 
     /**
-     * Create a navigation button (for header)
-     */
-    public static JButton createNavButton(String text) {
-        JButton btn = new JButton(text);
-        btn.setFont(new Font("Segoe UI", Font.PLAIN, 12));
-        btn.setForeground(Color.WHITE);
-        btn.setBackground(new Color(0, 82, 133));
-        btn.setFocusPainted(false);
-        btn.setBorderPainted(false);
-        btn.setOpaque(true);
-        btn.setContentAreaFilled(true);
-        btn.setCursor(new Cursor(Cursor.HAND_CURSOR));
-        btn.setBorder(BorderFactory.createEmptyBorder(8, 12, 8, 12));
-
-        btn.addMouseListener(new java.awt.event.MouseAdapter() {
-            @Override
-            public void mouseEntered(java.awt.event.MouseEvent e) {
-                btn.setBackground(new Color(0, 60, 100));
-            }
-            @Override
-            public void mouseExited(java.awt.event.MouseEvent e) {
-                btn.setBackground(new Color(0, 82, 133));
-            }
-        });
-
-        return btn;
-    }
-
-    /**
      * Create a default button (gray)
      */
     public static JButton createDefaultButton(String text) {
@@ -122,8 +93,23 @@ public class UIHelper {
         return btn;
     }
 
-    // ── Sorting helpers ───────────────────────────────────────────────────────
+    public static GridBagConstraints gbc(int x, int y) {
+        GridBagConstraints gbc = new GridBagConstraints();
+        gbc.gridx = x;
+        gbc.gridy = y;
+        gbc.insets = new Insets(5, 5, 5, 5);
+        gbc.anchor = GridBagConstraints.WEST;
+        return gbc;
+    }
 
+    public static GridBagConstraints gbcFill(int x, int y) {
+        GridBagConstraints gbc = gbc(x, y);
+        gbc.fill = GridBagConstraints.HORIZONTAL;
+        gbc.weightx = 1.0;
+        return gbc;
+    }
+
+    // ── Sorting helpers ───────────────────────────────────────────────────────
     /**
      * Extracts the last word (first name / Tên) from a Vietnamese full name.
      * E.g. "Nguyễn Văn An" → "An"
@@ -148,7 +134,6 @@ public class UIHelper {
     }
 
     // ── Filter helpers ────────────────────────────────────────────────────────
-
     /**
      * Attaches a status RowFilter to a TableRowSorter driven by a JComboBox.
      * Selecting HRMConstants.ALL removes the filter; any other value filters

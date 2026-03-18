@@ -2,7 +2,9 @@ package com.hrm.gui.salary;
 
 import com.hrm.model.ChiTietLuong;
 import com.hrm.model.ThanhPhanLuong;
+import com.hrm.gui.components.BaseFormDialog;
 import com.hrm.util.UIColors;
+import com.hrm.util.UIFonts;
 import com.hrm.util.UIHelper;
 
 import javax.swing.*;
@@ -19,11 +21,10 @@ import java.util.Locale;
  * Dialog hiển thị chi tiết lương đầy đủ của một nhân viên trong một kỳ lương.
  * Bao gồm thông tin tổng hợp và bảng thành phần lương (ThanhPhanLuong).
  */
-public class SalaryDetailDialog extends JDialog {
+public class SalaryDetailDialog extends BaseFormDialog {
 
     private final ChiTietLuong chiTiet;
     private static final NumberFormat MONEY_FORMAT = NumberFormat.getNumberInstance(new Locale("vi", "VN"));
-
     public SalaryDetailDialog(Frame parent, ChiTietLuong chiTiet) {
         super(parent, "Chi tiết lương nhân viên", true);
         this.chiTiet = chiTiet;
@@ -34,32 +35,26 @@ public class SalaryDetailDialog extends JDialog {
     }
 
     private void initUI() {
-        JPanel mainPanel = new JPanel(new BorderLayout(12, 12));
-        mainPanel.setBackground(UIColors.LIGHT_GRAY_BG);
+        JPanel mainPanel = createMainPanel();
+        mainPanel.setBackground(Color.WHITE);
         mainPanel.setBorder(new EmptyBorder(20, 20, 20, 20));
-
         mainPanel.add(buildInfoPanel(), BorderLayout.NORTH);
         mainPanel.add(buildThanhPhanPanel(), BorderLayout.CENTER);
         mainPanel.add(buildButtonPanel(), BorderLayout.SOUTH);
-
         setContentPane(mainPanel);
     }
 
     // =======================
     // Build info panel
     // =======================
-
     private JPanel buildInfoPanel() {
         JPanel panel = new JPanel(new GridBagLayout());
-        panel.setBackground(UIColors.WHITE);
+        panel.setBackground(Color.WHITE);
         panel.setBorder(BorderFactory.createCompoundBorder(
-                BorderFactory.createLineBorder(UIColors.BORDER_GRAY),
+                BorderFactory.createLineBorder(Color.LIGHT_GRAY),
                 new EmptyBorder(15, 15, 15, 15)));
-
-        GridBagConstraints gbc = new GridBagConstraints();
+        GridBagConstraints gbc = UIHelper.gbc(0, 0);
         gbc.insets = new Insets(5, 10, 5, 10);
-        gbc.anchor = GridBagConstraints.WEST;
-
         // Title
         JLabel lblTitle = new JLabel("Thông tin lương nhân viên");
         lblTitle.setFont(com.hrm.util.UIFonts.HEADER_SUB);
@@ -67,7 +62,6 @@ public class SalaryDetailDialog extends JDialog {
         gbc.gridx = 0; gbc.gridy = 0; gbc.gridwidth = 4;
         panel.add(lblTitle, gbc);
         gbc.gridwidth = 1;
-
         // Row 1: Mã NV, Họ tên
         gbc.gridy = 1; gbc.gridx = 0;
         panel.add(makeLabel("Mã nhân viên:"), gbc);
@@ -77,7 +71,6 @@ public class SalaryDetailDialog extends JDialog {
         panel.add(makeLabel("Họ tên:"), gbc);
         gbc.gridx = 3;
         panel.add(makeValue(chiTiet.getTenNV() != null ? chiTiet.getTenNV() : ""), gbc);
-
         // Row 2: Lương cơ bản, Lương chức vụ
         gbc.gridy = 2; gbc.gridx = 0;
         panel.add(makeLabel("Lương cơ bản:"), gbc);
@@ -87,7 +80,6 @@ public class SalaryDetailDialog extends JDialog {
         panel.add(makeLabel("Lương chức vụ:"), gbc);
         gbc.gridx = 3;
         panel.add(makeValueMoney(chiTiet.getTongLuongChucVu()), gbc);
-
         // Row 3: Tiền OT, Tổng thu nhập
         gbc.gridy = 3; gbc.gridx = 0;
         panel.add(makeLabel("Tiền làm thêm (OT):"), gbc);
@@ -97,10 +89,9 @@ public class SalaryDetailDialog extends JDialog {
         panel.add(makeLabel("Tổng thu nhập:"), gbc);
         gbc.gridx = 3;
         JLabel lblTongThu = makeValueMoney(chiTiet.getTongLuong());
-        lblTongThu.setFont(com.hrm.util.UIFonts.BOLD_MEDIUM);
-        lblTongThu.setForeground(UIColors.INFO_BLUE);
+        lblTongThu.setFont(UIFonts.BOLD_NORMAL);
+        lblTongThu.setForeground(new Color(23, 162, 184));
         panel.add(lblTongThu, gbc);
-
         // Row 4: Khấu trừ, Thực lãnh
         gbc.gridy = 4; gbc.gridx = 0;
         panel.add(makeLabel("Tổng khấu trừ:"), gbc);
@@ -115,7 +106,6 @@ public class SalaryDetailDialog extends JDialog {
         lblThucLanh.setFont(com.hrm.util.UIFonts.HEADER_SUB);
         lblThucLanh.setForeground(UIColors.SUCCESS_GREEN);
         panel.add(lblThucLanh, gbc);
-
         // Row 5: Số ngày công
         gbc.gridy = 5; gbc.gridx = 0;
         panel.add(makeLabel("Số ngày công:"), gbc);
@@ -125,31 +115,26 @@ public class SalaryDetailDialog extends JDialog {
         panel.add(makeLabel("Số giờ OT:"), gbc);
         gbc.gridx = 3;
         panel.add(makeValue(formatHours(chiTiet.getTongGioOT())), gbc);
-
         gbc.gridy = 6; gbc.gridx = 0;
         panel.add(makeLabel("Ghi chú:"), gbc);
         gbc.gridx = 1; gbc.gridwidth = 3;
         panel.add(makeValue(chiTiet.getGhiChu() != null ? chiTiet.getGhiChu() : ""), gbc);
         gbc.gridwidth = 1;
-
         return panel;
     }
 
     // =======================
     // Build thành phần lương panel
     // =======================
-
     private JPanel buildThanhPhanPanel() {
         JPanel panel = new JPanel(new BorderLayout());
-        panel.setBackground(UIColors.LIGHT_GRAY_BG);
-
+        panel.setBackground(Color.WHITE);
         String[] cols = {"Khoản", "Loại", "Số tiền"};
         DefaultTableModel model = new DefaultTableModel(cols, 0) {
             @Override
             public boolean isCellEditable(int row, int col) { return false; }
         };
         model.setColumnIdentifiers(new Object[]{"Khoản", "Loại", "Số tiền", "Ghi chú"});
-
         List<ThanhPhanLuong> danhSach = chiTiet.getDanhSachThanhPhan();
         if (danhSach != null) {
             for (ThanhPhanLuong tp : danhSach) {
@@ -162,26 +147,22 @@ public class SalaryDetailDialog extends JDialog {
                 });
             }
         }
-
         JTable table = new JTable(model);
         table.setRowHeight(26);
         table.setFont(com.hrm.util.UIFonts.TEXT_NORMAL);
         table.getTableHeader().setFont(com.hrm.util.UIFonts.BOLD_NORMAL);
         table.getTableHeader().setBackground(UIColors.PRIMARY_PURPLE);
-        table.getTableHeader().setForeground(UIColors.WHITE);
+        table.getTableHeader().setForeground(Color.WHITE);
         table.setSelectionBackground(UIColors.LIGHT_PURPLE);
-
         // Column widths
         table.getColumnModel().getColumn(0).setPreferredWidth(250);
         table.getColumnModel().getColumn(1).setPreferredWidth(120);
         table.getColumnModel().getColumn(2).setPreferredWidth(150);
         table.getColumnModel().getColumn(3).setPreferredWidth(240);
-
         // Right-align money
         DefaultTableCellRenderer rightRenderer = new DefaultTableCellRenderer();
         rightRenderer.setHorizontalAlignment(SwingConstants.RIGHT);
         table.getColumnModel().getColumn(2).setCellRenderer(rightRenderer);
-
         // Color rows by type
         table.getColumnModel().getColumn(1).setCellRenderer(new DefaultTableCellRenderer() {
             @Override
@@ -200,10 +181,8 @@ public class SalaryDetailDialog extends JDialog {
                 return c;
             }
         });
-
-        JScrollPane scroll = new JScrollPane(table);
+        JScrollPane scroll = createScrollPane(table);
         scroll.setBorder(new TitledBorder("Thành phần lương"));
-
         panel.add(scroll, BorderLayout.CENTER);
         return panel;
     }
@@ -211,11 +190,9 @@ public class SalaryDetailDialog extends JDialog {
     // =======================
     // Button panel
     // =======================
-
     private JPanel buildButtonPanel() {
         JPanel panel = new JPanel(new FlowLayout(FlowLayout.RIGHT));
         panel.setOpaque(false);
-
         JButton btnDong = UIHelper.createDefaultButton("Đóng");
         btnDong.addActionListener(e -> dispose());
         panel.add(btnDong);
@@ -225,11 +202,10 @@ public class SalaryDetailDialog extends JDialog {
     // =======================
     // Helpers
     // =======================
-
     private JLabel makeLabel(String text) {
         JLabel lbl = new JLabel(text);
         lbl.setFont(com.hrm.util.UIFonts.TEXT_NORMAL);
-        lbl.setForeground(UIColors.TEXT_GRAY);
+        lbl.setForeground(Color.GRAY);
         return lbl;
     }
 

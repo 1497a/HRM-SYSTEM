@@ -1,9 +1,11 @@
 package com.hrm.gui.components;
 
 import com.hrm.util.UIColors;
+import com.hrm.util.UIFonts;
 
 import javax.swing.*;
 import java.awt.*;
+import java.awt.Font;
 
 /**
  * RoundedPanel - Panel with rounded corners
@@ -15,7 +17,6 @@ public class RoundedPanel extends JPanel {
     private Color borderColor;
     private int borderWidth;
     private boolean drawShadow;
-
     /**
      * Create panel with default corner radius (10px)
      */
@@ -31,9 +32,8 @@ public class RoundedPanel extends JPanel {
         this.borderColor = null;
         this.borderWidth = 0;
         this.drawShadow = false;
-
         setOpaque(false);
-        setBackground(com.hrm.util.UIColors.WHITE);
+        setBackground(Color.WHITE);
     }
 
     /**
@@ -52,9 +52,8 @@ public class RoundedPanel extends JPanel {
         this.borderColor = null;
         this.borderWidth = 0;
         this.drawShadow = false;
-
         setOpaque(false);
-        setBackground(com.hrm.util.UIColors.WHITE);
+        setBackground(Color.WHITE);
     }
 
     /**
@@ -86,21 +85,17 @@ public class RoundedPanel extends JPanel {
     protected void paintComponent(Graphics g) {
         Graphics2D g2 = (Graphics2D) g.create();
         g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
-
         int shadowOffset = drawShadow ? 3 : 0;
         int width = getWidth() - shadowOffset;
         int height = getHeight() - shadowOffset;
-
         // Draw shadow
         if (drawShadow) {
             g2.setColor(new Color(0, 0, 0, 30));
             g2.fillRoundRect(shadowOffset, shadowOffset, width, height, cornerRadius, cornerRadius);
         }
-
         // Draw background
         g2.setColor(getBackground());
         g2.fillRoundRect(0, 0, width, height, cornerRadius, cornerRadius);
-
         // Draw border
         if (borderColor != null && borderWidth > 0) {
             g2.setColor(borderColor);
@@ -108,7 +103,6 @@ public class RoundedPanel extends JPanel {
             g2.drawRoundRect(borderWidth / 2, borderWidth / 2,
                     width - borderWidth, height - borderWidth, cornerRadius, cornerRadius);
         }
-
         g2.dispose();
     }
 
@@ -117,8 +111,8 @@ public class RoundedPanel extends JPanel {
      */
     public static RoundedPanel createCard() {
         RoundedPanel panel = new RoundedPanel(15);
-        panel.setBackground(com.hrm.util.UIColors.WHITE);
-        panel.setBorderStyle(UIColors.BORDER_GRAY, 1);
+        panel.setBackground(Color.WHITE);
+        panel.setBorderStyle(Color.LIGHT_GRAY, 1);
         panel.setDrawShadow(true);
         return panel;
     }
@@ -128,8 +122,8 @@ public class RoundedPanel extends JPanel {
      */
     public static RoundedPanel createFlatCard() {
         RoundedPanel panel = new RoundedPanel(10);
-        panel.setBackground(com.hrm.util.UIColors.WHITE);
-        panel.setBorderStyle(UIColors.BORDER_GRAY, 1);
+        panel.setBackground(Color.WHITE);
+        panel.setBorderStyle(Color.LIGHT_GRAY, 1);
         return panel;
     }
 
@@ -149,33 +143,26 @@ public class RoundedPanel extends JPanel {
     public static RoundedPanel createStatCard(String title, String value, Color accentColor) {
         RoundedPanel card = new RoundedPanel(new BorderLayout());
         card.setCornerRadius(10);
-        card.setBackground(com.hrm.util.UIColors.WHITE);
-        card.setBorderStyle(UIColors.BORDER_GRAY, 1);
+        card.setBackground(Color.WHITE);
+        card.setBorderStyle(Color.LIGHT_GRAY, 1);
         card.setBorder(BorderFactory.createEmptyBorder(20, 20, 20, 20));
-
         // Color stripe at top
         JPanel stripe = new JPanel();
         stripe.setBackground(accentColor);
         stripe.setPreferredSize(new Dimension(0, 4));
         card.add(stripe, BorderLayout.NORTH);
-
         // Content
         JPanel content = new JPanel(new BorderLayout(5, 10));
         content.setOpaque(false);
-
         JLabel lblValue = new JLabel(value);
-        lblValue.setFont(com.hrm.util.UIFonts.DISPLAY_TITLE);
+        lblValue.setFont(new Font("Segoe UI", Font.BOLD, 32));
         lblValue.setForeground(accentColor);
-
         JLabel lblTitle = new JLabel(title);
-        lblTitle.setFont(com.hrm.util.UIFonts.TEXT_MEDIUM);
-        lblTitle.setForeground(UIColors.TEXT_GRAY);
-
+        lblTitle.setFont(UIFonts.TEXT_NORMAL);
+        lblTitle.setForeground(Color.GRAY);
         content.add(lblValue, BorderLayout.CENTER);
         content.add(lblTitle, BorderLayout.SOUTH);
-
         card.add(content, BorderLayout.CENTER);
-
         return card;
     }
 }

@@ -24,19 +24,15 @@ import java.util.List;
 public class RoleManagementPanel extends JPanel {
     private final XacThucBUS authService;
     private final SessionContext sessionContext;
-
     private JTable table;
     private DefaultTableModel tableModel;
     private TableRowSorter<DefaultTableModel> sorter;
     private JButton btnCreate;
     private JButton btnEdit;
     private JButton btnDelete;
-
-
     public RoleManagementPanel() {
         this.authService = XacThucBUS.getInstance();
         this.sessionContext = SessionContext.getInstance();
-
         initComponents();
         setupLayout();
         loadData();
@@ -45,18 +41,14 @@ public class RoleManagementPanel extends JPanel {
     private void initComponents() {
         setLayout(new BorderLayout(10, 10));
         setBorder(new EmptyBorder(15, 15, 15, 15));
-        setBackground(UIColors.LIGHT_GRAY_BG);
-
+        setBackground(Color.WHITE);
         // Buttons
         btnCreate = UIHelper.createPrimaryButton("Tạo mới");
         btnCreate.addActionListener(e -> createRole());
-
         btnEdit = UIHelper.createPrimaryButton("Sửa");
         btnEdit.addActionListener(e -> editRole());
-
         btnDelete = UIHelper.createDangerButton("Xóa");
         btnDelete.addActionListener(e -> deleteRole());
-
         // Table
         String[] columns = {"Mã vai trò", "Tên vai trò", "Mô tả", "Số quyền", "Hệ thống"};
         tableModel = new DefaultTableModel(columns, 0) {
@@ -73,7 +65,6 @@ public class RoleManagementPanel extends JPanel {
         table.getColumnModel().getColumn(2).setPreferredWidth(300);
         table.getColumnModel().getColumn(3).setPreferredWidth(80);
         table.getColumnModel().getColumn(4).setPreferredWidth(80);
-
         // System role cell renderer
         table.getColumnModel().getColumn(4).setCellRenderer(new DefaultTableCellRenderer() {
             @Override
@@ -83,16 +74,15 @@ public class RoleManagementPanel extends JPanel {
                 if (!isSelected) {
                     String isSystem = (String) value;
                     if ("Có".equals(isSystem)) {
-                        c.setBackground(com.hrm.util.UIColors.LIGHT_YELLOW_BG);
+                        c.setBackground(new Color(255, 255, 200));
                     } else {
-                        c.setBackground(com.hrm.util.UIColors.WHITE);
+                        c.setBackground(Color.WHITE);
                     }
                 }
                 setHorizontalAlignment(SwingConstants.CENTER);
                 return c;
             }
         });
-
         // Sorter – sort by role name (col 1) using Vietnamese locale
         sorter = new TableRowSorter<>(tableModel);
         table.setRowSorter(sorter);
@@ -104,7 +94,6 @@ public class RoleManagementPanel extends JPanel {
         // Top panel - buttons
         JPanel topPanel = new JPanel(new BorderLayout(10, 10));
         topPanel.setOpaque(false);
-
         JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT, 10, 0));
         buttonPanel.setOpaque(false);
         JButton btnLamMoi = new JButton("Làm mới");
@@ -119,18 +108,14 @@ public class RoleManagementPanel extends JPanel {
         if (sessionContext.hasPermission(PermissionCodes.ROLE_DELETE)) {
             buttonPanel.add(btnDelete);
         }
-
         topPanel.add(buttonPanel, BorderLayout.EAST);
-
         // Center - table
         JScrollPane scrollPane = new JScrollPane(table);
         scrollPane.setBorder(new TitledBorder("Danh sách vai trò"));
-
         // Info panel
         JPanel infoPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
         infoPanel.setOpaque(false);
         infoPanel.add(new JLabel("Lưu ý: Vai trò hệ thống (ADMIN) không thể xóa."));
-
         add(topPanel, BorderLayout.NORTH);
         add(scrollPane, BorderLayout.CENTER);
         add(infoPanel, BorderLayout.SOUTH);
@@ -139,7 +124,6 @@ public class RoleManagementPanel extends JPanel {
     private void loadData() {
         tableModel.setRowCount(0);
         List<VaiTro> roles = authService.getAllRoles();
-
         for (VaiTro role : roles) {
             Object[] row = {
                 role.getId(),
@@ -170,7 +154,6 @@ public class RoleManagementPanel extends JPanel {
                     JOptionPane.WARNING_MESSAGE);
             return;
         }
-
         int modelRow = table.convertRowIndexToModel(selectedRow);
         String roleCode = (String) tableModel.getValueAt(modelRow, 0);
         VaiTro role = authService.getRoleByCode(roleCode);
@@ -193,16 +176,13 @@ public class RoleManagementPanel extends JPanel {
                     JOptionPane.WARNING_MESSAGE);
             return;
         }
-
         int modelRow = table.convertRowIndexToModel(selectedRow);
         String roleCode = (String) tableModel.getValueAt(modelRow, 0);
-
         int confirm = JOptionPane.showConfirmDialog(this,
                 "Bạn có chắc muốn xóa vai trò '" + roleCode + "'?",
                 "Xác nhận xóa",
                 JOptionPane.YES_NO_OPTION,
                 JOptionPane.WARNING_MESSAGE);
-
         if (confirm == JOptionPane.YES_OPTION) {
             KetQua<Void> result = authService.deleteRole(roleCode);
             if (result.isSuccess()) {

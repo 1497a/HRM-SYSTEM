@@ -8,7 +8,6 @@ public class LoaiPhep {
     private int soNgayToiDa;
     private String moTa;
     private String trangThai;
-
     public LoaiPhep() {}
 
     public LoaiPhep(String id, String tenLoaiPhep, int soNgayToiDa, boolean coLuong) {
@@ -32,12 +31,6 @@ public class LoaiPhep {
     public void setMoTa(String moTa) { this.moTa = moTa; }
     public String getTrangThai() { return trangThai; }
     public void setTrangThai(String trangThai) { this.trangThai = trangThai; }
-
-    // Legacy compat
-    public String getCode() { return id; }
-    public String getName() { return tenLoaiPhep; }
-    public int getDefaultDays() { return soNgayToiDa; }
-    public boolean isPaid() { return coLuong; }
 
     @Override
     public String toString() { return tenLoaiPhep + " (" + id + ")"; }

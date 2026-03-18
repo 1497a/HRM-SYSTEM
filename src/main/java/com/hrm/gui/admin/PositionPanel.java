@@ -4,6 +4,7 @@ import com.hrm.bus.ChucVuBUS;
 import com.hrm.bus.KetQua;
 import com.hrm.model.ChucVu;
 import com.hrm.util.DialogUtil;
+import com.hrm.util.HRMConstants;
 import com.hrm.util.PermissionCodes;
 import com.hrm.util.SessionContext;
 import com.hrm.util.UIHelper;
@@ -22,48 +23,37 @@ public class PositionPanel extends JPanel {
     private static final String STATUS_ALL = "Tat ca";
     private static final String STATUS_ACTIVE = "Hoat dong";
     private static final String STATUS_INACTIVE = "Ngung hoat dong";
-
     private final ChucVuBUS service = new ChucVuBUS();
     private final NumberFormat moneyFmt = NumberFormat.getNumberInstance(new Locale("vi", "VN"));
-
     private JTable table;
     private DefaultTableModel tableModel;
     private TableRowSorter<DefaultTableModel> sorter;
     private JTextField txtSearch;
     private JComboBox<String> cboFilter;
     private JButton btnThem;
-
     public PositionPanel() {
         setLayout(new BorderLayout());
         setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
-
         JPanel topPanel = new JPanel(new BorderLayout());
-
         JLabel title = new JLabel("QUAN LY CHUC VU");
         title.setFont(new Font("Arial", Font.BOLD, 16));
         title.setBorder(BorderFactory.createEmptyBorder(0, 0, 10, 0));
         topPanel.add(title, BorderLayout.NORTH);
-
         JLabel lblHint = new JLabel("Tim theo: Ma / Ten chuc vu / Trang thai");
         lblHint.setFont(new Font("Arial", Font.ITALIC, 11));
         topPanel.add(lblHint, BorderLayout.SOUTH);
-
         JPanel searchFilterPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
         JLabel lblSearch = new JLabel("Tim kiem:");
         txtSearch = new JTextField(20);
         txtSearch.setToolTipText("Nhap ma hoac ten chuc vu de tim kiem");
-
         JLabel lblFilter = new JLabel("    Trang thai:");
         cboFilter = new JComboBox<>(new String[]{STATUS_ALL, STATUS_ACTIVE, STATUS_INACTIVE});
-
         searchFilterPanel.add(lblSearch);
         searchFilterPanel.add(txtSearch);
         searchFilterPanel.add(lblFilter);
         searchFilterPanel.add(cboFilter);
-
         topPanel.add(searchFilterPanel, BorderLayout.CENTER);
         add(topPanel, BorderLayout.NORTH);
-
         tableModel = new DefaultTableModel(
                 new Object[]{"Ma CV", "Ten chuc vu", "Cap bac", "Phu cap (VND)", "Trang thai"}, 0) {
             @Override
@@ -71,7 +61,6 @@ public class PositionPanel extends JPanel {
                 return false;
             }
         };
-
         table = new JTable(tableModel);
         table.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
         table.setRowHeight(24);
@@ -80,11 +69,9 @@ public class PositionPanel extends JPanel {
         table.getColumnModel().getColumn(2).setPreferredWidth(70);
         table.getColumnModel().getColumn(3).setPreferredWidth(110);
         table.getColumnModel().getColumn(4).setPreferredWidth(90);
-
         sorter = new TableRowSorter<>(tableModel);
         table.setRowSorter(sorter);
         add(new JScrollPane(table), BorderLayout.CENTER);
-
         btnThem = UIHelper.createPrimaryButton("+ Them");
         JPanel btnPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
         btnPanel.add(btnThem);
@@ -92,9 +79,7 @@ public class PositionPanel extends JPanel {
         btnLamMoi.addActionListener(e -> refreshTable());
         btnPanel.add(btnLamMoi);
         add(btnPanel, BorderLayout.SOUTH);
-
         setupPermissions();
-
         btnThem.addActionListener(e -> showAddDialog());
         txtSearch.addKeyListener(new java.awt.event.KeyAdapter() {
             @Override
@@ -103,7 +88,6 @@ public class PositionPanel extends JPanel {
             }
         });
         cboFilter.addActionListener(e -> applyFilter());
-
         table.addMouseListener(new java.awt.event.MouseAdapter() {
             @Override
             public void mouseClicked(java.awt.event.MouseEvent e) {
@@ -112,7 +96,6 @@ public class PositionPanel extends JPanel {
                 }
             }
         });
-
         refreshTable();
     }
 
@@ -123,14 +106,12 @@ public class PositionPanel extends JPanel {
     private void applyFilter() {
         String searchText = txtSearch.getText().toLowerCase().trim();
         int statusFilterIndex = cboFilter.getSelectedIndex();
-
         RowFilter<DefaultTableModel, Object> rf = new RowFilter<DefaultTableModel, Object>() {
             @Override
             public boolean include(Entry<? extends DefaultTableModel, ? extends Object> entry) {
                 String ma = entry.getStringValue(0).toLowerCase();
                 String tenChucVu = entry.getStringValue(1).toLowerCase();
                 boolean matchSearch = searchText.isEmpty() || ma.contains(searchText) || tenChucVu.contains(searchText);
-
                 String trangThai = normalizeTrangThai(entry.getStringValue(4));
                 boolean matchStatus = true;
                 if (statusFilterIndex == 1) {
@@ -141,7 +122,6 @@ public class PositionPanel extends JPanel {
                 return matchSearch && matchStatus;
             }
         };
-
         sorter.setRowFilter(rf);
     }
 
@@ -156,7 +136,6 @@ public class PositionPanel extends JPanel {
                     toTrangThaiDisplay(p.getTrangThai())
             });
         }
-
         txtSearch.setText("");
         cboFilter.setSelectedIndex(0);
     }
@@ -168,7 +147,6 @@ public class PositionPanel extends JPanel {
         JTextField txtPhuCap = new JTextField("0");
         JTextArea txtMoTa = new JTextArea(3, 20);
         txtMoTa.setLineWrap(true);
-
         Object[] fields = {
                 "Ma chuc vu (*):", txtMa,
                 "Ten chuc vu (*):", txtTen,
@@ -176,41 +154,34 @@ public class PositionPanel extends JPanel {
                 "Phu cap (VND):", txtPhuCap,
                 "Mo ta:", new JScrollPane(txtMoTa)
         };
-
         int ok = JOptionPane.showConfirmDialog(this, fields, "Them chuc vu moi", JOptionPane.OK_CANCEL_OPTION);
         if (ok != JOptionPane.OK_OPTION) {
             return;
         }
-
         String maChucVu = txtMa.getText().trim();
         if (maChucVu.isEmpty()) {
             JOptionPane.showMessageDialog(this, "Ma chuc vu khong duoc de trong.", "Loi nhap lieu", JOptionPane.ERROR_MESSAGE);
             return;
         }
-
         if (service.existsActiveByCode(maChucVu)) {
             JOptionPane.showMessageDialog(this,
                     "Ma chuc vu '" + maChucVu + "' da ton tai va dang hoat dong. Vui long dung ma khac.",
                     "Trung ma chuc vu", JOptionPane.ERROR_MESSAGE);
             return;
         }
-
         String tenChucVu = txtTen.getText().trim();
         if (tenChucVu.isEmpty()) {
             JOptionPane.showMessageDialog(this, "Ten chuc vu khong duoc de trong.", "Loi nhap lieu", JOptionPane.ERROR_MESSAGE);
             return;
         }
-
         Integer capBac = parseCapBac(txtCapBac.getText(), this);
         if (capBac == null) {
             return;
         }
-
         Double phuCap = parsePhuCap(txtPhuCap.getText(), this);
         if (phuCap == null) {
             return;
         }
-
         KetQua<Void> kq = service.addPosition(
                 maChucVu,
                 tenChucVu,
@@ -222,7 +193,6 @@ public class PositionPanel extends JPanel {
             DialogUtil.showError(this, kq.getMessage());
             return;
         }
-
         refreshTable();
         DialogUtil.showSuccess(this, kq.getMessage());
     }
@@ -232,18 +202,15 @@ public class PositionPanel extends JPanel {
         if (row == -1) {
             return;
         }
-
         int modelRow = table.convertRowIndexToModel(row);
         String ma = (String) tableModel.getValueAt(modelRow, 0);
-        ChucVu pos = service.getById(ma);
+        ChucVu pos = service.getByMaChucVu(ma);
         if (pos == null) {
             return;
         }
-
         boolean canEdit = SessionContext.getInstance().hasPermission(PermissionCodes.POSITION_MANAGE);
         Frame frame = (Frame) SwingUtilities.getWindowAncestor(this);
         JDialog dialog = new JDialog(frame, "Chi tiet chuc vu - " + pos.getTenChucVu(), true);
-
         JTextField txtMa = new JTextField(pos.getId());
         txtMa.setEnabled(false);
         JTextField txtTen = new JTextField(pos.getTenChucVu());
@@ -251,11 +218,9 @@ public class PositionPanel extends JPanel {
         JTextField txtPhuCap = new JTextField(String.valueOf(pos.getPhuCapChucVu()));
         JTextArea txtMoTa = new JTextArea(pos.getMoTa() != null ? pos.getMoTa() : "", 3, 20);
         txtMoTa.setLineWrap(true);
-
         JComboBox<String> cboTrangThai = new JComboBox<>(new String[]{STATUS_ACTIVE, STATUS_INACTIVE});
         cboTrangThai.setSelectedItem(toTrangThaiDisplay(pos.getTrangThai()));
         cboTrangThai.setEnabled(canEdit);
-
         for (JComponent c : new JComponent[]{txtTen, txtCapBac, txtPhuCap, txtMoTa}) {
             if (c instanceof JTextField) {
                 ((JTextField) c).setEditable(canEdit);
@@ -263,18 +228,15 @@ public class PositionPanel extends JPanel {
                 ((JTextArea) c).setEditable(canEdit);
             }
         }
-
         JPanel form = new JPanel(new GridBagLayout());
         form.setBorder(BorderFactory.createEmptyBorder(16, 16, 8, 16));
         GridBagConstraints gbc = new GridBagConstraints();
         gbc.insets = new Insets(5, 8, 5, 8);
         gbc.anchor = GridBagConstraints.WEST;
-
         String[] labels = {
                 "Ma chuc vu:", "Ten chuc vu (*):", "Cap bac:", "Phu cap (VND):", "Mo ta:", "Trang thai:"
         };
         JComponent[] fields = {txtMa, txtTen, txtCapBac, txtPhuCap, new JScrollPane(txtMoTa), cboTrangThai};
-
         for (int i = 0; i < labels.length; i++) {
             gbc.gridx = 0;
             gbc.gridy = i;
@@ -283,19 +245,16 @@ public class PositionPanel extends JPanel {
             JLabel lbl = new JLabel(labels[i]);
             lbl.setFont(UIFonts.TEXT_NORMAL);
             form.add(lbl, gbc);
-
             gbc.gridx = 1;
             gbc.fill = GridBagConstraints.HORIZONTAL;
             gbc.weightx = 1.0;
             fields[i].setPreferredSize(new Dimension(210, i == 4 ? 60 : 28));
             form.add(fields[i], gbc);
         }
-
         JPanel btnPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT, 8, 8));
         JButton btnHuy = UIHelper.createDefaultButton("Huy");
         btnHuy.addActionListener(e -> dialog.dispose());
         btnPanel.add(btnHuy);
-
         if (canEdit) {
             JButton btnLuu = UIHelper.createSuccessButton("Luu");
             btnLuu.addActionListener(e -> {
@@ -304,17 +263,14 @@ public class PositionPanel extends JPanel {
                     JOptionPane.showMessageDialog(dialog, "Ten chuc vu khong duoc de trong.", "Loi nhap lieu", JOptionPane.ERROR_MESSAGE);
                     return;
                 }
-
                 Integer capBac = parseCapBac(txtCapBac.getText(), dialog);
                 if (capBac == null) {
                     return;
                 }
-
                 Double phuCap = parsePhuCap(txtPhuCap.getText(), dialog);
                 if (phuCap == null) {
                     return;
                 }
-
                 KetQua<Void> kqCapNhat = service.updatePosition(
                         ma,
                         tenChucVu,
@@ -326,11 +282,10 @@ public class PositionPanel extends JPanel {
                     DialogUtil.showError(dialog, kqCapNhat.getMessage());
                     return;
                 }
-
                 String rawTrangThaiMoi = toTrangThaiRaw((String) cboTrangThai.getSelectedItem());
                 if (!normalizeTrangThai(rawTrangThaiMoi).equals(normalizeTrangThai(pos.getTrangThai()))) {
                     KetQua<Void> kqTrangThai;
-                    if ("hoat_dong".equals(rawTrangThaiMoi)) {
+                    if (HRMConstants.TRANG_THAI_HOAT_DONG.equals(rawTrangThaiMoi)) {
                         kqTrangThai = service.activatePosition(ma);
                     } else {
                         kqTrangThai = service.deactivatePosition(ma);
@@ -340,14 +295,12 @@ public class PositionPanel extends JPanel {
                         return;
                     }
                 }
-
                 refreshTable();
                 dialog.dispose();
                 DialogUtil.showSuccess(PositionPanel.this, "Cap nhat chuc vu thanh cong!");
             });
             btnPanel.add(btnLuu);
         }
-
         JPanel main = new JPanel(new BorderLayout());
         main.add(form, BorderLayout.CENTER);
         main.add(btnPanel, BorderLayout.SOUTH);
@@ -372,10 +325,10 @@ public class PositionPanel extends JPanel {
     private String toTrangThaiRaw(String display) {
         String normalized = normalizeTrangThai(display);
         if ("hoatdong".equals(normalized)) {
-            return "hoat_dong";
+            return HRMConstants.TRANG_THAI_HOAT_DONG;
         }
         if ("ngunghoatdong".equals(normalized) || "ngung".equals(normalized)) {
-            return "ngung";
+            return HRMConstants.TRANG_THAI_NGUNG_HOAT_DONG;
         }
         return display == null ? "" : display;
     }
@@ -396,18 +349,18 @@ public class PositionPanel extends JPanel {
     private Integer parseCapBac(String rawValue, Component parent) {
         String text = rawValue == null ? "" : rawValue.trim();
         if (text.isEmpty()) {
-            JOptionPane.showMessageDialog(parent, "Cap bac khong duoc de trong.", "Loi nhap lieu", JOptionPane.ERROR_MESSAGE);
+            JOptionPane.showMessageDialog(parent, "Cấp bậc không được để trống.", "Lỗi nhập liệu", JOptionPane.ERROR_MESSAGE);
             return null;
         }
         try {
             int capBac = Integer.parseInt(text);
             if (capBac < 1 || capBac > 20) {
-                JOptionPane.showMessageDialog(parent, "Cap bac phai la so tu 1 den 20.", "Loi nhap lieu", JOptionPane.ERROR_MESSAGE);
+                JOptionPane.showMessageDialog(parent, "Cấp bậc phải là số từ 1 đến 20.", "Lỗi nhập liệu", JOptionPane.ERROR_MESSAGE);
                 return null;
             }
             return capBac;
         } catch (NumberFormatException e) {
-            JOptionPane.showMessageDialog(parent, "Cap bac phai la so nguyen hop le.", "Loi nhap lieu", JOptionPane.ERROR_MESSAGE);
+            JOptionPane.showMessageDialog(parent, "Cấp bậc phải là số nguyên hợp lệ.", "Lỗi nhập liệu", JOptionPane.ERROR_MESSAGE);
             return null;
         }
     }

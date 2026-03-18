@@ -9,6 +9,7 @@ import com.hrm.bus.HopDongBUS;
 import com.hrm.bus.KetQua;
 import com.hrm.bus.NhanVienBUS;
 import com.hrm.util.SessionContext;
+import com.hrm.util.UIFonts;
 import com.hrm.util.UIColors;
 
 import javax.swing.*;
@@ -24,21 +25,17 @@ public class EmployeeDetailPanel extends JDialog {
     private final NhanVienBUS nvService      = NhanVienBUS.getInstance();
     private final BoNhiemBUS  boNhiemService = BoNhiemBUS.getInstance();
     private final HopDongBUS  hopDongService = HopDongBUS.getInstance();
-
     private final String maNV;
     private NhanVien       nhanVien;
     private ThongTinCaNhan ttcn;
     private BoNhiem        boNhiemHienTai;
     private HopDongLaoDong hopDong;
-
     private boolean dataChanged = false;
     private boolean personalEditMode = false;
     private boolean statusEditMode   = false;
-
     private JButton btnSuaThongTin;
     private JButton btnDoiTrangThai;
     private TabThongTinCaNhanPanel personalTab;
-
     public boolean isDataChanged() { return dataChanged; }
 
     public EmployeeDetailPanel(Frame parent, String maNV) {
@@ -53,7 +50,7 @@ public class EmployeeDetailPanel extends JDialog {
     }
 
     private void loadData() {
-        nhanVien       = nvService.getById(maNV);
+        nhanVien       = nvService.getByMaNhanVien(maNV);
         ttcn           = nvService.getThongTinCaNhan(maNV);
         boNhiemHienTai = boNhiemService.getBoNhiemChinhHieuLuc(maNV);
         hopDong        = hopDongService.getHieuLuc(maNV);
@@ -64,20 +61,16 @@ public class EmployeeDetailPanel extends JDialog {
         if (nhanVien != null && nhanVien.getHoTen() != null && !nhanVien.getHoTen().isEmpty())
             title = "Hồ sơ: " + nhanVien.getHoTen();
         setTitle(title);
-
         JPanel root = new JPanel(new BorderLayout());
-        root.setBackground(UIColors.WHITE);
+        root.setBackground(Color.WHITE);
         root.add(buildHeader(), BorderLayout.NORTH);
-
         personalTab = new TabThongTinCaNhanPanel(maNV, nhanVien, ttcn, hopDong);
-
         JTabbedPane tabs = new JTabbedPane(JTabbedPane.TOP);
         tabs.setFont(com.hrm.util.UIFonts.BOLD_NORMAL);
-        tabs.setBackground(UIColors.LIGHT_GRAY_BG);
+        tabs.setBackground(Color.WHITE);
         tabs.addTab("Thông tin cá nhân", personalTab);
         tabs.addTab("Bổ nhiệm hiện tại", new TabBoNhiemPanel(boNhiemHienTai, boNhiemService, maNV));
         tabs.addChangeListener(e -> updateButtons(tabs));
-
         root.add(tabs, BorderLayout.CENTER);
         root.add(buildFooter(), BorderLayout.SOUTH);
         updateButtons(tabs);
@@ -88,21 +81,17 @@ public class EmployeeDetailPanel extends JDialog {
         JPanel header = new JPanel(new BorderLayout());
         header.setBackground(UIColors.PRIMARY_PURPLE);
         header.setBorder(BorderFactory.createEmptyBorder(14, 20, 14, 20));
-
         String name = "(Không rõ tên)";
         String code = "#" + maNV;
         if (ttcn != null && ttcn.getHoTen() != null)       name = ttcn.getHoTen();
         else if (nhanVien != null && nhanVien.getHoTen() != null) name = nhanVien.getHoTen();
         if (nhanVien != null && nhanVien.getMaNhanVien() != null)  code = nhanVien.getMaNhanVien();
-
         JLabel lblName = new JLabel(name);
-        lblName.setFont(com.hrm.util.UIFonts.HEADER_H3);
-        lblName.setForeground(UIColors.WHITE);
-
+        lblName.setFont(UIFonts.HEADER_SUB);
+        lblName.setForeground(Color.WHITE);
         JLabel lblCode = new JLabel(code);
         lblCode.setFont(com.hrm.util.UIFonts.TEXT_NORMAL);
         lblCode.setForeground(new Color(220, 210, 255));
-
         JPanel textPanel = new JPanel();
         textPanel.setOpaque(false);
         textPanel.setLayout(new BoxLayout(textPanel, BoxLayout.Y_AXIS));
@@ -110,7 +99,6 @@ public class EmployeeDetailPanel extends JDialog {
         textPanel.add(Box.createVerticalStrut(2));
         textPanel.add(lblCode);
         header.add(textPanel, BorderLayout.WEST);
-
         if (nhanVien != null) {
             JLabel badge = createStatusBadge(nhanVien.getTrangThai(), nhanVien.getTrangThaiDisplay());
             JPanel wrap = new JPanel(new FlowLayout(FlowLayout.RIGHT, 0, 0));
@@ -123,39 +111,32 @@ public class EmployeeDetailPanel extends JDialog {
 
     private JPanel buildFooter() {
         JPanel footer = new JPanel(new BorderLayout());
-        footer.setBackground(UIColors.LIGHT_GRAY_BG);
-        footer.setBorder(BorderFactory.createMatteBorder(1, 0, 0, 0, UIColors.BORDER_GRAY));
-
+        footer.setBackground(Color.WHITE);
+        footer.setBorder(BorderFactory.createMatteBorder(1, 0, 0, 0, Color.LIGHT_GRAY));
         JPanel right = new JPanel(new FlowLayout(FlowLayout.RIGHT, 8, 10));
         right.setOpaque(false);
-
         btnSuaThongTin = new JButton("Sửa thông tin");
         styleButton(btnSuaThongTin, UIColors.PRIMARY_PURPLE);
         btnSuaThongTin.setPreferredSize(new Dimension(130, 34));
         btnSuaThongTin.addActionListener(e -> onSuaThongTin());
-
         btnDoiTrangThai = new JButton("Đổi trạng thái");
-        styleButton(btnDoiTrangThai, UIColors.WARNING_TEXT_AMBER);
+        styleButton(btnDoiTrangThai, new Color(230, 120, 0));
         btnDoiTrangThai.setPreferredSize(new Dimension(145, 34));
         btnDoiTrangThai.addActionListener(e -> onDoiTrangThai());
-
         JButton btnClose = new JButton("Đóng");
         btnClose.setFont(com.hrm.util.UIFonts.BOLD_NORMAL);
         btnClose.setFocusPainted(false);
         btnClose.setPreferredSize(new Dimension(90, 34));
         btnClose.setCursor(new Cursor(Cursor.HAND_CURSOR));
         btnClose.addActionListener(e -> dispose());
-
         SessionContext sc = SessionContext.getInstance();
         boolean canUpdate = nvService.canEditEmployeeProfile(maNV);
         boolean canChangeStatus = nvService.canChangeEmployeeStatus(maNV);
-        String myMaNV = sc.getCurrentUser() != null ? sc.getCurrentUser().getNhanVienId() : null;
+        String myMaNV = sc.getCurrentUser() != null ? sc.getCurrentUser().getMaNV() : null;
         boolean isSelf = maNV != null && maNV.equals(myMaNV);
         personalTab.configureStatusOptions();
-
         btnSuaThongTin.setVisible(canUpdate);
         btnDoiTrangThai.setVisible(canChangeStatus && !isSelf);
-
         right.add(btnSuaThongTin);
         right.add(btnDoiTrangThai);
         right.add(btnClose);
@@ -238,7 +219,7 @@ public class EmployeeDetailPanel extends JDialog {
         SessionContext sc = SessionContext.getInstance();
         boolean canUpdate = nvService.canEditEmployeeProfile(maNV);
         boolean canChangeStatus = nvService.canChangeEmployeeStatus(maNV);
-        String myMaNV = sc.getCurrentUser() != null ? sc.getCurrentUser().getNhanVienId() : null;
+        String myMaNV = sc.getCurrentUser() != null ? sc.getCurrentUser().getMaNV() : null;
         boolean isSelf = maNV != null && maNV.equals(myMaNV);
         personalTab.configureStatusOptions();
         btnSuaThongTin.setVisible(isPersonalTab && canUpdate);
@@ -256,7 +237,7 @@ public class EmployeeDetailPanel extends JDialog {
             }
         };
         badge.setOpaque(false); badge.setFont(com.hrm.util.UIFonts.BOLD_SMALL);
-        badge.setForeground(UIColors.WHITE); badge.setBackground(bg);
+        badge.setForeground(Color.WHITE); badge.setBackground(bg);
         badge.setBorder(BorderFactory.createEmptyBorder(4, 10, 4, 10));
         return badge;
     }
@@ -264,7 +245,7 @@ public class EmployeeDetailPanel extends JDialog {
     private void styleButton(JButton btn, Color bg) {
         btn.setFont(com.hrm.util.UIFonts.BOLD_NORMAL);
         btn.setBackground(bg);
-        btn.setForeground(UIColors.WHITE);
+        btn.setForeground(Color.WHITE);
         btn.setFocusPainted(false);
         btn.setBorderPainted(false);
         btn.setOpaque(true);

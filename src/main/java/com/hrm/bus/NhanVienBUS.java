@@ -27,24 +27,18 @@ public class NhanVienBUS {
     private static final String ACTION_EMPLOYEE_VIEW = PermissionCodes.EMPLOYEE_VIEW;
     private static final String ACTION_EMPLOYEE_UPDATE = PermissionCodes.EMPLOYEE_UPDATE;
     private static final String ACTION_EMPLOYEE_STATUS_UPDATE = PermissionCodes.EMPLOYEE_STATUS_UPDATE;
-
-    private static final String TRANG_THAI_DANG_LAM_VIEC = "dang_lam_viec";
+    private static final String TRANG_THAI_DANG_LAM_VIEC = HRMConstants.TRANG_THAI_DANG_LAM_VIEC;
     private static final String TRANG_THAI_TAM_NGHI = "tam_nghi";
     private static final String TRANG_THAI_NGHI_VIEC = "nghi_viec";
-
     private static final String MA_LOAI_PHEP_NAM = "PHEP_NAM";
     private static final String REGEX_EMAIL = "^[\\w.-]+@[\\w.-]+\\.[a-zA-Z]{2,}$";
     private static final String REGEX_PHONE = "0\\d{9,10}";
-
     private static final String ROLE_ADMIN = HRMConstants.ROLE_ADMIN;
-
     private static NhanVienBUS instance;
-
     private final NhanVienDAO nvRepo = NhanVienDAO.getInstance();
     private final ThongTinCaNhanDAO ttcnRepo = ThongTinCaNhanDAO.getInstance();
     private final BoNhiemDAO boNhiemRepo = BoNhiemDAO.getInstance();
-    private final TaiKhoanDAO taiKhoanRepo = new TaiKhoanDAO();
-
+    private final TaiKhoanDAO taiKhoanRepo = TaiKhoanDAO.getInstance();
     private NhanVienBUS() {
     }
 
@@ -56,13 +50,13 @@ public class NhanVienBUS {
     }
 
     public KetQua<NhanVien> taoHoSo(NhanVien nv, ThongTinCaNhan ttcn) {
-        if (isBlank(nv.getMaNhanVien())) {
+        if (ValidationUtils.isBlank(nv.getMaNhanVien())) {
             return KetQua.error("Ma nhan vien khong duoc de trong.");
         }
         if (nvRepo.existsByMaNhanVien(nv.getMaNhanVien().trim())) {
             return KetQua.error("Ma nhan vien '" + nv.getMaNhanVien() + "' da ton tai.");
         }
-        if (isBlank(ttcn.getHoTen())) {
+        if (ValidationUtils.isBlank(ttcn.getHoTen())) {
             return KetQua.error("Ho ten khong duoc de trong.");
         }
         if (ttcn.getNgaySinh() != null) {
@@ -79,20 +73,16 @@ public class NhanVienBUS {
         if (phoneErr != null) {
             return KetQua.error(phoneErr);
         }
-
         KetQua<Void> cccdValidation = validateCCCD(ttcn.getCccd(), nv.getMaNhanVien());
         if (!cccdValidation.isSuccess()) {
             return KetQua.error(cccdValidation.getMessage());
         }
-
         if (nv.getNgayVaoLam() == null) {
             return KetQua.error("Ngay vao lam khong duoc de trong.");
         }
-
-        if (isBlank(nv.getTrangThai())) {
+        if (ValidationUtils.isBlank(nv.getTrangThai())) {
             nv.setTrangThai(TRANG_THAI_DANG_LAM_VIEC);
         }
-
         try (Connection conn = DatabaseConnection.getConnection()) {
             conn.setAutoCommit(false);
             try {
@@ -101,7 +91,6 @@ public class NhanVienBUS {
                 ttcnRepo.insert(conn, ttcn);
                 insertSoDungPhep(conn, maNV, LocalDate.now().getYear(), MA_LOAI_PHEP_NAM, 12.0);
                 conn.commit();
-
                 nv.setHoTen(ttcn.getHoTen());
                 return KetQua.success(nv, "Tao ho so nhan vien thanh cong. Ma NV: " + maNV);
             } catch (Exception ex) {
@@ -114,13 +103,12 @@ public class NhanVienBUS {
     }
 
     public KetQua<ThongTinCaNhan> capNhatThongTinCaNhan(ThongTinCaNhan ttcn) {
-        if (isBlank(ttcn.getMaNV())) {
+        if (ValidationUtils.isBlank(ttcn.getMaNV())) {
             return KetQua.error("Ma nhan vien khong hop le.");
         }
         if (!canEditEmployeeProfile(ttcn.getMaNV())) {
             return KetQua.error("Ban khong co quyen cap nhat thong tin nhan vien nay.");
         }
-
         KetQua<Void> cccdValidation = validateCCCD(ttcn.getCccd(), ttcn.getMaNV());
         if (!cccdValidation.isSuccess()) {
             return KetQua.error(cccdValidation.getMessage());
@@ -135,7 +123,6 @@ public class NhanVienBUS {
         if (emailErr != null) return KetQua.error(emailErr);
         String phoneErr = ValidationUtils.validatePhone(ttcn.getDienThoai());
         if (phoneErr != null) return KetQua.error(phoneErr);
-
         try {
             ttcnRepo.update(ttcn);
             return KetQua.success(ttcn, "Cap nhat thong tin ca nhan thanh cong.");
@@ -145,38 +132,32 @@ public class NhanVienBUS {
     }
 
     public KetQua<NhanVien> capNhatTrangThai(String maNV, String trangThaiMoi, String lyDo) {
-        if (isBlank(maNV)) {
+        if (ValidationUtils.isBlank(maNV)) {
             return KetQua.error("Ma nhan vien khong hop le.");
         }
-
         NhanVien nv = nvRepo.findByMaNhanVien(maNV);
         if (nv == null) {
             return KetQua.error("Khong tim thay nhan vien voi ma: " + maNV);
         }
-
         KetQua<Void> permissionValidation = validateStatusChangePermission(nv, trangThaiMoi);
         if (!permissionValidation.isSuccess()) {
             return KetQua.error(permissionValidation.getMessage());
         }
-
         KetQua<Void> transitionValidation = validateTrangThaiTransition(nv.getTrangThai(), trangThaiMoi);
         if (!transitionValidation.isSuccess()) {
             return KetQua.error(transitionValidation.getMessage());
         }
-
         nv.setTrangThai(trangThaiMoi);
         nvRepo.update(nv);
-
         if (TRANG_THAI_NGHI_VIEC.equals(trangThaiMoi)) {
             boNhiemRepo.endAllActiveBoNhiemForNV(maNV, LocalDate.now());
             taiKhoanRepo.deactivateByMaNV(maNV);
         }
-
         return KetQua.success(nv, "Cap nhat trang thai nhan vien thanh cong.");
     }
 
     public boolean canChangeEmployeeStatus(String maNV) {
-        if (isBlank(maNV)) {
+        if (ValidationUtils.isBlank(maNV)) {
             return false;
         }
         NhanVien target = nvRepo.findByMaNhanVien(maNV);
@@ -184,19 +165,11 @@ public class NhanVienBUS {
     }
 
     public boolean canEditEmployeeProfile(String maNV) {
-        if (isBlank(maNV)) {
+        if (ValidationUtils.isBlank(maNV)) {
             return false;
         }
         NhanVien target = nvRepo.findByMaNhanVien(maNV);
         return canEditEmployeeProfile(target);
-    }
-
-    public boolean canUpdateEmployeeStatus(String maNV) {
-        if (isBlank(maNV)) {
-            return false;
-        }
-        NhanVien target = nvRepo.findByMaNhanVien(maNV);
-        return canChangeEmployeeStatus(target);
     }
 
     public List<NhanVien> getAll() {
@@ -219,10 +192,6 @@ public class NhanVienBUS {
 
     public NhanVien getByMaNhanVien(String maNhanVien) {
         return nvRepo.findByMaNhanVien(maNhanVien);
-    }
-
-    public NhanVien getById(String maNV) {
-        return nvRepo.findByMaNhanVien(maNV);
     }
 
     public ThongTinCaNhan getThongTinCaNhan(String maNV) {
@@ -252,7 +221,7 @@ public class NhanVienBUS {
     }
 
     private KetQua<Void> validateCCCD(String cccdRaw, String maNV) {
-        if (isBlank(cccdRaw)) {
+        if (ValidationUtils.isBlank(cccdRaw)) {
             return KetQua.success(null, "");
         }
         String cccd = cccdRaw.trim();
@@ -286,10 +255,10 @@ public class NhanVienBUS {
 
     private boolean canEditEmployeeProfile(NhanVien target) {
         TaiKhoan currentUser = SessionContext.getInstance().getCurrentUser();
-        if (currentUser == null || target == null || isBlank(target.getMaNhanVien())) {
+        if (currentUser == null || target == null || ValidationUtils.isBlank(target.getMaNhanVien())) {
             return false;
         }
-        String currentMaNV = currentUser.getNhanVienId();
+        String currentMaNV = currentUser.getMaNV();
         if (SelfApprovalGuard.isSelfAction(currentMaNV, target.getMaNhanVien())) {
             return true;
         }
@@ -310,16 +279,14 @@ public class NhanVienBUS {
         if (currentUser == null) {
             return KetQua.error("Phien dang nhap khong hop le.");
         }
-        if (target == null || isBlank(target.getMaNhanVien())) {
+        if (target == null || ValidationUtils.isBlank(target.getMaNhanVien())) {
             return KetQua.error("Nhan vien muc tieu khong hop le.");
         }
-
-        String currentMaNV = currentUser.getNhanVienId();
+        String currentMaNV = currentUser.getMaNV();
         if (SelfApprovalGuard.isSelfAction(currentMaNV, target.getMaNhanVien())
                 && !SelfApprovalGuard.currentUserCanBypassSelfRestriction()) {
             return KetQua.error("Khong the tu doi trang thai cua chinh minh.");
         }
-
         if (!isCurrentUserAllowedForAction(currentUser, ACTION_EMPLOYEE_STATUS_UPDATE)) {
             return KetQua.error("Ban khong co quyen doi trang thai nhan vien nay.");
         }
@@ -328,9 +295,7 @@ public class NhanVienBUS {
 
     private boolean isCurrentUserAllowedForAction(TaiKhoan currentUser, String action) {
         return currentUser != null
-                && (HRMConstants.USERNAME_ADMIN.equalsIgnoreCase(currentUser.getTenDangNhap())
-                || currentUser.coVaiTro(ROLE_ADMIN)
-                || currentUser.coQuyen(action));
+                && (SessionContext.getInstance().isAdmin() || currentUser.coQuyen(action));
     }
 
     private boolean isTargetWithinActionScope(String action, String currentMaNV, String targetMaNV) {
@@ -338,7 +303,9 @@ public class NhanVienBUS {
         if (scope == com.hrm.model.DataScope.ALL) {
             return true;
         }
-        if (scope == com.hrm.model.DataScope.NONE || isBlank(currentMaNV) || isBlank(targetMaNV)) {
+        if (scope == com.hrm.model.DataScope.NONE
+                || ValidationUtils.isBlank(currentMaNV)
+                || ValidationUtils.isBlank(targetMaNV)) {
             return false;
         }
         if (scope == com.hrm.model.DataScope.SELF) {
@@ -352,7 +319,4 @@ public class NhanVienBUS {
         return false;
     }
 
-    private boolean isBlank(String value) {
-        return value == null || value.trim().isEmpty();
-    }
 }

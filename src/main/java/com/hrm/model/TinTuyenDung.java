@@ -16,20 +16,17 @@ public class TinTuyenDung {
     private LocalDate hanNopHoSo;
     private String trangThai; // "dang_tuyen","tam_dung","da_dong"
     private LocalDate ngayTao;
-
     // Transient - dùng để hiển thị
     private transient String tenPhongBan;
     private transient String tenChucVu;
     private transient int soUngVien;
     private transient int soLuongCanTuyen; // lay tu YeuCauTuyenDung.soLuong
-
     public TinTuyenDung() {
     }
 
     // ============================
     // Getters & Setters
     // ============================
-
     public int getMaTin() {
         return maTin;
     }

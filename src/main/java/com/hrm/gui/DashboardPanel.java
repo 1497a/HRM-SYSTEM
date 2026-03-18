@@ -18,7 +18,9 @@ import com.hrm.util.UIFonts;
 
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
+
 import java.awt.*;
+import java.awt.Font;
 import java.text.NumberFormat;
 import java.time.LocalDate;
 import java.util.ArrayList;
@@ -32,11 +34,10 @@ import java.util.Locale;
 class DashboardPanel extends JPanel {
 
     private final XacThucBUS authService;
-
     DashboardPanel(XacThucBUS authService) {
         this.authService = authService;
         setLayout(new BorderLayout());
-        setBackground(UIColors.LIGHT_GRAY_BG);
+        setBackground(Color.WHITE);
         DataScope scope = authService.getScopeForAction(PermissionCodes.EMPLOYEE_VIEW);
         JPanel inner = (scope == DataScope.ALL || scope == DataScope.DEPT || scope == DataScope.TEAM)
                 ? buildManagerDashboard(scope)
@@ -46,20 +47,16 @@ class DashboardPanel extends JPanel {
 
     private JPanel buildManagerDashboard(DataScope scope) {
         TaiKhoan currentUser = SessionContext.getInstance().getCurrentUser();
-        String maNV = currentUser != null ? currentUser.getNhanVienId() : null;
-
+        String maNV = currentUser != null ? currentUser.getMaNV() : null;
         JPanel root = new JPanel(new BorderLayout(0, 20));
-        root.setBackground(UIColors.LIGHT_GRAY_BG);
+        root.setBackground(Color.WHITE);
         root.setBorder(new EmptyBorder(25, 25, 25, 25));
         root.add(createTitle("Tổng quan hệ thống"), BorderLayout.NORTH);
-
         JPanel body = new JPanel();
         body.setLayout(new BoxLayout(body, BoxLayout.Y_AXIS));
         body.setOpaque(false);
-
         List<JPanel> cards = new ArrayList<>();
         addManagerStatCards(cards, scope, maNV);
-
         if (!cards.isEmpty()) {
             int cols = Math.min(cards.size(), 3);
             int rows = (int) Math.ceil((double) cards.size() / cols);
@@ -69,7 +66,6 @@ class DashboardPanel extends JPanel {
             body.add(grid);
             body.add(Box.createVerticalStrut(28));
         }
-
         root.add(scroll(body), BorderLayout.CENTER);
         return root;
     }
@@ -105,32 +101,28 @@ class DashboardPanel extends JPanel {
             try {
                 long opening = TuyenDungBUS.getInstance().getAllTinTuyenDung().stream()
                         .filter(t -> "dang_tuyen".equals(t.getTrangThai())).count();
-                cards.add(RoundedPanel.createStatCard("Tuyển dụng đang mở", String.valueOf(opening), UIColors.WARNING_YELLOW));
+                cards.add(RoundedPanel.createStatCard("Tuyển dụng đang mở", String.valueOf(opening), new Color(255, 193, 7)));
             } catch (Exception ignored) {
-                cards.add(RoundedPanel.createStatCard("Tuyển dụng đang mở", "—", UIColors.WARNING_YELLOW));
+                cards.add(RoundedPanel.createStatCard("Tuyển dụng đang mở", "—", new Color(255, 193, 7)));
             }
         }
     }
 
     private JPanel buildPersonalDashboard() {
         TaiKhoan currentUser = SessionContext.getInstance().getCurrentUser();
-        String maNV = currentUser != null ? currentUser.getNhanVienId() : null;
-
+        String maNV = currentUser != null ? currentUser.getMaNV() : null;
         JPanel root = new JPanel(new BorderLayout(0, 20));
-        root.setBackground(UIColors.LIGHT_GRAY_BG);
+        root.setBackground(Color.WHITE);
         root.setBorder(new EmptyBorder(25, 25, 25, 25));
         root.add(createTitle("Thông tin của tôi"), BorderLayout.NORTH);
-
         JPanel body = new JPanel();
         body.setLayout(new BoxLayout(body, BoxLayout.Y_AXIS));
         body.setOpaque(false);
-
         JPanel cardsGrid = new JPanel(new GridLayout(1, 3, 18, 18));
         cardsGrid.setOpaque(false);
         addPersonalStatCards(cardsGrid, maNV);
         body.add(cardsGrid);
         body.add(Box.createVerticalStrut(28));
-
         root.add(scroll(body), BorderLayout.CENTER);
         return root;
     }
@@ -139,12 +131,12 @@ class DashboardPanel extends JPanel {
         try {
             SoDungPhep phepNam = null;
             for (SoDungPhep p : NghiPhepBUS.getInstance().getBalances(maNV)) {
-                if ("PHEP_NAM".equals(p.getLeaveTypeCode()) || "AL".equals(p.getLeaveTypeCode())) {
+                if ("PHEP_NAM".equals(p.getMaLoaiPhep()) || "AL".equals(p.getMaLoaiPhep())) {
                     phepNam = p;
                     break;
                 }
             }
-            double remaining = phepNam != null ? phepNam.getRemainingDays() : 0;
+            double remaining = phepNam != null ? phepNam.getSoNgayConLai() : 0;
             cardsGrid.add(RoundedPanel.createStatCard("Phép năm còn lại", (int) remaining + " ngày", UIColors.PRIMARY_PURPLE));
         } catch (Exception ignored) {
             cardsGrid.add(RoundedPanel.createStatCard("Phép năm còn lại", "—", UIColors.PRIMARY_PURPLE));
@@ -152,9 +144,9 @@ class DashboardPanel extends JPanel {
         try {
             long pending = maNV == null ? 0 : NghiPhepBUS.getInstance().getMyRequests(maNV).stream()
                     .filter(d -> DonXinNghiPhep.TrangThai.CHO_DUYET.equals(d.getTrangThai())).count();
-            cardsGrid.add(RoundedPanel.createStatCard("Đơn đang chờ duyệt", String.valueOf(pending), UIColors.WARNING_YELLOW));
+            cardsGrid.add(RoundedPanel.createStatCard("Đơn đang chờ duyệt", String.valueOf(pending), new Color(255, 193, 7)));
         } catch (Exception ignored) {
-            cardsGrid.add(RoundedPanel.createStatCard("Đơn đang chờ duyệt", "—", UIColors.WARNING_YELLOW));
+            cardsGrid.add(RoundedPanel.createStatCard("Đơn đang chờ duyệt", "—", new Color(255, 193, 7)));
         }
         try {
             String luongText = "Chưa có";
@@ -178,7 +170,7 @@ class DashboardPanel extends JPanel {
 
     private JLabel createTitle(String text) {
         JLabel label = new JLabel(text);
-        label.setFont(UIFonts.HEADER_H1);
+        label.setFont(new Font("Segoe UI", Font.BOLD, 24));
         label.setForeground(UIColors.TEXT_DARK);
         return label;
     }
@@ -190,4 +182,5 @@ class DashboardPanel extends JPanel {
         sp.getViewport().setOpaque(false);
         return sp;
     }
+
 }

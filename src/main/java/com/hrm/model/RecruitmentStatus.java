@@ -10,7 +10,6 @@ public final class RecruitmentStatus {
         public static final String DA_DUYET = "da_duyet";
         public static final String TU_CHOI = "tu_choi";
         public static final String DA_TUYEN_DU = "da_tuyen_du";
-
         private YeuCau() {
         }
     }
@@ -19,7 +18,6 @@ public final class RecruitmentStatus {
         public static final String DANG_TUYEN = "dang_tuyen";
         public static final String TAM_DUNG = "tam_dung";
         public static final String DA_DONG = "da_dong";
-
         private Tin() {
         }
     }
@@ -30,7 +28,6 @@ public final class RecruitmentStatus {
         public static final String TRUNG_TUYEN = "trung_tuyen";
         public static final String TU_CHOI = "tu_choi";
         public static final String DA_CHUYEN_NHAN_VIEN = "da_chuyen_nhan_vien";
-
         private UngVien() {
         }
     }

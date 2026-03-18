@@ -16,16 +16,22 @@ import java.util.List;
  */
 public class TaiKhoanDAO {
 
+    private static TaiKhoanDAO instance;
+    public static synchronized TaiKhoanDAO getInstance() {
+        if (instance == null) {
+            instance = new TaiKhoanDAO();
+        }
+        return instance;
+    }
+
     // =====================================================================
     // ==================== TaiKhoan (TAIKHOAN) Methods ========================
     // =====================================================================
-
     /**
      * Tìm người dùng theo tên đăng nhập, nạp đầy đủ vai trò và quyền.
      */
     public TaiKhoan findByUsername(String username) {
         if (username == null || username.trim().isEmpty()) return null;
-
         String sql = "SELECT maTaiKhoan, tenDangNhap, matKhau, email, hoatDong, biKhoa, maNV "
                    + "FROM TAIKHOAN WHERE tenDangNhap = ?";
         try (Connection conn = DatabaseConnection.getConnection();
@@ -109,7 +115,6 @@ public class TaiKhoanDAO {
             ps.setString(4, maVaiTro != null ? maVaiTro.trim() : null);
             ps.setString(5, email != null ? email.trim() : null);
             ps.executeUpdate();
-
             try (ResultSet keys = ps.getGeneratedKeys()) {
                 if (keys.next()) {
                     return keys.getInt(1);
@@ -181,7 +186,6 @@ public class TaiKhoanDAO {
      */
     public TaiKhoan findByMaNV(String maNV) {
         if (maNV == null || maNV.trim().isEmpty()) return null;
-
         String sql = "SELECT maTaiKhoan, tenDangNhap, matKhau, email, hoatDong, biKhoa, maNV "
                    + "FROM TAIKHOAN WHERE maNV = ? LIMIT 1";
         try (Connection conn = DatabaseConnection.getConnection();
@@ -222,7 +226,6 @@ public class TaiKhoanDAO {
      */
     public void deactivateByMaNV(String maNV) {
         if (maNV == null || maNV.trim().isEmpty()) return;
-
         String sql = "UPDATE TAIKHOAN SET hoatDong = FALSE, ngayCapNhat = NOW() WHERE maNV = ?";
         try (Connection conn = DatabaseConnection.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
@@ -239,7 +242,6 @@ public class TaiKhoanDAO {
      */
     public boolean existsByUsername(String username) {
         if (username == null || username.trim().isEmpty()) return false;
-
         String sql = "SELECT 1 FROM TAIKHOAN WHERE tenDangNhap = ? LIMIT 1";
         try (Connection conn = DatabaseConnection.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
@@ -257,7 +259,6 @@ public class TaiKhoanDAO {
     // =====================================================================
     // ==================== VaiTro (VAITRO) Methods ==========================
     // =====================================================================
-
     public List<VaiTro> findAllRoles() {
         List<VaiTro> list = new ArrayList<>();
         String sql = "SELECT maVaiTro, tenVaiTro, moTa, laVaiTroHeThong FROM VAITRO "
@@ -286,7 +287,6 @@ public class TaiKhoanDAO {
 
     public VaiTro findRoleByCode(String code) {
         if (code == null || code.trim().isEmpty()) return null;
-
         String sql = "SELECT maVaiTro, tenVaiTro, moTa, laVaiTroHeThong FROM VAITRO WHERE maVaiTro = ?";
         try (Connection conn = DatabaseConnection.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
@@ -328,7 +328,6 @@ public class TaiKhoanDAO {
 
     public void updateRole(VaiTro role) {
         if (role == null || role.getId() == null) return;
-
         String sql = "UPDATE VAITRO SET tenVaiTro = ?, moTa = ? WHERE maVaiTro = ?";
         try (Connection conn = DatabaseConnection.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
@@ -344,12 +343,10 @@ public class TaiKhoanDAO {
 
     public boolean deleteRole(String code) {
         if (code == null || code.trim().isEmpty()) return false;
-
         String checkSystem = "SELECT laVaiTroHeThong FROM VAITRO WHERE maVaiTro = ?";
         String checkInUse  = "SELECT COUNT(*) FROM TAIKHOAN WHERE maVaiTro = ?";
         String delPerms    = "DELETE FROM VAITRO_QUYEN WHERE maVaiTro = ?";
         String delRole     = "DELETE FROM VAITRO WHERE maVaiTro = ?";
-
         try (Connection conn = DatabaseConnection.getConnection()) {
             // Kiểm tra vai trò hệ thống
             try (PreparedStatement ps = conn.prepareStatement(checkSystem)) {
@@ -361,7 +358,6 @@ public class TaiKhoanDAO {
                     }
                 }
             }
-
             // Kiểm tra đang được sử dụng
             try (PreparedStatement ps = conn.prepareStatement(checkInUse)) {
                 ps.setString(1, code.trim());
@@ -372,7 +368,6 @@ public class TaiKhoanDAO {
                     }
                 }
             }
-
             conn.setAutoCommit(false);
             try {
                 try (PreparedStatement ps = conn.prepareStatement(delPerms)) {
@@ -401,7 +396,6 @@ public class TaiKhoanDAO {
     // =====================================================================
     // ==================== Quyen (QUYEN) Methods ==========================
     // =====================================================================
-
     public List<Quyen> findAllPermissions() {
         List<Quyen> list = new ArrayList<>();
         String sql = "SELECT maQuyen, tenQuyen, nhomQuyen, moTa, coPhamVi FROM QUYEN ORDER BY nhomQuyen, maQuyen";
@@ -427,7 +421,6 @@ public class TaiKhoanDAO {
 
     public List<Quyen> findPermissionsByRole(String maVaiTro) {
         if (maVaiTro == null || maVaiTro.trim().isEmpty()) return new ArrayList<>();
-
         List<Quyen> list = new ArrayList<>();
         String sql = "SELECT q.maQuyen, q.tenQuyen, q.nhomQuyen, q.moTa, q.coPhamVi, vq.phamVi "
                    + "FROM QUYEN q JOIN VAITRO_QUYEN vq ON q.maQuyen = vq.maQuyen "
@@ -460,10 +453,8 @@ public class TaiKhoanDAO {
 
     public void setRolePermissions(String maVaiTro, List<Quyen> permissions) {
         if (maVaiTro == null || maVaiTro.trim().isEmpty()) return;
-
         String deleteSql = "DELETE FROM VAITRO_QUYEN WHERE maVaiTro = ?";
         String insertSql = "INSERT INTO VAITRO_QUYEN (maVaiTro, maQuyen, phamVi) VALUES (?, ?, ?)";
-
         try (Connection conn = DatabaseConnection.getConnection()) {
             conn.setAutoCommit(false);
             try {
@@ -507,7 +498,6 @@ public class TaiKhoanDAO {
     // =====================================================================
     // ==================== Private Helpers ================================
     // =====================================================================
-
     private TaiKhoan mapRowToUser(ResultSet rs) throws SQLException {
         int id = rs.getInt("maTaiKhoan");
         String username = rs.getString("tenDangNhap");
@@ -516,15 +506,13 @@ public class TaiKhoanDAO {
         boolean hoatDong = rs.getBoolean("hoatDong");
         boolean biKhoa = rs.getBoolean("biKhoa");
         String maNV = rs.getString("maNV");  // String
-
         // Lấy họ tên nếu có
         String fullName = resolveFullName(maNV, username);
-
         TaiKhoan user = new TaiKhoan(id, username, password, fullName, email);
         user.setHoatDong(hoatDong);
         user.setBiKhoa(biKhoa);
         if (maNV != null && !maNV.trim().isEmpty()) {
-            user.setNhanVienId(maNV.trim());
+            user.setMaNV(maNV.trim());
         }
         return user;
     }
@@ -553,7 +541,6 @@ public class TaiKhoanDAO {
 
     private String resolveFullName(String maNV, String fallback) {
         if (maNV == null || maNV.trim().isEmpty()) return fallback;
-
         String sql = "SELECT hoTen FROM THONGTINCANHAN WHERE maNV = ?";
         try (Connection conn = DatabaseConnection.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
@@ -571,4 +558,5 @@ public class TaiKhoanDAO {
         }
         return fallback;
     }
+
 }

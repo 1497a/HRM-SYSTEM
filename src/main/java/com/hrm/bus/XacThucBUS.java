@@ -23,12 +23,10 @@ public class XacThucBUS {
     private static final int MIN_PASSWORD_LENGTH = 6;
     private static final String ROLE_ADMIN = HRMConstants.ROLE_ADMIN;
     private static final String USERNAME_ADMIN = HRMConstants.USERNAME_ADMIN;
-
     private static XacThucBUS instance;
     private final TaiKhoanDAO taiKhoanRepo;
-
     private XacThucBUS() {
-        this.taiKhoanRepo = new TaiKhoanDAO();
+        this.taiKhoanRepo = TaiKhoanDAO.getInstance();
     }
 
     public static synchronized XacThucBUS getInstance() {
@@ -41,7 +39,6 @@ public class XacThucBUS {
     // =====================================================================
     // ==================== Authentication =================================
     // =====================================================================
-
     /**
      * Xác thực người dùng bằng tên đăng nhập và mật khẩu.
      * Kiểm tra: tài khoản tồn tại, đang hoạt động, không bị khóa, mật khẩu đúng.
@@ -51,12 +48,10 @@ public class XacThucBUS {
      * @return TaiKhoan nếu thành công, null nếu thất bại
      */
     public TaiKhoan authenticate(String username, String password) {
-        if (isBlank(username) || isBlank(password)) return null;
-
+        if (ValidationUtils.isBlank(username) || ValidationUtils.isBlank(password)) return null;
         TaiKhoan user = taiKhoanRepo.findByUsername(username.trim());
         if (user == null || !user.isHoatDong() || user.isBiKhoa()) return null;
         if (!PasswordUtil.verifyPassword(password, user.getMatKhau())) return null;
-
         SessionContext.getInstance().setCurrentUser(user);
         return user;
     }
@@ -99,7 +94,7 @@ public class XacThucBUS {
         if (target == null) return false;
         TaiKhoan current = SessionContext.getInstance().getCurrentUser();
         if (current == null || current.getId() != target.getId()) return false;
-        return current.coVaiTro(ROLE_ADMIN);
+        return SessionContext.getInstance().isAdmin();
     }
 
     /**
@@ -112,7 +107,7 @@ public class XacThucBUS {
     public com.hrm.model.DataScope getScopeForAction(String action) {
         TaiKhoan user = getCurrentUser();
         if (user == null) return com.hrm.model.DataScope.NONE;
-        if (USERNAME_ADMIN.equalsIgnoreCase(user.getTenDangNhap()) || user.coVaiTro(ROLE_ADMIN)) {
+        if (SessionContext.getInstance().isAdmin()) {
             return com.hrm.model.DataScope.ALL;
         }
         for (com.hrm.model.VaiTro role : user.getVaiTros()) {
@@ -123,11 +118,6 @@ public class XacThucBUS {
             }
         }
         return com.hrm.model.DataScope.NONE;
-    }
-
-    /** Alias cho hasPermission() */
-    public boolean coQuyen(String maQuyen) {
-        return hasPermission(maQuyen);
     }
 
     /**
@@ -142,12 +132,11 @@ public class XacThucBUS {
      * Đổi mật khẩu cho người dùng (yêu cầu xác minh mật khẩu cũ).
      */
     public KetQua<Void> changePassword(int userId, String oldPass, String newPass) {
-        if (isBlank(oldPass)) {
+        if (ValidationUtils.isBlank(oldPass)) {
             return KetQua.error("Mật khẩu cũ không được để trống.");
         }
         KetQua<Void> passwordValidation = validateNewPassword(newPass);
         if (!passwordValidation.isSuccess()) return passwordValidation;
-
         TaiKhoan user = taiKhoanRepo.findById(userId);
         if (user == null) {
             return KetQua.error("Không tìm thấy tài khoản.");
@@ -155,7 +144,6 @@ public class XacThucBUS {
         if (!PasswordUtil.verifyPassword(oldPass, user.getMatKhau())) {
             return KetQua.error("Mật khẩu cũ không đúng.");
         }
-
         return updatePassword(userId, newPass, "Đổi mật khẩu thành công.", "Không thể cập nhật mật khẩu. Vui lòng thử lại.");
     }
 
@@ -171,7 +159,6 @@ public class XacThucBUS {
     // =====================================================================
     // ==================== TaiKhoan Management =============================
     // =====================================================================
-
     public List<TaiKhoan> getAllUsers() {
         return taiKhoanRepo.findAll();
     }
@@ -188,26 +175,23 @@ public class XacThucBUS {
      */
     public KetQua<Integer> createUser(String tenDangNhap, String matKhau,
                                       String maNV, String maVaiTro, String email) {
-        if (isBlank(tenDangNhap)) {
+        if (ValidationUtils.isBlank(tenDangNhap)) {
             return KetQua.error("Tên đăng nhập không được để trống.");
         }
         if (matKhau == null || matKhau.isEmpty()) {
             return KetQua.error("Mật khẩu không được để trống.");
         }
-        if (isBlank(maVaiTro)) {
+        if (ValidationUtils.isBlank(maVaiTro)) {
             return KetQua.error("Vai trò không được để trống.");
         }
-
         String emailErr = ValidationUtils.validateEmail(email);
         if (emailErr != null) {
             return KetQua.error(emailErr);
         }
-
         String trimmedUsername = tenDangNhap.trim();
         if (taiKhoanRepo.existsByUsername(trimmedUsername)) {
             return KetQua.error("Tên đăng nhập '" + trimmedUsername + "' đã tồn tại.");
         }
-
         // Kiểm tra mỗi nhân viên chỉ có 1 tài khoản
         String normalizedMaNV = normalizeOptional(maNV);
         if (normalizedMaNV != null) {
@@ -217,10 +201,8 @@ public class XacThucBUS {
                         + "'). Mỗi nhân viên chỉ được có một tài khoản.");
             }
         }
-
         String hashedPassword = PasswordUtil.hashPassword(matKhau);
         int newId = taiKhoanRepo.insert(trimmedUsername, hashedPassword, normalizedMaNV, maVaiTro.trim(), email);
-
         if (newId < 0) {
             return KetQua.error("Không thể tạo tài khoản. Vui lòng thử lại.");
         }
@@ -235,14 +217,11 @@ public class XacThucBUS {
         if (existing == null) {
             return KetQua.error("Không tìm thấy tài khoản.");
         }
-
         String emailErr = ValidationUtils.validateEmail(user != null ? user.getEmail() : null);
         if (emailErr != null) {
             return KetQua.error(emailErr);
         }
-
         enforceAdminProtection(existing, user);
-
         try {
             taiKhoanRepo.update(user);
             // Cập nhật vai trò (lưu trực tiếp trong cột maVaiTro)
@@ -263,15 +242,13 @@ public class XacThucBUS {
         if (user == null) {
             return KetQua.error("Không tìm thấy tài khoản.");
         }
-
         TaiKhoan current = SessionContext.getInstance().getCurrentUser();
-        if (current != null && current.getId() == id && current.coVaiTro(ROLE_ADMIN)) {
+        if (current != null && current.getId() == id && SessionContext.getInstance().isAdmin()) {
             return KetQua.error("Không thể xóa tài khoản admin đang đăng nhập.");
         }
         if (USERNAME_ADMIN.equalsIgnoreCase(user.getTenDangNhap())) {
             return KetQua.error("Không thể xóa tài khoản admin hệ thống.");
         }
-
         try {
             taiKhoanRepo.delete(id);
             return KetQua.success(null, "Xóa tài khoản thành công.");
@@ -285,19 +262,17 @@ public class XacThucBUS {
     // =====================================================================
     // ==================== VaiTro Management ================================
     // =====================================================================
-
     public List<VaiTro> getAllRoles() {
         return taiKhoanRepo.findAllRoles();
     }
 
     public KetQua<Void> createRole(String maVaiTro, String tenVaiTro, String moTa) {
-        if (isBlank(maVaiTro)) {
+        if (ValidationUtils.isBlank(maVaiTro)) {
             return KetQua.error("Mã vai trò không được để trống.");
         }
-        if (isBlank(tenVaiTro)) {
+        if (ValidationUtils.isBlank(tenVaiTro)) {
             return KetQua.error("Tên vai trò không được để trống.");
         }
-
         try {
             int rows = taiKhoanRepo.insertRole(maVaiTro.trim(), tenVaiTro.trim(), moTa);
             if (rows > 0) {
@@ -326,7 +301,7 @@ public class XacThucBUS {
     }
 
     public KetQua<Void> deleteRole(String code) {
-        if (isBlank(code)) {
+        if (ValidationUtils.isBlank(code)) {
             return KetQua.error("Mã vai trò không hợp lệ.");
         }
         boolean deleted = taiKhoanRepo.deleteRole(code.trim());
@@ -339,13 +314,12 @@ public class XacThucBUS {
     // =====================================================================
     // ==================== Quyen Management ================================
     // =====================================================================
-
     public List<Quyen> getAllPermissions() {
         return taiKhoanRepo.findAllPermissions();
     }
 
     public KetQua<Void> setRolePermissions(String maVaiTro, List<Quyen> permissions) {
-        if (isBlank(maVaiTro)) {
+        if (ValidationUtils.isBlank(maVaiTro)) {
             return KetQua.error("Mã vai trò không hợp lệ.");
         }
         String normalizedRoleCode = maVaiTro.trim();
@@ -355,7 +329,6 @@ public class XacThucBUS {
         if (permissions == null) {
             return KetQua.error("Danh sách quyền không hợp lệ.");
         }
-
         try {
             taiKhoanRepo.setRolePermissions(normalizedRoleCode, permissions);
             return KetQua.success(null, "Cập nhật quyền cho vai trò thành công.");
@@ -370,7 +343,7 @@ public class XacThucBUS {
      * Tìm tài khoản theo mã nhân viên (String).
      */
     public TaiKhoan findByMaNV(String maNV) {
-        if (isBlank(maNV)) {
+        if (ValidationUtils.isBlank(maNV)) {
             return null;
         }
         return taiKhoanRepo.findByMaNV(maNV);
@@ -389,7 +362,6 @@ public class XacThucBUS {
     public KetQua<Void> createRoleWithPermissions(String maVaiTro, String tenVaiTro, List<Quyen> permissions) {
         KetQua<Void> createResult = createRole(maVaiTro, tenVaiTro, null);
         if (!createResult.isSuccess()) return createResult;
-
         if (permissions != null && !permissions.isEmpty()) {
             return setRolePermissions(maVaiTro, permissions);
         }
@@ -404,11 +376,9 @@ public class XacThucBUS {
         if (target == null) {
             return KetQua.error("Không tìm thấy tài khoản.");
         }
-
         if (isProtectedAdminRoleChange(target, maVaiTro)) {
             return KetQua.error("Không thể thay đổi vai trò của tài khoản admin.");
         }
-
         try {
             taiKhoanRepo.updateRole(maTaiKhoan, maVaiTro);
             return KetQua.success(null, "Gán vai trò thành công.");
@@ -423,26 +393,20 @@ public class XacThucBUS {
     public Set<String> getEffectivePermissions(int maTaiKhoan) {
         TaiKhoan user = taiKhoanRepo.findById(maTaiKhoan);
         if (user == null) return new HashSet<>();
-
         Set<String> fromRoles = new HashSet<>();
         user.getVaiTros().forEach(role ->
                 role.getQuyens().forEach(p -> fromRoles.add(p.getId()))
         );
-
         return fromRoles;
     }
 
-    private boolean isBlank(String value) {
-        return value == null || value.trim().isEmpty();
-    }
-
     private String normalizeOptional(String value) {
-        if (isBlank(value)) return null;
+        if (ValidationUtils.isBlank(value)) return null;
         return value.trim();
     }
 
     private KetQua<Void> validateNewPassword(String newPass) {
-        if (isBlank(newPass)) {
+        if (ValidationUtils.isBlank(newPass)) {
             return KetQua.error("Mật khẩu mới không được để trống.");
         }
         if (newPass.length() < MIN_PASSWORD_LENGTH) {

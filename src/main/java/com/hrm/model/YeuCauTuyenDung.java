@@ -21,18 +21,15 @@ public class YeuCauTuyenDung {
     private int nguoiDuyet;    // 0 = chưa có
     private LocalDateTime ngayDuyet;
     private String trangThai; // "cho_duyet","da_duyet","tu_choi","da_tuyen_du"
-
     // Transient - dùng để hiển thị
     private transient String tenPhongBan;
     private transient String tenChucVu;
-
     public YeuCauTuyenDung() {
     }
 
     // ============================
     // Getters & Setters
     // ============================
-
     public int getMaYeuCau() {
         return maYeuCau;
     }

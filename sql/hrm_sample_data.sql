@@ -832,9 +832,9 @@ INSERT INTO TIEUCHIDANHGIA (tenTieuChi, moTa, nhomTieuChi, diemToiDa, trangThai)
 -- 15.5. ĐÁNH GIÁ HIỆU SUẤT - CHI TIẾT
 -- =====================================================
 INSERT INTO DOTDANHGIA_TIEUCHI (maDot, maTieuChi, trongSo) VALUES
-(1, 1, 1.00), (1, 2, 1.00), (1, 3, 1.00), (1, 4, 1.00), (1, 5, 1.00), (1, 6, 1.00), (1, 7, 1.00),
-(2, 1, 1.00), (2, 2, 1.00), (2, 3, 1.00), (2, 4, 1.00), (2, 5, 1.00), (2, 6, 1.00), (2, 7, 1.00),
-(3, 1, 1.00), (3, 2, 1.00), (3, 3, 1.00), (3, 4, 1.00), (3, 5, 1.00), (3, 6, 1.00), (3, 7, 1.00);
+(1, 1, 30.00), (1, 2, 20.00), (1, 3, 10.00), (1, 4, 10.00), (1, 5, 10.00), (1, 6, 10.00), (1, 7, 10.00),
+(2, 1, 30.00), (2, 2, 20.00), (2, 3, 10.00), (2, 4, 10.00), (2, 5, 10.00), (2, 6, 10.00), (2, 7, 10.00),
+(3, 1, 30.00), (3, 2, 20.00), (3, 3, 10.00), (3, 4, 10.00), (3, 5, 10.00), (3, 6, 10.00), (3, 7, 10.00);
 
 -- Chi tiết đánh giá
 INSERT INTO CHITIETDANHGIA (maDanhGia, maTieuChi, diem, nhanXet) VALUES
@@ -864,29 +864,29 @@ INSERT INTO CHITIETDANHGIA (maDanhGia, maTieuChi, diem, nhanXet) VALUES
 (3, 7,  7.00, 'Có tinh thần học hỏi'),
 -- NV011 Q3/2025: bị xóa vì NV011 chưa vào làm (ngayVaoLam=2025-10-01)
 -- Cuoi nam 2025: NV008 (Tổng 8.8 ~ 88/100)
-(5, 1, 29.00, 'Hoàn thành xuất sắc'),
-(5, 2, 19.00, 'Luôn bám deadline'),
-(5, 3,  8.00, 'Có các giải pháp hữu hiệu cho hệ thống'),
-(5, 4,  8.00, 'Am hiểu sâu về kiến trúc'),
-(5, 5,  8.00, 'Teamwork hoàn hảo'),
-(5, 6,  8.00, 'Chấp hành thể lệ tốt'),
-(5, 7,  8.00, 'Học thêm chứng chỉ PMI'),
+(4, 1, 29.00, 'Hoàn thành xuất sắc'),
+(4, 2, 19.00, 'Luôn bám deadline'),
+(4, 3,  8.00, 'Có các giải pháp hữu hiệu cho hệ thống'),
+(4, 4,  8.00, 'Am hiểu sâu về kiến trúc'),
+(4, 5,  8.00, 'Teamwork hoàn hảo'),
+(4, 6,  8.00, 'Chấp hành thể lệ tốt'),
+(4, 7,  8.00, 'Học thêm chứng chỉ PMI'),
 -- Cuoi nam 2025: NV009 (Tổng 8.3 ~ 83/100)
-(6, 1, 25.00, 'Tốt'),
-(6, 2, 18.00, 'Đúng hạn'),
-(6, 3,  8.00, 'Sáng tạo trong UX'),
-(6, 4,  8.00, 'Kiến thức tốt'),
-(6, 5,  8.00, 'Tốt'),
-(6, 6,  8.00, 'Nghiêm túc'),
-(6, 7,  8.00, 'Luôn tích cực nâng cao tay nghề'),
+(5, 1, 25.00, 'Tốt'),
+(5, 2, 18.00, 'Đúng hạn'),
+(5, 3,  8.00, 'Sáng tạo trong UX'),
+(5, 4,  8.00, 'Kiến thức tốt'),
+(5, 5,  8.00, 'Tốt'),
+(5, 6,  8.00, 'Nghiêm túc'),
+(5, 7,  8.00, 'Luôn tích cực nâng cao tay nghề'),
 -- Cuoi nam 2025: NV010 (Tổng 7.6 ~ 76/100)
-(7, 1, 24.00, 'Hoàn thành công việc'),
-(7, 2, 16.00, 'Khắc phục tình trạng trễ deadline'),
-(7, 3,  7.00, 'Bình thường'),
-(7, 4,  7.00, 'Không thay đổi nhiều'),
-(7, 5,  7.00, 'Đã cải thiện giao tiếp với đồng nghiệp'),
-(7, 6,  8.00, 'Đã hạn chế việc đi muộn'),
-(7, 7,  7.00, 'Bình thường');
+(6, 1, 24.00, 'Hoàn thành công việc'),
+(6, 2, 16.00, 'Khắc phục tình trạng trễ deadline'),
+(6, 3,  7.00, 'Bình thường'),
+(6, 4,  7.00, 'Không thay đổi nhiều'),
+(6, 5,  7.00, 'Đã cải thiện giao tiếp với đồng nghiệp'),
+(6, 6,  8.00, 'Đã hạn chế việc đi muộn'),
+(6, 7,  7.00, 'Bình thường');
 
 -- =====================================================
 -- 15. TUYỂN DỤNG
