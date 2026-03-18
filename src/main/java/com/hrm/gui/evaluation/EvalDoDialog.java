@@ -254,7 +254,7 @@ public class EvalDoDialog extends BaseFormDialog {
                 ChiTietDanhGia ct = new ChiTietDanhGia(
                         c.getId(),
                         c.getTenTieuChi(),
-                        c.getDiemToiDa(),      // trongSo = weight %
+                        c.getTrongSo(),         // trongSo = per-period weight from DOTDANHGIA_TIEUCHI
                         ((Number) spn.getValue()).doubleValue()
                 );
                 if (txt != null) ct.setNhanXet(txt.getText().trim());
