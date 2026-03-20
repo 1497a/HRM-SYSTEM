@@ -2,8 +2,10 @@ package com.hrm.bus;
 
 import com.hrm.dao.BoNhiemDAO;
 import com.hrm.dao.ChucVuDAO;
+import com.hrm.dao.LichSuLuongDAO;
 import com.hrm.model.ChucVu;
 import com.hrm.model.DataScope;
+import com.hrm.model.LichSuHeSoLuong;
 import com.hrm.model.TaiKhoan;
 import com.hrm.util.HRMConstants;
 import com.hrm.util.PermissionCodes;
@@ -37,6 +39,10 @@ public class ChucVuBUS {
 
     public boolean existsActiveByCode(String maChucVu) {
         return positionRepo.existsActiveByCode(maChucVu);
+    }
+
+    public List<LichSuHeSoLuong> getHistoryByMaChucVu(String maChucVu) {
+        return LichSuLuongDAO.getInstance().findByMaChucVu(maChucVu);
     }
 
     public KetQua<Void> addPosition(String maChucVu, String tenChucVu, int capBac,
