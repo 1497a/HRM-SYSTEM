@@ -18,11 +18,41 @@
 -- =====================================================
 USE hrm_db;
 
+-- Reset du lieu mau de co the import lai tren database da co du lieu
+SET FOREIGN_KEY_CHECKS = 0;
+DELETE FROM PHANQUYEN_VAITRO;
+DELETE FROM PHANQUYEN_NHANVIEN;
+DELETE FROM TAIKHOAN;
+DELETE FROM THONGBAO;
+DELETE FROM UNGTUYEN;
+DELETE FROM TINTUYENDUNG;
+DELETE FROM YEUCAUTUYENDUNG;
+DELETE FROM CHITIETDANHGIA;
+DELETE FROM DANHGIAHIEUSUAT;
+DELETE FROM TIEUCHIDOT;
+DELETE FROM DOTDANHGIA;
+DELETE FROM TIEUCHIDANHGIA;
+DELETE FROM DONNGHIPHEP;
+DELETE FROM LOAIPHEP;
+DELETE FROM CHITIETPHUCAP;
+DELETE FROM CHITIETLUONG;
+DELETE FROM BANGLUONG;
+DELETE FROM KETQUACHAMCONG;
+DELETE FROM CALAM;
+DELETE FROM PHUCAPNHANVIEN;
+DELETE FROM BONHIEM;
+DELETE FROM THONGTINCANHAN;
+DELETE FROM NHANVIEN;
+DELETE FROM CAUHINH_PHUCAP;
+DELETE FROM QUYEN;
+DELETE FROM VAITRO;
+DELETE FROM CHUCVU;
+DELETE FROM PHONGBAN;
+SET FOREIGN_KEY_CHECKS = 1;
+
 -- =====================================================
 -- 1. PHONG BAN
 -- =====================================================
-DELETE FROM PHONGBAN;
-
 INSERT INTO PHONGBAN (maPhongBan, tenPhongBan, phongBanCha, moTa, trangThai) VALUES
 ('CONGTY',   'Công ty TNHH ABC Technology',  NULL,      'Công ty công nghệ phần mềm và giải pháp CNTT',             'hoatDong'),
 ('PHONGNS',  'Phòng Nhân sự',                'CONGTY',  'Quản lý nhân sự, tuyển dụng, lương thưởng',                'hoatDong'),
@@ -34,8 +64,6 @@ INSERT INTO PHONGBAN (maPhongBan, tenPhongBan, phongBanCha, moTa, trangThai) VAL
 -- =====================================================
 -- 2. CHUC VU
 -- =====================================================
-DELETE FROM CHUCVU;
-
 INSERT INTO CHUCVU (maChucVu, tenChucVu, capBac, phuCapChucVu, moTa, trangThai) VALUES
 ('GD',  'Giám đốc',       1, 15000000, 'Cấp lãnh đạo cao nhất công ty',                     'hoatDong'),
 ('TP',  'Trưởng phòng',   2,  5000000, 'Quản lý cấp phòng ban',                              'hoatDong'),
@@ -970,7 +998,6 @@ INSERT INTO THONGBAO (tieuDe, noiDung, loaiThongBao, maTaiKhoanGui, maTaiKhoanNh
 -- =====================================================
 -- 17. CẤU HÌNH PHỤ CẤP
 -- =====================================================
-DELETE FROM CAUHINH_PHUCAP;
 INSERT INTO CAUHINH_PHUCAP (loai, tenKhoan, kieuTinh, giaTri, nguon, hoatDong) VALUES
 ('phu_cap', 'Phụ cấp ăn trưa',               'co_dinh',   750000, 'CongTy',   1),
 ('phu_cap', 'Phụ cấp điện thoại',            'co_dinh',   500000, 'CongTy',   1),
