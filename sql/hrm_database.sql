@@ -35,6 +35,19 @@ CREATE TABLE CHUCVU (
     ngayCapNhat DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 ) ENGINE=InnoDB;
 
+CREATE TABLE LICHSU_HESOLUONG (
+    maLichSu INT AUTO_INCREMENT PRIMARY KEY,
+    maChucVu VARCHAR(20) NOT NULL,
+    heSoLuongCu DECIMAL(10,2) DEFAULT 0,
+    heSoLuongMoi DECIMAL(10,2) DEFAULT 0,
+    phuCapCu DECIMAL(15,2) DEFAULT 0,
+    phuCapMoi DECIMAL(15,2) DEFAULT 0,
+    ngayThayDoi DATETIME DEFAULT CURRENT_TIMESTAMP,
+    nguoiThayDoi VARCHAR(50),
+    FOREIGN KEY (maChucVu) REFERENCES CHUCVU(maChucVu) ON DELETE CASCADE,
+    INDEX idx_lshs_chucvu_ngay (maChucVu, ngayThayDoi)
+) ENGINE=InnoDB;
+
 -- =====================================================
 -- NGHIEP VU 1: QUAN LY HO SO NHAN VIEN
 -- =====================================================

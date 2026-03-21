@@ -57,6 +57,9 @@ public class ChucVuBUS {
         if (ValidationUtils.isBlank(tenChucVu)) {
             return KetQua.error("Ten chuc vu khong duoc de trong.");
         }
+        if (capBac <= 0) {
+            return KetQua.error("Cap bac phai lon hon 0.");
+        }
         if (positionRepo.existsById(maChucVu.trim())) {
             return KetQua.error("Ma chuc vu '" + maChucVu + "' da ton tai.");
         }
@@ -88,14 +91,35 @@ public class ChucVuBUS {
         if (ValidationUtils.isBlank(tenMoi)) {
             return KetQua.error("Ten chuc vu khong duoc de trong.");
         }
+        if (capBacMoi <= 0) {
+            return KetQua.error("Cap bac phai lon hon 0.");
+        }
         if (phuCapMoi < 0) {
             return KetQua.error("Phu cap khong duoc am.");
         }
+        TaiKhoan currentUser = SessionContext.getInstance().getCurrentUser();
+        int capBacCu = position.getCapBac();
+        double phuCapCu = position.getPhuCapChucVu();
+
         position.setTenChucVu(tenMoi.trim());
         position.setCapBac(capBacMoi);
         position.setPhuCapChucVu(phuCapMoi);
         position.setMoTa(moTaMoi);
         positionRepo.update(position);
+
+        // Lưu lịch sử khi có thay đổi hệ số/cấp bậc hoặc phụ cấp chức vụ.
+        if (capBacCu != capBacMoi || Double.compare(phuCapCu, phuCapMoi) != 0) {
+            LichSuLuongDAO.getInstance().insert(new LichSuHeSoLuong(
+                    0,
+                    maChucVu,
+                    capBacCu,
+                    capBacMoi,
+                    phuCapCu,
+                    phuCapMoi,
+                    "",
+                    currentUser != null ? currentUser.getTenDangNhap() : "system"
+            ));
+        }
         return KetQua.success(null, "Cap nhat chuc vu thanh cong.");
     }
 

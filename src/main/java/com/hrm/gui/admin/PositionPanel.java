@@ -39,6 +39,8 @@ public class PositionPanel extends JPanel {
 
     private PurpleButton btnThem;
     private PurpleButton btnSua;
+    private PurpleButton btnLichSu;
+    private PurpleButton btnLamMoi;
 
     public PositionPanel() {
         setLayout(new BorderLayout());
@@ -89,15 +91,17 @@ public class PositionPanel extends JPanel {
         // Buttons
         btnThem = new PurpleButton("+ Them");
         btnSua  = new PurpleButton("Sua", UIColors.SUCCESS_GREEN, UIColors.SUCCESS_GREEN.darker(), UIColors.SUCCESS_GREEN.darker());
-        PurpleButton btnLichSu = new PurpleButton("Xem lich su he so");
+        btnLichSu = new PurpleButton("Xem lich su he so");
         btnSua.setEnabled(false);
+        btnLichSu.setEnabled(false);
         btnLichSu.addActionListener(e -> showHistoryDialog());
 
         JPanel btnPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
         btnPanel.add(btnThem);
         btnPanel.add(btnSua);
         btnPanel.add(btnLichSu);
-        JButton btnLamMoi = UIHelper.createDefaultButton("Lam moi");
+        btnLamMoi = PurpleButton.info("Lam moi");
+        btnLamMoi.setToolTipText("Tai lai du lieu va xoa bo loc");
         btnLamMoi.addActionListener(e -> refreshTable());
         btnPanel.add(btnLamMoi);
         add(btnPanel, BorderLayout.SOUTH);
@@ -114,7 +118,9 @@ public class PositionPanel extends JPanel {
 
         table.getSelectionModel().addListSelectionListener(e -> {
             if (!e.getValueIsAdjusting()) {
-                btnSua.setEnabled(table.getSelectedRow() != -1 &&
+                boolean hasSelection = table.getSelectedRow() != -1;
+                btnLichSu.setEnabled(hasSelection);
+                btnSua.setEnabled(hasSelection &&
                         SessionContext.getInstance().hasPermission(PermissionCodes.POSITION_MANAGE));
             }
         });
@@ -161,20 +167,26 @@ public class PositionPanel extends JPanel {
 
     private void refreshTable() {
         isRefreshing = true;
-        tableModel.setRowCount(0);
-        for (ChucVu p : service.getAllPositions()) {
-            tableModel.addRow(new Object[]{
-                    p.getId(),
-                    p.getTenChucVu(),
-                    "Cap " + p.getCapBac(),
-                    moneyFmt.format(p.getPhuCapChucVu()),
-                    toTrangThaiDisplay(p.getTrangThai())
-            });
+        try {
+            tableModel.setRowCount(0);
+            for (ChucVu p : service.getAllPositions()) {
+                tableModel.addRow(new Object[]{
+                        p.getId(),
+                        p.getTenChucVu(),
+                        "Cap " + p.getCapBac(),
+                        moneyFmt.format(p.getPhuCapChucVu()),
+                        toTrangThaiDisplay(p.getTrangThai())
+                });
+            }
+            txtSearch.setText("");
+            cboFilter.setSelectedIndex(0);
+            sorter.setRowFilter(null);
+            table.clearSelection();
+            btnSua.setEnabled(false);
+            btnLichSu.setEnabled(false);
+        } finally {
+            isRefreshing = false;
         }
-        txtSearch.setText("");
-        cboFilter.setSelectedIndex(0);
-        sorter.setRowFilter(null);
-        isRefreshing = false;
     }
 
     private void showAddDialog() {
@@ -197,10 +209,10 @@ public class PositionPanel extends JPanel {
         int capBac;
         double phuCap;
         try {
-            capBac = Integer.parseInt(txtCapBac.getText().trim());
-            phuCap = Double.parseDouble(txtPhuCap.getText().trim());
+            capBac = parseCapBac(txtCapBac.getText());
+            phuCap = parsePhuCap(txtPhuCap.getText());
         } catch (NumberFormatException ex) {
-            DialogUtil.showError(this, "Cap bac va phu cap phai la so hop le.");
+            DialogUtil.showError(this, "Cap bac va phu cap phai la so hop le (vi du: 1, 1500000, 1.500.000).");
             return;
         }
 
@@ -269,15 +281,20 @@ public class PositionPanel extends JPanel {
                 int capBac;
                 double phuCap;
                 try {
-                    capBac = Integer.parseInt(txtCapBac.getText().trim());
-                    phuCap = Double.parseDouble(txtPhuCap.getText().trim());
+                    capBac = parseCapBac(txtCapBac.getText());
+                    phuCap = parsePhuCap(txtPhuCap.getText());
                 } catch (NumberFormatException ex) {
-                    DialogUtil.showError(dialog, "Cap bac va phu cap phai la so hop le.");
+                    DialogUtil.showError(dialog, "Cap bac va phu cap phai la so hop le (vi du: 1, 1500000, 1.500.000).");
                     return;
                 }
+                btnLuu.setEnabled(false);
                 KetQua<Void> kqCapNhat = service.updatePosition(
                         ma, txtTen.getText().trim(), capBac, phuCap, txtMoTa.getText().trim());
-                if (!kqCapNhat.isSuccess()) { DialogUtil.showError(dialog, kqCapNhat.getMessage()); return; }
+                if (!kqCapNhat.isSuccess()) {
+                    btnLuu.setEnabled(true);
+                    DialogUtil.showError(dialog, kqCapNhat.getMessage());
+                    return;
+                }
 
                 String rawMoi = toTrangThaiRaw((String) cboTrangThai.getSelectedItem());
                 if (!normalizeTrangThai(rawMoi).equals(normalizeTrangThai(pos.getTrangThai()))) {
@@ -287,7 +304,11 @@ public class PositionPanel extends JPanel {
                     } else {
                         kqTT = service.deactivatePosition(ma);
                     }
-                    if (!kqTT.isSuccess()) { DialogUtil.showError(dialog, kqTT.getMessage()); return; }
+                    if (!kqTT.isSuccess()) {
+                        btnLuu.setEnabled(true);
+                        DialogUtil.showError(dialog, kqTT.getMessage());
+                        return;
+                    }
                 }
                 refreshTable();
                 dialog.dispose();
@@ -319,7 +340,7 @@ public class PositionPanel extends JPanel {
         List<LichSuHeSoLuong> danhSach = service.getHistoryByMaChucVu(ma);
 
         DefaultTableModel histModel = new DefaultTableModel(
-                new Object[]{"Ngay thay doi", "Phu cap cu (VND)", "Phu cap moi (VND)"}, 0) {
+                new Object[]{"Ngay thay đổi", "Phụ cấp cũ (VND)", "Phụ cấp mới (VND)", "Người thay đổi"}, 0) {
             @Override
             public boolean isCellEditable(int r, int c) { return false; }
         };
@@ -327,7 +348,8 @@ public class PositionPanel extends JPanel {
             histModel.addRow(new Object[]{
                     h.getNgayThayDoi(),
                     moneyFmt.format(h.getPhuCapCu()),
-                    moneyFmt.format(h.getPhuCapMoi())
+                    moneyFmt.format(h.getPhuCapMoi()),
+                    h.getNguoiThayDoi()
             });
         }
 
@@ -337,14 +359,14 @@ public class PositionPanel extends JPanel {
         scroll.setPreferredSize(new Dimension(500, 200));
 
         JDialog dialog = new JDialog((Frame) SwingUtilities.getWindowAncestor(this),
-                "Lich su thay doi phu cap -- " + ten + " (" + ma + ")", true);
+                "Lịch sử thay đổi phụ cấp -- " + ten + " (" + ma + ")", true);
         dialog.setLayout(new BorderLayout());
         if (danhSach.isEmpty()) {
-            dialog.add(new JLabel("  Chua co lich su thay doi nao.", SwingConstants.CENTER), BorderLayout.CENTER);
+            dialog.add(new JLabel("  Chưa có lịch sử thay đổi nào.", SwingConstants.CENTER), BorderLayout.CENTER);
         } else {
             dialog.add(scroll, BorderLayout.CENTER);
         }
-        JButton btnDong = UIHelper.createDefaultButton("Dong");
+        JButton btnDong = UIHelper.createDefaultButton("Đóng");
         btnDong.addActionListener(e -> dialog.dispose());
         JPanel footer = new JPanel(); footer.add(btnDong);
         dialog.add(footer, BorderLayout.SOUTH);
@@ -390,5 +412,28 @@ public class PositionPanel extends JPanel {
                 .replaceAll("\\p{M}+", "")
                 .replace('d', 'd').toLowerCase().trim();
         return v.replace("_", "").replace(" ", "").replace("-", "");
+    }
+
+    private int parseCapBac(String input) throws NumberFormatException {
+        String value = input == null ? "" : input.trim();
+        return Integer.parseInt(value);
+    }
+
+    private double parsePhuCap(String input) throws NumberFormatException {
+        String value = input == null ? "" : input.trim();
+        if (value.isEmpty()) {
+            throw new NumberFormatException("empty");
+        }
+        try {
+            return Double.parseDouble(value);
+        } catch (NumberFormatException ignored) {
+            // Accept common VND group separators like 1.500.000 or 1,500,000
+            String compact = value.replace(" ", "");
+            if (compact.matches("\\d{1,3}([.,]\\d{3})+")) {
+                return Double.parseDouble(compact.replace(".", "").replace(",", ""));
+            }
+            String normalized = compact.replace(",", ".");
+            return Double.parseDouble(normalized);
+        }
     }
 }

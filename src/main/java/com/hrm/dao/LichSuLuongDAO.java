@@ -4,7 +4,8 @@ import com.hrm.model.LichSuHeSoLuong;
 import com.hrm.util.DatabaseConnection;
 
 import java.sql.*;
-import java.text.SimpleDateFormat;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -12,6 +13,7 @@ import java.util.List;
  * Repository JDBC cho bang LICHSU_HESOLUONG.
  */
 public class LichSuLuongDAO {
+    private static final DateTimeFormatter DATE_FMT = DateTimeFormatter.ofPattern("dd/MM/yyyy");
 
     private static LichSuLuongDAO instance;
 
@@ -30,8 +32,8 @@ public class LichSuLuongDAO {
      */
     public int insert(LichSuHeSoLuong h) {
         String sql = "INSERT INTO LICHSU_HESOLUONG "
-                + "(maChucVu, heSoLuongCu, heSoLuongMoi, phuCapCu, phuCapMoi, ngayThayDoi) "
-                + "VALUES (?, ?, ?, ?, ?, NOW())";
+            + "(maChucVu, heSoLuongCu, heSoLuongMoi, phuCapCu, phuCapMoi, ngayThayDoi, nguoiThayDoi) "
+            + "VALUES (?, ?, ?, ?, ?, ?, ?)";
         try (Connection conn = DatabaseConnection.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
 
@@ -40,6 +42,8 @@ public class LichSuLuongDAO {
             ps.setDouble(3, h.getHeSoLuongMoi());
             ps.setDouble(4, h.getPhuCapCu());
             ps.setDouble(5, h.getPhuCapMoi());
+            ps.setObject(6, LocalDateTime.now());
+            ps.setString(7, h.getNguoiThayDoi());
             ps.executeUpdate();
 
             try (ResultSet generatedKeys = ps.getGeneratedKeys()) {
@@ -48,7 +52,7 @@ public class LichSuLuongDAO {
                 }
             }
         } catch (SQLException e) {
-            System.err.println("Loi LichSuLuongDAO.insert: " + e.getMessage());
+            logSqlError("insert", e);
         }
         return 0;
     }
@@ -57,7 +61,7 @@ public class LichSuLuongDAO {
     public List<LichSuHeSoLuong> findAll() {
         List<LichSuHeSoLuong> list = new ArrayList<>();
         String sql = "SELECT maLichSu, maChucVu, heSoLuongCu, heSoLuongMoi, "
-                + "phuCapCu, phuCapMoi, ngayThayDoi "
+                + "phuCapCu, phuCapMoi, ngayThayDoi, nguoiThayDoi "
                 + "FROM LICHSU_HESOLUONG ORDER BY ngayThayDoi DESC, maLichSu DESC";
         try (Connection conn = DatabaseConnection.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql);
@@ -66,7 +70,7 @@ public class LichSuLuongDAO {
                 list.add(mapRow(rs));
             }
         } catch (SQLException e) {
-            System.err.println("Loi LichSuLuongDAO.findAll: " + e.getMessage());
+            logSqlError("findAll", e);
         }
         return list;
     }
@@ -75,7 +79,7 @@ public class LichSuLuongDAO {
     public List<LichSuHeSoLuong> findByMaChucVu(String maChucVu) {
         List<LichSuHeSoLuong> list = new ArrayList<>();
         String sql = "SELECT maLichSu, maChucVu, heSoLuongCu, heSoLuongMoi, "
-                + "phuCapCu, phuCapMoi, ngayThayDoi "
+                + "phuCapCu, phuCapMoi, ngayThayDoi, nguoiThayDoi "
                 + "FROM LICHSU_HESOLUONG WHERE maChucVu = ? "
                 + "ORDER BY ngayThayDoi DESC, maLichSu DESC";
         try (Connection conn = DatabaseConnection.getConnection();
@@ -87,7 +91,7 @@ public class LichSuLuongDAO {
                 }
             }
         } catch (SQLException e) {
-            System.err.println("Loi LichSuLuongDAO.findByMaChucVu: " + e.getMessage());
+            logSqlError("findByMaChucVu", e);
         }
         return list;
     }
@@ -106,12 +110,27 @@ public class LichSuLuongDAO {
         double phuCapMoi = rs.getDouble("phuCapMoi");
 
         String ngayThayDoi = "";
-        Timestamp ts = rs.getTimestamp("ngayThayDoi");
-        if (ts != null) {
-            ngayThayDoi = new SimpleDateFormat("dd/MM/yyyy").format(ts);
+        LocalDateTime changedAt = rs.getObject("ngayThayDoi", LocalDateTime.class);
+        if (changedAt != null) {
+            ngayThayDoi = changedAt.format(DATE_FMT);
+        }
+        String nguoiThayDoi = rs.getString("nguoiThayDoi");
+        if (nguoiThayDoi == null || nguoiThayDoi.trim().isEmpty()) {
+            nguoiThayDoi = "(không rõ)";
         }
 
         return new LichSuHeSoLuong(id, maChucVu, heSoLuongCu, heSoLuongMoi,
-                phuCapCu, phuCapMoi, ngayThayDoi, "");
+                phuCapCu, phuCapMoi, ngayThayDoi, nguoiThayDoi);
+    }
+
+    private void logSqlError(String action, SQLException e) {
+        String msg = e.getMessage() == null ? "" : e.getMessage();
+        if (msg.toLowerCase().contains("doesn't exist") && msg.toLowerCase().contains("lichsu_hesoluong")) {
+            System.err.println("Lỗi LichSuLuongDAO." + action
+                    + ": Chưa có bảng LICHSU_HESOLUONG trong CSDL. "
+                    + "Hãy cập nhật schema trước khi xem lịch sử hệ số lương.");
+            return;
+        }
+        System.err.println("Lỗi LichSuLuongDAO." + action + ": " + msg);
     }
 }

@@ -36,6 +36,7 @@ public class DepartmentPanel extends JPanel {
 
     private PurpleButton btnThem;
     private PurpleButton btnSua;
+    private PurpleButton btnLamMoi;
 
     public DepartmentPanel() {
         setLayout(new BorderLayout());
@@ -90,7 +91,8 @@ public class DepartmentPanel extends JPanel {
         JPanel btnPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
         btnPanel.add(btnThem);
         btnPanel.add(btnSua);
-        JButton btnLamMoi = UIHelper.createDefaultButton("Lam moi");
+        btnLamMoi = PurpleButton.info("Lam moi");
+        btnLamMoi.setToolTipText("Tai lai du lieu va xoa bo loc");
         btnLamMoi.addActionListener(e -> refreshTable());
         btnPanel.add(btnLamMoi);
         add(btnPanel, BorderLayout.SOUTH);
@@ -153,21 +155,27 @@ public class DepartmentPanel extends JPanel {
 
     private void refreshTable() {
         isRefreshing = true;
-        tableModel.setRowCount(0);
-        for (PhongBan d : service.getAllDepartments()) {
-            String tenCha = "-- (goc) --";
-            if (d.getPhongBanChaId() != null) {
-                PhongBan cha = service.getByMaPhongBan(d.getPhongBanChaId());
-                if (cha != null) tenCha = cha.getTenPhongBan();
+        try {
+            tableModel.setRowCount(0);
+            for (PhongBan d : service.getAllDepartments()) {
+                String tenCha = "-- (goc) --";
+                if (d.getPhongBanChaId() != null) {
+                    PhongBan cha = service.getByMaPhongBan(d.getPhongBanChaId());
+                    if (cha != null) tenCha = cha.getTenPhongBan();
+                }
+                tableModel.addRow(new Object[]{
+                        d.getId(), d.getTenPhongBan(), tenCha, toTrangThaiDisplay(d.getTrangThai())
+                });
             }
-            tableModel.addRow(new Object[]{
-                    d.getId(), d.getTenPhongBan(), tenCha, toTrangThaiDisplay(d.getTrangThai())
-            });
+
+            txtSearch.setText("");
+            cboFilter.setSelectedIndex(0);
+            sorter.setRowFilter(null);
+            table.clearSelection();
+            btnSua.setEnabled(false);
+        } finally {
+            isRefreshing = false;
         }
-        txtSearch.setText("");
-        cboFilter.setSelectedIndex(0);
-        sorter.setRowFilter(null);
-        isRefreshing = false;
     }
 
     private void showAddDialog() {
