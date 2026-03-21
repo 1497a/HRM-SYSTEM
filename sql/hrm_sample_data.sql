@@ -178,6 +178,9 @@ INSERT INTO QUYEN (maQuyen, tenQuyen, nhomQuyen, moTa) VALUES
 ('RECRUITMENT_VIEW',    'Xem tuyển dụng',                                 'Tuyển dụng', 'Xem tin tuyển dụng và hồ sơ ứng viên'),
 ('RECRUITMENT_REQUEST', 'Yêu cầu tuyển dụng',                             'Tuyển dụng', 'Tạo yêu cầu tuyển dụng cho phòng ban'),
 ('RECRUITMENT_MANAGE',  'Đăng tin, xét hồ sơ và quản lý ứng viên',       'Tuyển dụng', 'Đăng tin tuyển dụng, xét hồ sơ và quản lý toàn bộ quy trình tuyển dụng'),
+('RECRUITMENT_CANDIDATE_CREATE',  'Tạo ứng viên',                        'Tuyển dụng', 'Tiếp nhận và tạo hồ sơ ứng viên mới'),
+('RECRUITMENT_CANDIDATE_REVIEW',  'Duyệt trạng thái ứng viên',           'Tuyển dụng', 'Cập nhật trạng thái ứng viên trong phạm vi được cấp'),
+('RECRUITMENT_CANDIDATE_CONVERT', 'Chuyển ứng viên thành nhân viên',     'Tuyển dụng', 'Chuyển ứng viên trúng tuyển thành nhân viên chính thức'),
 -- Bao cao & Thong bao
 ('REPORT_VIEW',         'Xem báo cáo',                                    'Báo cáo',    'Xem báo cáo thống kê (phạm vi theo scope)'),
 ('NOTIFICATION_SEND',   'Gửi thông báo',                                  'Thông báo',  'Gửi thông báo đến nhân viên'),
@@ -213,6 +216,7 @@ UPDATE QUYEN SET coPhamVi = FALSE WHERE maQuyen IN (
     'PAYROLL_CALCULATE', 'PAYROLL_LOCK',
     -- (2) Nghi phep / Danh gia / Tuyen dung
     'LEAVE_MANAGE', 'EVAL_MANAGE', 'RECRUITMENT_MANAGE',
+    'RECRUITMENT_CANDIDATE_CREATE', 'RECRUITMENT_CANDIDATE_CONVERT',
     -- (2) Quan tri he thong
     'USER_VIEW', 'USER_CREATE', 'USER_UPDATE', 'USER_DELETE',
     'ROLE_VIEW',  'ROLE_CREATE',  'ROLE_UPDATE',  'ROLE_DELETE',
@@ -284,6 +288,7 @@ INSERT INTO VAITRO_QUYEN (maVaiTro, maQuyen, phamVi) VALUES
 ('TRUONG_PHONG', 'EVAL_REVIEW',           'DEPT'),
 ('TRUONG_PHONG', 'RECRUITMENT_VIEW',      'DEPT'),
 ('TRUONG_PHONG', 'RECRUITMENT_REQUEST',   'DEPT'),
+('TRUONG_PHONG', 'RECRUITMENT_CANDIDATE_REVIEW', 'DEPT'),
 ('TRUONG_PHONG', 'NOTIFICATION_SEND',     'DEPT'),
 ('TRUONG_PHONG', 'REPORT_VIEW',           'DEPT'),
 ('TRUONG_PHONG', 'DEPARTMENT_VIEW',       'DEPT'),
@@ -325,6 +330,9 @@ INSERT INTO VAITRO_QUYEN (maVaiTro, maQuyen, phamVi) VALUES
 ('TRUONG_PHONG_NS', 'RECRUITMENT_VIEW',      'ALL'),
 ('TRUONG_PHONG_NS', 'RECRUITMENT_REQUEST',   'DEPT'),
 ('TRUONG_PHONG_NS', 'RECRUITMENT_MANAGE',    'ALL'),
+('TRUONG_PHONG_NS', 'RECRUITMENT_CANDIDATE_CREATE',  'ALL'),
+('TRUONG_PHONG_NS', 'RECRUITMENT_CANDIDATE_REVIEW',  'ALL'),
+('TRUONG_PHONG_NS', 'RECRUITMENT_CANDIDATE_CONVERT', 'ALL'),
 ('TRUONG_PHONG_NS', 'REPORT_VIEW',           'ALL'),
 ('TRUONG_PHONG_NS', 'NOTIFICATION_SEND',     'ALL'),
 ('TRUONG_PHONG_NS', 'DEPARTMENT_VIEW',       'ALL'),
@@ -397,6 +405,9 @@ INSERT INTO VAITRO_QUYEN (maVaiTro, maQuyen, phamVi) VALUES
 ('TONG_GIAM_DOC', 'RECRUITMENT_VIEW',      'ALL'),
 ('TONG_GIAM_DOC', 'RECRUITMENT_REQUEST',   'DEPT'),
 ('TONG_GIAM_DOC', 'RECRUITMENT_MANAGE',    'ALL'),
+('TONG_GIAM_DOC', 'RECRUITMENT_CANDIDATE_CREATE',  'ALL'),
+('TONG_GIAM_DOC', 'RECRUITMENT_CANDIDATE_REVIEW',  'ALL'),
+('TONG_GIAM_DOC', 'RECRUITMENT_CANDIDATE_CONVERT', 'ALL'),
 ('TONG_GIAM_DOC', 'REPORT_VIEW',           'ALL'),
 ('TONG_GIAM_DOC', 'NOTIFICATION_SEND',     'ALL'),
 ('TONG_GIAM_DOC', 'CHANGE_PASSWORD',       'ALL'),
@@ -429,6 +440,9 @@ INSERT INTO VAITRO_QUYEN (maVaiTro, maQuyen, phamVi) VALUES
 ('NHAN_SU', 'RECRUITMENT_VIEW',      'ALL'),
 ('NHAN_SU', 'RECRUITMENT_REQUEST',   'DEPT'),
 ('NHAN_SU', 'RECRUITMENT_MANAGE',    'ALL'),
+('NHAN_SU', 'RECRUITMENT_CANDIDATE_CREATE',  'ALL'),
+('NHAN_SU', 'RECRUITMENT_CANDIDATE_REVIEW',  'ALL'),
+('NHAN_SU', 'RECRUITMENT_CANDIDATE_CONVERT', 'ALL'),
 ('NHAN_SU', 'REPORT_VIEW',           'ALL'),
 ('NHAN_SU', 'NOTIFICATION_SEND',     'ALL'),
 ('NHAN_SU', 'DEPARTMENT_VIEW',       'ALL'),
@@ -968,6 +982,33 @@ INSERT INTO CAUHINH_PHUCAP (loai, tenKhoan, kieuTinh, giaTri, nguon, hoatDong) V
 ('khau_tru','BHYT NLD (1.5%)',             'phan_tram',   1.50, 'LuatDinh', 1),
 ('khau_tru','BHTN NLD (1%)',               'phan_tram',   1.00, 'LuatDinh', 1),
 ('khau_tru','Thue TNCN',                   'phan_tram',   0.00, 'LuatDinh', 1);
+
+-- =====================================================
+-- 17.1. DỮ LIỆU MẪU CHỈNH SỬA CHẤM CÔNG
+-- =====================================================
+UPDATE CHAMCONG
+SET nguoiChinhSua = 'NV002',
+    lyDoChinhSua = 'Điều chỉnh giờ vào theo xác nhận của quản lý trực tiếp.',
+    ngayChinhSua = '2026-01-05 09:10:00'
+WHERE maNV = 'NV002' AND ngay = '2026-01-05';
+
+UPDATE CHAMCONG
+SET nguoiChinhSua = 'NV002',
+    lyDoChinhSua = 'Bổ sung bản ghi nghỉ phép theo đơn đã được duyệt.',
+    ngayChinhSua = '2026-01-14 08:30:00'
+WHERE maNV = 'NV002' AND ngay = '2026-01-14';
+
+UPDATE CHAMCONG
+SET nguoiChinhSua = 'NV008',
+    lyDoChinhSua = 'Điều chỉnh trạng thái vắng mặt do nhân viên quên chấm vân tay.',
+    ngayChinhSua = '2026-01-06 10:15:00'
+WHERE maNV = 'NV010' AND ngay = '2026-01-06';
+
+UPDATE CHAMCONG
+SET nguoiChinhSua = 'NV002',
+    lyDoChinhSua = 'Cập nhật nghỉ ốm theo giấy xác nhận đã nộp bổ sung.',
+    ngayChinhSua = '2026-01-08 11:20:00'
+WHERE maNV = 'NV009' AND ngay = '2026-01-08';
 
 -- =====================================================
 -- 18. LOG AUDIT

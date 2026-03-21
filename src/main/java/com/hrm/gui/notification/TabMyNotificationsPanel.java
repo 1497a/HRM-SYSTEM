@@ -4,6 +4,7 @@ import com.hrm.bus.KetQua;
 import com.hrm.bus.ThongBaoBUS;
 import com.hrm.model.TaiKhoan;
 import com.hrm.model.ThongBao;
+import com.hrm.util.HRMConstants;
 import com.hrm.util.UIColors;
 import com.hrm.util.UIFonts;
 import com.hrm.util.UIHelper;
@@ -110,7 +111,7 @@ class TabMyNotificationsPanel extends JPanel {
             for (ThongBao tb : danhSachThongBao) {
                 String ngayTao = tb.getNgayTao() != null ? tb.getNgayTao().format(DATE_FORMAT) : "";
                 modelThongBao.addRow(new Object[]{
-                    tb.getMaThongBao(), tb.getTieuDe(), tb.getLoaiDisplay(),
+                    tb.getMaThongBao(), tb.getTieuDe(), HRMConstants.display(tb.getLoaiThongBao()),
                     ngayTao, tb.isDaDoc() ? "Đã đọc" : "Chưa đọc"
                 });
             }

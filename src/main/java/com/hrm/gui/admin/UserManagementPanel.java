@@ -84,11 +84,11 @@ public class UserManagementPanel extends JPanel {
                 if (!isSelected) {
                     String status = (String) value;
                     if ("Hoạt động".equals(status)) {
-                        c.setBackground(new Color(200, 255, 200));
+                        c.setBackground(UIColors.BG_SUCCESS);
                     } else if ("Bị khóa".equals(status)) {
-                        c.setBackground(new Color(255, 200, 200));
+                        c.setBackground(UIColors.BG_DANGER);
                     } else {
-                        c.setBackground(new Color(255, 255, 200));
+                        c.setBackground(UIColors.BG_WARNING);
                     }
                 }
                 setHorizontalAlignment(SwingConstants.CENTER);

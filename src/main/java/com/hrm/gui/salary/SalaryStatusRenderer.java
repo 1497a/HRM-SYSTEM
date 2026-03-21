@@ -22,9 +22,9 @@ class SalaryStatusRenderer extends DefaultTableCellRenderer {
             if (v.contains("Đã khóa")) {
                 c.setForeground(UIColors.SUCCESS_GREEN);
             } else if (v.contains("Đã duyệt")) {
-                c.setForeground(new Color(230, 120, 0));
+                c.setForeground(UIColors.WARNING_ORANGE);
             } else if (v.contains("Đã tính")) {
-                c.setForeground(new Color(23, 162, 184));
+                c.setForeground(UIColors.INFO_TEAL);
             } else {
                 c.setForeground(UIColors.TEXT_DARK);
             }

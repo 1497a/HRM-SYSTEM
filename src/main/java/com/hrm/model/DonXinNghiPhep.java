@@ -5,10 +5,10 @@ import java.time.LocalDateTime;
 
 public class DonXinNghiPhep {
     public enum TrangThai {
-        CHO_DUYET("cho_duyet", "Cho duyet"),
-        DA_DUYET("da_duyet", "Da duyet"),
-        TU_CHOI("tu_choi", "Tu choi"),
-        HUY("huy", "Da huy");
+        CHO_DUYET("cho_duyet", "Chờ duyệt"),
+        DA_DUYET("da_duyet",   "Đã duyệt"),
+        TU_CHOI("tu_choi",     "Từ chối"),
+        HUY("huy",             "Đã hủy");
         private final String dbValue;
         private final String tenHienThi;
         TrangThai(String dbValue, String tenHienThi) {

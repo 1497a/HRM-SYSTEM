@@ -2,6 +2,7 @@ package com.hrm.bus;
 
 import com.hrm.dao.TuyenDungDAO;
 import com.hrm.model.BoNhiem;
+import com.hrm.model.DataScope;
 import com.hrm.model.HopDongLaoDong;
 import com.hrm.model.NhanVien;
 import com.hrm.model.RecruitmentStatus;
@@ -11,6 +12,7 @@ import com.hrm.model.TinTuyenDung;
 import com.hrm.model.UngVien;
 import com.hrm.model.YeuCauTuyenDung;
 import com.hrm.util.HRMConstants;
+import com.hrm.util.PermissionCodes;
 import com.hrm.util.SessionContext;
 import com.hrm.util.ValidationUtils;
 
@@ -25,9 +27,12 @@ import java.util.stream.Collectors;
  */
 public class TuyenDungBUS {
 
-    static final String ACTION_RECRUITMENT_VIEW = "RECRUITMENT_VIEW";
-    static final String ACTION_RECRUITMENT_REQUEST = "RECRUITMENT_REQUEST";
-    static final String ACTION_RECRUITMENT_MANAGE = "RECRUITMENT_MANAGE";
+    static final String ACTION_RECRUITMENT_VIEW = PermissionCodes.RECRUITMENT_VIEW;
+    static final String ACTION_RECRUITMENT_REQUEST = PermissionCodes.RECRUITMENT_REQUEST;
+    static final String ACTION_RECRUITMENT_MANAGE = PermissionCodes.RECRUITMENT_MANAGE;
+    static final String ACTION_RECRUITMENT_CANDIDATE_CREATE = PermissionCodes.RECRUITMENT_CANDIDATE_CREATE;
+    static final String ACTION_RECRUITMENT_CANDIDATE_REVIEW = PermissionCodes.RECRUITMENT_CANDIDATE_REVIEW;
+    static final String ACTION_RECRUITMENT_CANDIDATE_CONVERT = PermissionCodes.RECRUITMENT_CANDIDATE_CONVERT;
     private static TuyenDungBUS instance;
     private final TuyenDungDAO recruitmentRepo = TuyenDungDAO.getInstance();
     private TuyenDungBUS() {
@@ -44,7 +49,7 @@ public class TuyenDungBUS {
     // Yêu cầu tuyển dụng
     // ============================
     public List<YeuCauTuyenDung> getAllYeuCau() {
-        return recruitmentRepo.findAllYeuCau();
+        return recruitmentRepo.findAllYeuCauByScope(getScopeForAction(ACTION_RECRUITMENT_VIEW), getCurrentMaNV());
     }
 
     public List<YeuCauTuyenDung> getYeuCauDaDuyet() {
@@ -55,7 +60,7 @@ public class TuyenDungBUS {
 
     public KetQua<YeuCauTuyenDung> taoYeuCau(YeuCauTuyenDung yc) {
         KetQua<Void> permission = requireAnyPermission(
-                "Ban khong co quyen tao yeu cau tuyen dung.",
+                "Bạn không có quyền tạo yêu cầu tuyển dụng.",
                 ACTION_RECRUITMENT_REQUEST,
                 ACTION_RECRUITMENT_MANAGE
         );
@@ -93,7 +98,7 @@ public class TuyenDungBUS {
     public KetQua<Void> duyetYeuCau(int maYC) {
         KetQua<Void> permission = requirePermission(
                 ACTION_RECRUITMENT_MANAGE,
-                "Bạn khong co quyen duyet yeu cau tuyen dung."
+                "Bạn không có quyền duyệt yêu cầu tuyển dụng."
         );
         if (!permission.isSuccess()) {
             return permission;
@@ -124,12 +129,12 @@ public class TuyenDungBUS {
     // Tin tuyển dụng
     // ============================
     public List<TinTuyenDung> getAllTinTuyenDung() {
-        return recruitmentRepo.findAllTin();
+        return recruitmentRepo.findAllTinByScope(getScopeForAction(ACTION_RECRUITMENT_VIEW), getCurrentMaNV());
     }
 
     public KetQua<TinTuyenDung> taoTin(TinTuyenDung tin) {
         KetQua<Void> permission = requirePermission(
-                ACTION_RECRUITMENT_MANAGE,
+                ACTION_RECRUITMENT_CANDIDATE_REVIEW,
                 "Bạn không có quyền tạo tin tuyển dụng."
         );
         if (!permission.isSuccess()) {
@@ -193,17 +198,17 @@ public class TuyenDungBUS {
     // Ứng viên
     // ============================
     public List<UngVien> getAllUngVien() {
-        return recruitmentRepo.findAllUngVien();
+        return recruitmentRepo.findAllUngVienByScope(getScopeForAction(ACTION_RECRUITMENT_VIEW), getCurrentMaNV());
     }
 
     public UngVien getUngVienById(int maUngVien) {
-        return recruitmentRepo.findById(maUngVien);
+        return recruitmentRepo.findByIdInScope(maUngVien, getScopeForAction(ACTION_RECRUITMENT_VIEW), getCurrentMaNV());
     }
 
     public KetQua<UngVien> tiepNhanUngVien(UngVien uv) {
         KetQua<Void> permission = requirePermission(
-                ACTION_RECRUITMENT_MANAGE,
-                "Ban khong co quyen tiep nhan ung vien."
+                ACTION_RECRUITMENT_CANDIDATE_CREATE,
+                "Bạn không có quyền tiếp nhận ứng viên."
         );
         if (!permission.isSuccess()) {
             return KetQua.error(permission.getMessage());
@@ -254,7 +259,7 @@ public class TuyenDungBUS {
     public KetQua<Void> capNhatTrangThaiUV(int maUV, String trangThai) {
         KetQua<Void> permission = requirePermission(
                 ACTION_RECRUITMENT_MANAGE,
-                "Ban khong co quyen cap nhat trang thai ung vien."
+                "Bạn không có quyền cập nhật trạng thái ứng viên."
         );
         if (!permission.isSuccess()) {
             return permission;
@@ -262,7 +267,7 @@ public class TuyenDungBUS {
         if (!RecruitmentStatus.isUngVienStatusEditable(trangThai)) {
             return KetQua.error("Trạng thái ứng viên không hợp lệ.");
         }
-        UngVien uv = recruitmentRepo.findById(maUV);
+        UngVien uv = recruitmentRepo.findByIdInScope(maUV, getScopeForAction(ACTION_RECRUITMENT_CANDIDATE_REVIEW), getCurrentMaNV());
         if (uv == null) {
             return KetQua.error("Không tìm thấy ứng viên #" + maUV);
         }
@@ -294,8 +299,8 @@ public class TuyenDungBUS {
 
     public KetQua<String> taoThongDiepXacNhanChuyenUVThanhNV(int maUV) {
         KetQua<Void> permission = requirePermission(
-                ACTION_RECRUITMENT_MANAGE,
-                "Ban khong co quyen chuyen ung vien thanh nhan vien."
+                ACTION_RECRUITMENT_CANDIDATE_CONVERT,
+                "Bạn không có quyền chuyển ứng viên thành nhân viên."
         );
         if (!permission.isSuccess()) {
             return KetQua.error(permission.getMessage());
@@ -317,8 +322,8 @@ public class TuyenDungBUS {
 
     public KetQua<Void> chuyenUVThanhNV(int maUV) {
         KetQua<Void> permission = requirePermission(
-                ACTION_RECRUITMENT_MANAGE,
-                "Ban khong co quyen chuyen ung vien thanh nhan vien."
+                ACTION_RECRUITMENT_CANDIDATE_CONVERT,
+                "Bạn không có quyền chuyển ứng viên thành nhân viên."
         );
         if (!permission.isSuccess()) {
             return KetQua.error(permission.getMessage());
@@ -348,7 +353,7 @@ public class TuyenDungBUS {
     }
 
     private KetQua<UngVien> validateUngVienForConversion(int maUV) {
-        UngVien uv = recruitmentRepo.findById(maUV);
+        UngVien uv = recruitmentRepo.findByIdInScope(maUV, getScopeForAction(ACTION_RECRUITMENT_CANDIDATE_CONVERT), getCurrentMaNV());
         if (uv == null) {
             return KetQua.error("Không tìm thấy ứng viên #" + maUV);
         }
@@ -510,6 +515,15 @@ public class TuyenDungBUS {
     private int getCurrentUserId() {
         return SessionContext.getInstance().getCurrentUser() != null
                 ? SessionContext.getInstance().getCurrentUser().getId() : 0;
+    }
+
+    private String getCurrentMaNV() {
+        return SessionContext.getInstance().getCurrentUser() != null
+                ? SessionContext.getInstance().getCurrentUser().getMaNV() : null;
+    }
+
+    private DataScope getScopeForAction(String action) {
+        return XacThucBUS.getInstance().getScopeForAction(action);
     }
 
     static boolean hasPermission(TaiKhoan user, String action) {

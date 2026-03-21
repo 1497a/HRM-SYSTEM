@@ -8,6 +8,7 @@ import com.hrm.bus.BoNhiemBUS;
 import com.hrm.bus.HopDongBUS;
 import com.hrm.bus.KetQua;
 import com.hrm.bus.NhanVienBUS;
+import com.hrm.util.HRMConstants;
 import com.hrm.util.SessionContext;
 import com.hrm.util.UIFonts;
 import com.hrm.util.UIColors;
@@ -100,7 +101,7 @@ public class EmployeeDetailPanel extends JDialog {
         textPanel.add(lblCode);
         header.add(textPanel, BorderLayout.WEST);
         if (nhanVien != null) {
-            JLabel badge = createStatusBadge(nhanVien.getTrangThai(), nhanVien.getTrangThaiDisplay());
+            JLabel badge = createStatusBadge(nhanVien.getTrangThai(), HRMConstants.display(nhanVien.getTrangThai()));
             JPanel wrap = new JPanel(new FlowLayout(FlowLayout.RIGHT, 0, 0));
             wrap.setOpaque(false);
             wrap.add(badge);
@@ -120,7 +121,7 @@ public class EmployeeDetailPanel extends JDialog {
         btnSuaThongTin.setPreferredSize(new Dimension(130, 34));
         btnSuaThongTin.addActionListener(e -> onSuaThongTin());
         btnDoiTrangThai = new JButton("Đổi trạng thái");
-        styleButton(btnDoiTrangThai, new Color(230, 120, 0));
+        styleButton(btnDoiTrangThai, UIColors.WARNING_ORANGE);
         btnDoiTrangThai.setPreferredSize(new Dimension(145, 34));
         btnDoiTrangThai.addActionListener(e -> onDoiTrangThai());
         JButton btnClose = new JButton("Đóng");

@@ -242,6 +242,48 @@ public class ChamCongBUS {
         return KetQua.success(cc, "Đã thêm chấm công thủ công cho ngày " + ngay + ".");
     }
 
+    public KetQua<ChamCong> suaChamCongThuCong(int maChamCong, LocalDate ngay, String maCaLam,
+            LocalDateTime gioVao, LocalDateTime gioRa, ChamCong.TrangThai trangThai, String lyDoChinhSua) {
+        KetQua<Void> permission = validateAttendanceManagePermission();
+        if (!permission.isSuccess()) return KetQua.error(permission.getMessage());
+        ChamCong cc = repository.findChamCongById(maChamCong);
+        if (cc == null) {
+            return KetQua.error("Không tìm thấy bản ghi chấm công cần sửa.");
+        }
+        if (ngay == null) {
+            return KetQua.error("Ngày chấm công không được để trống.");
+        }
+        if (gioVao == null || gioRa == null) {
+            return KetQua.error("Giờ vào và giờ ra không được để trống.");
+        }
+        if (!gioRa.isAfter(gioVao)) {
+            return KetQua.error("Giờ ra phải sau giờ vào.");
+        }
+        if (ValidationUtils.isBlank(lyDoChinhSua)) {
+            return KetQua.error("Vui lòng nhập lý do chỉnh sửa.");
+        }
+        CaLam caLam = repository.findCaLamById(maCaLam);
+        if (caLam == null) {
+            return KetQua.error("Mã ca làm không hợp lệ.");
+        }
+        ChamCong duplicate = repository.findChamCongByNVAndNgayExcludingId(cc.getMaNV(), ngay, maChamCong);
+        if (duplicate != null) {
+            return KetQua.error("Nhân viên đã có bản ghi chấm công khác trong ngày " + ngay + ".");
+        }
+        cc.setNgay(ngay);
+        cc.setMaCaLam(maCaLam);
+        cc.setTenCaLam(caLam.getTenCaLam());
+        cc.setGioVao(gioVao);
+        cc.setGioRa(gioRa);
+        cc.setSoGioLam(cc.tinhSoGioLam());
+        cc.setTrangThai(trangThai != null ? trangThai : ChamCong.TrangThai.DUNG_GIO);
+        cc.setNguoiChinhSua(resolveCurrentEditorCode());
+        cc.setLyDoChinhSua(lyDoChinhSua.trim());
+        cc.setNgayChinhSua(LocalDateTime.now());
+        repository.updateChamCongByManager(cc);
+        return KetQua.success(cc, "Đã cập nhật chấm công ngày " + ngay + ".");
+    }
+
     public ChamCong getChamCongHomNay(String maNV) {
         if (!canViewAttendanceOf(maNV)) return null;
         return repository.findChamCongByNVAndNgay(maNV, LocalDate.now());
@@ -705,6 +747,15 @@ public class ChamCongBUS {
 
     private com.hrm.model.DataScope getScopeForAction(String action) {
         return XacThucBUS.getInstance().getScopeForAction(action);
+    }
+
+    private String resolveCurrentEditorCode() {
+        TaiKhoan currentUser = SessionContext.getInstance().getCurrentUser();
+        if (currentUser == null) return null;
+        if (!ValidationUtils.isBlank(currentUser.getMaNV())) {
+            return currentUser.getMaNV();
+        }
+        return currentUser.getTenDangNhap();
     }
 
 }

@@ -37,7 +37,7 @@ public class StatusBadge extends JLabel {
                 setForeground(Color.WHITE);
                 break;
             case WARNING:
-                setBackground(new Color(255, 193, 7));
+                setBackground(UIColors.ACCENT_YELLOW);
                 setForeground(UIColors.TEXT_DARK);
                 break;
             case DANGER:
@@ -45,7 +45,7 @@ public class StatusBadge extends JLabel {
                 setForeground(Color.WHITE);
                 break;
             case INFO:
-                setBackground(new Color(23, 162, 184));
+                setBackground(UIColors.INFO_TEAL);
                 setForeground(Color.WHITE);
                 break;
             case PURPLE:

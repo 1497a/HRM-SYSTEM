@@ -72,7 +72,7 @@ public class PurpleTable extends JTable {
                 c.setBackground(UIColors.LIGHT_PURPLE);
                 c.setForeground(UIColors.PRIMARY_PURPLE);
             } else {
-                c.setBackground(row % 2 == 0 ? Color.WHITE : new Color(250, 248, 255));
+                c.setBackground(row % 2 == 0 ? Color.WHITE : UIColors.TABLE_ROW_ALT);
                 c.setForeground(UIColors.TEXT_DARK);
             }
             // Center align by default
@@ -98,7 +98,7 @@ public class PurpleTable extends JTable {
                     c.setBackground(UIColors.LIGHT_PURPLE);
                     c.setForeground(UIColors.PRIMARY_PURPLE);
                 } else {
-                    c.setBackground(row % 2 == 0 ? Color.WHITE : new Color(250, 248, 255));
+                    c.setBackground(row % 2 == 0 ? Color.WHITE : UIColors.TABLE_ROW_ALT);
                     c.setForeground(UIColors.TEXT_DARK);
                 }
                 return c;
@@ -155,7 +155,7 @@ public class PurpleTable extends JTable {
                 return panel;
             } else {
                 JPanel panel = new JPanel(new FlowLayout(FlowLayout.CENTER, 0, 5));
-                panel.setBackground(row % 2 == 0 ? Color.WHITE : new Color(250, 248, 255));
+                panel.setBackground(row % 2 == 0 ? Color.WHITE : UIColors.TABLE_ROW_ALT);
                 panel.add(badge);
                 return panel;
             }

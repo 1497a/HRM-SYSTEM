@@ -74,7 +74,7 @@ public class RoleManagementPanel extends JPanel {
                 if (!isSelected) {
                     String isSystem = (String) value;
                     if ("Có".equals(isSystem)) {
-                        c.setBackground(new Color(255, 255, 200));
+                        c.setBackground(UIColors.BG_WARNING);
                     } else {
                         c.setBackground(Color.WHITE);
                     }

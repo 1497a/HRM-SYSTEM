@@ -1,11 +1,13 @@
 package com.hrm.gui;
 
+import com.hrm.bus.DanhGiaBUS;
 import com.hrm.bus.XacThucBUS;
 import com.hrm.bus.LuongBUS;
 import com.hrm.bus.NghiPhepBUS;
 import com.hrm.bus.NhanVienBUS;
 import com.hrm.bus.TuyenDungBUS;
 import com.hrm.gui.components.RoundedPanel;
+import com.hrm.model.DanhGiaHieuSuat;
 import com.hrm.model.DataScope;
 import com.hrm.model.DonXinNghiPhep;
 import com.hrm.model.SoDungPhep;
@@ -101,9 +103,18 @@ class DashboardPanel extends JPanel {
             try {
                 long opening = TuyenDungBUS.getInstance().getAllTinTuyenDung().stream()
                         .filter(t -> "dang_tuyen".equals(t.getTrangThai())).count();
-                cards.add(RoundedPanel.createStatCard("Tuyển dụng đang mở", String.valueOf(opening), new Color(255, 193, 7)));
+                cards.add(RoundedPanel.createStatCard("Tuyển dụng đang mở", String.valueOf(opening), UIColors.ACCENT_YELLOW));
             } catch (Exception ignored) {
-                cards.add(RoundedPanel.createStatCard("Tuyển dụng đang mở", "—", new Color(255, 193, 7)));
+                cards.add(RoundedPanel.createStatCard("Tuyển dụng đang mở", "—", UIColors.ACCENT_YELLOW));
+            }
+        }
+        if (authService.getScopeForAction(PermissionCodes.EVAL_VIEW) != DataScope.NONE) {
+            try {
+                long openCount = DanhGiaBUS.getInstance().getOpenCycles().size();
+                String val = openCount > 0 ? openCount + " đợt" : "Không có";
+                cards.add(RoundedPanel.createStatCard("Đánh giá đang mở", val, UIColors.PRIMARY_PURPLE));
+            } catch (Exception ignored) {
+                cards.add(RoundedPanel.createStatCard("Đánh giá đang mở", "—", UIColors.PRIMARY_PURPLE));
             }
         }
     }
@@ -118,7 +129,7 @@ class DashboardPanel extends JPanel {
         JPanel body = new JPanel();
         body.setLayout(new BoxLayout(body, BoxLayout.Y_AXIS));
         body.setOpaque(false);
-        JPanel cardsGrid = new JPanel(new GridLayout(1, 3, 18, 18));
+        JPanel cardsGrid = new JPanel(new GridLayout(1, 4, 18, 18));
         cardsGrid.setOpaque(false);
         addPersonalStatCards(cardsGrid, maNV);
         body.add(cardsGrid);
@@ -144,9 +155,9 @@ class DashboardPanel extends JPanel {
         try {
             long pending = maNV == null ? 0 : NghiPhepBUS.getInstance().getMyRequests(maNV).stream()
                     .filter(d -> DonXinNghiPhep.TrangThai.CHO_DUYET.equals(d.getTrangThai())).count();
-            cardsGrid.add(RoundedPanel.createStatCard("Đơn đang chờ duyệt", String.valueOf(pending), new Color(255, 193, 7)));
+            cardsGrid.add(RoundedPanel.createStatCard("Đơn đang chờ duyệt", String.valueOf(pending), UIColors.ACCENT_YELLOW));
         } catch (Exception ignored) {
-            cardsGrid.add(RoundedPanel.createStatCard("Đơn đang chờ duyệt", "—", new Color(255, 193, 7)));
+            cardsGrid.add(RoundedPanel.createStatCard("Đơn đang chờ duyệt", "—", UIColors.ACCENT_YELLOW));
         }
         try {
             String luongText = "Chưa có";
@@ -165,6 +176,32 @@ class DashboardPanel extends JPanel {
             cardsGrid.add(RoundedPanel.createStatCard("Lương gần nhất", luongText, UIColors.SUCCESS_GREEN));
         } catch (Exception ignored) {
             cardsGrid.add(RoundedPanel.createStatCard("Lương gần nhất", "—", UIColors.SUCCESS_GREEN));
+        }
+        try {
+            String evalText = "Chưa có";
+            Color evalColor = UIColors.PRIMARY_PURPLE;
+            if (maNV != null) {
+                List<DanhGiaHieuSuat> evals = DanhGiaBUS.getInstance().getSubmissionsByEmployee(maNV);
+                DanhGiaHieuSuat latest = evals.stream()
+                        .filter(e -> e.getNgayDanhGia() != null)
+                        .max(java.util.Comparator.comparing(DanhGiaHieuSuat::getNgayDanhGia))
+                        .orElse(null);
+                if (latest != null && latest.getXepLoai() != null) {
+                    evalText = latest.getXepLoai().getTenHienThi()
+                            + " (" + String.format("%.1f", latest.getTongDiem()) + ")";
+                    DanhGiaHieuSuat.XepLoai xl = latest.getXepLoai();
+                    if (xl == DanhGiaHieuSuat.XepLoai.XUAT_SAC || xl == DanhGiaHieuSuat.XepLoai.TOT) {
+                        evalColor = UIColors.SUCCESS_GREEN;
+                    } else if (xl == DanhGiaHieuSuat.XepLoai.KHA) {
+                        evalColor = UIColors.ACCENT_YELLOW;
+                    } else {
+                        evalColor = UIColors.DANGER_RED;
+                    }
+                }
+            }
+            cardsGrid.add(RoundedPanel.createStatCard("Đánh giá gần nhất", evalText, evalColor));
+        } catch (Exception ignored) {
+            cardsGrid.add(RoundedPanel.createStatCard("Đánh giá gần nhất", "—", UIColors.PRIMARY_PURPLE));
         }
     }
 

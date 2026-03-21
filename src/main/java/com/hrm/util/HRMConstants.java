@@ -17,26 +17,35 @@ public final class HRMConstants {
     // Account status
     public static final String TK_ACTIVE = "Đang hoạt động";
     public static final String TK_LOCKED = "Bị khóa";
-    // Shared DB statuses
-    public static final String TRANG_THAI_CHO_DUYET = "cho_duyet";
-    public static final String TRANG_THAI_HIEU_LUC = "hieu_luc";
-    public static final String TRANG_THAI_DA_DUYET = "da_duyet";
-    public static final String TRANG_THAI_TU_CHOI = "tu_choi";
-    public static final String TRANG_THAI_HUY = "huy";
-    public static final String TRANG_THAI_THANH_LY = "thanh_ly";
-    public static final String TRANG_THAI_DANG_LAM_VIEC = "dang_lam_viec";
-    public static final String TRANG_THAI_HOAT_DONG = "hoatDong";
+    // Trạng thái nhân viên
+    public static final String TRANG_THAI_DANG_LAM_VIEC  = "dang_lam_viec";
+    public static final String TRANG_THAI_TAM_NGHI        = "tam_nghi";
+    public static final String TRANG_THAI_NGHI_VIEC       = "nghi_viec";
+    // Trạng thái phòng ban / chức vụ
+    public static final String TRANG_THAI_HOAT_DONG       = "hoatDong";
     public static final String TRANG_THAI_NGUNG_HOAT_DONG = "ngung_hoat_dong";
-    // Appointment status
-    public static final String BN_CHO_DUYET = "Chờ duyệt";
-    public static final String BN_HIEU_LUC = "Hiệu lực";
-    public static final String BN_KET_THUC = "Kết thúc";
-    public static final String BN_TU_CHOI = "Từ chối";
-    // Recruitment request status
-    public static final String YC_CHO_DUYET = "Chờ duyệt";
-    public static final String YC_DA_DUYET = "Đã duyệt";
-    public static final String YC_TU_CHOI = "Từ chối";
-    public static final String YC_DA_TUYEN = "Đã tuyển";
+    // Trạng thái chung (bổ nhiệm, đơn nghỉ phép, yêu cầu tuyển dụng...)
+    public static final String TRANG_THAI_CHO_DUYET       = "cho_duyet";
+    public static final String TRANG_THAI_DA_DUYET        = "da_duyet";
+    public static final String TRANG_THAI_TU_CHOI         = "tu_choi";
+    public static final String TRANG_THAI_HUY             = "huy";
+    // Trạng thái bổ nhiệm / hợp đồng
+    public static final String TRANG_THAI_HIEU_LUC        = "hieu_luc";
+    public static final String TRANG_THAI_HET_HIEU_LUC    = "het_hieu_luc";
+    public static final String TRANG_THAI_SAP_HET_HAN     = "sap_het_han";
+    public static final String TRANG_THAI_HET_HAN         = "het_han";
+    public static final String TRANG_THAI_THANH_LY        = "thanh_ly";
+    // Loại bổ nhiệm
+    public static final String LOAI_BO_NHIEM_CHINH        = "chinh";
+    public static final String LOAI_BO_NHIEM_KIEM_NHIEM   = "kiem_nhiem";
+    // Loại hợp đồng
+    public static final String LOAI_HOP_DONG_THU_VIEC         = "thu_viec";
+    public static final String LOAI_HOP_DONG_XAC_DINH         = "xac_dinh_thoi_han";
+    public static final String LOAI_HOP_DONG_KHONG_XAC_DINH   = "khong_xac_dinh";
+    // Loại thông báo
+    public static final String LOAI_TB_HE_THONG          = "he_thong";
+    public static final String LOAI_TB_DON_TU            = "don_tu";
+    public static final String LOAI_TB_CHUNG             = "thong_bao_chung";
     // Recruitment posting status
     public static final String TIN_NHAP = "Nhập";
     public static final String TIN_DANG_TUYEN = "Đang tuyển";
@@ -47,4 +56,44 @@ public final class HRMConstants {
     public static final String UV_PHONG_VAN = "Phỏng vấn";
     public static final String UV_TRUNG_TUYEN = "Trúng tuyển";
     public static final String UV_LOAI = "Loại";
+
+    /**
+     * Chuyển raw DB status value sang chuỗi tiếng Việt hiển thị cho người dùng.
+     * Áp dụng cho mọi trạng thái dạng snake_case được khai báo là hằng trong class này.
+     */
+    public static String display(String raw) {
+        if (raw == null) return "";
+        switch (raw) {
+            // Nhân viên
+            case TRANG_THAI_DANG_LAM_VIEC:  return "Đang làm việc";
+            case TRANG_THAI_TAM_NGHI:       return "Tạm nghỉ";
+            case TRANG_THAI_NGHI_VIEC:      return "Nghỉ việc";
+            // Phòng ban / Chức vụ
+            case TRANG_THAI_HOAT_DONG:      return "Hoạt động";
+            case TRANG_THAI_NGUNG_HOAT_DONG:return "Ngừng hoạt động";
+            // Chung
+            case TRANG_THAI_CHO_DUYET:      return "Chờ duyệt";
+            case TRANG_THAI_DA_DUYET:       return "Đã duyệt";
+            case TRANG_THAI_TU_CHOI:        return "Từ chối";
+            case TRANG_THAI_HUY:            return "Đã hủy";
+            // Bổ nhiệm / Hợp đồng
+            case TRANG_THAI_HIEU_LUC:       return "Hiệu lực";
+            case TRANG_THAI_HET_HIEU_LUC:   return "Hết hiệu lực";
+            case TRANG_THAI_SAP_HET_HAN:    return "Sắp hết hạn";
+            case TRANG_THAI_HET_HAN:        return "Hết hạn";
+            case TRANG_THAI_THANH_LY:       return "Thanh lý";
+            // Loại bổ nhiệm
+            case LOAI_BO_NHIEM_CHINH:       return "Chính";
+            case LOAI_BO_NHIEM_KIEM_NHIEM:  return "Kiêm nhiệm";
+            // Loại hợp đồng
+            case LOAI_HOP_DONG_THU_VIEC:        return "Thử việc";
+            case LOAI_HOP_DONG_XAC_DINH:        return "Xác định thời hạn";
+            case LOAI_HOP_DONG_KHONG_XAC_DINH:  return "Không xác định";
+            // Loại thông báo
+            case LOAI_TB_HE_THONG:  return "Hệ thống";
+            case LOAI_TB_DON_TU:    return "Đơn từ";
+            case LOAI_TB_CHUNG:     return "Thông báo chung";
+            default:                return raw;
+        }
+    }
 }

@@ -94,19 +94,6 @@ public class ThongBao {
         this.ngayTao = ngayTao;
     }
 
-    /**
-     * Trả về tên loại thông báo bằng tiếng Việt.
-     */
-    public String getLoaiDisplay() {
-        if (loaiThongBao == null) return "";
-        switch (loaiThongBao) {
-            case "he_thong":       return "Hệ thống";
-            case "don_tu":         return "Đơn từ";
-            case "thong_bao_chung": return "Thông báo chung";
-            default:               return loaiThongBao;
-        }
-    }
-
     @Override
     public String toString() {
         return tieuDe;

@@ -7,6 +7,7 @@ import com.hrm.gui.components.PurpleTable;
 import com.hrm.model.DataScope;
 import com.hrm.model.HopDongLaoDong;
 import com.hrm.model.TaiKhoan;
+import com.hrm.util.HRMConstants;
 import com.hrm.util.PermissionCodes;
 import com.hrm.util.UIFonts;
 import com.hrm.util.SessionContext;
@@ -197,12 +198,12 @@ public class ContractListPanel extends JPanel {
                     hd.getMaHopDong(),
                     hd.getSoHopDong(),
                     hd.getMaNV(),
-                    hd.getLoaiHopDongDisplay(),
+                    HRMConstants.display(hd.getLoaiHopDong()),
                     String.format("%,d đ", hd.getLuongCoSo()),
                     hd.getNgayKy() != null ? hd.getNgayKy().format(dtf) : "",
                     hd.getNgayHieuLuc() != null ? hd.getNgayHieuLuc().format(dtf) : "",
                     hd.getNgayHetHieuLuc() != null ? hd.getNgayHetHieuLuc().format(dtf) : "Không xác định",
-                    hd.getTrangThaiDisplay()
+                    HRMConstants.display(hd.getTrangThai())
             });
         }
         applyFilter();
@@ -291,12 +292,12 @@ public class ContractListPanel extends JPanel {
             setBorder(BorderFactory.createEmptyBorder(0, 8, 0, 8));
             setToolTipText(null);
             if (!isSelected) {
-                c.setBackground(row % 2 == 0 ? Color.WHITE : new Color(250, 248, 255));
+                c.setBackground(row % 2 == 0 ? Color.WHITE : UIColors.TABLE_ROW_ALT);
                 c.setForeground(UIColors.TEXT_DARK);
                 if (col == 8 && value != null) {
                     String val = value.toString();
                     if ("Chờ phê duyệt".equals(val)) {
-                        c.setForeground(new Color(0xE65100));
+                        c.setForeground(UIColors.WARNING_ORANGE);
                         ((JLabel) c).setFont(com.hrm.util.UIFonts.BOLD_SMALL);
                         setToolTipText("Hợp đồng đang chờ phê duyệt");
                     } else if ("Hiệu lực".equals(val)) {
@@ -304,7 +305,7 @@ public class ContractListPanel extends JPanel {
                         ((JLabel) c).setFont(com.hrm.util.UIFonts.BOLD_SMALL);
                         setToolTipText("Hợp đồng đang có hiệu lực");
                     } else if ("Hết hạn".equals(val) || "Hết hiệu lực".equals(val)) {
-                        c.setForeground(new Color(230, 120, 0));
+                        c.setForeground(UIColors.WARNING_ORANGE);
                         ((JLabel) c).setFont(com.hrm.util.UIFonts.BOLD_SMALL);
                         setToolTipText("Hợp đồng đã hết thời hạn");
                     } else if ("Thanh lý".equals(val)) {

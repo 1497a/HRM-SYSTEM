@@ -6,7 +6,7 @@ import com.hrm.model.SoDungPhep;
 import com.hrm.model.TaiKhoan;
 import com.hrm.bus.NghiPhepBUS;
 import com.hrm.util.HRMConstants;
-import com.hrm.util.UIFonts;
+import com.hrm.util.UIColors;
 import com.hrm.util.PermissionCodes;
 import com.hrm.util.SessionContext;
 import com.hrm.util.UIHelper;
@@ -125,11 +125,11 @@ public class LeaveListPanel extends JPanel {
                 if (!isSelected) {
                     String status = (String) value;
                     if (com.hrm.model.DonXinNghiPhep.TrangThai.DA_DUYET.getTenHienThi().equals(status)) {
-                        c.setBackground(new Color(200, 255, 200));
+                        c.setBackground(UIColors.BG_SUCCESS);
                     } else if (com.hrm.model.DonXinNghiPhep.TrangThai.TU_CHOI.getTenHienThi().equals(status)) {
-                        c.setBackground(new Color(255, 200, 200));
+                        c.setBackground(UIColors.BG_DANGER);
                     } else if (com.hrm.model.DonXinNghiPhep.TrangThai.CHO_DUYET.getTenHienThi().equals(status)) {
-                        c.setBackground(new Color(255, 255, 200));
+                        c.setBackground(UIColors.BG_WARNING);
                     } else {
                         c.setBackground(Color.WHITE);
                     }

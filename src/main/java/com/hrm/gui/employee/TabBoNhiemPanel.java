@@ -3,8 +3,8 @@ package com.hrm.gui.employee;
 import com.hrm.gui.components.PurpleTable;
 import com.hrm.model.BoNhiem;
 import com.hrm.bus.BoNhiemBUS;
+import com.hrm.util.HRMConstants;
 import com.hrm.util.UIColors;
-import com.hrm.util.UIFonts;
 
 import javax.swing.*;
 import javax.swing.table.DefaultTableCellRenderer;
@@ -36,14 +36,14 @@ class TabBoNhiemPanel extends JPanel {
             String tenCV = boNhiemHienTai.getTenChucVu()   != null ? boNhiemHienTai.getTenChucVu()   : safe(String.valueOf(boNhiemHienTai.getId()));
             addInfoRow(detailGrid, 0, "Phòng ban:",         tenPB);
             addInfoRow(detailGrid, 1, "Chức vụ:",           tenCV);
-            addInfoRow(detailGrid, 2, "Loại bổ nhiệm:",     safe(boNhiemHienTai.getLoaiBoNhiemDisplay()));
+            addInfoRow(detailGrid, 2, "Loại bổ nhiệm:",     HRMConstants.display(boNhiemHienTai.getLoaiBoNhiem()));
             addInfoRow(detailGrid, 3, "Tỷ lệ hưởng lương:", boNhiemHienTai.getTyLeHuongLuong() + "%");
             addInfoRow(detailGrid, 4, "Từ ngày:",
                     boNhiemHienTai.getTuNgay() != null ? boNhiemHienTai.getTuNgay().format(DATE_FMT) : "");
             addInfoRow(detailGrid, 5, "Đến ngày:",
                     boNhiemHienTai.getDenNgay() != null ? boNhiemHienTai.getDenNgay().format(DATE_FMT) : "Không xác định");
             addInfoRow(detailGrid, 6, "Trạng thái:",
-                    buildStatusLabel(boNhiemHienTai.getTrangThai(), boNhiemHienTai.getTrangThaiDisplay()));
+                    buildStatusLabel(boNhiemHienTai.getTrangThai(), HRMConstants.display(boNhiemHienTai.getTrangThai())));
         } else {
             JLabel noData = new JLabel("  Chưa có bổ nhiệm chính hiệu lực.");
             noData.setFont(new Font("Segoe UI", Font.ITALIC, 13));
@@ -80,10 +80,10 @@ class TabBoNhiemPanel extends JPanel {
                 String tenPB = bn.getTenPhongBan() != null ? bn.getTenPhongBan() : safe(bn.getMaChucVu());
                 String tenCV = bn.getTenChucVu()   != null ? bn.getTenChucVu()   : safe(bn.getMaChucVu());
                 model.addRow(new Object[]{
-                    tenPB, tenCV, safe(bn.getLoaiBoNhiemDisplay()),
+                    tenPB, tenCV, HRMConstants.display(bn.getLoaiBoNhiem()),
                     bn.getTuNgay() != null ? bn.getTuNgay().format(DATE_FMT) : "",
                     bn.getDenNgay() != null ? bn.getDenNgay().format(DATE_FMT) : "Không xác định",
-                    safe(bn.getTrangThaiDisplay())
+                    HRMConstants.display(bn.getTrangThai())
                 });
             }
         } catch (Exception ignored) {}
@@ -170,12 +170,12 @@ class TabBoNhiemPanel extends JPanel {
             setHorizontalAlignment(SwingConstants.CENTER);
             setBorder(BorderFactory.createEmptyBorder(0, 8, 0, 8));
             if (!isSelected) {
-                c.setBackground(row % 2 == 0 ? Color.WHITE : new Color(250, 248, 255));
+                c.setBackground(row % 2 == 0 ? Color.WHITE : UIColors.TABLE_ROW_ALT);
                 c.setForeground(UIColors.TEXT_DARK);
                 if (col == 5 && value != null) {
                     String v = value.toString();
                     if (v.contains("Hiệu lực") || v.contains("hieu_luc")) c.setForeground(UIColors.SUCCESS_GREEN);
-                    else if (v.contains("Chờ duyệt") || v.contains("cho_duyet")) c.setForeground(new Color(230, 120, 0));
+                    else if (v.contains("Chờ duyệt") || v.contains("cho_duyet")) c.setForeground(UIColors.WARNING_ORANGE);
                     else if (v.contains("Đã hết") || v.contains("Từ chối")) c.setForeground(UIColors.DANGER_RED);
                     ((JLabel) c).setFont(com.hrm.util.UIFonts.BOLD_SMALL);
                 }

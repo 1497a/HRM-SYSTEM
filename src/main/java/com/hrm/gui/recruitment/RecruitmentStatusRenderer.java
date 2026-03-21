@@ -45,9 +45,9 @@ class RecruitmentStatusRenderer extends DefaultTableCellRenderer {
             } else if (DANGER_STATUSES.contains(v)) {
                 c.setForeground(UIColors.DANGER_RED);
             } else if (WARNING_STATUSES.contains(v)) {
-                c.setForeground(new Color(255, 193, 7));
+                c.setForeground(UIColors.ACCENT_YELLOW);
             } else {
-                c.setForeground(new Color(23, 162, 184));
+                c.setForeground(UIColors.INFO_TEAL);
             }
             ((JLabel) c).setFont(com.hrm.util.UIFonts.BOLD_SMALL);
         }

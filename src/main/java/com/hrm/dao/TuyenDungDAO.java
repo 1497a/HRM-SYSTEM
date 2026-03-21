@@ -3,13 +3,17 @@ package com.hrm.dao;
 import com.hrm.model.TinTuyenDung;
 import com.hrm.model.UngVien;
 import com.hrm.model.YeuCauTuyenDung;
+import com.hrm.model.DataScope;
 import com.hrm.model.RecruitmentStatus;
+import com.hrm.util.DaoHelper;
 import com.hrm.util.DatabaseConnection;
 
 import java.sql.*;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
+import java.util.Set;
 
 /**
  * Repository JDBC cho module Tuyển dụng.
@@ -149,6 +153,10 @@ public class TuyenDungDAO {
         return list;
     }
 
+    public List<YeuCauTuyenDung> findAllYeuCauByScope(DataScope scope, String currentMaNV) {
+        return queryYeuCauByScope(scope, currentMaNV, null);
+    }
+
     /**
      * Tìm yêu cầu tuyển dụng theo ID với transients.
      */
@@ -268,6 +276,10 @@ public class TuyenDungDAO {
         return list;
     }
 
+    public List<TinTuyenDung> findAllTinByScope(DataScope scope, String currentMaNV) {
+        return queryTinByScope(scope, currentMaNV, null);
+    }
+
     /**
      * Tim tin tuyen dung theo ID voi transients.
      */
@@ -286,6 +298,11 @@ public class TuyenDungDAO {
             e.printStackTrace();
         }
         return null;
+    }
+
+    public TinTuyenDung findTinByIdInScope(int maTin, DataScope scope, String currentMaNV) {
+        List<TinTuyenDung> list = queryTinByScope(scope, currentMaNV, maTin);
+        return list.isEmpty() ? null : list.get(0);
     }
 
     // =====================================================================
@@ -400,6 +417,10 @@ public class TuyenDungDAO {
         return list;
     }
 
+    public List<UngVien> findAllUngVienByScope(DataScope scope, String currentMaNV) {
+        return queryUngVienByScope(scope, currentMaNV, null);
+    }
+
     /**
      * Lấy ứng viên theo mã tin tuyển dụng.
      */
@@ -439,6 +460,124 @@ public class TuyenDungDAO {
             e.printStackTrace();
         }
         return null;
+    }
+
+    public UngVien findByIdInScope(int maUngVien, DataScope scope, String currentMaNV) {
+        List<UngVien> list = queryUngVienByScope(scope, currentMaNV, maUngVien);
+        return list.isEmpty() ? null : list.get(0);
+    }
+
+    private List<YeuCauTuyenDung> queryYeuCauByScope(DataScope scope, String currentMaNV, Integer maYeuCau) {
+        List<YeuCauTuyenDung> list = new ArrayList<>();
+        String orderBy = maYeuCau == null ? " ORDER BY yc.maYeuCau DESC" : "";
+        try (Connection conn = DatabaseConnection.getConnection()) {
+            ScopeQuery scopeQuery = buildScopeQuery(scope, currentMaNV, conn, "yc.maPhongBan");
+            if (scopeQuery == null) return list;
+            StringBuilder sql = new StringBuilder(YEUCAU_BASE_SELECT).append(scopeQuery.whereClause);
+            if (maYeuCau != null) {
+                sql.append(scopeQuery.hasWhere ? " AND " : "WHERE ").append("yc.maYeuCau = ?");
+            }
+            sql.append(orderBy);
+            try (PreparedStatement ps = conn.prepareStatement(sql.toString())) {
+                int index = bindParams(ps, scopeQuery.params);
+                if (maYeuCau != null) ps.setInt(index, maYeuCau);
+                try (ResultSet rs = ps.executeQuery()) {
+                    while (rs.next()) list.add(mapYeuCauWithDetails(rs));
+                }
+            }
+        } catch (SQLException e) {
+            System.err.println("Loi queryYeuCauByScope: " + e.getMessage());
+            e.printStackTrace();
+        }
+        return list;
+    }
+
+    private List<TinTuyenDung> queryTinByScope(DataScope scope, String currentMaNV, Integer maTin) {
+        List<TinTuyenDung> list = new ArrayList<>();
+        String orderBy = maTin == null ? " ORDER BY t.maTin DESC" : "";
+        try (Connection conn = DatabaseConnection.getConnection()) {
+            ScopeQuery scopeQuery = buildScopeQuery(scope, currentMaNV, conn, "yc.maPhongBan");
+            if (scopeQuery == null) return list;
+            StringBuilder sql = new StringBuilder(TIN_BASE_SELECT).append(scopeQuery.whereClause);
+            if (maTin != null) {
+                sql.append(scopeQuery.hasWhere ? " AND " : "WHERE ").append("t.maTin = ?");
+            }
+            sql.append(orderBy);
+            try (PreparedStatement ps = conn.prepareStatement(sql.toString())) {
+                int index = bindParams(ps, scopeQuery.params);
+                if (maTin != null) ps.setInt(index, maTin);
+                try (ResultSet rs = ps.executeQuery()) {
+                    while (rs.next()) list.add(mapTinWithDetails(rs));
+                }
+            }
+        } catch (SQLException e) {
+            System.err.println("Loi queryTinByScope: " + e.getMessage());
+            e.printStackTrace();
+        }
+        return list;
+    }
+
+    private List<UngVien> queryUngVienByScope(DataScope scope, String currentMaNV, Integer maUngVien) {
+        List<UngVien> list = new ArrayList<>();
+        String orderBy = maUngVien == null ? " ORDER BY uv.maUngVien DESC" : "";
+        try (Connection conn = DatabaseConnection.getConnection()) {
+            ScopeQuery scopeQuery = buildScopeQuery(scope, currentMaNV, conn, "yc.maPhongBan");
+            if (scopeQuery == null) return list;
+            StringBuilder sql = new StringBuilder(UV_BASE_SELECT).append(scopeQuery.whereClause);
+            if (maUngVien != null) {
+                sql.append(scopeQuery.hasWhere ? " AND " : "WHERE ").append("uv.maUngVien = ?");
+            }
+            sql.append(orderBy);
+            try (PreparedStatement ps = conn.prepareStatement(sql.toString())) {
+                int index = bindParams(ps, scopeQuery.params);
+                if (maUngVien != null) ps.setInt(index, maUngVien);
+                try (ResultSet rs = ps.executeQuery()) {
+                    while (rs.next()) list.add(mapUngVienWithDetails(rs));
+                }
+            }
+        } catch (SQLException e) {
+            System.err.println("Loi queryUngVienByScope: " + e.getMessage());
+            e.printStackTrace();
+        }
+        return list;
+    }
+
+    private ScopeQuery buildScopeQuery(DataScope scope, String currentMaNV, Connection conn, String deptColumn) throws SQLException {
+        if (scope == null || scope == DataScope.NONE) return null;
+        if (scope == DataScope.ALL) {
+            return new ScopeQuery("", Collections.emptyList(), false);
+        }
+        if (scope == DataScope.DEPT) {
+            Set<String> deptIds = DaoHelper.getDeptSubtree(currentMaNV, conn);
+            if (deptIds.isEmpty()) return null;
+            String placeholders = String.join(",", Collections.nCopies(deptIds.size(), "?"));
+            return new ScopeQuery(
+                    "WHERE " + deptColumn + " IN (" + placeholders + ")",
+                    new ArrayList<>(deptIds),
+                    true
+            );
+        }
+        return null;
+    }
+
+    private int bindParams(PreparedStatement ps, List<String> params) throws SQLException {
+        int index = 1;
+        for (String param : params) {
+            ps.setString(index++, param);
+        }
+        return index;
+    }
+
+    private static class ScopeQuery {
+        private final String whereClause;
+        private final List<String> params;
+        private final boolean hasWhere;
+
+        private ScopeQuery(String whereClause, List<String> params, boolean hasWhere) {
+            this.whereClause = whereClause;
+            this.params = params;
+            this.hasWhere = hasWhere;
+        }
     }
 
     /**

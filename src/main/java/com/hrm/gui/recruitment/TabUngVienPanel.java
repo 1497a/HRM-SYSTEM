@@ -83,7 +83,7 @@ class TabUngVienPanel extends JPanel {
         scroll.setBorder(new TitledBorder("Danh sách ứng viên"));
         add(toolbar, BorderLayout.NORTH);
         add(scroll, BorderLayout.CENTER);
-        btnTaoUV.setVisible(SessionContext.getInstance().hasPermission(PermissionCodes.RECRUITMENT_MANAGE));
+        btnTaoUV.setVisible(SessionContext.getInstance().hasPermission(PermissionCodes.RECRUITMENT_CANDIDATE_CREATE));
         load();
     }
 

@@ -21,12 +21,12 @@ import java.time.Duration;
 public class ChamCong {
 
     public enum TrangThai {
-        DUNG_GIO("dung_gio", "Dung gio"),
-        DI_MUON("di_muon", "Di muon"),
-        VE_SOM("ve_som", "Ve som"),
-        VANG_MAT("vang_mat", "Vang mat"),
-        NGHI_PHEP("nghi_phep", "Nghi phep"),
-        CONG_TAC("cong_tac", "Cong tac");
+        DUNG_GIO("dung_gio",   "Đúng giờ"),
+        DI_MUON("di_muon",     "Đi muộn"),
+        VE_SOM("ve_som",       "Về sớm"),
+        VANG_MAT("vang_mat",   "Vắng mặt"),
+        NGHI_PHEP("nghi_phep", "Nghỉ phép"),
+        CONG_TAC("cong_tac",   "Công tác");
         private final String dbValue;
         private final String displayName;
         TrangThai(String dbValue, String displayName) {
@@ -46,11 +46,11 @@ public class ChamCong {
     }
 
     public enum PhuongThuc {
-        WIFI("wifi", "WiFi"),
-        VAN_TAY("van_tay", "Van tay"),
-        THE_TU("the_tu", "The tu"),
-        GPS("gps", "GPS"),
-        THU_CONG("thu_cong", "Thu cong");
+        WIFI("wifi",       "WiFi"),
+        VAN_TAY("van_tay", "Vân tay"),
+        THE_TU("the_tu",   "Thẻ từ"),
+        GPS("gps",         "GPS"),
+        THU_CONG("thu_cong", "Thủ công");
         private final String dbValue;
         private final String displayName;
         PhuongThuc(String dbValue, String displayName) {
@@ -82,6 +82,9 @@ public class ChamCong {
     private TrangThai trangThai;           // Trang thai cham cong
     private PhuongThuc phuongThucChamCong; // Cach cham cong
     private String ghiChu;                 // Ghi chu — co the NULL
+    private String nguoiChinhSua;          // Mã NV hoặc username người sửa gần nhất
+    private String lyDoChinhSua;           // Lý do sửa gần nhất
+    private LocalDateTime ngayChinhSua;    // Thời điểm sửa gần nhất
     private LocalDateTime ngayTao;         // Thoi diem tao ban ghi
     public ChamCong() {
         this.soGioLam = 0;
@@ -139,6 +142,15 @@ public class ChamCong {
 
     public String getGhiChu() { return ghiChu; }
     public void setGhiChu(String ghiChu) { this.ghiChu = ghiChu; }
+
+    public String getNguoiChinhSua() { return nguoiChinhSua; }
+    public void setNguoiChinhSua(String nguoiChinhSua) { this.nguoiChinhSua = nguoiChinhSua; }
+
+    public String getLyDoChinhSua() { return lyDoChinhSua; }
+    public void setLyDoChinhSua(String lyDoChinhSua) { this.lyDoChinhSua = lyDoChinhSua; }
+
+    public LocalDateTime getNgayChinhSua() { return ngayChinhSua; }
+    public void setNgayChinhSua(LocalDateTime ngayChinhSua) { this.ngayChinhSua = ngayChinhSua; }
 
     private static final String OT_FLAG = "OT";
     public boolean isLaOT() {

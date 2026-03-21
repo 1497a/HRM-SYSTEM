@@ -21,12 +21,12 @@ import java.util.List;
  */
 public class ChamCongDAO {
 
-    private static final String CHAMCONG_SELECT = "SELECT c.maChamCong, c.maNV, c.ngay, c.maCaLam, c.gioVao, c.gioRa, "
-            + "c.soGioLam, c.gioLamThem, c.trangThai, c.phuongThucChamCong, c.ghiChu, t.hoTen, ca.tenCaLam "
-            + "FROM CHAMCONG c "
+    private static final String CHAMCONG_SELECT_BASE = "SELECT c.maChamCong, c.maNV, c.ngay, c.maCaLam, c.gioVao, c.gioRa, "
+            + "c.soGioLam, c.gioLamThem, c.trangThai, c.phuongThucChamCong, c.ghiChu";
+    private static final String CHAMCONG_FROM_BASE = " FROM CHAMCONG c "
             + "LEFT JOIN THONGTINCANHAN t ON c.maNV = t.maNV "
             + "LEFT JOIN CALAM ca ON c.maCaLam = ca.maCaLam ";
-    private static final String CHAMCONG_SELECT_WITH_BONHIEM = CHAMCONG_SELECT
+    private static final String CHAMCONG_FROM_WITH_BONHIEM = CHAMCONG_FROM_BASE
             + "LEFT JOIN BONHIEM b ON c.maNV = b.maNV AND b.trangThai = 'hieu_luc' AND b.loaiBoNhiem = 'chinh' ";
     private static final String DANGKY_SELECT = "SELECT d.maDK, d.maNV, d.ngay, d.soGio, d.heSoOT, d.lyDo, "
             + "d.trangThai, d.nguoiDuyet, d.ngayDuyet, t.hoTen "
@@ -35,6 +35,7 @@ public class ChamCongDAO {
     private static final String DANGKY_SELECT_WITH_BONHIEM = DANGKY_SELECT
             + "LEFT JOIN BONHIEM b ON d.maNV = b.maNV AND b.trangThai = 'hieu_luc' AND b.loaiBoNhiem = 'chinh' ";
     private static ChamCongDAO instance;
+    private volatile Boolean chamCongAuditColumnsAvailable;
     private ChamCongDAO() {}
 
     public static synchronized ChamCongDAO getInstance() {
@@ -42,6 +43,68 @@ public class ChamCongDAO {
             instance = new ChamCongDAO();
         }
         return instance;
+    }
+
+    private String getChamCongSelect() {
+        StringBuilder sql = new StringBuilder(CHAMCONG_SELECT_BASE);
+        if (hasChamCongAuditColumns()) {
+            sql.append(", c.nguoiChinhSua, c.lyDoChinhSua, c.ngayChinhSua");
+        }
+        sql.append(", t.hoTen, ca.tenCaLam");
+        sql.append(CHAMCONG_FROM_BASE);
+        return sql.toString();
+    }
+
+    private String getChamCongSelectWithBoNhiem() {
+        StringBuilder sql = new StringBuilder(CHAMCONG_SELECT_BASE);
+        if (hasChamCongAuditColumns()) {
+            sql.append(", c.nguoiChinhSua, c.lyDoChinhSua, c.ngayChinhSua");
+        }
+        sql.append(", t.hoTen, ca.tenCaLam");
+        sql.append(CHAMCONG_FROM_WITH_BONHIEM);
+        return sql.toString();
+    }
+
+    private boolean hasChamCongAuditColumns() {
+        Boolean cached = chamCongAuditColumnsAvailable;
+        if (cached != null) {
+            return cached;
+        }
+        synchronized (this) {
+            if (chamCongAuditColumnsAvailable != null) {
+                return chamCongAuditColumnsAvailable;
+            }
+            chamCongAuditColumnsAvailable = detectChamCongAuditColumns();
+            return chamCongAuditColumnsAvailable;
+        }
+    }
+
+    private boolean detectChamCongAuditColumns() {
+        try (Connection conn = DatabaseConnection.getConnection()) {
+            DatabaseMetaData meta = conn.getMetaData();
+            boolean hasNguoiChinhSua = hasColumn(meta, "CHAMCONG", "nguoiChinhSua");
+            boolean hasLyDoChinhSua = hasColumn(meta, "CHAMCONG", "lyDoChinhSua");
+            boolean hasNgayChinhSua = hasColumn(meta, "CHAMCONG", "ngayChinhSua");
+            return hasNguoiChinhSua && hasLyDoChinhSua && hasNgayChinhSua;
+        } catch (SQLException e) {
+            return false;
+        }
+    }
+
+    private boolean hasColumn(DatabaseMetaData meta, String tableName, String columnName) throws SQLException {
+        try (ResultSet rs = meta.getColumns(null, null, tableName, columnName)) {
+            if (rs.next()) {
+                return true;
+            }
+        }
+        try (ResultSet rs = meta.getColumns(null, null, tableName.toLowerCase(), columnName)) {
+            if (rs.next()) {
+                return true;
+            }
+        }
+        try (ResultSet rs = meta.getColumns(null, null, tableName.toUpperCase(), columnName.toUpperCase())) {
+            return rs.next();
+        }
     }
 
     // =====================================================================
@@ -178,9 +241,14 @@ public class ChamCongDAO {
      * INSERT a new ChamCong record. Returns the generated id.
      */
     public int saveChamCong(ChamCong cc) {
-        String sql = "INSERT INTO CHAMCONG (maNV, ngay, maCaLam, gioVao, gioRa, soGioLam, "
-                + "gioLamThem, trangThai, phuongThucChamCong, ghiChu) "
-                + "VALUES (?,?,?,?,?,?,?,?,?,?)";
+        boolean hasAuditColumns = hasChamCongAuditColumns();
+        String sql = hasAuditColumns
+                ? "INSERT INTO CHAMCONG (maNV, ngay, maCaLam, gioVao, gioRa, soGioLam, "
+                    + "gioLamThem, trangThai, phuongThucChamCong, ghiChu, nguoiChinhSua, lyDoChinhSua, ngayChinhSua) "
+                    + "VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?)"
+                : "INSERT INTO CHAMCONG (maNV, ngay, maCaLam, gioVao, gioRa, soGioLam, "
+                    + "gioLamThem, trangThai, phuongThucChamCong, ghiChu) "
+                    + "VALUES (?,?,?,?,?,?,?,?,?,?)";
         try (Connection conn = DatabaseConnection.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
             ps.setString(1, cc.getMaNV());
@@ -193,6 +261,11 @@ public class ChamCongDAO {
             ps.setString(8, cc.getTrangThai() != null ? cc.getTrangThai().getDbValue() : "dung_gio");
             ps.setString(9, cc.getPhuongThucChamCong() != null ? cc.getPhuongThucChamCong().getDbValue() : "thu_cong");
             ps.setString(10, cc.getGhiChu());
+            if (hasAuditColumns) {
+                ps.setString(11, cc.getNguoiChinhSua());
+                ps.setString(12, cc.getLyDoChinhSua());
+                ps.setTimestamp(13, cc.getNgayChinhSua() != null ? Timestamp.valueOf(cc.getNgayChinhSua()) : null);
+            }
             ps.executeUpdate();
             try (ResultSet keys = ps.getGeneratedKeys()) {
                 if (keys.next()) {
@@ -226,8 +299,55 @@ public class ChamCongDAO {
         }
     }
 
+    public void updateChamCongByManager(ChamCong cc) {
+        if (hasChamCongAuditColumns()) {
+            String sql = "UPDATE CHAMCONG SET ngay=?, maCaLam=?, gioVao=?, gioRa=?, soGioLam=?, gioLamThem=?, "
+                    + "trangThai=?, phuongThucChamCong=?, ghiChu=?, nguoiChinhSua=?, lyDoChinhSua=?, ngayChinhSua=? "
+                    + "WHERE maChamCong=?";
+            try (Connection conn = DatabaseConnection.getConnection();
+                 PreparedStatement ps = conn.prepareStatement(sql)) {
+                ps.setDate(1, Date.valueOf(cc.getNgay()));
+                ps.setString(2, cc.getMaCaLam());
+                ps.setTimestamp(3, cc.getGioVao() != null ? Timestamp.valueOf(cc.getGioVao()) : null);
+                ps.setTimestamp(4, cc.getGioRa() != null ? Timestamp.valueOf(cc.getGioRa()) : null);
+                ps.setDouble(5, cc.getSoGioLam());
+                ps.setDouble(6, cc.getGioLamThem());
+                ps.setString(7, cc.getTrangThai() != null ? cc.getTrangThai().getDbValue() : "dung_gio");
+                ps.setString(8, cc.getPhuongThucChamCong() != null ? cc.getPhuongThucChamCong().getDbValue() : "thu_cong");
+                ps.setString(9, cc.getGhiChu());
+                ps.setString(10, cc.getNguoiChinhSua());
+                ps.setString(11, cc.getLyDoChinhSua());
+                ps.setTimestamp(12, cc.getNgayChinhSua() != null ? Timestamp.valueOf(cc.getNgayChinhSua()) : null);
+                ps.setInt(13, cc.getId());
+                ps.executeUpdate();
+                return;
+            } catch (SQLException e) {
+                throw new RuntimeException("Lỗi cập nhật chấm công: " + e.getMessage(), e);
+            }
+        }
+        String ghiChuMoi = buildLegacyEditNote(cc);
+        String sql = "UPDATE CHAMCONG SET ngay=?, maCaLam=?, gioVao=?, gioRa=?, soGioLam=?, gioLamThem=?, "
+                + "trangThai=?, phuongThucChamCong=?, ghiChu=? WHERE maChamCong=?";
+        try (Connection conn = DatabaseConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setDate(1, Date.valueOf(cc.getNgay()));
+            ps.setString(2, cc.getMaCaLam());
+            ps.setTimestamp(3, cc.getGioVao() != null ? Timestamp.valueOf(cc.getGioVao()) : null);
+            ps.setTimestamp(4, cc.getGioRa() != null ? Timestamp.valueOf(cc.getGioRa()) : null);
+            ps.setDouble(5, cc.getSoGioLam());
+            ps.setDouble(6, cc.getGioLamThem());
+            ps.setString(7, cc.getTrangThai() != null ? cc.getTrangThai().getDbValue() : "dung_gio");
+            ps.setString(8, cc.getPhuongThucChamCong() != null ? cc.getPhuongThucChamCong().getDbValue() : "thu_cong");
+            ps.setString(9, ghiChuMoi);
+            ps.setInt(10, cc.getId());
+            ps.executeUpdate();
+        } catch (SQLException e) {
+            throw new RuntimeException("Lỗi cập nhật chấm công: " + e.getMessage(), e);
+        }
+    }
+
     public ChamCong findChamCongByNVAndNgay(String nhanVienId, LocalDate ngay) {
-        String sql = CHAMCONG_SELECT + "WHERE c.maNV=? AND c.ngay=?";
+        String sql = getChamCongSelect() + "WHERE c.maNV=? AND c.ngay=?";
         try (Connection conn = DatabaseConnection.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setString(1, nhanVienId);
@@ -243,8 +363,42 @@ public class ChamCongDAO {
         return null;
     }
 
+    public ChamCong findChamCongById(int maChamCong) {
+        String sql = getChamCongSelect() + "WHERE c.maChamCong=?";
+        try (Connection conn = DatabaseConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setInt(1, maChamCong);
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    return mapChamCong(rs);
+                }
+            }
+        } catch (SQLException e) {
+            throw new RuntimeException("Lỗi tìm chấm công theo mã: " + e.getMessage(), e);
+        }
+        return null;
+    }
+
+    public ChamCong findChamCongByNVAndNgayExcludingId(String nhanVienId, LocalDate ngay, int excludeId) {
+        String sql = getChamCongSelect() + "WHERE c.maNV=? AND c.ngay=? AND c.maChamCong<>?";
+        try (Connection conn = DatabaseConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setString(1, nhanVienId);
+            ps.setDate(2, Date.valueOf(ngay));
+            ps.setInt(3, excludeId);
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    return mapChamCong(rs);
+                }
+            }
+        } catch (SQLException e) {
+            throw new RuntimeException("Lỗi kiểm tra trùng chấm công: " + e.getMessage(), e);
+        }
+        return null;
+    }
+
     public List<ChamCong> findByNVAndThang(String nhanVienId, int thang, int nam) {
-        String sql = CHAMCONG_SELECT + "WHERE c.maNV=? AND MONTH(c.ngay)=? AND YEAR(c.ngay)=? ORDER BY c.ngay";
+        String sql = getChamCongSelect() + "WHERE c.maNV=? AND MONTH(c.ngay)=? AND YEAR(c.ngay)=? ORDER BY c.ngay";
         List<ChamCong> result = new ArrayList<>();
         try (Connection conn = DatabaseConnection.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
@@ -263,7 +417,7 @@ public class ChamCongDAO {
     }
 
     public List<ChamCong> findByThang(int thang, int nam) {
-        String sql = CHAMCONG_SELECT + "WHERE MONTH(c.ngay)=? AND YEAR(c.ngay)=? ORDER BY c.ngay, c.maNV";
+        String sql = getChamCongSelect() + "WHERE MONTH(c.ngay)=? AND YEAR(c.ngay)=? ORDER BY c.ngay, c.maNV";
         List<ChamCong> result = new ArrayList<>();
         try (Connection conn = DatabaseConnection.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
@@ -286,7 +440,7 @@ public class ChamCongDAO {
         if (scope == com.hrm.model.DataScope.DEPT) {
             return findChamCongByDeptSubtree(thang, nam, currentMaNV);
         }
-        String sqlBase = CHAMCONG_SELECT_WITH_BONHIEM + "WHERE MONTH(c.ngay)=? AND YEAR(c.ngay)=? ";
+        String sqlBase = getChamCongSelectWithBoNhiem() + "WHERE MONTH(c.ngay)=? AND YEAR(c.ngay)=? ";
         String sqlCondition = "";
         switch (scope) {
             case ALL:
@@ -325,7 +479,7 @@ public class ChamCongDAO {
             java.util.Set<String> depts = DaoHelper.getDeptSubtree(currentMaNV, conn);
             if (depts.isEmpty()) return result;
             String ph = String.join(",", java.util.Collections.nCopies(depts.size(), "?"));
-            String sql = CHAMCONG_SELECT_WITH_BONHIEM
+            String sql = getChamCongSelectWithBoNhiem()
                     + "WHERE MONTH(c.ngay)=? AND YEAR(c.ngay)=? AND b.maPhongBan IN (" + ph + ") ORDER BY c.ngay, c.maNV";
             try (PreparedStatement ps = conn.prepareStatement(sql)) {
                 ps.setInt(1, thang); ps.setInt(2, nam);
@@ -380,6 +534,7 @@ public class ChamCongDAO {
             catch (IllegalArgumentException ignored) {}
         }
         cc.setGhiChu(rs.getString("ghiChu"));
+        applyChamCongAuditDetails(cc, rs);
         return cc;
     }
 
@@ -390,6 +545,36 @@ public class ChamCongDAO {
         try {
             cc.setTenNhanVien(rs.getString("hoTen"));
         } catch (SQLException ignored) {}
+    }
+
+    private void applyChamCongAuditDetails(ChamCong cc, ResultSet rs) {
+        try {
+            cc.setNguoiChinhSua(rs.getString("nguoiChinhSua"));
+        } catch (SQLException ignored) {}
+        try {
+            cc.setLyDoChinhSua(rs.getString("lyDoChinhSua"));
+        } catch (SQLException ignored) {}
+        try {
+            Timestamp ngayChinhSua = rs.getTimestamp("ngayChinhSua");
+            if (ngayChinhSua != null) {
+                cc.setNgayChinhSua(ngayChinhSua.toLocalDateTime());
+            }
+        } catch (SQLException ignored) {}
+    }
+
+    private String buildLegacyEditNote(ChamCong cc) {
+        String base = cc.getGhiChu();
+        StringBuilder note = new StringBuilder(base != null ? base.trim() : "");
+        if (note.length() > 0) {
+            note.append(" | ");
+        }
+        note.append("Chỉnh sửa bởi ");
+        note.append(cc.getNguoiChinhSua() != null ? cc.getNguoiChinhSua() : "không rõ");
+        if (cc.getNgayChinhSua() != null) {
+            note.append(" lúc ").append(cc.getNgayChinhSua());
+        }
+        note.append(". Lý do: ").append(cc.getLyDoChinhSua());
+        return note.toString();
     }
 
     // =====================================================================

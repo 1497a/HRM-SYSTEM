@@ -14,15 +14,14 @@ import javax.swing.*;
 import javax.swing.table.DefaultTableModel;
 import javax.swing.table.TableRowSorter;
 import java.awt.*;
-import java.text.Normalizer;
 import java.text.NumberFormat;
 import java.util.Locale;
 
 public class PositionPanel extends JPanel {
 
-    private static final String STATUS_ALL = "Tat ca";
-    private static final String STATUS_ACTIVE = "Hoat dong";
-    private static final String STATUS_INACTIVE = "Ngung hoat dong";
+    private static final String STATUS_ALL      = "Tất cả";
+    private static final String STATUS_ACTIVE   = "Hoạt động";
+    private static final String STATUS_INACTIVE = "Ngừng hoạt động";
     private final ChucVuBUS service = new ChucVuBUS();
     private final NumberFormat moneyFmt = NumberFormat.getNumberInstance(new Locale("vi", "VN"));
     private JTable table;
@@ -112,12 +111,12 @@ public class PositionPanel extends JPanel {
                 String ma = entry.getStringValue(0).toLowerCase();
                 String tenChucVu = entry.getStringValue(1).toLowerCase();
                 boolean matchSearch = searchText.isEmpty() || ma.contains(searchText) || tenChucVu.contains(searchText);
-                String trangThai = normalizeTrangThai(entry.getStringValue(4));
+                String trangThai = entry.getStringValue(4);
                 boolean matchStatus = true;
                 if (statusFilterIndex == 1) {
-                    matchStatus = "hoatdong".equals(trangThai);
+                    matchStatus = STATUS_ACTIVE.equals(trangThai);
                 } else if (statusFilterIndex == 2) {
-                    matchStatus = "ngunghoatdong".equals(trangThai) || "ngung".equals(trangThai);
+                    matchStatus = STATUS_INACTIVE.equals(trangThai);
                 }
                 return matchSearch && matchStatus;
             }
@@ -283,7 +282,7 @@ public class PositionPanel extends JPanel {
                     return;
                 }
                 String rawTrangThaiMoi = toTrangThaiRaw((String) cboTrangThai.getSelectedItem());
-                if (!normalizeTrangThai(rawTrangThaiMoi).equals(normalizeTrangThai(pos.getTrangThai()))) {
+                if (!rawTrangThaiMoi.equals(pos.getTrangThai())) {
                     KetQua<Void> kqTrangThai;
                     if (HRMConstants.TRANG_THAI_HOAT_DONG.equals(rawTrangThaiMoi)) {
                         kqTrangThai = service.activatePosition(ma);
@@ -312,38 +311,15 @@ public class PositionPanel extends JPanel {
     }
 
     private String toTrangThaiDisplay(String raw) {
-        String normalized = normalizeTrangThai(raw);
-        if ("hoatdong".equals(normalized)) {
-            return STATUS_ACTIVE;
-        }
-        if ("ngunghoatdong".equals(normalized) || "ngung".equals(normalized)) {
-            return STATUS_INACTIVE;
-        }
+        if (HRMConstants.TRANG_THAI_HOAT_DONG.equals(raw)) return STATUS_ACTIVE;
+        if (HRMConstants.TRANG_THAI_NGUNG_HOAT_DONG.equals(raw)) return STATUS_INACTIVE;
         return raw == null ? "" : raw;
     }
 
     private String toTrangThaiRaw(String display) {
-        String normalized = normalizeTrangThai(display);
-        if ("hoatdong".equals(normalized)) {
-            return HRMConstants.TRANG_THAI_HOAT_DONG;
-        }
-        if ("ngunghoatdong".equals(normalized) || "ngung".equals(normalized)) {
-            return HRMConstants.TRANG_THAI_NGUNG_HOAT_DONG;
-        }
+        if (STATUS_ACTIVE.equals(display)) return HRMConstants.TRANG_THAI_HOAT_DONG;
+        if (STATUS_INACTIVE.equals(display)) return HRMConstants.TRANG_THAI_NGUNG_HOAT_DONG;
         return display == null ? "" : display;
-    }
-
-    private String normalizeTrangThai(String value) {
-        if (value == null) {
-            return "";
-        }
-        String v = Normalizer.normalize(value, Normalizer.Form.NFD)
-                .replaceAll("\\p{M}+", "")
-                .replace('đ', 'd')
-                .replace('Đ', 'D')
-                .toLowerCase()
-                .trim();
-        return v.replace("_", "").replace(" ", "").replace("-", "");
     }
 
     private Integer parseCapBac(String rawValue, Component parent) {

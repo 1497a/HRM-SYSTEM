@@ -4,6 +4,7 @@ import com.hrm.model.*;
 import com.hrm.bus.ChamCongBUS;
 import com.hrm.bus.KetQua;
 import com.hrm.bus.XacThucBUS;
+import com.hrm.dao.ChamCongDAO;
 import com.hrm.util.PermissionCodes;
 import com.hrm.util.UIFonts;
 import com.hrm.util.SessionContext;
@@ -47,6 +48,7 @@ public class AttendancePanel extends JPanel {
     private JTable tableChamCong; private DefaultTableModel modelCC;
     private JComboBox<String> cboThang, cboNam, cboMaNVFilter, cboTrangThaiFilter;
     private JPanel statsPanel;
+    private List<ChamCong> dsChamCongTongHop = new ArrayList<>();
     // Tab 2
     private JTable tableCaLam; private DefaultTableModel modelCaLam;
     // Tab 3
@@ -150,6 +152,7 @@ public class AttendancePanel extends JPanel {
         JButton bL=btn("Lọc dữ liệu",UIColors.PRIMARY_PURPLE); bL.addActionListener(e->loadCC()); tb.add(bL);
         tb.add(Box.createHorizontalStrut(20));
         JButton bT=btn("+ Thêm thủ công",UIColors.SUCCESS_GREEN); bT.addActionListener(e->dlgThemCC()); tb.add(bT);
+        JButton bS=btn("Sửa chấm công",UIColors.PRIMARY_PURPLE); bS.addActionListener(e->dlgSuaCC()); tb.add(bS);
         initTongHopFilters(tb);
         p.add(tb,BorderLayout.NORTH);
         String[]cols={"Mã NV","Họ tên","Ngày","Ca làm","Giờ vào","Giờ ra","Số giờ","OT","Trạng thái"};
@@ -169,6 +172,7 @@ public class AttendancePanel extends JPanel {
         List<ChamCong> ds = canManage
             ? svc.getChamCongTatCaTheoThang(th, nm)
             : svc.getChamCongTatCaTheoThangByScope(th, nm, maNVCaNhan);
+        dsChamCongTongHop = ds;
         DateTimeFormatter fN = DateTimeFormatter.ofPattern("dd/MM");
         DateTimeFormatter fG = DateTimeFormatter.ofPattern("HH:mm");
         for (ChamCong cc : ds) {
@@ -322,6 +326,142 @@ public class AttendancePanel extends JPanel {
             }
         });
         d.setContentPane(f); d.setVisible(true);
+    }
+
+    private void dlgSuaCC() {
+        ChamCong selected = getSelectedChamCong();
+        if (selected == null) {
+            JOptionPane.showMessageDialog(this, "Chọn bản ghi chấm công cần sửa.");
+            return;
+        }
+        JDialog d = new JDialog((Frame) SwingUtilities.getWindowAncestor(this), "Sửa chấm công", true);
+        d.setSize(560, 620);
+        d.setLocationRelativeTo(this);
+        JPanel f = new JPanel(new GridBagLayout());
+        f.setBorder(new EmptyBorder(20, 20, 20, 20));
+        GridBagConstraints g = gbc();
+
+        ChamCongDAO.NhanVienInfo info = svc.findNhanVienByMaForManualAttendance(selected.getMaNV());
+        JPanel infoPanel = new JPanel(new GridLayout(0, 2, 8, 6));
+        infoPanel.setBackground(UIColors.LIGHT_PURPLE);
+        infoPanel.setBorder(BorderFactory.createCompoundBorder(
+            BorderFactory.createLineBorder(UIColors.PRIMARY_PURPLE, 1),
+            new EmptyBorder(10, 12, 10, 12)));
+        infoPanel.add(boldLabel("Mã nhân viên:")); infoPanel.add(new JLabel(selected.getMaNV()));
+        infoPanel.add(boldLabel("Họ tên:")); infoPanel.add(new JLabel(info != null ? info.hoTen : selected.getTenNhanVien()));
+        infoPanel.add(boldLabel("Email:")); infoPanel.add(new JLabel(info != null && !info.email.isBlank() ? info.email : "(Chưa có)"));
+        infoPanel.add(boldLabel("Chức vụ:")); infoPanel.add(new JLabel(info != null && !info.tenChucVu.isBlank() ? info.tenChucVu : "(Chưa có)"));
+        infoPanel.add(boldLabel("Phòng ban:")); infoPanel.add(new JLabel(info != null && !info.tenPhongBan.isBlank() ? info.tenPhongBan : "(Chưa có)"));
+        g.gridx = 0; g.gridy = 0; g.gridwidth = 3;
+        f.add(infoPanel, g);
+
+        DateTimeFormatter fDate = DateTimeFormatter.ofPattern("dd/MM/yyyy");
+        DateTimeFormatter fTime = DateTimeFormatter.ofPattern("HH:mm");
+        g.gridwidth = 1;
+
+        g.gridx = 0; g.gridy = 1; g.weightx = 0;
+        f.add(new JLabel("Ngày (dd/MM/yyyy):"), g);
+        JTextField txtNgay = new JTextField(selected.getNgay() != null ? selected.getNgay().format(fDate) : "");
+        g.gridx = 1; g.gridy = 1; g.gridwidth = 2; g.weightx = 1;
+        f.add(txtNgay, g);
+
+        g.gridx = 0; g.gridy = 2; g.gridwidth = 1; g.weightx = 0;
+        f.add(new JLabel("Ca làm:"), g);
+        JComboBox<String> cCa = new JComboBox<>();
+        int selectedCaIndex = -1;
+        int idx = 0;
+        for (CaLam ca : svc.getActiveCaLam()) {
+            String item = ca.getId() + " - " + ca.getTenCaLam();
+            cCa.addItem(item);
+            if (ca.getId().equals(selected.getMaCaLam())) {
+                selectedCaIndex = idx;
+            }
+            idx++;
+        }
+        if (selectedCaIndex >= 0) {
+            cCa.setSelectedIndex(selectedCaIndex);
+        }
+        g.gridx = 1; g.gridy = 2; g.gridwidth = 2; g.weightx = 1;
+        f.add(cCa, g);
+
+        g.gridx = 0; g.gridy = 3; g.gridwidth = 1; g.weightx = 0;
+        f.add(new JLabel("Giờ vào (HH:mm):"), g);
+        JTextField txtGioVao = new JTextField(selected.getGioVao() != null ? selected.getGioVao().format(fTime) : "");
+        g.gridx = 1; g.gridy = 3; g.gridwidth = 2; g.weightx = 1;
+        f.add(txtGioVao, g);
+
+        g.gridx = 0; g.gridy = 4; g.gridwidth = 1; g.weightx = 0;
+        f.add(new JLabel("Giờ ra (HH:mm):"), g);
+        JTextField txtGioRa = new JTextField(selected.getGioRa() != null ? selected.getGioRa().format(fTime) : "");
+        g.gridx = 1; g.gridy = 4; g.gridwidth = 2; g.weightx = 1;
+        f.add(txtGioRa, g);
+
+        g.gridx = 0; g.gridy = 5; g.gridwidth = 1; g.weightx = 0;
+        f.add(new JLabel("Trạng thái:"), g);
+        JComboBox<String> cTT = new JComboBox<>(new String[]{"Đúng giờ", "Đi muộn", "Về sớm", "Vắng mặt"});
+        ChamCong.TrangThai currentTrangThai = selected.getTrangThai() != null ? selected.getTrangThai() : ChamCong.TrangThai.DUNG_GIO;
+        cTT.setSelectedIndex(switch (currentTrangThai) {
+            case DI_MUON -> 1;
+            case VE_SOM -> 2;
+            case VANG_MAT -> 3;
+            default -> 0;
+        });
+        g.gridx = 1; g.gridy = 5; g.gridwidth = 2; g.weightx = 1;
+        f.add(cTT, g);
+
+        g.gridx = 0; g.gridy = 6; g.gridwidth = 1; g.weightx = 0; g.anchor = GridBagConstraints.NORTHWEST;
+        f.add(new JLabel("Lý do chỉnh sửa:"), g);
+        JTextArea txtLyDo = new JTextArea(4, 24);
+        txtLyDo.setLineWrap(true);
+        txtLyDo.setWrapStyleWord(true);
+        txtLyDo.setFont(UIFonts.TEXT_NORMAL);
+        g.gridx = 1; g.gridy = 6; g.gridwidth = 2; g.weightx = 1; g.fill = GridBagConstraints.BOTH;
+        f.add(new JScrollPane(txtLyDo), g);
+
+        JButton bLuu = btn("Lưu thay đổi", UIColors.SUCCESS_GREEN);
+        bLuu.setFont(UIFonts.BOLD_NORMAL);
+        bLuu.setPreferredSize(new Dimension(140, 38));
+        g.gridx = 0; g.gridy = 7; g.gridwidth = 3; g.weightx = 0; g.fill = GridBagConstraints.HORIZONTAL; g.anchor = GridBagConstraints.CENTER;
+        f.add(bLuu, g);
+
+        ChamCong.TrangThai[] tts = {
+            ChamCong.TrangThai.DUNG_GIO, ChamCong.TrangThai.DI_MUON,
+            ChamCong.TrangThai.VE_SOM, ChamCong.TrangThai.VANG_MAT
+        };
+        bLuu.addActionListener(e -> {
+            try {
+                LocalDate ngay = LocalDate.parse(txtNgay.getText().trim(), fDate);
+                String maCa = ((String) cCa.getSelectedItem()).split(" - ")[0].trim();
+                String[] vao = txtGioVao.getText().trim().split(":");
+                String[] ra = txtGioRa.getText().trim().split(":");
+                LocalDateTime gioVao = ngay.atTime(Integer.parseInt(vao[0]), Integer.parseInt(vao[1]));
+                LocalDateTime gioRa = ngay.atTime(Integer.parseInt(ra[0]), Integer.parseInt(ra[1]));
+                KetQua<ChamCong> res = svc.suaChamCongThuCong(
+                    selected.getId(), ngay, maCa, gioVao, gioRa, tts[cTT.getSelectedIndex()], txtLyDo.getText().trim());
+                JOptionPane.showMessageDialog(d, res.getMessage(),
+                    res.isSuccess() ? "Thành công" : "Lỗi",
+                    res.isSuccess() ? JOptionPane.INFORMATION_MESSAGE : JOptionPane.ERROR_MESSAGE);
+                if (res.isSuccess()) {
+                    d.dispose();
+                    loadCC();
+                }
+            } catch (Exception ex) {
+                JOptionPane.showMessageDialog(d, "Kiểm tra lại ngày giờ theo định dạng dd/MM/yyyy và HH:mm.",
+                    "Lỗi định dạng", JOptionPane.ERROR_MESSAGE);
+            }
+        });
+
+        d.setContentPane(f);
+        d.setVisible(true);
+    }
+
+    private ChamCong getSelectedChamCong() {
+        if (tableChamCong == null || dsChamCongTongHop == null || dsChamCongTongHop.isEmpty()) return null;
+        int viewRow = tableChamCong.getSelectedRow();
+        if (viewRow < 0) return null;
+        int modelRow = tableChamCong.convertRowIndexToModel(viewRow);
+        if (modelRow < 0 || modelRow >= dsChamCongTongHop.size()) return null;
+        return dsChamCongTongHop.get(modelRow);
     }
 
     private String formatTrangThaiNV(String tt) {
@@ -800,7 +940,7 @@ public class AttendancePanel extends JPanel {
             String otTag = cc.isLaOT() ? "  [CA OT]" : "";
             lblCaNhanStatus.setText("Đã check-out lúc " + cc.getGioRa().format(fG)
                 + "  -  Số giờ làm: " + String.format("%.1f", cc.getSoGioLam()) + otTag);
-            lblCaNhanStatus.setForeground(new Color(23, 162, 184));
+            lblCaNhanStatus.setForeground(UIColors.INFO_TEAL);
             if (btnCheckInCN  != null) btnCheckInCN.setVisible(false);
             if (btnCheckOutCN != null) btnCheckOutCN.setVisible(false);
             if (chkOT != null) { chkOT.setVisible(false); chkOT.setEnabled(false); }
@@ -1125,9 +1265,9 @@ public class AttendancePanel extends JPanel {
         for (int viewRow = 0; viewRow < tong; viewRow++) {
             Object value = tableChamCong.getValueAt(viewRow, 8);
             String trangThai = value != null ? value.toString() : "";
-            if (trangThai.equalsIgnoreCase("Dung gio")) dungGio++;
-            else if (trangThai.equalsIgnoreCase("Di muon")) diMuon++;
-            else if (trangThai.equalsIgnoreCase("Vang mat")) vang++;
+            if (com.hrm.model.ChamCong.TrangThai.DUNG_GIO.getDisplayName().equals(trangThai)) dungGio++;
+            else if (com.hrm.model.ChamCong.TrangThai.DI_MUON.getDisplayName().equals(trangThai)) diMuon++;
+            else if (com.hrm.model.ChamCong.TrangThai.VANG_MAT.getDisplayName().equals(trangThai)) vang++;
         }
         statsPanel.removeAll();
         statsPanel.add(lbl("Tổng:", String.valueOf(tong), UIColors.PRIMARY_PURPLE));
@@ -1221,11 +1361,11 @@ public class AttendancePanel extends JPanel {
         @Override public Component getTableCellRendererComponent(JTable t, Object v, boolean s, boolean f, int r, int c) {
             super.getTableCellRendererComponent(t, v, s, f, r, c);
             String str = v != null ? v.toString() : "";
-            if (str.contains("muon") || str.contains("som") || str.contains("choi")) setForeground(UIColors.DANGER_RED);
-            else if (str.contains("Cho") || str.contains("Chua")) setForeground(new Color(200, 150, 0));
-            else if (str.contains("Dung") || str.contains("duyet") || str.contains("Hoat dong") || str.contains("tinh"))
+            if (str.contains("muộn") || str.contains("sớm") || str.contains("chối")) setForeground(UIColors.DANGER_RED);
+            else if (str.contains("Chờ") || str.contains("Chưa")) setForeground(new Color(200, 150, 0));
+            else if (str.contains("Đúng") || str.contains("duyệt") || str.contains("Hoạt") || str.contains("tính"))
                 setForeground(UIColors.SUCCESS_GREEN);
-            else if (str.contains("Vang") || str.contains("Ngung")) setForeground(Color.GRAY);
+            else if (str.contains("Vắng") || str.contains("Ngừng")) setForeground(Color.GRAY);
             else setForeground(UIColors.TEXT_DARK);
             setHorizontalAlignment(CENTER); return this;
         }

@@ -111,28 +111,6 @@ public class BoNhiem {
     public void setTenNguoiDuyet(String tenNguoiDuyet) { this.tenNguoiDuyet = tenNguoiDuyet; }
 
     // ============================
-    // Display helpers
-    // ============================
-    public String getTrangThaiDisplay() {
-        if (trangThai == null) return "";
-        switch (trangThai) {
-            case "cho_duyet":    return "Cho duyet";
-            case "hieu_luc":     return "Hieu luc";
-            case "het_hieu_luc": return "Het hieu luc";
-            case "tu_choi":      return "Tu choi";
-            default:             return trangThai;
-        }
-    }
-
-    public String getLoaiBoNhiemDisplay() {
-        if (loaiBoNhiem == null) return "";
-        switch (loaiBoNhiem) {
-            case "chinh":      return "Chinh";
-            case "kiem_nhiem": return "Kiem nhiem";
-            default:           return loaiBoNhiem;
-        }
-    }
-
     @Override
     public String toString() {
         return "BoNhiem{id=" + id + ", nhanVienId=" + nhanVienId

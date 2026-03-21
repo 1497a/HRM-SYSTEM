@@ -575,20 +575,14 @@ public class AppointmentFormDialog extends BaseFormDialog {
     }
 
     private void ketThucBoNhiem() {
-        SpinnerDateModel dateModel = new SpinnerDateModel(new Date(), null, null, java.util.Calendar.DAY_OF_MONTH);
-        JSpinner spnDenNgay = new JSpinner(dateModel);
-        spnDenNgay.setEditor(new JSpinner.DateEditor(spnDenNgay, "dd/MM/yyyy"));
-        spnDenNgay.setFont(UIFonts.TEXT_NORMAL);
         int confirm = JOptionPane.showConfirmDialog(this,
-                new Object[] { "Ngày kết thúc:", spnDenNgay },
+                "Kết thúc bổ nhiệm này ngay hôm nay?",
                 "Kết thúc bổ nhiệm #" + boNhiemHienThi.getId(),
-                JOptionPane.OK_CANCEL_OPTION, JOptionPane.PLAIN_MESSAGE);
+                JOptionPane.OK_CANCEL_OPTION, JOptionPane.WARNING_MESSAGE);
         if (confirm != JOptionPane.OK_OPTION)
             return;
-        LocalDate denNgay = ((Date) spnDenNgay.getValue())
-                .toInstant().atZone(ZoneId.systemDefault()).toLocalDate();
         KetQua<BoNhiem> result = BoNhiemBUS.getInstance().ketThucBoNhiem(
-                boNhiemHienThi.getId(), denNgay);
+                boNhiemHienThi.getId(), LocalDate.now());
         if (result.isSuccess()) {
             JOptionPane.showMessageDialog(this, result.getMessage(), "Thành công", JOptionPane.INFORMATION_MESSAGE);
             actionTaken = true;

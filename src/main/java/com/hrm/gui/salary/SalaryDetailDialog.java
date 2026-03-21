@@ -90,7 +90,7 @@ public class SalaryDetailDialog extends BaseFormDialog {
         gbc.gridx = 3;
         JLabel lblTongThu = makeValueMoney(chiTiet.getTongLuong());
         lblTongThu.setFont(UIFonts.BOLD_NORMAL);
-        lblTongThu.setForeground(new Color(23, 162, 184));
+        lblTongThu.setForeground(UIColors.INFO_TEAL);
         panel.add(lblTongThu, gbc);
         // Row 4: Khấu trừ, Thực lãnh
         gbc.gridy = 4; gbc.gridx = 0;

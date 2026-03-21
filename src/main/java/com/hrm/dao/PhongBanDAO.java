@@ -2,6 +2,7 @@ package com.hrm.dao;
 
 import com.hrm.model.PhongBan;
 import com.hrm.util.DatabaseConnection;
+import com.hrm.util.HRMConstants;
 
 import java.sql.*;
 import java.util.ArrayList;
@@ -86,14 +87,14 @@ public class PhongBanDAO {
     public List<PhongBan> findActive() {
         List<PhongBan> list = new ArrayList<>();
         String sql = "SELECT maPhongBan, tenPhongBan, phongBanCha, trangThai "
-                + "FROM PHONGBAN "
-                + "WHERE REPLACE(REPLACE(REPLACE(LOWER(trangThai), '_', ''), ' ', ''), '-', '') = 'hoatdong' "
-                + "ORDER BY maPhongBan";
+                + "FROM PHONGBAN WHERE trangThai = ? ORDER BY maPhongBan";
         try (Connection conn = DatabaseConnection.getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql);
-             ResultSet rs = ps.executeQuery()) {
-            while (rs.next()) {
-                list.add(mapRow(rs));
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setString(1, HRMConstants.TRANG_THAI_HOAT_DONG);
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    list.add(mapRow(rs));
+                }
             }
         } catch (SQLException e) {
             System.err.println("Lỗi PhongBanDAO.findActive: " + e.getMessage());
@@ -176,13 +177,11 @@ public class PhongBanDAO {
      * Kiểm tra phòng ban có phòng ban con đang hoạt động không.
      */
     public boolean hasActiveChildren(String maPhongBan) {
-        String sql = "SELECT 1 FROM PHONGBAN "
-                + "WHERE phongBanCha = ? "
-                + "AND REPLACE(REPLACE(REPLACE(LOWER(trangThai), '_', ''), ' ', ''), '-', '') = 'hoatdong' "
-                + "LIMIT 1";
+        String sql = "SELECT 1 FROM PHONGBAN WHERE phongBanCha = ? AND trangThai = ? LIMIT 1";
         try (Connection conn = DatabaseConnection.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setString(1, maPhongBan);
+            ps.setString(2, HRMConstants.TRANG_THAI_HOAT_DONG);
             try (ResultSet rs = ps.executeQuery()) {
                 return rs.next();
             }

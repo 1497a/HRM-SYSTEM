@@ -126,9 +126,13 @@ CREATE TABLE CHAMCONG (
     trangThai ENUM('dung_gio', 'di_muon', 've_som', 'vang_mat', 'nghi_phep', 'cong_tac') DEFAULT 'dung_gio',
     phuongThucChamCong ENUM('wifi', 'van_tay', 'the_tu', 'gps', 'thu_cong') DEFAULT 'thu_cong',
     ghiChu NVARCHAR(255),
+    nguoiChinhSua VARCHAR(20),
+    lyDoChinhSua NVARCHAR(500),
+    ngayChinhSua DATETIME,
     ngayTao DATETIME DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (maNV) REFERENCES NHANVIEN(maNV) ON DELETE CASCADE,
     FOREIGN KEY (maCaLam) REFERENCES CALAM(maCaLam),
+    FOREIGN KEY (nguoiChinhSua) REFERENCES NHANVIEN(maNV),
     UNIQUE KEY uk_nv_ngay (maNV, ngay)
 ) ENGINE=InnoDB;
 

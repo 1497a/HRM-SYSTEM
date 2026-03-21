@@ -4,9 +4,9 @@ import java.time.LocalDate;
 
 public class DotDanhGia {
     public enum TrangThai {
-        CHUA_BAT_DAU("chua_bat_dau", "Chua bat dau"),
-        DANG_DIEN_RA("dang_dien_ra", "Dang dien ra"),
-        DA_KET_THUC("da_ket_thuc", "Da ket thuc");
+        CHUA_BAT_DAU("chua_bat_dau", "Chưa bắt đầu"),
+        DANG_DIEN_RA("dang_dien_ra", "Đang diễn ra"),
+        DA_KET_THUC("da_ket_thuc",   "Đã kết thúc");
         private final String dbValue;
         private final String tenHienThi;
         TrangThai(String dbValue, String tenHienThi) {

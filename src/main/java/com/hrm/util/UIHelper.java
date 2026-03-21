@@ -50,7 +50,7 @@ public class UIHelper {
      * Create a warning button (orange)
      */
     public static JButton createWarningButton(String text) {
-        return createStyledButton(text, new Color(255, 193, 7), Color.WHITE);
+        return createStyledButton(text, UIColors.ACCENT_YELLOW, Color.WHITE);
     }
 
     /**

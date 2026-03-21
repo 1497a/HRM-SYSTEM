@@ -4,6 +4,7 @@ import com.hrm.bus.BoNhiemBUS;
 import com.hrm.gui.components.PurpleButton;
 import com.hrm.gui.components.PurpleTable;
 import com.hrm.model.BoNhiem;
+import com.hrm.util.HRMConstants;
 import com.hrm.util.PermissionCodes;
 import com.hrm.util.UIFonts;
 import com.hrm.util.SessionContext;
@@ -36,14 +37,26 @@ import java.awt.Color;
 import java.awt.Component;
 import java.awt.Dimension;
 import java.awt.FlowLayout;
-import java.awt.Font;
 import java.awt.Frame;
 import java.text.Normalizer;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 
 public class AppointmentListPanel extends JPanel {
+
+    private static final Map<String, String> TRANG_THAI_OPTIONS = new LinkedHashMap<>();
+    private static final Map<String, String> LOAI_OPTIONS = new LinkedHashMap<>();
+    static {
+        TRANG_THAI_OPTIONS.put("Chờ duyệt", HRMConstants.TRANG_THAI_CHO_DUYET);
+        TRANG_THAI_OPTIONS.put("Hiệu lực", HRMConstants.TRANG_THAI_HIEU_LUC);
+        TRANG_THAI_OPTIONS.put("Hết hiệu lực", HRMConstants.TRANG_THAI_HET_HIEU_LUC);
+        TRANG_THAI_OPTIONS.put("Từ chối", HRMConstants.TRANG_THAI_TU_CHOI);
+        LOAI_OPTIONS.put("Chính", "chinh");
+        LOAI_OPTIONS.put("Kiêm nhiệm", "kiem_nhiem");
+    }
 
     private static final int COL_MA_BN = 0;
     private static final int COL_MA_NV = 1;
@@ -82,27 +95,22 @@ public class AppointmentListPanel extends JPanel {
     private JPanel buildNorthPanel() {
         JPanel panel = new JPanel(new BorderLayout(8, 8));
         panel.setOpaque(false);
-        JLabel lblTitle = new JLabel("QUẢN LÝ BỔ NHIỆM");
-        lblTitle.setFont(new Font("Segoe UI", Font.BOLD, 20));
-        lblTitle.setForeground(UIColors.PRIMARY_PURPLE);
-        lblTitle.setBorder(BorderFactory.createEmptyBorder(0, 0, 8, 0));
-        panel.add(lblTitle, BorderLayout.NORTH);
         JPanel filterPanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 8, 4));
         filterPanel.setOpaque(false);
         JLabel lblTrangThai = new JLabel("Trạng thái:");
         lblTrangThai.setFont(UIFonts.TEXT_NORMAL);
         lblTrangThai.setForeground(UIColors.TEXT_DARK);
-        cboTrangThai = new JComboBox<>(new String[]{
-            "Tất cả", "Chá» duyệt", "Hiệu lực", "Kết thúc", "Từ chối"
-        });
+        cboTrangThai = new JComboBox<>();
+        cboTrangThai.addItem(HRMConstants.ALL);
+        TRANG_THAI_OPTIONS.keySet().forEach(cboTrangThai::addItem);
         cboTrangThai.setFont(UIFonts.TEXT_NORMAL);
         cboTrangThai.setPreferredSize(new Dimension(160, 32));
         JLabel lblLoai = new JLabel("Loại:");
         lblLoai.setFont(UIFonts.TEXT_NORMAL);
         lblLoai.setForeground(UIColors.TEXT_DARK);
-        cboLoai = new JComboBox<>(new String[]{
-            "Tất cả", "Chính", "Kiêm nhiệm"
-        });
+        cboLoai = new JComboBox<>();
+        cboLoai.addItem(HRMConstants.ALL);
+        LOAI_OPTIONS.keySet().forEach(cboLoai::addItem);
         cboLoai.setFont(UIFonts.TEXT_NORMAL);
         cboLoai.setPreferredSize(new Dimension(140, 32));
         JLabel lblTimKiem = new JLabel("Tìm kiếm:");
@@ -226,9 +234,9 @@ public class AppointmentListPanel extends JPanel {
                 bn.getTenNV() != null ? bn.getTenNV() : "",
                 bn.getTenPhongBan() != null ? bn.getTenPhongBan() : bn.getMaPhongBan(),
                 bn.getTenChucVu() != null ? bn.getTenChucVu() : bn.getMaChucVu(),
-                bn.getLoaiBoNhiemDisplay(),
+                HRMConstants.display(bn.getLoaiBoNhiem()),
                 bn.getTuNgay() != null ? bn.getTuNgay().format(dtf) : "",
-                bn.getTrangThaiDisplay()
+                bn.getTrangThai()
             });
         }
         applyFilter();
@@ -236,7 +244,7 @@ public class AppointmentListPanel extends JPanel {
 
     private void applyFilter() {
         String trangThaiFilter = (String) cboTrangThai.getSelectedItem();
-        String loaiFilter = normalize((String) cboLoai.getSelectedItem());
+        String loaiFilterDisplay = (String) cboLoai.getSelectedItem();
         String keyword = normalize(txtTimKiem != null ? txtTimKiem.getText() : "");
         RowFilter<DefaultTableModel, Object> rf = new RowFilter<DefaultTableModel, Object>() {
             @Override
@@ -245,42 +253,22 @@ public class AppointmentListPanel extends JPanel {
                 if (modelRow < 0 || modelRow >= danhSachHienThi.size()) {
                     return false;
                 }
-                BoNhiem boNhiem = danhSachHienThi.get(modelRow);
+                BoNhiem bn = danhSachHienThi.get(modelRow);
                 if (!keyword.isEmpty()) {
-                    String tenNV = normalize(boNhiem.getTenNV());
-                    String phongBan = normalize(boNhiem.getTenPhongBan());
-            String maNV = normalize(boNhiem.getMaNV());
-                    boolean matched = tenNV.contains(keyword)
-                        || phongBan.contains(keyword)
-                        || maNV.contains(keyword);
-                    if (!matched) {
+                    String tenNV = normalize(bn.getTenNV());
+                    String pb = normalize(bn.getTenPhongBan());
+                    String maNV = normalize(bn.getMaNV());
+                    if (!tenNV.contains(keyword) && !pb.contains(keyword) && !maNV.contains(keyword)) {
                         return false;
                     }
                 }
-                if (!"tat ca".equals(loaiFilter)) {
-                    String loai = normalize(boNhiem.getLoaiBoNhiemDisplay());
-                    String loaiRaw = normalize(boNhiem.getLoaiBoNhiem());
-                    if ("chinh".equals(loaiFilter) && !("chinh".equals(loai) || "chinh".equals(loaiRaw))) {
-                        return false;
-                    }
-                    if ("kiem nhiem".equals(loaiFilter) && !("kiem nhiem".equals(loai) || "kiem_nhiem".equals(loaiRaw))) {
-                        return false;
-                    }
+                if (!HRMConstants.ALL.equals(loaiFilterDisplay)) {
+                    String expected = LOAI_OPTIONS.get(loaiFilterDisplay);
+                    if (!bn.getLoaiBoNhiem().equals(expected)) return false;
                 }
-                if (!"Tất cả".equals(trangThaiFilter)) {
-                    String trangThai = entry.getStringValue(COL_TRANG_THAI);
-                    if ("Chá» duyệt".equals(trangThaiFilter) && !"Cho duyet".equals(trangThai)) {
-                        return false;
-                    }
-                    if ("Hiệu lực".equals(trangThaiFilter) && !"Hieu luc".equals(trangThai)) {
-                        return false;
-                    }
-                    if ("Kết thúc".equals(trangThaiFilter) && !"Het hieu luc".equals(trangThai)) {
-                        return false;
-                    }
-                    if ("Từ chối".equals(trangThaiFilter) && !"Tu choi".equals(trangThai)) {
-                        return false;
-                    }
+                if (!HRMConstants.ALL.equals(trangThaiFilter)) {
+                    String expected = TRANG_THAI_OPTIONS.get(trangThaiFilter);
+                    if (!bn.getTrangThai().equals(expected)) return false;
                 }
                 return true;
             }
@@ -339,19 +327,19 @@ public class AppointmentListPanel extends JPanel {
             setHorizontalAlignment(SwingConstants.CENTER);
             setBorder(BorderFactory.createEmptyBorder(0, 8, 0, 8));
             if (!isSelected) {
-                c.setBackground(row % 2 == 0 ? Color.WHITE : new Color(250, 248, 255));
+                c.setBackground(row % 2 == 0 ? Color.WHITE : UIColors.TABLE_ROW_ALT);
                 c.setForeground(UIColors.TEXT_DARK);
                 if (col == COL_TRANG_THAI && value != null) {
-                    String val = value.toString();
-                    if ("Hieu luc".equals(val)) {
+                    String raw = value.toString();
+                    ((JLabel) c).setText(HRMConstants.display(raw));
+                    ((JLabel) c).setFont(UIFonts.BOLD_SMALL);
+                    if (HRMConstants.TRANG_THAI_HIEU_LUC.equals(raw)) {
                         c.setForeground(UIColors.SUCCESS_GREEN);
-                        ((JLabel) c).setFont(com.hrm.util.UIFonts.BOLD_SMALL);
-                    } else if ("Cho duyet".equals(val)) {
-                        c.setForeground(new Color(230, 120, 0));
-                        ((JLabel) c).setFont(com.hrm.util.UIFonts.BOLD_SMALL);
-                    } else if ("Tu choi".equals(val) || "Het hieu luc".equals(val)) {
+                    } else if (HRMConstants.TRANG_THAI_CHO_DUYET.equals(raw)) {
+                        c.setForeground(UIColors.WARNING_ORANGE);
+                    } else if (HRMConstants.TRANG_THAI_TU_CHOI.equals(raw)
+                            || HRMConstants.TRANG_THAI_HET_HIEU_LUC.equals(raw)) {
                         c.setForeground(UIColors.DANGER_RED);
-                        ((JLabel) c).setFont(com.hrm.util.UIFonts.BOLD_SMALL);
                     }
                 }
             }

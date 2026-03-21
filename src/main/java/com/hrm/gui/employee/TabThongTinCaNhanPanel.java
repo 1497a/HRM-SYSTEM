@@ -4,6 +4,7 @@ import com.hrm.bus.KetQua;
 import com.hrm.model.HopDongLaoDong;
 import com.hrm.model.NhanVien;
 import com.hrm.model.ThongTinCaNhan;
+import com.hrm.util.HRMConstants;
 import com.hrm.util.UIColors;
 import com.hrm.util.UIFonts;
 import com.hrm.util.ValidationUtils;
@@ -55,7 +56,7 @@ class TabThongTinCaNhanPanel extends JPanel {
         content.add(Box.createVerticalStrut(8));
         JPanel nvPanel = buildInfoGrid();
         addInfoRow(nvPanel, 0, "Mã nhân viên:", nhanVien != null ? safe(nhanVien.getMaNhanVien()) : "");
-        addInfoRow(nvPanel, 1, "Loại hợp đồng:", nhanVien != null ? safe(nhanVien.getLoaiHopDongDisplay()) : "");
+        addInfoRow(nvPanel, 1, "Loại hợp đồng:", nhanVien != null ? HRMConstants.display(nhanVien.getLoaiHopDong()) : "");
         addInfoRow(nvPanel, 2, "Ngày vào làm:",
                 nhanVien != null && nhanVien.getNgayVaoLam() != null
                         ? nhanVien.getNgayVaoLam().format(DATE_FMT) : "");
@@ -66,7 +67,7 @@ class TabThongTinCaNhanPanel extends JPanel {
             public Component getListCellRendererComponent(JList<?> list, Object value,
                     int index, boolean isSelected, boolean cellHasFocus) {
                 super.getListCellRendererComponent(list, value, index, isSelected, cellHasFocus);
-                setText(trangThaiDisplay(value != null ? value.toString() : ""));
+                setText(HRMConstants.display(value != null ? value.toString() : ""));
                 return this;
             }
         });
@@ -120,7 +121,7 @@ class TabThongTinCaNhanPanel extends JPanel {
         JPanel hdPanel = buildInfoGrid();
         if (hopDong != null) {
             addInfoRow(hdPanel, 0, "Số hợp đồng:", safe(hopDong.getSoHopDong()));
-            addInfoRow(hdPanel, 1, "Loại hợp đồng:", safe(hopDong.getLoaiHopDongDisplay()));
+            addInfoRow(hdPanel, 1, "Loại hợp đồng:", HRMConstants.display(hopDong.getLoaiHopDong()));
             addInfoRow(hdPanel, 2, "Ngày ký:",
                     hopDong.getNgayKy() != null ? hopDong.getNgayKy().format(DATE_FMT) : "");
             addInfoRow(hdPanel, 3, "Hiệu lực từ:",
@@ -128,7 +129,7 @@ class TabThongTinCaNhanPanel extends JPanel {
             addInfoRow(hdPanel, 4, "Hiệu lực đến:",
                     hopDong.getNgayHetHieuLuc() != null ? hopDong.getNgayHetHieuLuc().format(DATE_FMT) : "Không xác định");
             addInfoRow(hdPanel, 5, "Trạng thái:",
-                    buildStatusLabel(hopDong.getTrangThai(), hopDong.getTrangThaiDisplay()));
+                    buildStatusLabel(hopDong.getTrangThai(), HRMConstants.display(hopDong.getTrangThai())));
         } else {
             JLabel noHd = new JLabel("  Chưa có hợp đồng hiệu lực.");
             noHd.setFont(new Font("Segoe UI", Font.ITALIC, 13));
@@ -272,7 +273,7 @@ class TabThongTinCaNhanPanel extends JPanel {
             public Component getListCellRendererComponent(JList<?> list, Object value,
                     int index, boolean isSelected, boolean cellHasFocus) {
                 super.getListCellRendererComponent(list, value, index, isSelected, cellHasFocus);
-                setText(trangThaiDisplay(value != null ? value.toString() : ""));
+                setText(HRMConstants.display(value != null ? value.toString() : ""));
                 return this;
             }
         });
@@ -411,22 +412,13 @@ class TabThongTinCaNhanPanel extends JPanel {
         if (key == null) return Color.GRAY;
         return switch (key) {
             case "dang_lam_viec", "hieu_luc", "dung_gio" -> UIColors.SUCCESS_GREEN;
-            case "tam_nghi", "cho_duyet", "di_muon", "ve_som" -> new Color(230, 120, 0);
+            case "tam_nghi", "cho_duyet", "di_muon", "ve_som" -> UIColors.WARNING_ORANGE;
             case "nghi_viec", "tu_choi", "huy", "vang_mat" -> UIColors.DANGER_RED;
             case "het_han", "het_hieu_luc" -> Color.GRAY;
-            case "thanh_ly" -> new Color(23, 162, 184);
-            case "nghi_phep" -> new Color(0, 123, 200);
-            case "cong_tac" -> new Color(100, 60, 200);
+            case "thanh_ly" -> UIColors.INFO_TEAL;
+            case "nghi_phep" -> UIColors.LEAVE_BLUE;
+            case "cong_tac" -> UIColors.TRIP_PURPLE;
             default -> Color.GRAY;
-        };
-    }
-
-    private String trangThaiDisplay(String key) {
-        return switch (key) {
-            case "dang_lam_viec" -> "Đang làm việc";
-            case "tam_nghi" -> "Tạm nghỉ";
-            case "nghi_viec" -> "Nghỉ việc";
-            default -> key;
         };
     }
 

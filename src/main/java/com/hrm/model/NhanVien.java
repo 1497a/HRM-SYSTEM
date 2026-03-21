@@ -109,25 +109,6 @@ public class NhanVien {
     // ============================
     // Display helpers
     // ============================
-    public String getTrangThaiDisplay() {
-        if (trangThai == null) return "";
-        switch (trangThai) {
-            case "dang_lam_viec": return "Dang lam viec";
-            case "tam_nghi":      return "Tam nghi";
-            case "nghi_viec":     return "Nghi viec";
-            default:              return trangThai;
-        }
-    }
-
-    public String getLoaiHopDongDisplay() {
-        if (loaiHopDong == null) return "";
-        switch (loaiHopDong) {
-            case "thu_viec":          return "Thu viec";
-            case "xac_dinh_thoi_han": return "Xac dinh thoi han";
-            case "khong_xac_dinh":    return "Khong xac dinh";
-            default:                  return loaiHopDong;
-        }
-    }
 
     @Override
     public String toString() {

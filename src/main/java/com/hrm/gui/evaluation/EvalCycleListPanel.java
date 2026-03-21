@@ -84,9 +84,9 @@ public class EvalCycleListPanel extends JPanel {
                 Component c = super.getTableCellRendererComponent(t, value, sel, focus, row, col);
                 if (!sel && value != null) {
                     String s = value.toString();
-                    if (STATUS_DANG.equals(s)) c.setBackground(new Color(200, 255, 200));
+                    if (STATUS_DANG.equals(s)) c.setBackground(UIColors.BG_SUCCESS);
                     else if (STATUS_DA_KET.equals(s)) c.setBackground(Color.LIGHT_GRAY);
-                    else c.setBackground(new Color(255, 255, 200));
+                    else c.setBackground(UIColors.BG_WARNING);
                 }
                 return c;
             }

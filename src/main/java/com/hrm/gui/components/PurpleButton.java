@@ -114,9 +114,9 @@ public class PurpleButton extends JButton {
      */
     public static PurpleButton warning(String text) {
         PurpleButton btn = new PurpleButton(text,
-            new Color(255, 193, 7),
-            UIColors.darker(new Color(255, 193, 7)),
-            UIColors.darker(UIColors.darker(new Color(255, 193, 7))));
+            UIColors.ACCENT_YELLOW,
+            UIColors.darker(UIColors.ACCENT_YELLOW),
+            UIColors.darker(UIColors.darker(UIColors.ACCENT_YELLOW)));
         btn.setForeground(UIColors.TEXT_DARK);
         return btn;
     }
@@ -126,9 +126,9 @@ public class PurpleButton extends JButton {
      */
     public static PurpleButton info(String text) {
         return new PurpleButton(text,
-            new Color(23, 162, 184),
-            UIColors.darker(new Color(23, 162, 184)),
-            UIColors.darker(UIColors.darker(new Color(23, 162, 184))));
+            UIColors.INFO_TEAL,
+            UIColors.darker(UIColors.INFO_TEAL),
+            UIColors.darker(UIColors.darker(UIColors.INFO_TEAL)));
     }
 
     /**

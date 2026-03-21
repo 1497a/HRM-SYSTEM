@@ -8,6 +8,7 @@ import com.hrm.model.NhanVien;
 import com.hrm.model.TaiKhoan;
 import com.hrm.util.PermissionCodes;
 import com.hrm.util.SessionContext;
+import com.hrm.util.UIColors;
 
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
@@ -126,11 +127,11 @@ public class EvalResultPanel extends JPanel {
                 Component c = super.getTableCellRendererComponent(table, value, isSelected, hasFocus, row, column);
                 if (!isSelected && value != null) {
                     String rating = value.toString();
-                    if ("Xuất sắc".equals(rating))        { c.setBackground(new Color(200, 255, 200)); c.setForeground(com.hrm.util.UIColors.SUCCESS_GREEN); }
-                    else if ("Tốt".equals(rating))        { c.setBackground(new Color(200, 255, 200)); c.setForeground(com.hrm.util.UIColors.SUCCESS_GREEN); }
-                    else if ("Khá".equals(rating))        { c.setBackground(new Color(255, 255, 200)); c.setForeground(new Color(230, 120, 0)); }
-                    else if ("Trung bình".equals(rating)) { c.setBackground(new Color(255, 200, 200)); c.setForeground(new Color(230, 120, 0)); }
-                    else                                  { c.setBackground(new Color(255, 200, 200)); c.setForeground(com.hrm.util.UIColors.DANGER_RED); }
+                    if ("Xuất sắc".equals(rating))        { c.setBackground(UIColors.BG_SUCCESS); c.setForeground(UIColors.SUCCESS_GREEN); }
+                    else if ("Tốt".equals(rating))        { c.setBackground(UIColors.BG_SUCCESS); c.setForeground(UIColors.SUCCESS_GREEN); }
+                    else if ("Khá".equals(rating))        { c.setBackground(UIColors.BG_WARNING); c.setForeground(UIColors.WARNING_ORANGE); }
+                    else if ("Trung bình".equals(rating)) { c.setBackground(UIColors.BG_DANGER);  c.setForeground(UIColors.WARNING_ORANGE); }
+                    else                                  { c.setBackground(UIColors.BG_DANGER);  c.setForeground(UIColors.DANGER_RED); }
                 }
                 return c;
             }

@@ -185,8 +185,8 @@ public class EmployeeListPanel extends JPanel {
                 nv.getTenPhongBanHienTai() != null ? nv.getTenPhongBanHienTai() : "",
                 nv.getTenChucVuHienTai() != null ? nv.getTenChucVuHienTai() : "",
                 nv.getNgayVaoLam() != null ? nv.getNgayVaoLam().format(dtf) : "",
-                nv.getLoaiHopDongDisplay(),
-                nv.getTrangThaiDisplay()
+                HRMConstants.display(nv.getLoaiHopDong()),
+                HRMConstants.display(nv.getTrangThai())
             });
         }
         rebuildDeptCombo();
@@ -234,11 +234,11 @@ public class EmployeeListPanel extends JPanel {
                 String trangThai = entry.getStringValue(7);
                 boolean matchStatus = true;
                 if ("Đang làm việc".equals(trangThaiFilter)) {
-                    matchStatus = trangThai.contains("lam viec") || trangThai.contains("Đang làm việc");
+                    matchStatus = "Đang làm việc".equals(trangThai);
                 } else if ("Tạm nghỉ".equals(trangThaiFilter)) {
-                    matchStatus = trangThai.contains("Tạm nghỉ") || trangThai.contains("Tam nghi");
+                    matchStatus = "Tạm nghỉ".equals(trangThai);
                 } else if ("Nghỉ việc".equals(trangThaiFilter)) {
-                    matchStatus = trangThai.contains("Nghỉ việc") || trangThai.contains("Nghi viec");
+                    matchStatus = "Nghỉ việc".equals(trangThai);
                 }
                 return matchSearch && matchDept && matchStatus;
             }
@@ -304,15 +304,15 @@ public class EmployeeListPanel extends JPanel {
             setHorizontalAlignment(SwingConstants.CENTER);
             setBorder(BorderFactory.createEmptyBorder(0, 8, 0, 8));
             if (!isSelected) {
-                c.setBackground(row % 2 == 0 ? Color.WHITE : new Color(250, 248, 255));
+                c.setBackground(row % 2 == 0 ? Color.WHITE : UIColors.TABLE_ROW_ALT);
                 c.setForeground(UIColors.TEXT_DARK);
                 if (col == 7 && value != null) {
                     String val = value.toString();
-                    if (val.contains("lam viec") || val.contains("Đang")) {
+                    if ("Đang làm việc".equals(val)) {
                         c.setForeground(UIColors.SUCCESS_GREEN);
-                    } else if (val.contains("Tạm nghỉ") || val.contains("Tam nghi")) {
-                        c.setForeground(new Color(230, 120, 0));
-                    } else if (val.contains("Nghỉ việc") || val.contains("Nghi viec")) {
+                    } else if ("Tạm nghỉ".equals(val)) {
+                        c.setForeground(UIColors.WARNING_ORANGE);
+                    } else if ("Nghỉ việc".equals(val)) {
                         c.setForeground(UIColors.DANGER_RED);
                     }
                     ((JLabel) c).setFont(com.hrm.util.UIFonts.BOLD_SMALL);

@@ -47,7 +47,7 @@ public class PhongBanBUS {
             if (cha == null) {
                 return KetQua.error("Phong ban cha khong ton tai.");
             }
-            if (!isActiveStatus(cha.getTrangThai())) {
+            if (!HRMConstants.TRANG_THAI_HOAT_DONG.equals(cha.getTrangThai())) {
                 return KetQua.error("Phong ban cha '" + cha.getTenPhongBan() + "' da ngung hoat dong.");
             }
         }
@@ -74,7 +74,7 @@ public class PhongBanBUS {
             if (cha == null) {
                 return KetQua.error("Phong ban cha khong ton tai.");
             }
-            if (!isActiveStatus(cha.getTrangThai())) {
+            if (!HRMConstants.TRANG_THAI_HOAT_DONG.equals(cha.getTrangThai())) {
                 return KetQua.error("Phong ban cha '" + cha.getTenPhongBan() + "' da ngung hoat dong.");
             }
             if (isDescendant(maPhongBan, phongBanChaMoi.trim())) {
@@ -98,7 +98,7 @@ public class PhongBanBUS {
         }
         List<PhongBan> children = repository.findChildren(maPhongBan);
         for (PhongBan child : children) {
-            if (isActiveStatus(child.getTrangThai())) {
+            if (HRMConstants.TRANG_THAI_HOAT_DONG.equals(child.getTrangThai())) {
                 return KetQua.error("Khong the ngung hoat dong khi phong ban con van dang hoat dong.");
             }
         }
@@ -122,7 +122,7 @@ public class PhongBanBUS {
         String maCha = department.getPhongBanChaId();
         if (!ValidationUtils.isBlank(maCha)) {
             PhongBan cha = repository.findById(maCha.trim());
-            if (cha != null && !isActiveStatus(cha.getTrangThai())) {
+            if (cha != null && !HRMConstants.TRANG_THAI_HOAT_DONG.equals(cha.getTrangThai())) {
                 return KetQua.error("Khong the kich hoat khi phong ban cha dang ngung hoat dong.");
             }
         }
@@ -146,17 +146,6 @@ public class PhongBanBUS {
             return KetQua.error("Quyen quan ly phong ban yeu cau pham vi ALL.");
         }
         return KetQua.success(null, "");
-    }
-
-    private boolean isActiveStatus(String status) {
-        return normalizeStatus(HRMConstants.TRANG_THAI_HOAT_DONG).equals(normalizeStatus(status));
-    }
-
-    private String normalizeStatus(String status) {
-        if (status == null) {
-            return "";
-        }
-        return status.toLowerCase().replace("_", "").replace(" ", "").replace("-", "");
     }
 
     private String normalizeOptional(String value) {

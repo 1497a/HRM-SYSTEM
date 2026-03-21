@@ -1,7 +1,7 @@
 package com.hrm.model;
 
+import com.hrm.util.HRMConstants;
 import java.time.LocalDate;
-import java.time.LocalDateTime;
 import java.util.Objects;
 
 /**
@@ -178,28 +178,6 @@ public class HopDongLaoDong {
     // ============================
     // Display & Business Helpers
     // ============================
-    public String getLoaiHopDongDisplay() {
-        if (loaiHopDong == null) return "Không xác định";
-        return switch (loaiHopDong) {
-            case "thu_viec"             -> "Thử việc";
-            case "xac_dinh_thoi_han"    -> "Xác định thời hạn";
-            case "khong_xac_dinh"       -> "Không xác định thời hạn";
-            default                     -> loaiHopDong;
-        };
-    }
-
-    public String getTrangThaiDisplay() {
-        if (trangThai == null) return "Không xác định";
-        return switch (trangThai) {
-            case "cho_duyet"    -> "Chờ phê duyệt";
-            case "hieu_luc"     -> "Hiệu lực";
-            case "sap_het_han"  -> "Sắp hết hạn";
-            case "het_han"      -> "Hết hạn";
-            case "thanh_ly"     -> "Thanh lý";
-            case "huy"          -> "Hủy";
-            default             -> trangThai;
-        };
-    }
 
     /**
      * Kiểm tra hợp đồng đang hiệu lực (ngày hiện tại nằm trong khoảng hiệu lực).
@@ -240,8 +218,8 @@ public class HopDongLaoDong {
                 "maHopDong=" + maHopDong +
                 ", soHopDong='" + soHopDong + '\'' +
                 ", maNV='" + maNV + '\'' +
-                ", loaiHopDong='" + getLoaiHopDongDisplay() + '\'' +
-                ", trangThai='" + getTrangThaiDisplay() + '\'' +
+                ", loaiHopDong='" + HRMConstants.display(loaiHopDong) + '\'' +
+                ", trangThai='" + HRMConstants.display(trangThai) + '\'' +
                 ", ngayHieuLuc=" + ngayHieuLuc +
                 ", ngayHetHieuLuc=" + ngayHetHieuLuc +
                 '}';

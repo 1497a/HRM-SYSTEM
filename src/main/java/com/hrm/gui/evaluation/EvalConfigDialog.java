@@ -4,6 +4,7 @@ import com.hrm.model.TieuChiDanhGia;
 import com.hrm.bus.DanhGiaBUS;
 import com.hrm.bus.KetQua;
 import com.hrm.gui.components.BaseFormDialog;
+import com.hrm.util.UIColors;
 import com.hrm.util.UIHelper;
 import com.hrm.util.UIFonts;
 
@@ -126,7 +127,7 @@ public class EvalConfigDialog extends BaseFormDialog {
         rightPanel.setPreferredSize(new Dimension(350, 0));
         rightPanel.add(formPanel, BorderLayout.CENTER);
         JPanel notePanel = new JPanel(new BorderLayout(5, 0));
-        notePanel.setBackground(new Color(255, 255, 200));
+        notePanel.setBackground(UIColors.BG_WARNING);
         notePanel.setBorder(new EmptyBorder(8, 10, 8, 10));
         notePanel.add(new JLabel("<html><b>Lưu ý:</b> Tổng trọng số của tất cả tiêu chí phải bằng 100%</html>"), BorderLayout.CENTER);
         notePanel.add(lblTotalWeight, BorderLayout.EAST);

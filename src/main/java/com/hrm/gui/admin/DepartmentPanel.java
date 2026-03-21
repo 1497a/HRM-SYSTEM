@@ -14,7 +14,6 @@ import javax.swing.*;
 import javax.swing.table.DefaultTableModel;
 import javax.swing.table.TableRowSorter;
 import java.awt.*;
-import java.text.Normalizer;
 import java.util.List;
 import java.util.Objects;
 
@@ -107,12 +106,12 @@ public class DepartmentPanel extends JPanel {
                 String ma = entry.getStringValue(0).toLowerCase();
                 String tenPhongBan = entry.getStringValue(1).toLowerCase();
                 boolean matchSearch = searchText.isEmpty() || ma.contains(searchText) || tenPhongBan.contains(searchText);
-                String trangThai = normalizeTrangThai(entry.getStringValue(3));
+                String trangThai = entry.getStringValue(3);
                 boolean matchStatus = true;
                 if (statusFilterIndex == 1) {
-                    matchStatus = "hoatdong".equals(trangThai);
+                    matchStatus = STATUS_ACTIVE.equals(trangThai);
                 } else if (statusFilterIndex == 2) {
-                    matchStatus = "ngunghoatdong".equals(trangThai) || "ngung".equals(trangThai);
+                    matchStatus = STATUS_INACTIVE.equals(trangThai);
                 }
                 return matchSearch && matchStatus;
             }
@@ -226,9 +225,9 @@ public class DepartmentPanel extends JPanel {
                     }
                 }
                 String rawTrangThaiMoi = toTrangThaiRaw((String) cboTrangThai.getSelectedItem());
-                if (!normalizeTrangThai(rawTrangThaiMoi).equals(normalizeTrangThai(dept.getTrangThai()))) {
+                if (!rawTrangThaiMoi.equals(dept.getTrangThai())) {
                     KetQua<Void> kqTrangThai;
-                    if (normalizeTrangThai(HRMConstants.TRANG_THAI_HOAT_DONG).equals(normalizeTrangThai(rawTrangThaiMoi))) {
+                    if (HRMConstants.TRANG_THAI_HOAT_DONG.equals(rawTrangThaiMoi)) {
                         kqTrangThai = service.activateDepartment(ma);
                     } else {
                         kqTrangThai = service.deactivateDepartment(ma);
@@ -278,27 +277,14 @@ public class DepartmentPanel extends JPanel {
     }
 
     private String toTrangThaiDisplay(String raw) {
-        String normalized = normalizeTrangThai(raw);
-        if ("hoatdong".equals(normalized)) return STATUS_ACTIVE;
-        if ("ngunghoatdong".equals(normalized) || "ngung".equals(normalized)) return STATUS_INACTIVE;
+        if (HRMConstants.TRANG_THAI_HOAT_DONG.equals(raw)) return STATUS_ACTIVE;
+        if (HRMConstants.TRANG_THAI_NGUNG_HOAT_DONG.equals(raw)) return STATUS_INACTIVE;
         return raw == null ? "" : raw;
     }
 
     private String toTrangThaiRaw(String display) {
-        String normalized = normalizeTrangThai(display);
-        if (normalizeTrangThai(HRMConstants.TRANG_THAI_HOAT_DONG).equals(normalized)) return HRMConstants.TRANG_THAI_HOAT_DONG;
-        if (normalizeTrangThai(HRMConstants.TRANG_THAI_NGUNG_HOAT_DONG).equals(normalized) || "ngung".equals(normalized)) return HRMConstants.TRANG_THAI_NGUNG_HOAT_DONG;
+        if (STATUS_ACTIVE.equals(display)) return HRMConstants.TRANG_THAI_HOAT_DONG;
+        if (STATUS_INACTIVE.equals(display)) return HRMConstants.TRANG_THAI_NGUNG_HOAT_DONG;
         return display == null ? "" : display;
-    }
-
-    private String normalizeTrangThai(String value) {
-        if (value == null) return "";
-        String v = Normalizer.normalize(value, Normalizer.Form.NFD)
-                .replaceAll("\\p{M}+", "")
-                .replace('đ', 'd')
-                .replace('Đ', 'D')
-                .toLowerCase()
-                .trim();
-        return v.replace("_", "").replace(" ", "").replace("-", "");
     }
 }

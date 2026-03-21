@@ -125,14 +125,15 @@ class HopThoaiChiTietUngVien extends JDialog {
     private JPanel buildButtons() {
         JPanel panel = new JPanel(new FlowLayout(FlowLayout.RIGHT, 8, 4));
         panel.setBackground(Color.WHITE);
-        boolean canManage = SessionContext.getInstance().hasPermission(PermissionCodes.RECRUITMENT_MANAGE);
-        if (canManage && ungVien != null) {
+        boolean canReview = SessionContext.getInstance().hasPermission(PermissionCodes.RECRUITMENT_CANDIDATE_REVIEW);
+        boolean canConvert = SessionContext.getInstance().hasPermission(PermissionCodes.RECRUITMENT_CANDIDATE_CONVERT);
+        if (ungVien != null && (canReview || canConvert)) {
             JButton btnChuyenTT = UIHelper.createPrimaryButton("Chuyển trạng thái");
             JButton btnChuyenNV = UIHelper.createSuccessButton("Chuyển thành NV");
             btnChuyenTT.addActionListener(e -> chuyenTrangThai());
             btnChuyenNV.addActionListener(e -> chuyenThanhNV());
-            panel.add(btnChuyenTT);
-            panel.add(btnChuyenNV);
+            if (canReview) panel.add(btnChuyenTT);
+            if (canConvert) panel.add(btnChuyenNV);
         }
         JButton btnDong = UIHelper.createDefaultButton("Đóng");
         btnDong.addActionListener(e -> dispose());
@@ -216,9 +217,9 @@ class HopThoaiChiTietUngVien extends JDialog {
         } else if (displayText.equals(tuChoi)) {
             lbl.setForeground(UIColors.DANGER_RED);
         } else if (displayText.equals(phongVan)) {
-            lbl.setForeground(new Color(255, 193, 7));
+            lbl.setForeground(UIColors.ACCENT_YELLOW);
         } else {
-            lbl.setForeground(new Color(23, 162, 184));
+            lbl.setForeground(UIColors.INFO_TEAL);
         }
     }
 
