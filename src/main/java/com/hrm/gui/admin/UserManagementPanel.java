@@ -159,11 +159,20 @@ public class UserManagementPanel extends JPanel {
     }
 
     private void applyFilter() {
-        String keyword = txtSearch.getText().toLowerCase().trim();
+        String keyword = UIHelper.normalizeSearch(txtSearch.getText());
         String trangThai = (String) cboTrangThai.getSelectedItem();
         String vaiTro = (String) cboVaiTro.getSelectedItem();
         RowFilter<DefaultTableModel, Object> nameFilter = keyword.isEmpty() ? null :
-            RowFilter.regexFilter("(?i)" + java.util.regex.Pattern.quote(keyword), 1, 2);
+            new RowFilter<DefaultTableModel, Object>() {
+                @Override
+                public boolean include(Entry<? extends DefaultTableModel, ? extends Object> entry) {
+                    Object tenDangNhap = entry.getValue(1);
+                    Object hoTen = entry.getValue(2);
+                    String normalizedUsername = UIHelper.normalizeSearch(tenDangNhap != null ? tenDangNhap.toString() : "");
+                    String normalizedFullName = UIHelper.normalizeSearch(hoTen != null ? hoTen.toString() : "");
+                    return normalizedUsername.contains(keyword) || normalizedFullName.contains(keyword);
+                }
+            };
         RowFilter<DefaultTableModel, Object> statusFilter = (trangThai == null || "Tất cả".equals(trangThai)) ? null :
             RowFilter.regexFilter("(?i)" + java.util.regex.Pattern.quote(trangThai), 5);
         RowFilter<DefaultTableModel, Object> roleFilter = (vaiTro == null || "Tất cả vai trò".equals(vaiTro)) ? null :

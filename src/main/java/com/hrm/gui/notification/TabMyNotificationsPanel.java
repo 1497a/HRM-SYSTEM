@@ -17,6 +17,10 @@ import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.table.DefaultTableModel;
 import javax.swing.table.TableRowSorter;
 import java.awt.*;
+import java.awt.event.KeyAdapter;
+import java.awt.event.KeyEvent;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
 
@@ -100,16 +104,20 @@ class TabMyNotificationsPanel extends JPanel {
                 return c;
             }
         });
-        tblThongBao.getSelectionModel().addListSelectionListener(e -> {
-            if (!e.getValueIsAdjusting()) {
-                int viewRow = tblThongBao.getSelectedRow();
-                if (viewRow >= 0 && danhSachThongBao != null) {
-                    int modelRow = tblThongBao.convertRowIndexToModel(viewRow);
-                    if (modelRow >= 0 && modelRow < danhSachThongBao.size()) {
-                        ThongBao tb = danhSachThongBao.get(modelRow);
-                        if (!tb.isDaDoc()) markAsRead(tb.getMaThongBao());
-                        showNoiDung(tb);
-                    }
+        tblThongBao.addMouseListener(new MouseAdapter() {
+            @Override
+            public void mouseClicked(MouseEvent e) {
+                if (e.getClickCount() == 2 && SwingUtilities.isLeftMouseButton(e)) {
+                    moThongBaoDangChon();
+                }
+            }
+        });
+        tblThongBao.addKeyListener(new KeyAdapter() {
+            @Override
+            public void keyPressed(KeyEvent e) {
+                if (e.getKeyCode() == KeyEvent.VK_ENTER) {
+                    e.consume();
+                    moThongBaoDangChon();
                 }
             }
         });
@@ -177,6 +185,22 @@ class TabMyNotificationsPanel extends JPanel {
         KetQua<Void> result = service.danhDauDaDoc(maThongBao);
         if (result.isSuccess()) loadThongBao();
         // silent on error — auto-mark khi mở nội dung, không làm ngắt luồng UI
+    }
+
+    private void moThongBaoDangChon() {
+        int viewRow = tblThongBao.getSelectedRow();
+        if (viewRow < 0 || danhSachThongBao == null) {
+            return;
+        }
+        int modelRow = tblThongBao.convertRowIndexToModel(viewRow);
+        if (modelRow < 0 || modelRow >= danhSachThongBao.size()) {
+            return;
+        }
+        ThongBao tb = danhSachThongBao.get(modelRow);
+        if (!tb.isDaDoc()) {
+            markAsRead(tb.getMaThongBao());
+        }
+        showNoiDung(tb);
     }
 
     private void showNoiDung(ThongBao tb) {
