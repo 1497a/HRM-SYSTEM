@@ -5,16 +5,15 @@ import com.hrm.model.NhanVien;
 import com.hrm.model.SoDungPhep;
 import com.hrm.model.TaiKhoan;
 import com.hrm.bus.NghiPhepBUS;
-import com.hrm.util.DialogUtil;
 import com.hrm.util.HRMConstants;
 import com.hrm.util.UIColors;
 import com.hrm.util.PermissionCodes;
 import com.hrm.util.SessionContext;
+import com.hrm.gui.components.PurpleTable;
 import com.hrm.util.UIHelper;
 
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
-import javax.swing.border.TitledBorder;
 import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.table.DefaultTableModel;
 import javax.swing.table.TableRowSorter;
@@ -33,7 +32,7 @@ public class LeaveListPanel extends JPanel {
     private final TaiKhoan currentUser;
     private final boolean isManager;
     private final boolean canApprove;
-    private JTable table;
+    private PurpleTable table;
     private DefaultTableModel tableModel;
     private TableRowSorter<DefaultTableModel> sorter;
     private JComboBox<String> cboStatus;
@@ -99,14 +98,8 @@ public class LeaveListPanel extends JPanel {
         // Table
         String[] columns = {"ID", "Nhân viên", "Loại phép", "Từ ngày", "Đến ngày",
                 "Số ngày", "Lý do", "Trạng thái", "Người duyệt"};
-        tableModel = new DefaultTableModel(columns, 0) {
-            @Override
-            public boolean isCellEditable(int row, int column) {
-                return false;
-            }
-        };
-        table = new JTable(tableModel);
-        table.setRowHeight(28);
+        tableModel = PurpleTable.createNonEditableModel(columns);
+        table = new PurpleTable(tableModel);
         table.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
         table.getColumnModel().getColumn(0).setPreferredWidth(40);
         table.getColumnModel().getColumn(1).setPreferredWidth(160);
@@ -154,36 +147,43 @@ public class LeaveListPanel extends JPanel {
         sorter.setSortKeys(List.of(new RowSorter.SortKey(0, SortOrder.ASCENDING)));
         // Balance Panel
         balancePanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 20, 5));
-        balancePanel.setBorder(new TitledBorder("Số ngày phép còn lại"));
+        balancePanel.setBorder(BorderFactory.createTitledBorder("Số ngày phép còn lại"));
     }
 
     private void setupLayout() {
-        // Top panel
-        JPanel topPanel = new JPanel(new BorderLayout(10, 10));
+        // Top panel: hint + filters + balance
+        JPanel topPanel = new JPanel(new BorderLayout(10, 4));
         topPanel.setBorder(new EmptyBorder(0, 0, 10, 0));
-        JPanel filterPanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 10, 0));
+        JLabel lblHint = new JLabel("Nhấp đúp vào đơn để xem chi tiết. Chọn đơn rồi nhấn 'Xử lý đơn' để duyệt/từ chối.");
+        lblHint.setFont(new Font("Segoe UI", Font.ITALIC, 12));
+        lblHint.setForeground(UIColors.TEXT_DARK);
+        topPanel.add(lblHint, BorderLayout.NORTH);
+        JPanel filterPanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 10, 4));
+        filterPanel.setOpaque(false);
         if (isManager) {
             filterPanel.add(new JLabel("Nhân viên:"));
             filterPanel.add(cboNhanVien);
         }
         filterPanel.add(new JLabel("Trạng thái:"));
         filterPanel.add(cboStatus);
-        JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT, 10, 0));
-        JButton btnLamMoi = new JButton("Làm mới");
-        btnLamMoi.addActionListener(e -> loadData());
-        buttonPanel.add(btnLamMoi);
-        buttonPanel.add(btnCreate);
-        if (canApprove) {
-            buttonPanel.add(btnApprove);
-        }
-        topPanel.add(filterPanel, BorderLayout.WEST);
-        topPanel.add(buttonPanel, BorderLayout.EAST);
+        topPanel.add(filterPanel, BorderLayout.CENTER);
         topPanel.add(balancePanel, BorderLayout.SOUTH);
         // Center panel - table
         JScrollPane scrollPane = new JScrollPane(table);
-        scrollPane.setBorder(new TitledBorder("Danh sách đơn nghỉ phép"));
+        scrollPane.setBorder(BorderFactory.createLineBorder(Color.LIGHT_GRAY));
+        // South panel - action buttons
+        JPanel southPanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 8, 6));
+        southPanel.setOpaque(false);
+        southPanel.add(btnCreate);
+        if (canApprove) {
+            southPanel.add(btnApprove);
+        }
+        JButton btnLamMoi = UIHelper.createDefaultButton("Làm mới");
+        btnLamMoi.addActionListener(e -> loadData());
+        southPanel.add(btnLamMoi);
         add(topPanel, BorderLayout.NORTH);
         add(scrollPane, BorderLayout.CENTER);
+        add(southPanel, BorderLayout.SOUTH);
     }
 
     private void loadData() {

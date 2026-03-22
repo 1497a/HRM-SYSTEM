@@ -1,5 +1,6 @@
 package com.hrm.gui.admin;
 
+import com.hrm.gui.components.PurpleTable;
 import com.hrm.model.TaiKhoan;
 import com.hrm.model.VaiTro;
 import com.hrm.bus.XacThucBUS;
@@ -12,7 +13,6 @@ import com.hrm.util.UIHelper;
 
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
-import javax.swing.border.TitledBorder;
 import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.table.DefaultTableModel;
 import javax.swing.table.TableRowSorter;
@@ -27,7 +27,7 @@ import java.util.List;
 public class UserManagementPanel extends JPanel {
     private final XacThucBUS authService;
     private final SessionContext sessionContext;
-    private JTable table;
+    private PurpleTable table;
     private DefaultTableModel tableModel;
     private TableRowSorter<DefaultTableModel> sorter;
     private JTextField txtSearch;
@@ -61,14 +61,8 @@ public class UserManagementPanel extends JPanel {
         btnDelete.addActionListener(e -> deleteUser());
         // Table
         String[] columns = {"ID", "Tên đăng nhập", "Họ tên", "Email", "Vai trò", "Trạng thái"};
-        tableModel = new DefaultTableModel(columns, 0) {
-            @Override
-            public boolean isCellEditable(int row, int column) {
-                return false;
-            }
-        };
-        table = new JTable(tableModel);
-        table.setRowHeight(30);
+        tableModel = PurpleTable.createNonEditableModel(columns);
+        table = new PurpleTable(tableModel);
         table.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
         table.getColumnModel().getColumn(0).setPreferredWidth(40);
         table.getColumnModel().getColumn(1).setPreferredWidth(100);
@@ -123,10 +117,14 @@ public class UserManagementPanel extends JPanel {
     }
 
     private void setupLayout() {
-        // Top panel - search and buttons
-        JPanel topPanel = new JPanel(new BorderLayout(10, 10));
+        // Top panel - hint + search/filters
+        JPanel topPanel = new JPanel(new BorderLayout(10, 4));
         topPanel.setOpaque(false);
-        JPanel searchPanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 10, 0));
+        JLabel lblHint = new JLabel("Tìm theo: Tên đăng nhập / Họ tên. Nhấp đúp vào dòng để sửa.");
+        lblHint.setFont(new Font("Segoe UI", Font.ITALIC, 12));
+        lblHint.setForeground(UIColors.TEXT_DARK);
+        topPanel.add(lblHint, BorderLayout.NORTH);
+        JPanel searchPanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 10, 4));
         searchPanel.setOpaque(false);
         searchPanel.add(new JLabel("Tìm kiếm:"));
         searchPanel.add(txtSearch);
@@ -134,27 +132,28 @@ public class UserManagementPanel extends JPanel {
         searchPanel.add(cboTrangThai);
         searchPanel.add(new JLabel("Vai trò:"));
         searchPanel.add(cboVaiTro);
-        JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT, 10, 0));
-        buttonPanel.setOpaque(false);
-        JButton btnLamMoi = new JButton("Làm mới");
-        btnLamMoi.addActionListener(e -> loadData());
-        buttonPanel.add(btnLamMoi);
-        if (sessionContext.hasPermission(PermissionCodes.USER_CREATE)) {
-            buttonPanel.add(btnCreate);
-        }
-        if (sessionContext.hasPermission(PermissionCodes.USER_UPDATE)) {
-            buttonPanel.add(btnEdit);
-        }
-        if (sessionContext.hasPermission(PermissionCodes.USER_DELETE)) {
-            buttonPanel.add(btnDelete);
-        }
-        topPanel.add(searchPanel, BorderLayout.WEST);
-        topPanel.add(buttonPanel, BorderLayout.EAST);
+        topPanel.add(searchPanel, BorderLayout.CENTER);
         // Center - table
         JScrollPane scrollPane = new JScrollPane(table);
-        scrollPane.setBorder(new TitledBorder("Danh sách tài khoản"));
+        scrollPane.setBorder(BorderFactory.createLineBorder(Color.LIGHT_GRAY));
+        // South - action buttons
+        JPanel southPanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 8, 6));
+        southPanel.setOpaque(false);
+        if (sessionContext.hasPermission(PermissionCodes.USER_CREATE)) {
+            southPanel.add(btnCreate);
+        }
+        if (sessionContext.hasPermission(PermissionCodes.USER_UPDATE)) {
+            southPanel.add(btnEdit);
+        }
+        if (sessionContext.hasPermission(PermissionCodes.USER_DELETE)) {
+            southPanel.add(btnDelete);
+        }
+        JButton btnLamMoi = UIHelper.createDefaultButton("Làm mới");
+        btnLamMoi.addActionListener(e -> loadData());
+        southPanel.add(btnLamMoi);
         add(topPanel, BorderLayout.NORTH);
         add(scrollPane, BorderLayout.CENTER);
+        add(southPanel, BorderLayout.SOUTH);
     }
 
     private void loadData() {

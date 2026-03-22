@@ -10,13 +10,13 @@ import com.hrm.util.PermissionCodes;
 import com.hrm.util.UIFonts;
 import com.hrm.util.SessionContext;
 import com.hrm.util.DialogUtil;
+import com.hrm.gui.components.PurpleTable;
 import com.hrm.util.UIColors;
+import com.hrm.util.UIHelper;
 
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
 import javax.swing.table.DefaultTableModel;
-import javax.swing.table.JTableHeader;
-import javax.swing.table.TableCellRenderer;
 import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.table.TableRowSorter;
 
@@ -47,23 +47,23 @@ public class AttendancePanel extends JPanel {
     private final NumberFormat moneyFmt;
     private JTabbedPane tabbedPane;
     // Tab 1
-    private JTable tableChamCong; private DefaultTableModel modelCC;
+    private PurpleTable tableChamCong; private DefaultTableModel modelCC;
     private JComboBox<String> cboThang, cboNam, cboMaNVFilter, cboTrangThaiFilter;
     private JPanel statsPanel;
     private List<ChamCong> dsChamCongTongHop = new ArrayList<>();
     // Tab 2
-    private JTable tableCaLam; private DefaultTableModel modelCaLam;
+    private PurpleTable tableCaLam; private DefaultTableModel modelCaLam;
     // Tab 3
-    private JTable tableDonOT; private DefaultTableModel modelOT;
+    private PurpleTable tableDonOT; private DefaultTableModel modelOT;
     // Tab 5
-    private JTable tablePC; private DefaultTableModel modelPC;
+    private PurpleTable tablePC; private DefaultTableModel modelPC;
     // Tab -- Cham cong ca nhan
     private JLabel lblCaNhanStatus;
     private JButton btnCheckInCN, btnCheckOutCN;
     private JComboBox<String> cboCaLamCaNhan;
     private List<CaLam> dsCaLamCN;
     private DefaultTableModel modelLichSuCaNhan;
-    private JTable tableLichSuCaNhan;
+    private PurpleTable tableLichSuCaNhan;
     private JComboBox<String> cboThangCN, cboNamCN;
     private JPanel statsPanelCN;
     private javax.swing.Timer clockTimer;
@@ -76,7 +76,7 @@ public class AttendancePanel extends JPanel {
     private JPanel histPanelCN;
     // Tab -- Dang ky OT (Employee/HR/Manager)
     private DefaultTableModel modelDonOTCaNhan;
-    private JTable tableDonOTCaNhan;
+    private PurpleTable tableDonOTCaNhan;
     public AttendancePanel() {
         svc = ChamCongBUS.getInstance();
         currentUser = SessionContext.getInstance().getCurrentUser();
@@ -1355,40 +1355,18 @@ public class AttendancePanel extends JPanel {
     }
 
     private JButton btn(String text, Color bg) {
-        JButton b = new JButton(text); b.setFont(com.hrm.util.UIFonts.TEXT_NORMAL);
-        b.setBackground(bg); b.setForeground(Color.WHITE);
-        b.setFocusPainted(false); b.setBorderPainted(false);
-        b.setCursor(new Cursor(Cursor.HAND_CURSOR)); return b;
+        if (UIColors.SUCCESS_GREEN.equals(bg)) return UIHelper.createSuccessButton(text);
+        if (UIColors.DANGER_RED.equals(bg))   return UIHelper.createDangerButton(text);
+        if (UIColors.PRIMARY_PURPLE.equals(bg)) return UIHelper.createPrimaryButton(text);
+        return UIHelper.createDefaultButton(text);
     }
 
-    private JTable tbl(DefaultTableModel m) {
-        JTable t = new JTable(m); t.setFont(com.hrm.util.UIFonts.TEXT_NORMAL);
-        t.setForeground(com.hrm.util.UIColors.TEXT_DARK); t.setRowHeight(32);
-        t.getTableHeader().setFont(com.hrm.util.UIFonts.BOLD_NORMAL);
-        t.getTableHeader().setBackground(UIColors.PRIMARY_PURPLE);
-        t.getTableHeader().setForeground(com.hrm.util.UIColors.TEXT_DARK);
-        t.setSelectionBackground(UIColors.LIGHT_PURPLE);
-        t.setSelectionForeground(com.hrm.util.UIColors.TEXT_DARK);
-        JTableHeader header = t.getTableHeader();
-        header.setDefaultRenderer(new DefaultTableCellRenderer() {
-            private final TableCellRenderer orig = header.getDefaultRenderer();
-            @Override public Component getTableCellRendererComponent(JTable t, Object v, boolean s, boolean f, int r, int c) {
-                Component comp = orig.getTableCellRendererComponent(t, v, s, f, r, c);
-                if (comp instanceof JLabel lbl) lbl.setHorizontalAlignment(JLabel.CENTER);
-                return comp;
-            }
-        });
-        t.setDefaultRenderer(Object.class, new DefaultTableCellRenderer() {
-            @Override public Component getTableCellRendererComponent(JTable table, Object v, boolean s, boolean f, int r, int c) {
-                super.getTableCellRendererComponent(table, v, s, f, r, c);
-                setForeground(com.hrm.util.UIColors.TEXT_DARK); return this;
-            }
-        });
-        return t;
+    private PurpleTable tbl(DefaultTableModel m) {
+        return new PurpleTable(m);
     }
 
     private DefaultTableModel mdl(String[] cols) {
-        return new DefaultTableModel(cols, 0) { public boolean isCellEditable(int r, int c) { return false; } };
+        return PurpleTable.createNonEditableModel(cols);
     }
 
     private JLabel lbl(String label, String val, Color color) {

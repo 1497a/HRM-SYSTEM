@@ -119,6 +119,7 @@ public class AppointmentListPanel extends JPanel {
         txtTimKiem = new JTextField(20);
         txtTimKiem.setFont(UIFonts.TEXT_NORMAL);
         txtTimKiem.setPreferredSize(new Dimension(200, 32));
+        txtTimKiem.setToolTipText("Co the tim theo ma NV, ho ten nhan vien hoac phong ban");
         txtTimKiem.setToolTipText("Có thể tìm theo mã NV, tên nhân viên hoặc phòng ban");
         filterPanel.add(lblTrangThai);
         filterPanel.add(cboTrangThai);
@@ -128,7 +129,12 @@ public class AppointmentListPanel extends JPanel {
         filterPanel.add(Box.createHorizontalStrut(16));
         filterPanel.add(lblTimKiem);
         filterPanel.add(txtTimKiem);
+        JLabel lblHint = new JLabel("Co the tim theo ma NV, ho ten nhan vien hoac phong ban.");
+        lblHint.setFont(UIFonts.TEXT_NORMAL);
+        lblHint.setForeground(Color.GRAY);
+        lblHint.setBorder(BorderFactory.createEmptyBorder(0, 8, 0, 0));
         panel.add(filterPanel, BorderLayout.CENTER);
+        panel.add(lblHint, BorderLayout.SOUTH);
         return panel;
     }
 
@@ -326,13 +332,16 @@ public class AppointmentListPanel extends JPanel {
             Component c = super.getTableCellRendererComponent(t, value, isSelected, hasFocus, row, col);
             setHorizontalAlignment(SwingConstants.CENTER);
             setBorder(BorderFactory.createEmptyBorder(0, 8, 0, 8));
+            if (col == COL_TRANG_THAI && value != null) {
+                String raw = value.toString();
+                ((JLabel) c).setText(HRMConstants.display(raw));
+                ((JLabel) c).setFont(UIFonts.BOLD_SMALL);
+            }
             if (!isSelected) {
                 c.setBackground(row % 2 == 0 ? Color.WHITE : UIColors.TABLE_ROW_ALT);
                 c.setForeground(UIColors.TEXT_DARK);
                 if (col == COL_TRANG_THAI && value != null) {
                     String raw = value.toString();
-                    ((JLabel) c).setText(HRMConstants.display(raw));
-                    ((JLabel) c).setFont(UIFonts.BOLD_SMALL);
                     if (HRMConstants.TRANG_THAI_HIEU_LUC.equals(raw)) {
                         c.setForeground(UIColors.SUCCESS_GREEN);
                     } else if (HRMConstants.TRANG_THAI_CHO_DUYET.equals(raw)) {

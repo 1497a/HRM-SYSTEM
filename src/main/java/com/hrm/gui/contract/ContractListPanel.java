@@ -2,8 +2,8 @@ package com.hrm.gui.contract;
 
 import com.hrm.bus.HopDongBUS;
 import com.hrm.bus.XacThucBUS;
-import com.hrm.gui.components.PurpleButton;
 import com.hrm.gui.components.PurpleTable;
+import com.hrm.util.UIHelper;
 import com.hrm.model.DataScope;
 import com.hrm.model.HopDongLaoDong;
 import com.hrm.model.NhanVien;
@@ -84,8 +84,8 @@ public class ContractListPanel extends JPanel {
     private TableRowSorter<DefaultTableModel> sorter;
     private JComboBox<String> cboTrangThai;
     private JComboBox<Object> cboNhanVien;
-    private PurpleButton btnTao;
-    private PurpleButton btnXemChiTiet;
+    private JButton btnTao;
+    private JButton btnXemChiTiet;
     private List<HopDongLaoDong> danhSachHienThi = new ArrayList<>();
 
     public ContractListPanel() {
@@ -193,11 +193,11 @@ public class ContractListPanel extends JPanel {
         JPanel panel = new JPanel(new FlowLayout(FlowLayout.LEFT, 8, 6));
         panel.setOpaque(false);
 
-        btnTao = new PurpleButton("+ Tạo hợp đồng");
-        btnXemChiTiet = new PurpleButton("Xem chi tiết");
+        btnTao = UIHelper.createSuccessButton("+ Tạo hợp đồng");
+        btnXemChiTiet = UIHelper.createPrimaryButton("Xem chi tiết");
         btnXemChiTiet.setEnabled(false);
 
-        JButton btnLamMoi = new JButton("Làm mới");
+        JButton btnLamMoi = UIHelper.createDefaultButton("Làm mới");
         btnLamMoi.addActionListener(e -> loadData());
 
         panel.add(btnTao);

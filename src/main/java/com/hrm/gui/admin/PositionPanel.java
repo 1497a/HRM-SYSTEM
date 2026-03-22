@@ -9,6 +9,7 @@ import com.hrm.util.DialogUtil;
 import com.hrm.util.HRMConstants;
 import com.hrm.util.PermissionCodes;
 import com.hrm.util.SessionContext;
+import com.hrm.gui.components.PurpleTable;
 import com.hrm.util.UIHelper;
 import com.hrm.util.UIFonts;
 
@@ -27,7 +28,7 @@ public class PositionPanel extends JPanel {
     private static final String STATUS_INACTIVE = "Ngừng hoạt động";
     private final ChucVuBUS service = new ChucVuBUS();
     private final NumberFormat moneyFmt = NumberFormat.getNumberInstance(new Locale("vi", "VN"));
-    private JTable table;
+    private PurpleTable table;
     private DefaultTableModel tableModel;
     private TableRowSorter<DefaultTableModel> sorter;
     private JTextField txtSearch;
@@ -56,16 +57,10 @@ public class PositionPanel extends JPanel {
         searchFilterPanel.add(cboFilter);
         topPanel.add(searchFilterPanel, BorderLayout.CENTER);
         add(topPanel, BorderLayout.NORTH);
-        tableModel = new DefaultTableModel(
-                new Object[]{"Mã CV", "Tên chức vụ", "Cấp bậc", "Phụ cấp (VND)", "Trạng thái"}, 0) {
-            @Override
-            public boolean isCellEditable(int row, int col) {
-                return false;
-            }
-        };
-        table = new JTable(tableModel);
+        tableModel = PurpleTable.createNonEditableModel(
+                new Object[]{"Mã CV", "Tên chức vụ", "Cấp bậc", "Phụ cấp (VND)", "Trạng thái"});
+        table = new PurpleTable(tableModel);
         table.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
-        table.setRowHeight(24);
         table.getColumnModel().getColumn(0).setPreferredWidth(70);
         table.getColumnModel().getColumn(1).setPreferredWidth(160);
         table.getColumnModel().getColumn(2).setPreferredWidth(70);
@@ -73,12 +68,14 @@ public class PositionPanel extends JPanel {
         table.getColumnModel().getColumn(4).setPreferredWidth(90);
         sorter = new TableRowSorter<>(tableModel);
         table.setRowSorter(sorter);
-        add(new JScrollPane(table), BorderLayout.CENTER);
+        JScrollPane scroll = new JScrollPane(table);
+        scroll.setBorder(BorderFactory.createLineBorder(Color.LIGHT_GRAY));
+        add(scroll, BorderLayout.CENTER);
         btnThem = UIHelper.createPrimaryButton("+ Thêm");
         JPanel btnPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
         btnPanel.add(btnThem);
-        JButton btnLamMoi = new JButton("Làm mới");
-        btnLamMoi.addActionListener(e -> refreshTable());
+        JButton btnLamMoi = UIHelper.createDefaultButton("Làm mới");
+        btnLamMoi.addActionListener(e -> loadData());
         btnPanel.add(btnLamMoi);
         add(btnPanel, BorderLayout.SOUTH);
         setupPermissions();
@@ -98,7 +95,7 @@ public class PositionPanel extends JPanel {
                 }
             }
         });
-        refreshTable();
+        loadData();
     }
 
     private void setupPermissions() {
@@ -127,7 +124,7 @@ public class PositionPanel extends JPanel {
         sorter.setRowFilter(rf);
     }
 
-    private void refreshTable() {
+    public void loadData() {
         tableModel.setRowCount(0);
         for (ChucVu p : service.getAllPositions()) {
             tableModel.addRow(new Object[]{
@@ -206,7 +203,7 @@ public class PositionPanel extends JPanel {
             DialogUtil.showError(this, kq.getMessage());
             return;
         }
-        refreshTable();
+        loadData();
         DialogUtil.showSuccess(this, kq.getMessage());
     }
 
@@ -315,7 +312,7 @@ public class PositionPanel extends JPanel {
                         return;
                     }
                 }
-                refreshTable();
+                loadData();
                 dialog.dispose();
                 DialogUtil.showSuccess(PositionPanel.this, "Cập nhật chức vụ thành công!");
             });

@@ -1,16 +1,15 @@
 package com.hrm.gui.salary;
 
 import com.hrm.bus.LuongBUS;
+import com.hrm.gui.components.PurpleTable;
 import com.hrm.model.BangLuong;
 import com.hrm.model.ChiTietLuong;
 import com.hrm.util.DialogUtil;
-import com.hrm.util.UIColors;
 import com.hrm.util.UIFonts;
 import com.hrm.util.UIHelper;
 
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
-import javax.swing.border.TitledBorder;
 import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.table.DefaultTableModel;
 import java.awt.*;
@@ -29,7 +28,7 @@ class SalarySelfViewPanel extends JPanel {
     private static final NumberFormat MONEY_FORMAT = NumberFormat.getNumberInstance(new Locale("vi", "VN"));
     private final LuongBUS salaryService;
     private final String maNVHienTai;
-    private JTable tblChiTiet;
+    private PurpleTable tblChiTiet;
     private DefaultTableModel modelChiTiet;
     private List<ChiTietLuong> currentChiTietList = new ArrayList<>();
     private int selectedMaBL = -1;
@@ -72,7 +71,7 @@ class SalarySelfViewPanel extends JPanel {
         btnXemChiTiet.addActionListener(e -> showChiTietDialog());
         toolbar.add(btnXemChiTiet);
         add(toolbar, BorderLayout.NORTH);
-        add(buildChiTietTablePanel("Phiếu lương cá nhân"), BorderLayout.CENTER);
+        add(buildChiTietTablePanel(), BorderLayout.CENTER);
         loadBangLuong();
     }
 
@@ -122,24 +121,13 @@ class SalarySelfViewPanel extends JPanel {
         }
     }
 
-    private JScrollPane buildChiTietTablePanel(String title) {
-        modelChiTiet = new DefaultTableModel(0, 0) {
-            @Override public boolean isCellEditable(int row, int col) { return false; }
-        };
-        modelChiTiet.setColumnIdentifiers(new Object[]{
+    private JScrollPane buildChiTietTablePanel() {
+        modelChiTiet = PurpleTable.createNonEditableModel(new Object[]{
             "Mã NV", "Họ tên", "Lương cơ bản", "Lương chức vụ",
             "Tiền OT", "Tổng thu nhập", "Khấu trừ", "Thực lãnh",
             "Số ngày công", "Số giờ OT", "Ghi chú"
         });
-        tblChiTiet = new JTable(modelChiTiet);
-        tblChiTiet.setRowHeight(28);
-        tblChiTiet.setFont(com.hrm.util.UIFonts.TEXT_NORMAL);
-        tblChiTiet.getTableHeader().setFont(com.hrm.util.UIFonts.BOLD_NORMAL);
-        tblChiTiet.getTableHeader().setBackground(UIColors.PRIMARY_PURPLE);
-        tblChiTiet.getTableHeader().setForeground(UIColors.TEXT_DARK);
-        tblChiTiet.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
-        tblChiTiet.setSelectionBackground(UIColors.LIGHT_PURPLE);
-        tblChiTiet.setSelectionForeground(UIColors.TEXT_DARK);
+        tblChiTiet = new PurpleTable(modelChiTiet);
         int[] widths = {70, 150, 125, 125, 110, 125, 110, 125, 95, 95, 220};
         for (int i = 0; i < widths.length; i++) {
             tblChiTiet.getColumnModel().getColumn(i).setPreferredWidth(widths[i]);
@@ -155,7 +143,7 @@ class SalarySelfViewPanel extends JPanel {
             }
         });
         JScrollPane scroll = new JScrollPane(tblChiTiet);
-        scroll.setBorder(new TitledBorder(title));
+        scroll.setBorder(BorderFactory.createLineBorder(Color.LIGHT_GRAY));
         return scroll;
     }
 

@@ -6,6 +6,7 @@ import com.hrm.model.TinTuyenDung;
 import com.hrm.model.YeuCauTuyenDung;
 import com.hrm.util.DialogUtil;
 import com.hrm.util.PermissionCodes;
+import com.hrm.gui.components.PurpleTable;
 import com.hrm.util.UIFonts;
 import com.hrm.util.SessionContext;
 import com.hrm.util.UIColors;
@@ -13,7 +14,6 @@ import com.hrm.util.UIHelper;
 
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
-import javax.swing.border.TitledBorder;
 import javax.swing.table.DefaultTableModel;
 import javax.swing.table.TableRowSorter;
 import java.awt.*;
@@ -29,7 +29,7 @@ class TabTinPanel extends JPanel {
 
     private static final DateTimeFormatter DATE_FMT = DateTimeFormatter.ofPattern("dd/MM/yyyy");
     private final TuyenDungBUS service;
-    private JTable tbl;
+    private PurpleTable tbl;
     private DefaultTableModel model;
     private JButton btnDangTin;
     private JButton btnDongTin;
@@ -76,8 +76,15 @@ class TabTinPanel extends JPanel {
         sorter.setSortKeys(List.of(new SortKey(0, ASCENDING)));
         UIHelper.attachStatusFilter(sorter, cboTrangThai, 7);
         JScrollPane scroll = new JScrollPane(tbl);
-        scroll.setBorder(new TitledBorder("Danh sách tin tuyển dụng"));
-        add(toolbar, BorderLayout.NORTH);
+        scroll.setBorder(BorderFactory.createLineBorder(Color.LIGHT_GRAY));
+        JLabel lblHint = new JLabel("Quản lý tin tuyển dụng. Nhấp đúp để xem chi tiết.");
+        lblHint.setFont(new Font("Segoe UI", Font.ITALIC, 12));
+        lblHint.setForeground(UIColors.TEXT_DARK);
+        JPanel northPanel = new JPanel(new BorderLayout(0, 4));
+        northPanel.setOpaque(false);
+        northPanel.add(lblHint, BorderLayout.NORTH);
+        northPanel.add(toolbar, BorderLayout.CENTER);
+        add(northPanel, BorderLayout.NORTH);
         add(scroll, BorderLayout.CENTER);
         boolean canManage = SessionContext.getInstance().hasPermission(PermissionCodes.RECRUITMENT_MANAGE);
         btnDangTin.setVisible(canManage);

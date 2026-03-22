@@ -1,5 +1,6 @@
 package com.hrm.gui.evaluation;
 
+import com.hrm.gui.components.PurpleTable;
 import com.hrm.bus.DanhGiaBUS;
 import com.hrm.bus.KetQua;
 import com.hrm.model.DotDanhGia;
@@ -30,7 +31,7 @@ public class EvalCycleListPanel extends JPanel {
     private final TaiKhoan currentUser;
     private final boolean isAdmin;
     private final boolean isManager;
-    private JTable cycleTable;
+    private PurpleTable cycleTable;
     private DefaultTableModel cycleTableModel;
     private JButton btnTaoDot;
     private JButton btnOpenCycle;
@@ -58,17 +59,12 @@ public class EvalCycleListPanel extends JPanel {
         setBorder(new EmptyBorder(15, 15, 15, 15));
         setBackground(Color.WHITE);
         String[] cycleColumns = {"ID", "Tên đợt đánh giá", "Kỳ", "Năm", "Bắt đầu", "Kết thúc", "Trạng thái"};
-        cycleTableModel = new DefaultTableModel(cycleColumns, 0) {
-            @Override public boolean isCellEditable(int row, int col) { return false; }
-        };
-        cycleTable = new JTable(cycleTableModel);
+        cycleTableModel = PurpleTable.createNonEditableModel(cycleColumns);
+        cycleTable = new PurpleTable(cycleTableModel);
         TableRowSorter<DefaultTableModel> sorter = new TableRowSorter<>(cycleTableModel);
         cycleTable.setRowSorter(sorter);
         sorter.setComparator(0, java.util.Comparator.comparingInt(a -> (Integer) a));
         sorter.setSortKeys(java.util.List.of(new javax.swing.RowSorter.SortKey(0, javax.swing.SortOrder.ASCENDING)));
-        cycleTable.setRowHeight(28);
-        cycleTable.setFont(com.hrm.util.UIFonts.TEXT_NORMAL);
-        cycleTable.getTableHeader().setFont(com.hrm.util.UIFonts.BOLD_NORMAL);
         cycleTable.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
         cycleTable.getSelectionModel().addListSelectionListener(e -> onCycleSelected());
         cycleTable.getColumnModel().getColumn(0).setPreferredWidth(40);
@@ -128,11 +124,11 @@ public class EvalCycleListPanel extends JPanel {
         }
         if (isManager) topPanel.add(btnEvaluate);
         topPanel.add(btnViewDetail);
-        JButton btnLamMoi = new JButton("Làm mới");
+        JButton btnLamMoi = UIHelper.createDefaultButton("Làm mới");
         btnLamMoi.addActionListener(e -> loadData());
         topPanel.add(btnLamMoi);
         JScrollPane cycleScroll = new JScrollPane(cycleTable);
-        cycleScroll.setBorder(new TitledBorder("Các đợt đánh giá (nhấp đúp để xem kết quả)"));
+        cycleScroll.setBorder(BorderFactory.createLineBorder(Color.LIGHT_GRAY));
         add(topPanel, BorderLayout.NORTH);
         add(cycleScroll, BorderLayout.CENTER);
     }
@@ -194,7 +190,7 @@ public class EvalCycleListPanel extends JPanel {
         formInfo.add(new JLabel("Ngày kết thúc:"));        formInfo.add(spinKT);
         List<TieuChiDanhGia> allCriteria = evalService.getAllCriteria();
         JPanel criteriaPanel = new JPanel(new GridLayout(0, 1, 4, 4));
-        criteriaPanel.setBorder(new TitledBorder("Chọn các tiêu chí"));
+        criteriaPanel.setBorder(BorderFactory.createTitledBorder("Chọn các tiêu chí"));
         List<JCheckBox> checkBoxes = new java.util.ArrayList<>();
         JLabel lblTotal = new JLabel("Tổng trọng số: 0%");
         lblTotal.setFont(com.hrm.util.UIFonts.BOLD_NORMAL);

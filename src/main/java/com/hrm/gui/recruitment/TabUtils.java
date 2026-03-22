@@ -1,7 +1,7 @@
 package com.hrm.gui.recruitment;
 
+import com.hrm.gui.components.PurpleTable;
 import com.hrm.util.DialogUtil;
-import com.hrm.util.UIColors;
 import com.hrm.util.UIFonts;
 
 import javax.swing.*;
@@ -16,17 +16,8 @@ final class TabUtils {
 
     private TabUtils() {}
 
-    static JTable buildTable(DefaultTableModel model) {
-        JTable t = new JTable(model);
-        t.setRowHeight(28);
-        t.setFont(com.hrm.util.UIFonts.TEXT_NORMAL);
-        t.getTableHeader().setFont(com.hrm.util.UIFonts.BOLD_NORMAL);
-        t.getTableHeader().setBackground(UIColors.PRIMARY_PURPLE);
-        t.getTableHeader().setForeground(UIColors.TEXT_DARK);
-        t.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
-        t.setSelectionBackground(UIColors.LIGHT_PURPLE);
-        t.setSelectionForeground(UIColors.TEXT_DARK);
-        return t;
+    static PurpleTable buildTable(DefaultTableModel model) {
+        return new PurpleTable(model);
     }
 
     static void applyColWidths(JTable t, int[] widths) {

@@ -2,7 +2,6 @@ package com.hrm.gui.employee;
 
 import com.hrm.bus.NhanVienBUS;
 import com.hrm.bus.PhongBanBUS;
-import com.hrm.gui.components.PurpleButton;
 import com.hrm.gui.components.PurpleTable;
 import com.hrm.model.NhanVien;
 import com.hrm.model.PhongBan;
@@ -38,8 +37,8 @@ public class EmployeeListPanel extends JPanel {
     private JTextField txtSearch;
     private JComboBox<String> cboTrangThai;
     private JComboBox<String> cboPhongBan;
-    private PurpleButton btnThem;
-    private PurpleButton btnChiTiet;
+    private JButton btnThem;
+    private JButton btnChiTiet;
     private List<NhanVien> danhSachHienThi = new ArrayList<>();
     private static final String[] COL_NAMES = {
         "STT", "Mã NV", "Họ tên", "Phòng ban", "Chức vụ",
@@ -54,7 +53,7 @@ public class EmployeeListPanel extends JPanel {
         add(buildSouthPanel(), BorderLayout.SOUTH);
         setupPermissions();
         setupEvents();
-        refreshTable();
+        loadData();
     }
 
     private JPanel buildNorthPanel() {
@@ -128,13 +127,13 @@ public class EmployeeListPanel extends JPanel {
     private JPanel buildSouthPanel() {
         JPanel panel = new JPanel(new FlowLayout(FlowLayout.LEFT, 8, 6));
         panel.setOpaque(false);
-        btnThem = new PurpleButton("+ Tạo hồ sơ");
-        btnChiTiet = new PurpleButton("Xem chi tiết");
+        btnThem = UIHelper.createSuccessButton("+ Tạo hồ sơ");
+        btnChiTiet = UIHelper.createPrimaryButton("Xem chi tiết");
         btnChiTiet.setEnabled(false);
         panel.add(btnThem);
         panel.add(btnChiTiet);
-        JButton btnLamMoi = new JButton("Làm mới");
-        btnLamMoi.addActionListener(e -> refreshTable());
+        JButton btnLamMoi = UIHelper.createDefaultButton("Làm mới");
+        btnLamMoi.addActionListener(e -> loadData());
         panel.add(btnLamMoi);
         return panel;
     }
@@ -172,7 +171,7 @@ public class EmployeeListPanel extends JPanel {
         updateActionButtons();
     }
 
-    public void refreshTable() {
+    public void loadData() {
         com.hrm.model.TaiKhoan currentUser = SessionContext.getInstance().getCurrentUser();
         String userId = currentUser != null ? currentUser.getMaNV() : null;
         danhSachHienThi = nvService.getAllByScope(userId);
@@ -253,7 +252,7 @@ public class EmployeeListPanel extends JPanel {
                 (Frame) SwingUtilities.getWindowAncestor(this), null, null);
         dialog.setVisible(true);
         if (dialog.isSaved()) {
-            refreshTable();
+            loadData();
         }
     }
 
@@ -269,7 +268,7 @@ public class EmployeeListPanel extends JPanel {
                 (Frame) SwingUtilities.getWindowAncestor(this), selected.getMaNhanVien());
         dialog.setVisible(true);
         if (dialog.isDataChanged()) {
-            refreshTable();
+            loadData();
         }
     }
 

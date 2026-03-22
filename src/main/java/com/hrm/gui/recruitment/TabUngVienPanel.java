@@ -1,6 +1,7 @@
 package com.hrm.gui.recruitment;
 
 import com.hrm.bus.TuyenDungBUS;
+import com.hrm.gui.components.PurpleTable;
 import com.hrm.model.UngVien;
 import com.hrm.util.DialogUtil;
 import com.hrm.util.PermissionCodes;
@@ -10,7 +11,6 @@ import com.hrm.util.UIHelper;
 
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
-import javax.swing.border.TitledBorder;
 import javax.swing.table.DefaultTableModel;
 import javax.swing.table.TableRowSorter;
 import java.awt.*;
@@ -25,7 +25,7 @@ class TabUngVienPanel extends JPanel {
 
     private static final DateTimeFormatter DATE_FMT = DateTimeFormatter.ofPattern("dd/MM/yyyy");
     private final TuyenDungBUS service;
-    private JTable tbl;
+    private PurpleTable tbl;
     private DefaultTableModel model;
     private JButton btnTaoUV;
     TabUngVienPanel(TuyenDungBUS service) {
@@ -81,8 +81,15 @@ class TabUngVienPanel extends JPanel {
             }
         });
         JScrollPane scroll = new JScrollPane(tbl);
-        scroll.setBorder(new TitledBorder("Danh sách ứng viên"));
-        add(toolbar, BorderLayout.NORTH);
+        scroll.setBorder(BorderFactory.createLineBorder(Color.LIGHT_GRAY));
+        JLabel lblHint = new JLabel("Quản lý ứng viên. Nhấp đúp để xem chi tiết.");
+        lblHint.setFont(new Font("Segoe UI", Font.ITALIC, 12));
+        lblHint.setForeground(UIColors.TEXT_DARK);
+        JPanel northPanel = new JPanel(new BorderLayout(0, 4));
+        northPanel.setOpaque(false);
+        northPanel.add(lblHint, BorderLayout.NORTH);
+        northPanel.add(toolbar, BorderLayout.CENTER);
+        add(northPanel, BorderLayout.NORTH);
         add(scroll, BorderLayout.CENTER);
         btnTaoUV.setVisible(SessionContext.getInstance().hasPermission(PermissionCodes.RECRUITMENT_CANDIDATE_CREATE));
         load();

@@ -16,7 +16,6 @@ import com.hrm.util.UIHelper;
 
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
-import javax.swing.border.TitledBorder;
 import javax.swing.table.DefaultTableModel;
 import javax.swing.table.TableRowSorter;
 import java.awt.*;
@@ -52,7 +51,7 @@ class TabYeuCauPanel extends JPanel {
         btnTuChoi.addActionListener(e -> tuChoi());
         JComboBox<String> cboTrangThai = new JComboBox<>(
                 new String[]{"Tất cả", "Chờ duyệt", "Đã duyệt", "Từ chối", "Đã tuyển đủ"});
-        JButton btnLamMoi = new JButton("Làm mới");
+        JButton btnLamMoi = UIHelper.createDefaultButton("Làm mới");
         btnLamMoi.addActionListener(e -> load());
         toolbar.add(btnTao);
         toolbar.add(btnPheDuyet);
@@ -82,7 +81,7 @@ class TabYeuCauPanel extends JPanel {
         sorter.setSortKeys(List.of(new SortKey(0, ASCENDING)));
         UIHelper.attachStatusFilter(sorter, cboTrangThai, 5);
         JScrollPane scroll = new JScrollPane(tbl);
-        scroll.setBorder(new TitledBorder("Danh sách yêu cầu tuyển dụng"));
+        scroll.setBorder(BorderFactory.createLineBorder(Color.LIGHT_GRAY));
         add(toolbar, BorderLayout.NORTH);
         add(scroll, BorderLayout.CENTER);
         setupPermissions();

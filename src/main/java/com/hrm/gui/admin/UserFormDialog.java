@@ -252,7 +252,7 @@ public class UserFormDialog extends BaseFormDialog {
         if (editingUser.getMaNV() != null) {
             try {
                 NhanVien nv = nhanVienService.getByMaNhanVien(editingUser.getMaNV());
-                txtMaNV.setText(nv != null ? nv.getMaNhanVien() + " - " + editingUser.getMaNV() : editingUser.getMaNV());
+                txtMaNV.setText(nv != null ? nv.getMaNhanVien() : editingUser.getMaNV());
             } catch (Exception e) {
                 txtMaNV.setText(editingUser.getMaNV());
             }

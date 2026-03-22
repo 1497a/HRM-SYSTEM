@@ -1,7 +1,7 @@
 package com.hrm.gui.contract;
 
 import com.hrm.gui.components.BaseFormDialog;
-import com.hrm.gui.components.PurpleButton;
+import com.hrm.util.UIHelper;
 import com.hrm.model.HopDongLaoDong;
 import com.hrm.model.NhanVien;
 import com.hrm.bus.HopDongBUS;
@@ -44,9 +44,9 @@ public class ContractFormDialog extends BaseFormDialog {
     // Audit fields (chỉ hiển thị trong view mode)
     private JPanel pnlAudit;
     // Buttons
-    private PurpleButton btnLuu;
-    private PurpleButton btnPheDuyet;
-    private PurpleButton btnThanhLy;
+    private JButton btnLuu;
+    private JButton btnPheDuyet;
+    private JButton btnThanhLy;
     private JButton btnHuy;
     /**
      * Constructor tạo mới hợp đồng.
@@ -150,12 +150,10 @@ public class ContractFormDialog extends BaseFormDialog {
         txtGhiChu.setLineWrap(true);
         txtGhiChu.setWrapStyleWord(true);
         // Buttons
-        btnLuu = new PurpleButton("Lưu");
-        btnPheDuyet = new PurpleButton("Phê duyệt");
-        btnThanhLy = PurpleButton.warning("Thanh lý");
-        btnHuy = new JButton("Hủy");
-        btnHuy.setFont(UIFonts.TEXT_NORMAL);
-        btnHuy.setCursor(new Cursor(Cursor.HAND_CURSOR));
+        btnLuu = UIHelper.createSuccessButton("Lưu");
+        btnPheDuyet = UIHelper.createPrimaryButton("Phê duyệt");
+        btnThanhLy = UIHelper.createWarningButton("Thanh lý");
+        btnHuy = UIHelper.createDefaultButton("Hủy");
         btnLuu.addActionListener(e -> luuHopDong());
         btnHuy.addActionListener(e -> dispose());
         btnPheDuyet.addActionListener(e -> pheDuyetHopDong());
@@ -252,8 +250,11 @@ public class ContractFormDialog extends BaseFormDialog {
         formPanel.add(scrollGhiChu, gbc);
         gbc.fill = GridBagConstraints.NONE;
         gbc.weightx = 0;
-        mainPanel.add(formPanel, BorderLayout.CENTER);
-        mainPanel.add(pnlAudit, BorderLayout.NORTH);
+        JPanel centerWrapper = new JPanel(new BorderLayout(0, 8));
+        centerWrapper.setOpaque(false);
+        centerWrapper.add(pnlAudit, BorderLayout.NORTH);
+        centerWrapper.add(formPanel, BorderLayout.CENTER);
+        mainPanel.add(centerWrapper, BorderLayout.CENTER);
         // Button panel
         JPanel btnPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT, 8, 0));
         btnPanel.setOpaque(false);
