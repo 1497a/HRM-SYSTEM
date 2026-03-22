@@ -81,8 +81,7 @@ public class ThongBaoDAO {
                 }
             }
         } catch (SQLException e) {
-            System.err.println("Lỗi insert thông báo: " + e.getMessage());
-            e.printStackTrace();
+            throw new RuntimeException("Loi insert thong bao: " + e.getMessage(), e);
         }
         return -1;
     }
@@ -90,8 +89,8 @@ public class ThongBaoDAO {
     /**
      * Chèn nhiều thông báo cùng lúc (bulk insert) trong một connection.
      */
-    public void insertBulk(List<ThongBao> list) {
-        if (list == null || list.isEmpty()) return;
+    public int insertBulk(List<ThongBao> list) {
+        if (list == null || list.isEmpty()) return 0;
         try (Connection conn = DatabaseConnection.getConnection();
              PreparedStatement ps = conn.prepareStatement(buildInsertSql())) {
             conn.setAutoCommit(false);
@@ -100,8 +99,11 @@ public class ThongBaoDAO {
                     bindInsertStatement(ps, tb);
                     ps.addBatch();
                 }
-                ps.executeBatch();
+                int[] counts = ps.executeBatch();
                 conn.commit();
+                int total = 0;
+                for (int c : counts) total += (c >= 0 ? c : 0);
+                return total;
             } catch (SQLException e) {
                 conn.rollback();
                 throw e;
@@ -109,8 +111,7 @@ public class ThongBaoDAO {
                 conn.setAutoCommit(true);
             }
         } catch (SQLException e) {
-            System.err.println("Lỗi insertBulk thông báo: " + e.getMessage());
-            e.printStackTrace();
+            throw new RuntimeException("Loi insertBulk thong bao: " + e.getMessage(), e);
         }
     }
 
@@ -179,30 +180,28 @@ public class ThongBaoDAO {
     /**
      * Đánh dấu một thông báo là đã đọc.
      */
-    public void markAsRead(int maThongBao) {
+    public int markAsRead(int maThongBao) {
         String sql = "UPDATE THONGBAO SET daDoc = TRUE, ngayDoc = NOW() WHERE maThongBao = ? AND daDoc = FALSE";
         try (Connection conn = DatabaseConnection.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setInt(1, maThongBao);
-            ps.executeUpdate();
+            return ps.executeUpdate();
         } catch (SQLException e) {
-            System.err.println("Lỗi markAsRead: " + e.getMessage());
-            e.printStackTrace();
+            throw new RuntimeException("Loi markAsRead thong bao " + maThongBao + ": " + e.getMessage(), e);
         }
     }
 
     /**
      * Đánh dấu tất cả thông báo của người nhận là đã đọc.
      */
-    public void markAllAsRead(int maTaiKhoanNhan) {
+    public int markAllAsRead(int maTaiKhoanNhan) {
         String sql = "UPDATE THONGBAO SET daDoc = TRUE, ngayDoc = NOW() WHERE maTaiKhoanNhan = ? AND daDoc = FALSE";
         try (Connection conn = DatabaseConnection.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setInt(1, maTaiKhoanNhan);
-            ps.executeUpdate();
+            return ps.executeUpdate();
         } catch (SQLException e) {
-            System.err.println("Lỗi markAllAsRead: " + e.getMessage());
-            e.printStackTrace();
+            throw new RuntimeException("Loi markAllAsRead cho tai khoan " + maTaiKhoanNhan + ": " + e.getMessage(), e);
         }
     }
     public Integer findMaTaiKhoanByMaNV(String maNV) {

@@ -5,6 +5,7 @@ import com.hrm.bus.KetQua;
 import com.hrm.model.DotDanhGia;
 import com.hrm.model.TaiKhoan;
 import com.hrm.model.TieuChiDanhGia;
+import com.hrm.util.DialogUtil;
 import com.hrm.util.PermissionCodes;
 import com.hrm.util.UIFonts;
 import com.hrm.util.SessionContext;
@@ -153,10 +154,7 @@ public class EvalCycleListPanel extends JPanel {
                 });
             }
         } catch (Exception ex) {
-            JOptionPane.showMessageDialog(this,
-                    "Lỗi tải dữ liệu: " + ex.getMessage(),
-                    "Lỗi",
-                    JOptionPane.ERROR_MESSAGE);
+            DialogUtil.showError(this, "Lỗi tải dữ liệu: " + ex.getMessage());
         }
     }
 
@@ -201,33 +199,30 @@ public class EvalCycleListPanel extends JPanel {
         JLabel lblTotal = new JLabel("Tổng trọng số: 0%");
         lblTotal.setFont(com.hrm.util.UIFonts.BOLD_NORMAL);
         lblTotal.setForeground(UIColors.DANGER_RED);
-        java.awt.event.ActionListener calcTotalAction = e -> {
+        Runnable calcTotal = () -> {
             int total = 0;
             for (JCheckBox cb : checkBoxes) {
                 if (cb.isSelected()) {
-                    TieuChiDanhGia c =
-                            (TieuChiDanhGia) cb.getClientProperty("criteria");
-                    total += c.getDiemToiDa();
+                    total += (int) ((TieuChiDanhGia) cb.getClientProperty("criteria")).getTrongSo();
                 }
             }
             lblTotal.setText("Tổng trọng số (bắt buộc 100%): " + total + "%");
             lblTotal.setForeground(total == 100 ? UIColors.SUCCESS_GREEN : UIColors.DANGER_RED);
-            criteriaPanel.repaint();
         };
         for (TieuChiDanhGia c : allCriteria) {
-                JCheckBox cb = new JCheckBox(c.getTenTieuChi() + " (" + (int) c.getDiemToiDa() + "%)");
+            JCheckBox cb = new JCheckBox(c.getTenTieuChi() + " (" + (int) c.getTrongSo() + "%)");
             cb.putClientProperty("criteria", c);
-            cb.addActionListener(calcTotalAction);
+            cb.addActionListener(e -> calcTotal.run());
             checkBoxes.add(cb);
             criteriaPanel.add(cb);
         }
         int initialTotal = checkBoxes.stream()
-                .mapToInt(cb -> (int) ((TieuChiDanhGia) cb.getClientProperty("criteria")).getDiemToiDa())
+                .mapToInt(cb -> (int) ((TieuChiDanhGia) cb.getClientProperty("criteria")).getTrongSo())
                 .sum();
         if (initialTotal == 100) {
             for (JCheckBox cb : checkBoxes) cb.setSelected(true);
         }
-        calcTotalAction.actionPerformed(null);
+        calcTotal.run();
         JPanel scrollCriteriaPanel = new JPanel(new BorderLayout());
         JScrollPane scrollPane = new JScrollPane(criteriaPanel);
         scrollPane.setPreferredSize(new Dimension(300, 150));
@@ -242,26 +237,21 @@ public class EvalCycleListPanel extends JPanel {
             if (res != JOptionPane.OK_OPTION) return;
             String ten = txtTen.getText().trim();
             if (ten.isEmpty()) {
-                JOptionPane.showMessageDialog(this,
-                        "Vui lòng nhập tên đợt đánh giá.",
-                        "Lỗi", JOptionPane.WARNING_MESSAGE);
+                DialogUtil.showWarn(this, "Vui lòng nhập tên đợt đánh giá.");
+                SwingUtilities.invokeLater(() -> txtTen.requestFocusInWindow());
                 continue;
             }
             List<TieuChiDanhGia> selectedCriteria = new java.util.ArrayList<>();
             int totalWeight = 0;
             for (JCheckBox cb : checkBoxes) {
                 if (cb.isSelected()) {
-                    TieuChiDanhGia c =
-                            (TieuChiDanhGia) cb.getClientProperty("criteria");
-                    c.setTrongSo(c.getDiemToiDa()); // diemToiDa dùng làm trọng số
+                    TieuChiDanhGia c = (TieuChiDanhGia) cb.getClientProperty("criteria");
                     selectedCriteria.add(c);
-                    totalWeight += c.getDiemToiDa();
+                    totalWeight += (int) c.getTrongSo();
                 }
             }
             if (totalWeight != 100) {
-                JOptionPane.showMessageDialog(this,
-                        "Tổng trọng số các tiêu chí được chọn phải chính xác 100%.",
-                        "Lỗi trọng số", JOptionPane.WARNING_MESSAGE);
+                DialogUtil.showWarn(this, "Tổng trọng số các tiêu chí được chọn phải chính xác 100%.");
                 continue;
             }
             LocalDate tuNgay = toLocalDate((java.util.Date) spinBD.getValue());
@@ -289,10 +279,9 @@ public class EvalCycleListPanel extends JPanel {
     private void closeCycle() {
         int row = cycleTable.getSelectedRow();
         if (row < 0) return;
-        int confirm = JOptionPane.showConfirmDialog(this,
+        if (!DialogUtil.showYesNo(this,
                 "Bạn có chắc muốn đóng kỳ đánh giá này?\nSau khi đóng sẽ không thể sửa đổi.",
-                "Xác nhận", JOptionPane.YES_NO_OPTION);
-        if (confirm != JOptionPane.YES_OPTION) return;
+                "Xác nhận")) return;
         int cycleId = (int) cycleTableModel.getValueAt(cycleTable.convertRowIndexToModel(row), 0);
         KetQua<?> result = evalService.closeCycle(cycleId);
         showResult(result);
@@ -306,17 +295,12 @@ public class EvalCycleListPanel extends JPanel {
 
     private void evaluateEmployee() {
         if (currentUser.getMaNV() == null || currentUser.getMaNV().isEmpty()) {
-            JOptionPane.showMessageDialog(this,
-                    "Tài khoản quản trị viên không đánh giá nhân viên\n",
-                    "Không thể thực hiện",
-                    JOptionPane.WARNING_MESSAGE);
+            DialogUtil.showWarn(this, "Tài khoản quản trị viên không đánh giá nhân viên");
             return;
         }
         int row = cycleTable.getSelectedRow();
         if (row < 0) {
-            JOptionPane.showMessageDialog(this,
-                    "Vui lòng chọn đợt đánh giá.",
-                    "Thông báo", JOptionPane.WARNING_MESSAGE);
+            DialogUtil.showWarn(this, "Vui lòng chọn đợt đánh giá.");
             return;
         }
         int cycleId = (int) cycleTableModel.getValueAt(cycleTable.convertRowIndexToModel(row), 0);
@@ -371,10 +355,11 @@ public class EvalCycleListPanel extends JPanel {
     }
 
     private void showResult(KetQua<?> result) {
-        JOptionPane.showMessageDialog(this,
-                result.getMessage(),
-                result.isSuccess() ? "Thành công" : "Lỗi",
-                result.isSuccess() ? JOptionPane.INFORMATION_MESSAGE : JOptionPane.ERROR_MESSAGE);
+        if (result.isSuccess()) {
+            DialogUtil.showSuccess(this, result.getMessage());
+        } else {
+            DialogUtil.showError(this, result.getMessage());
+        }
     }
 
 }

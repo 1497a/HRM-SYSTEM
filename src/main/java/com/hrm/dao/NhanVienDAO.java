@@ -277,7 +277,7 @@ public class NhanVienDAO {
     // ============================
     // update - chỉ cập nhật các trường cơ bản
     // ============================
-    public void update(NhanVien nv) {
+    public int update(NhanVien nv) {
         String sql = "UPDATE NHANVIEN SET loaiHopDong=?, trangThai=?, ghiChu=? WHERE maNV=?";
         try (Connection conn = DatabaseConnection.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
@@ -285,9 +285,9 @@ public class NhanVienDAO {
             ps.setString(2, nv.getTrangThai());
             ps.setString(3, nv.getGhiChu());
             ps.setString(4, nv.getMaNhanVien());
-            ps.executeUpdate();
+            return ps.executeUpdate();
         } catch (SQLException e) {
-            throw new RuntimeException("Lỗi cập nhật nhân viên " + nv.getMaNhanVien() + ": " + e.getMessage(), e);
+            throw new RuntimeException("Loi cap nhat nhan vien " + nv.getMaNhanVien() + ": " + e.getMessage(), e);
         }
     }
 

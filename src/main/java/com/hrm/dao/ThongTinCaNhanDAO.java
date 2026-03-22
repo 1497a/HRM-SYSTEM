@@ -38,7 +38,6 @@ public class ThongTinCaNhanDAO {
         ttcn.setDienThoai(rs.getString("dienThoai"));
         ttcn.setEmail(rs.getString("email"));
         ttcn.setDiaChi(rs.getString("diaChi"));
-        ttcn.setDiaChiThuongTru(rs.getString("diaChiThuongTru"));
         ttcn.setQueQuan(rs.getString("queQuan"));
         ttcn.setTinhTrangHonNhan(rs.getString("tinhTrangHonNhan"));
         ttcn.setFileCv(rs.getString("fileCV"));
@@ -72,13 +71,12 @@ public class ThongTinCaNhanDAO {
     public void insert(ThongTinCaNhan ttcn) throws SQLException {
         String sql = "INSERT INTO THONGTINCANHAN "
                 + "(maNV, hoTen, ngaySinh, gioiTinh, CCCD, dienThoai, email, "
-                + " diaChi, diaChiThuongTru, queQuan, tinhTrangHonNhan, fileCV, trinhDoHocVan, kinhNghiem) "
-                + "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) "
+                + " diaChi, queQuan, tinhTrangHonNhan, fileCV, trinhDoHocVan, kinhNghiem) "
+                + "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) "
                 + "ON DUPLICATE KEY UPDATE "
                 + "hoTen=VALUES(hoTen), ngaySinh=VALUES(ngaySinh), gioiTinh=VALUES(gioiTinh), "
                 + "CCCD=VALUES(CCCD), dienThoai=VALUES(dienThoai), email=VALUES(email), "
-                + "diaChi=VALUES(diaChi), diaChiThuongTru=VALUES(diaChiThuongTru), "
-                + "queQuan=VALUES(queQuan), tinhTrangHonNhan=VALUES(tinhTrangHonNhan), "
+                + "diaChi=VALUES(diaChi), queQuan=VALUES(queQuan), tinhTrangHonNhan=VALUES(tinhTrangHonNhan), "
                 + "fileCV=VALUES(fileCV), trinhDoHocVan=VALUES(trinhDoHocVan), kinhNghiem=VALUES(kinhNghiem)";
         try (Connection conn = DatabaseConnection.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
@@ -93,13 +91,12 @@ public class ThongTinCaNhanDAO {
     public void insert(Connection conn, ThongTinCaNhan ttcn) throws SQLException {
         String sql = "INSERT INTO THONGTINCANHAN "
                 + "(maNV, hoTen, ngaySinh, gioiTinh, CCCD, dienThoai, email, "
-                + " diaChi, diaChiThuongTru, queQuan, tinhTrangHonNhan, fileCV, trinhDoHocVan, kinhNghiem) "
-                + "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) "
+                + " diaChi, queQuan, tinhTrangHonNhan, fileCV, trinhDoHocVan, kinhNghiem) "
+                + "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) "
                 + "ON DUPLICATE KEY UPDATE "
                 + "hoTen=VALUES(hoTen), ngaySinh=VALUES(ngaySinh), gioiTinh=VALUES(gioiTinh), "
                 + "CCCD=VALUES(CCCD), dienThoai=VALUES(dienThoai), email=VALUES(email), "
-                + "diaChi=VALUES(diaChi), diaChiThuongTru=VALUES(diaChiThuongTru), "
-                + "queQuan=VALUES(queQuan), tinhTrangHonNhan=VALUES(tinhTrangHonNhan), "
+                + "diaChi=VALUES(diaChi), queQuan=VALUES(queQuan), tinhTrangHonNhan=VALUES(tinhTrangHonNhan), "
                 + "fileCV=VALUES(fileCV), trinhDoHocVan=VALUES(trinhDoHocVan), kinhNghiem=VALUES(kinhNghiem)";
         try (PreparedStatement ps = conn.prepareStatement(sql)) {
             setParams(ps, ttcn);
@@ -110,10 +107,10 @@ public class ThongTinCaNhanDAO {
     // ============================
     // update
     // ============================
-    public void update(ThongTinCaNhan ttcn) {
+    public int update(ThongTinCaNhan ttcn) {
         String sql = "UPDATE THONGTINCANHAN SET "
                 + "hoTen=?, ngaySinh=?, gioiTinh=?, CCCD=?, dienThoai=?, email=?, "
-                + "diaChi=?, diaChiThuongTru=?, queQuan=?, tinhTrangHonNhan=?, "
+                + "diaChi=?, queQuan=?, tinhTrangHonNhan=?, "
                 + "fileCV=?, trinhDoHocVan=?, kinhNghiem=? "
                 + "WHERE maNV=?";
         try (Connection conn = DatabaseConnection.getConnection();
@@ -125,16 +122,15 @@ public class ThongTinCaNhanDAO {
             ps.setString(5, ttcn.getDienThoai());
             ps.setString(6, ttcn.getEmail());
             ps.setString(7, ttcn.getDiaChi());
-            ps.setString(8, ttcn.getDiaChiThuongTru());
-            ps.setString(9, ttcn.getQueQuan());
-            ps.setString(10, ttcn.getTinhTrangHonNhan());
-            ps.setString(11, ttcn.getFileCv());
-            ps.setString(12, ttcn.getTrinhDoHocVan());
-            ps.setString(13, ttcn.getKinhNghiem());
-            ps.setString(14, ttcn.getMaNV());
-            ps.executeUpdate();
+            ps.setString(8, ttcn.getQueQuan());
+            ps.setString(9, ttcn.getTinhTrangHonNhan());
+            ps.setString(10, ttcn.getFileCv());
+            ps.setString(11, ttcn.getTrinhDoHocVan());
+            ps.setString(12, ttcn.getKinhNghiem());
+            ps.setString(13, ttcn.getMaNV());
+            return ps.executeUpdate();
         } catch (SQLException e) {
-            throw new RuntimeException("Lỗi cập nhật thông tin cá nhân: " + e.getMessage(), e);
+            throw new RuntimeException("Loi cap nhat thong tin ca nhan: " + e.getMessage(), e);
         }
     }
 
@@ -170,11 +166,10 @@ public class ThongTinCaNhanDAO {
         ps.setString(6, ttcn.getDienThoai());
         ps.setString(7, ttcn.getEmail());
         ps.setString(8, ttcn.getDiaChi());
-        ps.setString(9, ttcn.getDiaChiThuongTru());
-        ps.setString(10, ttcn.getQueQuan());
-        ps.setString(11, ttcn.getTinhTrangHonNhan());
-        ps.setString(12, ttcn.getFileCv());
-        ps.setString(13, ttcn.getTrinhDoHocVan());
-        ps.setString(14, ttcn.getKinhNghiem());
+        ps.setString(9, ttcn.getQueQuan());
+        ps.setString(10, ttcn.getTinhTrangHonNhan());
+        ps.setString(11, ttcn.getFileCv());
+        ps.setString(12, ttcn.getTrinhDoHocVan());
+        ps.setString(13, ttcn.getKinhNghiem());
     }
 }

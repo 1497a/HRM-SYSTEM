@@ -5,6 +5,7 @@ import com.hrm.model.NhanVien;
 import com.hrm.model.ThongTinCaNhan;
 import com.hrm.model.TaiKhoan;
 import com.hrm.model.VaiTro;
+import com.hrm.model.YeuCauTuyenDung;
 import com.hrm.dao.BoNhiemDAO;
 import com.hrm.dao.NhanVienDAO;
 import com.hrm.dao.ThongTinCaNhanDAO;
@@ -26,9 +27,7 @@ import java.util.List;
  */
 public class BoNhiemBUS {
 
-    private static final String LOAI_BO_NHIEM_CHINH = "chinh";
     private static final String ACTION_APPOINTMENT_VIEW = PermissionCodes.APPOINTMENT_VIEW;
-    private static final String ROLE_ADMIN = HRMConstants.ROLE_ADMIN;
     private static final String ROLE_EMPLOYEE = HRMConstants.ROLE_EMPLOYEE;
     private static BoNhiemBUS instance;
     private final BoNhiemDAO boNhiemRepo = BoNhiemDAO.getInstance();
@@ -72,25 +71,46 @@ public class BoNhiemBUS {
                         "Nhân viên đã có bổ nhiệm chính hiệu lực trong khoảng thời gian này. "
                         + "Hãy kết thúc bổ nhiệm cũ trước.");
             }
-            // Chan tao bo nhiem moi neu chuc vu lanh dao (capBac <= 3: GD/TP/TT) da co nguoi giu
+            // Ch?n t?o b? nhi?m m?i n?u ch?c v? l�nh d?o (c?p b?c <= 3: G�/TP/TT) d� c� ngu?i gi?
             ChucVu cv = chucVuRepo.findById(bn.getMaChucVu());
             if (cv != null && cv.getCapBac() <= 3) {
-                // Giam doc (capBac=1): kiem tra toan cong ty, khong gioi han phong ban
+                // Gi�m d?c (c?p b?c = 1): ki?m tra to�n c�ng ty, kh�ng gi?i h?n ph�ng ban
                 String deptToCheck = (cv.getCapBac() == 1) ? null : bn.getMaPhongBan();
                 if (boNhiemRepo.hasActiveChinhForChucVuInDept(deptToCheck, bn.getMaChucVu(), 0)) {
                     String tenCV = cv.getTenChucVu() != null ? cv.getTenChucVu() : bn.getMaChucVu();
-                    String scope = (cv.getCapBac() == 1) ? "trong cong ty" : "trong phong ban nay";
-                    return KetQua.error("Chuc vu " + tenCV + " da co nguoi dang giu " + scope + ". Ket thuc bo nhiem cu truoc khi tao moi.");
+                    String scope = (cv.getCapBac() == 1) ? "trong c�ng ty" : "trong ph�ng ban n�y";
+                    return KetQua.error("Ch?c v? " + tenCV + " d� c� ngu?i dang gi? " + scope + ". K?t th�c b? nhi?m cu tru?c khi t?o m?i.");
                 }
             }
         }
-        // Thiết lập trạng thái chờ duyệt
+        // Thi?t l?p tr?ng th�i ch? duy?t
         bn.setTrangThai(HRMConstants.TRANG_THAI_CHO_DUYET);
         try {
             boNhiemRepo.insert(bn);
             return KetQua.success(bn, "Tạo bổ nhiệm thành công. Đang chờ phê duyệt.");
         } catch (Exception e) {
             return KetQua.error("Lỗi khi tạo bổ nhiệm: " + e.getMessage());
+        }
+    }
+
+    // ============================
+    // Tạo bổ nhiệm từ hợp đồng thử việc (gọi bởi HopDongBUS khi phê duyệt HĐ)
+    // ============================
+    public KetQua<Void> taoBoNhiemTuHopDong(String maNV, YeuCauTuyenDung yc, LocalDate tuNgay, int maHopDong) {
+        BoNhiem bn = new BoNhiem();
+        bn.setMaNV(maNV);
+        bn.setMaPhongBan(yc.getId());
+        bn.setMaChucVu(yc.getMaChucVu());
+        bn.setLoaiBoNhiem(HRMConstants.LOAI_BO_NHIEM_CHINH);
+        bn.setTyLeHuongLuong(100);
+        bn.setTuNgay(tuNgay != null ? tuNgay : LocalDate.now());
+        bn.setTrangThai(HRMConstants.TRANG_THAI_CHO_DUYET);
+        bn.setLyDo("Tự động bổ nhiệm sau khi phê duyệt hợp đồng thử việc #" + maHopDong);
+        try {
+            boNhiemRepo.insert(bn);
+            return KetQua.success(null, "Bổ nhiệm đã được tạo tự động.");
+        } catch (Exception e) {
+            return KetQua.error("Lỗi tạo bổ nhiệm tự động: " + e.getMessage());
         }
     }
 
@@ -119,8 +139,19 @@ public class BoNhiemBUS {
             }
         }
         // Cập nhật trạng thái và người duyệt
-        boNhiemRepo.updateTrangThai(maBoNhiem, HRMConstants.TRANG_THAI_HIEU_LUC, now);
-        boNhiemRepo.updateNguoiDuyet(maBoNhiem, nguoiDuyetId);
+        try {
+            int rows = boNhiemRepo.updateTrangThai(maBoNhiem, HRMConstants.TRANG_THAI_HIEU_LUC, now);
+            if (rows <= 0) {
+                return KetQua.error("Không thể cập nhật trạng thái bổ nhiệm. Vui lòng thử lại.");
+            }
+        } catch (Exception e) {
+            return KetQua.error("Lỗi phê duyệt bổ nhiệm: " + e.getMessage());
+        }
+        try {
+            boNhiemRepo.updateNguoiDuyet(maBoNhiem, nguoiDuyetId);
+        } catch (Exception e) {
+            System.err.println("Cảnh báo: Không thể cập nhật người duyệt cho bổ nhiệm " + maBoNhiem + ": " + e.getMessage());
+        }
         bn.setTrangThai(HRMConstants.TRANG_THAI_HIEU_LUC);
         bn.setNgayPheDuyet(now);
         bn.setNguoiDuyet(nguoiDuyetId); // giả định nguoiDuyet là String trong model
@@ -146,8 +177,15 @@ public class BoNhiemBUS {
         if (bn == null) {
             return KetQua.error("Không tìm thấy bổ nhiệm #" + maBoNhiem);
         }
-        boNhiemRepo.updateTrangThai(maBoNhiem, HRMConstants.TRANG_THAI_TU_CHOI, null);
-        boNhiemRepo.updateLyDoTuChoi(maBoNhiem, lyDo.trim());
+        try {
+            int rows = boNhiemRepo.updateTrangThai(maBoNhiem, HRMConstants.TRANG_THAI_TU_CHOI, null);
+            if (rows <= 0) {
+                return KetQua.error("Không thể từ chối bổ nhiệm. Vui lòng thử lại.");
+            }
+            boNhiemRepo.updateLyDoTuChoi(maBoNhiem, lyDo.trim());
+        } catch (Exception e) {
+            return KetQua.error("Lỗi từ chối bổ nhiệm: " + e.getMessage());
+        }
         return KetQua.success(null, "Đã từ chối bổ nhiệm #" + maBoNhiem + ".");
     }
 
@@ -187,14 +225,14 @@ public class BoNhiemBUS {
             return KetQua.error("Không tìm thấy bổ nhiệm #" + maBoNhiem);
         }
         if (!HRMConstants.TRANG_THAI_HIEU_LUC.equals(bn.getTrangThai())) {
-            return KetQua.error("Chỉ có thể kết thúc bổ nhiệm đang hiệu lực.");
+            return KetQua.error("Ch? c� th? k?t th�c b? nhi?m dang hi?u l?c.");
         }
-        // Không cho tự kết thúc bổ nhiệm của chính mình (nhất quán với tao/phe duyet)
+        // Kh�ng cho t? k?t th�c b? nhi?m c?a ch�nh m�nh (nh?t qu�n v?i t?o/ph� duy?t)
         if (SelfApprovalGuard.isSelfAction(getCurrentUserNhanVienId(), bn.getMaNV())
                 && !SelfApprovalGuard.currentUserCanBypassSelfRestriction()) {
-            return KetQua.error("Bạn không thể tự kết thúc bổ nhiệm của chính mình.");
+            return KetQua.error("B?n kh�ng th? t? k?t th�c b? nhi?m c?a ch�nh m�nh.");
         }
-        // Bảo vệ bổ nhiệm CEO (capBac=1): chỉ ADMIN mới được kết thúc
+        // B?o v? b? nhi?m CEO (capBac=1): ch? ADMIN m?i du?c k?t th�c
         ChucVu cv = chucVuRepo.findById(bn.getMaChucVu());
         if (cv != null && cv.getCapBac() == 1) {
             SessionContext ctx = SessionContext.getInstance();
@@ -206,7 +244,10 @@ public class BoNhiemBUS {
             return KetQua.error("Ngày kết thúc phải sau ngày bắt đầu (" + bn.getTuNgay() + ").");
         }
         try {
-            boNhiemRepo.endBoNhiem(maBoNhiem, denNgay);
+            int rows = boNhiemRepo.endBoNhiem(maBoNhiem, denNgay);
+            if (rows <= 0) {
+                return KetQua.error("Không thể kết thúc bổ nhiệm. Vui lòng thử lại.");
+            }
             // Cascade: chuyển cấp dưới lên cấp trên kế tiếp (grandparent)
             java.util.List<String> subordinates = boNhiemRepo.findActiveSubordinateNVIds(bn.getMaNV());
             if (!subordinates.isEmpty()) {
@@ -225,23 +266,24 @@ public class BoNhiemBUS {
         XacThucBUS authService = XacThucBUS.getInstance();
         NhanVien nv = nvRepo.findByMaNhanVien(bn.getMaNV());
         if (nv == null) return;
-        // Xác định vai trò mặc định
-        String roleCode = resolveDefaultRoleCode(authService);
-        if (roleCode == null || roleCode.trim().isEmpty()) {
-            System.err.println("Cảnh báo: Không tìm thấy vai trò mặc định để tạo tài khoản.");
-            return;
+        // Resolve role từ ChucVu.maVaiTro; fallback về NHAN_VIEN nếu chưa có mapping
+        String roleCode = resolveRoleFromChucVu(bn.getMaChucVu(), authService);
+        if (roleCode == null) {
+            roleCode = ROLE_EMPLOYEE;
+            System.err.println("Cảnh báo: Chức vụ '" + bn.getMaChucVu()
+                    + "' chưa có mapping vai trò, sử dụng mặc định: " + ROLE_EMPLOYEE);
         }
         // Kiểm tra tài khoản đã tồn tại chưa
         TaiKhoan existing = authService.findByMaNV(bn.getMaNV());
         if (existing == null) {
             // Tạo tài khoản mới
-            String username = nv.getMaNhanVien();  // hoặc tạo username theo quy tắc khác
+            String username = nv.getMaNhanVien();
             ThongTinCaNhan ttcn = ttcnRepo.findByMaNV(bn.getMaNV());
             String password;
             if (ttcn != null && ttcn.getNgaySinh() != null) {
                 password = ttcn.getNgaySinh().format(DateTimeFormatter.ofPattern("ddMMyyyy"));
             } else {
-                password = bn.getMaNV(); // fallback: dùng mã NV
+                password = bn.getMaNV();
             }
             String email = (ttcn != null) ? ttcn.getEmail() : null;
             KetQua<Integer> result = authService.createUser(
@@ -249,27 +291,25 @@ public class BoNhiemBUS {
             if (!result.isSuccess()) {
                 System.err.println("Tạo tài khoản tự động thất bại: " + result.getMessage());
             }
+        } else {
+            // Tài khoản đã tồn tại → cập nhật role theo chức vụ mới (thăng chức)
+            String mappedRole = resolveRoleFromChucVu(bn.getMaChucVu(), authService);
+            if (mappedRole != null) {
+                KetQua<Void> upd = authService.updateUserRole(bn.getMaNV(), mappedRole);
+                if (!upd.isSuccess()) {
+                    System.err.println("Cập nhật vai trò tự động thất bại: " + upd.getMessage());
+                }
+            }
         }
-        // Nếu tài khoản đã tồn tại → có thể cập nhật vai trò nếu cần (hiện tại giữ nguyên)
     }
 
-    private String resolveDefaultRoleCode(XacThucBUS authService) {
-        List<VaiTro> roles = authService.getAllRoles();
-        if (roles == null || roles.isEmpty()) return null;
-        // Ưu tiên tìm vai trò nhân viên chuẩn của hệ thống.
-        for (VaiTro role : roles) {
-            if (ROLE_EMPLOYEE.equalsIgnoreCase(role.getId())) {
-                return role.getId();
-            }
-        }
-        // Nếu không có → lấy vai trò đầu tiên không phải ADMIN
-        for (VaiTro role : roles) {
-            if (role.getId() != null && !ROLE_ADMIN.equalsIgnoreCase(role.getId())) {
-                return role.getId();
-            }
-        }
-        // Cuối cùng lấy vai trò đầu tiên
-        return roles.get(0).getId();
+    private String resolveRoleFromChucVu(String maChucVu, XacThucBUS authService) {
+        if (maChucVu == null || maChucVu.trim().isEmpty()) return null;
+        ChucVu cv = ChucVuDAO.getInstance().findById(maChucVu);
+        if (cv == null || cv.getMaVaiTro() == null || cv.getMaVaiTro().trim().isEmpty()) return null;
+        // Verify role actually exists in system
+        VaiTro vt = authService.getRoleByCode(cv.getMaVaiTro().trim());
+        return (vt != null) ? vt.getId() : null;
     }
 
     private KetQua<Void> validateBoNhiemInput(BoNhiem bn) {
@@ -292,7 +332,7 @@ public class BoNhiemBUS {
     }
 
     private boolean isLoaiBoNhiemChinh(BoNhiem bn) {
-        return bn != null && LOAI_BO_NHIEM_CHINH.equals(bn.getLoaiBoNhiem());
+        return bn != null && HRMConstants.LOAI_BO_NHIEM_CHINH.equals(bn.getLoaiBoNhiem());
     }
 
     private String getCurrentUserNhanVienId() {

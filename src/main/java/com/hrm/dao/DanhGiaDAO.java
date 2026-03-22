@@ -65,7 +65,7 @@ public class DanhGiaDAO {
     }
 
     /** Cập nhật thông tin đợt đánh giá */
-    public void updateCycle(DotDanhGia cycle) {
+    public int updateCycle(DotDanhGia cycle) {
         String sql = "UPDATE DOTDANHGIA SET tenDot=?, nam=?, kyDanhGia=?, tuNgay=?, denNgay=?, trangThai=? "
                    + "WHERE maDot=?";
         try (Connection conn = DatabaseConnection.getConnection();
@@ -77,7 +77,7 @@ public class DanhGiaDAO {
             ps.setDate(5, cycle.getDenNgay() != null ? Date.valueOf(cycle.getDenNgay()) : null);
             ps.setString(6, cycleStatusToDb(cycle.getTrangThai()));
             ps.setInt(7, cycle.getId());
-            ps.executeUpdate();
+            return ps.executeUpdate();
         } catch (SQLException e) {
             throw new RuntimeException("Lỗi cập nhật đợt đánh giá #" + cycle.getId() + ": " + e.getMessage(), e);
         }
@@ -156,7 +156,7 @@ public class DanhGiaDAO {
     /** Lấy danh sách tiêu chí của một đợt, kèm trọng số */
     public List<TieuChiDanhGia> findCriteriaByDot(int maDot) {
         String sql = "SELECT tc.maTieuChi, tc.tenTieuChi, tc.moTa, tc.nhomTieuChi, "
-                   + "tc.diemToiDa, tc.trangThai, dt.trongSo "
+                   + "tc.trangThai, tc.trongSo AS trongSoTieuChi, dt.trongSo "
                    + "FROM TIEUCHIDANHGIA tc "
                    + "JOIN DOTDANHGIA_TIEUCHI dt ON tc.maTieuChi = dt.maTieuChi "
                    + "WHERE dt.maDot=? ORDER BY tc.maTieuChi";
@@ -179,7 +179,7 @@ public class DanhGiaDAO {
 
     /** Lấy tất cả tiêu chí đang hoạt động */
     public List<TieuChiDanhGia> findAllCriteria() {
-        String sql = "SELECT maTieuChi, tenTieuChi, moTa, nhomTieuChi, diemToiDa, trangThai "
+        String sql = "SELECT maTieuChi, tenTieuChi, moTa, nhomTieuChi, trongSo, trangThai "
                    + "FROM TIEUCHIDANHGIA WHERE trangThai = 'hoatDong' OR trangThai IS NULL ORDER BY maTieuChi";
         List<TieuChiDanhGia> result = new ArrayList<>();
         try (Connection conn = DatabaseConnection.getConnection();
@@ -195,16 +195,17 @@ public class DanhGiaDAO {
     }
 
     /** Xóa toàn bộ liên kết tiêu chí cũ của đợt, sau đó thêm mới batch */
-    public void setCriteriasForDot(int maDot, List<TieuChiDanhGia> criterias) {
+    public int setCriteriasForDot(int maDot, List<TieuChiDanhGia> criterias) {
         String delSql = "DELETE FROM DOTDANHGIA_TIEUCHI WHERE maDot=?";
         String insSql = "INSERT INTO DOTDANHGIA_TIEUCHI (maDot, maTieuChi, trongSo, batBuoc) VALUES (?,?,?,1)";
         try (Connection conn = DatabaseConnection.getConnection()) {
             conn.setAutoCommit(false);
             try {
+                int total = 0;
                 // Xóa cũ
                 try (PreparedStatement del = conn.prepareStatement(delSql)) {
                     del.setInt(1, maDot);
-                    del.executeUpdate();
+                    total += del.executeUpdate();
                 }
                 // Thêm mới
                 try (PreparedStatement ins = conn.prepareStatement(insSql)) {
@@ -214,9 +215,11 @@ public class DanhGiaDAO {
                         ins.setDouble(3, c.getTrongSo());
                         ins.addBatch();
                     }
-                    ins.executeBatch();
+                    int[] counts = ins.executeBatch();
+                    for (int ct : counts) total += (ct >= 0 ? ct : 0);
                 }
                 conn.commit();
+                return total;
             } catch (SQLException e) {
                 conn.rollback();
                 throw e;
@@ -234,7 +237,7 @@ public class DanhGiaDAO {
         c.setTenTieuChi(rs.getString("tenTieuChi"));
         c.setMoTa(rs.getString("moTa"));
         c.setNhomTieuChi(rs.getString("nhomTieuChi"));
-        c.setDiemToiDa(rs.getDouble("diemToiDa"));
+        c.setTrongSo(rs.getDouble("trongSo"));
         String tt = rs.getString("trangThai");
         c.setHoatDong(tt == null || HRMConstants.TRANG_THAI_HOAT_DONG.equals(tt));
         return c;
@@ -272,7 +275,7 @@ public class DanhGiaDAO {
     }
 
     /** Cập nhật đánh giá hiệu suất */
-    public void updateSubmission(DanhGiaHieuSuat sub) {
+    public int updateSubmission(DanhGiaHieuSuat sub) {
         String sql = "UPDATE DANHGIAHIEUSUAT SET tongDiem=?, xepLoai=?, nhanXetChung=?, "
                    + "ngayDanhGia=?, trangThai=? WHERE maDanhGia=?";
         try (Connection conn = DatabaseConnection.getConnection();
@@ -283,7 +286,7 @@ public class DanhGiaDAO {
             ps.setTimestamp(4, sub.getNgayDanhGia() != null ? Timestamp.valueOf(sub.getNgayDanhGia()) : Timestamp.valueOf(LocalDateTime.now()));
             ps.setString(5, "da_danh_gia");
             ps.setInt(6, sub.getId());
-            ps.executeUpdate();
+            return ps.executeUpdate();
         } catch (SQLException e) {
             throw new RuntimeException("Lỗi cập nhật đánh giá #" + sub.getId() + ": " + e.getMessage(), e);
         }
@@ -468,15 +471,16 @@ public class DanhGiaDAO {
     // CHITIETDANHGIA (Chi tiết đánh giá)
     // =====================================================================
     /** Xóa toàn bộ chi tiết cũ và thêm mới batch */
-    public void saveScores(int maDanhGia, List<ChiTietDanhGia> scores) {
+    public int saveScores(int maDanhGia, List<ChiTietDanhGia> scores) {
         String delSql = "DELETE FROM CHITIETDANHGIA WHERE maDanhGia=?";
         String insSql = "INSERT INTO CHITIETDANHGIA (maDanhGia, maTieuChi, diem, nhanXet) VALUES (?,?,?,?)";
         try (Connection conn = DatabaseConnection.getConnection()) {
             conn.setAutoCommit(false);
             try {
+                int total = 0;
                 try (PreparedStatement del = conn.prepareStatement(delSql)) {
                     del.setInt(1, maDanhGia);
-                    del.executeUpdate();
+                    total += del.executeUpdate();
                 }
                 try (PreparedStatement ins = conn.prepareStatement(insSql)) {
                     for (ChiTietDanhGia score : scores) {
@@ -486,9 +490,11 @@ public class DanhGiaDAO {
                         ins.setString(4, score.getNhanXet());
                         ins.addBatch();
                     }
-                    ins.executeBatch();
+                    int[] counts = ins.executeBatch();
+                    for (int ct : counts) total += (ct >= 0 ? ct : 0);
                 }
                 conn.commit();
+                return total;
             } catch (SQLException e) {
                 conn.rollback();
                 throw e;
@@ -569,7 +575,7 @@ public class DanhGiaDAO {
     }
 
     public TieuChiDanhGia getCriteria(int maTieuChi) {
-        String sql = "SELECT maTieuChi, tenTieuChi, moTa, nhomTieuChi, diemToiDa, trangThai "
+        String sql = "SELECT maTieuChi, tenTieuChi, moTa, nhomTieuChi, trongSo, trangThai "
                    + "FROM TIEUCHIDANHGIA WHERE maTieuChi=?";
         try (Connection conn = DatabaseConnection.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
@@ -585,14 +591,14 @@ public class DanhGiaDAO {
 
     public TieuChiDanhGia saveCriteria(TieuChiDanhGia c) {
         if (c.getMaTieuChi() == 0) {
-            String sql = "INSERT INTO TIEUCHIDANHGIA (tenTieuChi, moTa, nhomTieuChi, diemToiDa, trangThai) "
+            String sql = "INSERT INTO TIEUCHIDANHGIA (tenTieuChi, moTa, nhomTieuChi, trongSo, trangThai) "
                        + "VALUES (?,?,?,?,?)";
             try (Connection conn = DatabaseConnection.getConnection();
                  PreparedStatement ps = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
                 ps.setString(1, c.getTenTieuChi());
                 ps.setString(2, c.getMoTa());
                 ps.setString(3, c.getNhomTieuChi());
-                ps.setDouble(4, c.getDiemToiDa());
+                ps.setDouble(4, c.getTrongSo());
                 ps.setString(5, c.isHoatDong() ? HRMConstants.TRANG_THAI_HOAT_DONG : HRMConstants.TRANG_THAI_NGUNG_HOAT_DONG);
                 ps.executeUpdate();
                 try (ResultSet keys = ps.getGeneratedKeys()) {
@@ -602,14 +608,14 @@ public class DanhGiaDAO {
                 throw new RuntimeException("Lỗi thêm tiêu chí: " + e.getMessage(), e);
             }
         } else {
-            String sql = "UPDATE TIEUCHIDANHGIA SET tenTieuChi=?, moTa=?, nhomTieuChi=?, diemToiDa=?, trangThai=? "
+            String sql = "UPDATE TIEUCHIDANHGIA SET tenTieuChi=?, moTa=?, nhomTieuChi=?, trongSo=?, trangThai=? "
                        + "WHERE maTieuChi=?";
             try (Connection conn = DatabaseConnection.getConnection();
                  PreparedStatement ps = conn.prepareStatement(sql)) {
                 ps.setString(1, c.getTenTieuChi());
                 ps.setString(2, c.getMoTa());
                 ps.setString(3, c.getNhomTieuChi());
-                ps.setDouble(4, c.getDiemToiDa());
+                ps.setDouble(4, c.getTrongSo());
                 ps.setString(5, c.isHoatDong() ? HRMConstants.TRANG_THAI_HOAT_DONG : HRMConstants.TRANG_THAI_NGUNG_HOAT_DONG);
                 ps.setInt(6, c.getMaTieuChi());
                 ps.executeUpdate();
@@ -620,12 +626,12 @@ public class DanhGiaDAO {
         return c;
     }
 
-    public void deleteCriteria(int maTieuChi) {
+    public int deleteCriteria(int maTieuChi) {
         String sql = "UPDATE TIEUCHIDANHGIA SET trangThai='" + HRMConstants.TRANG_THAI_NGUNG_HOAT_DONG + "' WHERE maTieuChi=?";
         try (Connection conn = DatabaseConnection.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setInt(1, maTieuChi);
-            ps.executeUpdate();
+            return ps.executeUpdate();
         } catch (SQLException e) {
             throw new RuntimeException("Lỗi vô hiệu hóa tiêu chí #" + maTieuChi + ": " + e.getMessage(), e);
         }

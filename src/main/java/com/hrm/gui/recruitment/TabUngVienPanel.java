@@ -2,6 +2,7 @@ package com.hrm.gui.recruitment;
 
 import com.hrm.bus.TuyenDungBUS;
 import com.hrm.model.UngVien;
+import com.hrm.util.DialogUtil;
 import com.hrm.util.PermissionCodes;
 import com.hrm.util.SessionContext;
 import com.hrm.util.UIColors;
@@ -122,7 +123,7 @@ class TabUngVienPanel extends JPanel {
     private void xemChiTiet() {
         int viewRow = tbl.getSelectedRow();
         if (viewRow < 0) {
-            JOptionPane.showMessageDialog(this, "Vui lòng chọn ứng viên.", "Thông báo", JOptionPane.WARNING_MESSAGE);
+            DialogUtil.showWarn(this, "Vui lòng chọn ứng viên.");
             return;
         }
         int maUV = (Integer) model.getValueAt(tbl.convertRowIndexToModel(viewRow), 0);

@@ -40,22 +40,22 @@ public class ChucVuBUS {
     }
 
     public KetQua<Void> addPosition(String maChucVu, String tenChucVu, int capBac,
-                                    double phuCapChucVu, String moTa) {
+                                    double phuCapChucVu, String moTa, String maVaiTro) {
         KetQua<Void> permission = validateManagePermission();
         if (!permission.isSuccess()) {
             return permission;
         }
         if (ValidationUtils.isBlank(maChucVu)) {
-            return KetQua.error("Ma chuc vu khong duoc de trong.");
+            return KetQua.error("Mã chức vụ không được để trống.");
         }
         if (ValidationUtils.isBlank(tenChucVu)) {
-            return KetQua.error("Ten chuc vu khong duoc de trong.");
+            return KetQua.error("Tên chức vụ không được để trống.");
         }
         if (positionRepo.existsById(maChucVu.trim())) {
-            return KetQua.error("Ma chuc vu '" + maChucVu + "' da ton tai.");
+            return KetQua.error("Mã chức vụ '" + maChucVu + "' đã tồn tại.");
         }
         if (phuCapChucVu < 0) {
-            return KetQua.error("Phu cap khong duoc am.");
+            return KetQua.error("Phụ cấp không được âm.");
         }
         ChucVu position = new ChucVu(
                 maChucVu.trim(),
@@ -65,32 +65,47 @@ public class ChucVuBUS {
                 moTa,
                 HRMConstants.TRANG_THAI_HOAT_DONG
         );
+        position.setMaVaiTro(ValidationUtils.isBlank(maVaiTro) ? null : maVaiTro.trim());
         positionRepo.save(position);
-        return KetQua.success(null, "Them chuc vu thanh cong.");
+        return KetQua.success(null, "Thêm chức vụ thành công.");
     }
 
     public KetQua<Void> updatePosition(String maChucVu, String tenMoi, int capBacMoi,
-                                       double phuCapMoi, String moTaMoi) {
+                                       double phuCapMoi, String moTaMoi, String maVaiTroMoi) {
         KetQua<Void> permission = validateManagePermission();
         if (!permission.isSuccess()) {
             return permission;
         }
         ChucVu position = positionRepo.findById(maChucVu);
         if (position == null) {
-            return KetQua.error("Khong tim thay chuc vu.");
+            return KetQua.error("Không tìm thấy chức vụ.");
         }
         if (ValidationUtils.isBlank(tenMoi)) {
-            return KetQua.error("Ten chuc vu khong duoc de trong.");
+            return KetQua.error("Tên chức vụ không được để trống.");
         }
         if (phuCapMoi < 0) {
-            return KetQua.error("Phu cap khong duoc am.");
+            return KetQua.error("Phụ cấp không được âm.");
         }
         position.setTenChucVu(tenMoi.trim());
         position.setCapBac(capBacMoi);
         position.setPhuCapChucVu(phuCapMoi);
         position.setMoTa(moTaMoi);
+        position.setMaVaiTro(ValidationUtils.isBlank(maVaiTroMoi) ? null : maVaiTroMoi.trim());
         positionRepo.update(position);
-        return KetQua.success(null, "Cap nhat chuc vu thanh cong.");
+        return KetQua.success(null, "Cập nhật chức vụ thành công.");
+    }
+
+    public KetQua<Void> setMaVaiTro(String maChucVu, String maVaiTro) {
+        TaiKhoan currentUser = SessionContext.getInstance().getCurrentUser();
+        if (currentUser == null) {
+            return KetQua.error("Phiên đăng nhập không hợp lệ.");
+        }
+        if (!SessionContext.getInstance().isAdmin()
+                && !currentUser.coQuyen(PermissionCodes.ROLE_UPDATE)) {
+            return KetQua.error("Bạn không có quyền cấu hình mapping vai trò.");
+        }
+        positionRepo.updateMaVaiTro(maChucVu, ValidationUtils.isBlank(maVaiTro) ? null : maVaiTro.trim());
+        return KetQua.success(null, "Cập nhật mapping vai trò thành công.");
     }
 
     public KetQua<Void> deactivatePosition(String maChucVu) {
@@ -100,14 +115,14 @@ public class ChucVuBUS {
         }
         ChucVu position = positionRepo.findById(maChucVu);
         if (position == null) {
-            return KetQua.error("Khong tim thay chuc vu.");
+            return KetQua.error("Không tìm thấy chức vụ.");
         }
         if (boNhiemRepo.hasActiveBoNhiemByChucVu(maChucVu)) {
-            return KetQua.error("Khong the ngung hoat dong chuc vu vi van con nhan vien dang giu chuc vu nay.");
+            return KetQua.error("Không thể ngừng hoạt động chức vụ vì vẫn còn nhân viên đang giữ chức vụ này.");
         }
         position.setTrangThai(HRMConstants.TRANG_THAI_NGUNG_HOAT_DONG);
         positionRepo.update(position);
-        return KetQua.success(null, "Da ngung hoat dong chuc vu.");
+        return KetQua.success(null, "Đã ngừng hoạt động chức vụ.");
     }
 
     public KetQua<Void> activatePosition(String maChucVu) {
@@ -117,26 +132,26 @@ public class ChucVuBUS {
         }
         ChucVu position = positionRepo.findById(maChucVu);
         if (position == null) {
-            return KetQua.error("Khong tim thay chuc vu.");
+            return KetQua.error("Không tìm thấy chức vụ.");
         }
         position.setTrangThai(HRMConstants.TRANG_THAI_HOAT_DONG);
         positionRepo.update(position);
-        return KetQua.success(null, "Da kich hoat lai chuc vu.");
+        return KetQua.success(null, "Đã kích hoạt lại chức vụ.");
     }
 
     private KetQua<Void> validateManagePermission() {
         TaiKhoan currentUser = SessionContext.getInstance().getCurrentUser();
         if (currentUser == null) {
-            return KetQua.error("Phien dang nhap khong hop le.");
+            return KetQua.error("Phiên đăng nhập không hợp lệ.");
         }
         if (SessionContext.getInstance().isAdmin()) {
             return KetQua.success(null, "");
         }
         if (!currentUser.coQuyen(ACTION_POSITION_MANAGE)) {
-            return KetQua.error("Ban khong co quyen quan ly chuc vu.");
+            return KetQua.error("Bạn không có quyền quản lý chức vụ.");
         }
         if (XacThucBUS.getInstance().getScopeForAction(ACTION_POSITION_MANAGE) != DataScope.ALL) {
-            return KetQua.error("Quyen quan ly chuc vu yeu cau pham vi ALL.");
+            return KetQua.error("Quyền quản lý chức vụ yêu cầu phạm vi ALL.");
         }
         return KetQua.success(null, "");
     }

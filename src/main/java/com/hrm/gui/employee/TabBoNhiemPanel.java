@@ -174,9 +174,9 @@ class TabBoNhiemPanel extends JPanel {
                 c.setForeground(UIColors.TEXT_DARK);
                 if (col == 5 && value != null) {
                     String v = value.toString();
-                    if (v.contains("Hiệu lực") || v.contains("hieu_luc")) c.setForeground(UIColors.SUCCESS_GREEN);
-                    else if (v.contains("Chờ duyệt") || v.contains("cho_duyet")) c.setForeground(UIColors.WARNING_ORANGE);
-                    else if (v.contains("Đã hết") || v.contains("Từ chối")) c.setForeground(UIColors.DANGER_RED);
+                    if (HRMConstants.display(HRMConstants.TRANG_THAI_HIEU_LUC).equals(v)) c.setForeground(UIColors.SUCCESS_GREEN);
+                    else if (HRMConstants.display(HRMConstants.TRANG_THAI_CHO_DUYET).equals(v)) c.setForeground(UIColors.WARNING_ORANGE);
+                    else if (HRMConstants.display(HRMConstants.TRANG_THAI_TU_CHOI).equals(v) || HRMConstants.display(HRMConstants.TRANG_THAI_HET_HIEU_LUC).equals(v)) c.setForeground(UIColors.DANGER_RED);
                     ((JLabel) c).setFont(com.hrm.util.UIFonts.BOLD_SMALL);
                 }
             }

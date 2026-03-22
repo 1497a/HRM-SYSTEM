@@ -6,6 +6,7 @@ public class ChucVu {
     private int capBac;
     private double phuCapChucVu;
     private String moTa;
+    private String maVaiTro;
     private String trangThai;
     public ChucVu() {}
 
@@ -28,6 +29,8 @@ public class ChucVu {
     public void setPhuCapChucVu(double phuCapChucVu) { this.phuCapChucVu = phuCapChucVu; }
     public String getMoTa() { return moTa; }
     public void setMoTa(String moTa) { this.moTa = moTa; }
+    public String getMaVaiTro() { return maVaiTro; }
+    public void setMaVaiTro(String maVaiTro) { this.maVaiTro = maVaiTro; }
     public String getTrangThai() { return trangThai; }
     public void setTrangThai(String trangThai) { this.trangThai = trangThai; }
 

@@ -5,6 +5,7 @@ import com.hrm.bus.TuyenDungBUS;
 import com.hrm.model.RecruitmentStatus;
 import com.hrm.model.UngVien;
 import com.hrm.model.RecruitmentStatus;
+import com.hrm.util.DialogUtil;
 import com.hrm.util.PermissionCodes;
 import com.hrm.util.SessionContext;
 import com.hrm.util.UIColors;
@@ -156,7 +157,7 @@ class HopThoaiChiTietUngVien extends JDialog {
                 applyStatusColor(lblTrangThai, ungVien.getTrangThaiDisplay());
             }
             daThayDoi = true;
-            JOptionPane.showMessageDialog(this, "Đã cập nhật trạng thái.", "Thành công", JOptionPane.INFORMATION_MESSAGE);
+            DialogUtil.showSuccess(this, "Đã cập nhật trạng thái.");
         } else {
             TabUtils.showError(this, r.getMessage());
         }
@@ -168,8 +169,7 @@ class HopThoaiChiTietUngVien extends JDialog {
             TabUtils.showError(this, preview.getMessage());
             return;
         }
-        if (JOptionPane.showConfirmDialog(this, preview.getData(), "Xác nhận chuyển thành nhân viên",
-                JOptionPane.YES_NO_OPTION, JOptionPane.QUESTION_MESSAGE) != JOptionPane.YES_OPTION) {
+        if (!DialogUtil.showYesNo(this, preview.getData(), "Xác nhận chuyển thành nhân viên")) {
             return;
         }
         KetQua<?> r = service.chuyenUVThanhNV(ungVien.getMaUngVien());
@@ -181,8 +181,7 @@ class HopThoaiChiTietUngVien extends JDialog {
                 lblMaNV.setText(ungVien.getMaNV() != null ? ungVien.getMaNV() : "");
             }
             daThayDoi = true;
-            JOptionPane.showMessageDialog(this, "Đã chuyển thành nhân viên thành công!\n" + r.getMessage(),
-                    "Thành công", JOptionPane.INFORMATION_MESSAGE);
+            DialogUtil.showSuccess(this, "Đã chuyển thành nhân viên thành công!\n" + r.getMessage());
         } else {
             TabUtils.showError(this, r.getMessage());
         }

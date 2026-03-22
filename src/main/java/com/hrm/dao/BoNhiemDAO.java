@@ -100,14 +100,14 @@ public class BoNhiemDAO {
     // ============================
     // updateTrangThai
     // ============================
-    public void updateTrangThai(int maBoNhiem, String trangThai, LocalDateTime ngayPheDuyet) {
+    public int updateTrangThai(int maBoNhiem, String trangThai, LocalDateTime ngayPheDuyet) {
         String sql = "UPDATE BONHIEM SET trangThai=?, ngayPheDuyet=? WHERE maBoNhiem=?";
         try (Connection conn = DatabaseConnection.getConnection();
             PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setString(1, trangThai);
             ps.setTimestamp(2, ngayPheDuyet != null ? Timestamp.valueOf(ngayPheDuyet) : null);
             ps.setInt(3, maBoNhiem);
-            ps.executeUpdate();
+            return ps.executeUpdate();
         } catch (SQLException e) {
             throw new RuntimeException("Lỗi cập nhật trạng thái bổ nhiệm: " + e.getMessage(), e);
         }
@@ -116,27 +116,27 @@ public class BoNhiemDAO {
     // ============================
     // updateLyDoTuChoi
     // ============================
-    public void updateLyDoTuChoi(int maBoNhiem, String lyDo) {
+    public int updateLyDoTuChoi(int maBoNhiem, String lyDo) {
         String sql = "UPDATE BONHIEM SET lyDo=? WHERE maBoNhiem=?";
         try (Connection conn = DatabaseConnection.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setString(1, lyDo);
             ps.setInt(2, maBoNhiem);
-            ps.executeUpdate();
+            return ps.executeUpdate();
         } catch (SQLException e) {
-            System.err.println("Lỗi updateLyDoTuChoi: " + e.getMessage());
+            throw new RuntimeException("Loi updateLyDoTuChoi: " + e.getMessage(), e);
         }
     }
     // ============================
     // updateNguoiDuyet
     // ============================
-    public void updateNguoiDuyet(int maBoNhiem, String nguoiDuyetId) {
+    public int updateNguoiDuyet(int maBoNhiem, String nguoiDuyetId) {
         String sql = "UPDATE BONHIEM SET nguoiDuyet=? WHERE maBoNhiem=?";
         try (Connection conn = DatabaseConnection.getConnection();
             PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setString(1, nguoiDuyetId);
             ps.setInt(2, maBoNhiem);
-            ps.executeUpdate();
+            return ps.executeUpdate();
         } catch (SQLException e) {
             throw new RuntimeException("Lỗi cập nhật người duyệt: " + e.getMessage(), e);
         }
@@ -167,7 +167,7 @@ public class BoNhiemDAO {
     // ============================
     public BoNhiem findBoNhiemChinhHieuLuc(String maNV) {
         String sql = buildJoinQuery(
-                "WHERE b.maNV = ? AND b.trangThai = 'hieu_luc' AND b.loaiBoNhiem = 'chinh'"
+                "WHERE b.maNV = ? AND b.trangThai = '" + HRMConstants.TRANG_THAI_HIEU_LUC + "' AND b.loaiBoNhiem = '" + HRMConstants.LOAI_BO_NHIEM_CHINH + "'"
                 + " AND (b.denNgay IS NULL OR b.denNgay >= CURDATE())",
                 "LIMIT 1");
         try (Connection conn = DatabaseConnection.getConnection();
@@ -189,7 +189,7 @@ public class BoNhiemDAO {
     // findChoDuyet
     // ============================
     public List<BoNhiem> findChoDuyet() {
-        String sql = buildJoinQuery("WHERE b.trangThai = 'cho_duyet'", "ORDER BY b.maBoNhiem ASC");
+        String sql = buildJoinQuery("WHERE b.trangThai = '" + HRMConstants.TRANG_THAI_CHO_DUYET + "'", "ORDER BY b.maBoNhiem ASC");
         List<BoNhiem> result = new ArrayList<>();
         try (Connection conn = DatabaseConnection.getConnection();
             PreparedStatement ps = conn.prepareStatement(sql);
@@ -291,8 +291,8 @@ public class BoNhiemDAO {
     public boolean hasConflictingChinhBoNhiem(String maNV, LocalDate tuNgay, LocalDate denNgay, int excludeId) {
         // Kiểm tra overlap với bổ nhiệm chính đang hiệu lực hoặc chờ duyệt
         String sql = "SELECT COUNT(*) FROM BONHIEM "
-                + "WHERE maNV=? AND loaiBoNhiem='chinh' "
-                + "AND trangThai IN ('hieu_luc','cho_duyet') "
+                + "WHERE maNV=? AND loaiBoNhiem='" + HRMConstants.LOAI_BO_NHIEM_CHINH + "' "
+                + "AND trangThai IN ('" + HRMConstants.TRANG_THAI_HIEU_LUC + "','" + HRMConstants.TRANG_THAI_CHO_DUYET + "') "
                 + "AND maBoNhiem <> ? "
                 + "AND (denNgay IS NULL OR denNgay >= ?) "
                 + "AND tuNgay <= ?";
@@ -326,14 +326,14 @@ public class BoNhiemDAO {
         if (maPhongBan == null) {
             // Company-wide check (for Director level)
             sql = "SELECT COUNT(*) FROM BONHIEM "
-                    + "WHERE maChucVu=? AND loaiBoNhiem='chinh' "
-                    + "AND trangThai IN ('hieu_luc','cho_duyet') "
+                    + "WHERE maChucVu=? AND loaiBoNhiem='" + HRMConstants.LOAI_BO_NHIEM_CHINH + "' "
+                    + "AND trangThai IN ('" + HRMConstants.TRANG_THAI_HIEU_LUC + "','" + HRMConstants.TRANG_THAI_CHO_DUYET + "') "
                     + "AND maBoNhiem <> ? "
                     + "AND (denNgay IS NULL OR denNgay >= CURDATE())";
         } else {
             sql = "SELECT COUNT(*) FROM BONHIEM "
-                    + "WHERE maPhongBan=? AND maChucVu=? AND loaiBoNhiem='chinh' "
-                    + "AND trangThai IN ('hieu_luc','cho_duyet') "
+                    + "WHERE maPhongBan=? AND maChucVu=? AND loaiBoNhiem='" + HRMConstants.LOAI_BO_NHIEM_CHINH + "' "
+                    + "AND trangThai IN ('" + HRMConstants.TRANG_THAI_HIEU_LUC + "','" + HRMConstants.TRANG_THAI_CHO_DUYET + "') "
                     + "AND maBoNhiem <> ? "
                     + "AND (denNgay IS NULL OR denNgay >= CURDATE())";
         }
@@ -361,7 +361,7 @@ public class BoNhiemDAO {
      */
     public BoNhiem findBoNhiemChinhHieuLucByChucVuInDept(String maPhongBan, String maChucVu, int excludeBoNhiemId) {
         String sql = buildJoinQuery(
-                "WHERE b.maPhongBan=? AND b.maChucVu=? AND b.loaiBoNhiem='chinh' AND b.trangThai='hieu_luc' AND b.maBoNhiem<>?",
+                "WHERE b.maPhongBan=? AND b.maChucVu=? AND b.loaiBoNhiem='" + HRMConstants.LOAI_BO_NHIEM_CHINH + "' AND b.trangThai='" + HRMConstants.TRANG_THAI_HIEU_LUC + "' AND b.maBoNhiem<>?",
                 "LIMIT 1");
         try (Connection conn = DatabaseConnection.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
@@ -385,7 +385,7 @@ public class BoNhiemDAO {
      * Kiểm tra phòng ban có bổ nhiệm đang hiệu lực không (để validate trước khi ngưng phòng ban).
      */
     public boolean hasActiveBoNhiemInDepartment(String maPhongBan) {
-        String sql = "SELECT COUNT(*) FROM BONHIEM WHERE maPhongBan=? AND trangThai='hieu_luc' AND (denNgay IS NULL OR denNgay >= CURDATE())";
+        String sql = "SELECT COUNT(*) FROM BONHIEM WHERE maPhongBan=? AND trangThai='" + HRMConstants.TRANG_THAI_HIEU_LUC + "' AND (denNgay IS NULL OR denNgay >= CURDATE())";
         try (Connection conn = DatabaseConnection.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setString(1, maPhongBan);
@@ -402,7 +402,7 @@ public class BoNhiemDAO {
      * Kiểm tra một chức vụ còn đang được sử dụng bởi bổ nhiệm hiệu lực hay không.
      */
     public boolean hasActiveBoNhiemByChucVu(String maChucVu) {
-        String sql = "SELECT COUNT(*) FROM BONHIEM WHERE maChucVu=? AND trangThai='hieu_luc' AND (denNgay IS NULL OR denNgay >= CURDATE())";
+        String sql = "SELECT COUNT(*) FROM BONHIEM WHERE maChucVu=? AND trangThai='" + HRMConstants.TRANG_THAI_HIEU_LUC + "' AND (denNgay IS NULL OR denNgay >= CURDATE())";
         try (Connection conn = DatabaseConnection.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setString(1, maChucVu);
@@ -418,13 +418,13 @@ public class BoNhiemDAO {
     // ============================
     // endBoNhiem - set denNgay + trangThai=het_hieu_luc
     // ============================
-    public void endBoNhiem(int maBoNhiem, LocalDate denNgay) {
-        String sql = "UPDATE BONHIEM SET denNgay=?, trangThai='het_hieu_luc' WHERE maBoNhiem=?";
+    public int endBoNhiem(int maBoNhiem, LocalDate denNgay) {
+        String sql = "UPDATE BONHIEM SET denNgay=?, trangThai='" + HRMConstants.TRANG_THAI_HET_HIEU_LUC + "' WHERE maBoNhiem=?";
         try (Connection conn = DatabaseConnection.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setDate(1, Date.valueOf(denNgay));
             ps.setInt(2, maBoNhiem);
-            ps.executeUpdate();
+            return ps.executeUpdate();
         } catch (SQLException e) {
             throw new RuntimeException("Lỗi kết thúc bổ nhiệm: " + e.getMessage(), e);
         }
@@ -433,14 +433,14 @@ public class BoNhiemDAO {
     /**
      * Kết thúc tất cả bổ nhiệm chính hiệu lực của một nhân viên (dùng khi nghỉ việc).
      */
-    public void endAllActiveBoNhiemForNV(String maNV, LocalDate denNgay) {
-        String sql = "UPDATE BONHIEM SET denNgay=?, trangThai='het_hieu_luc' "
-                + "WHERE maNV=? AND trangThai='hieu_luc'";
+    public int endAllActiveBoNhiemForNV(String maNV, LocalDate denNgay) {
+        String sql = "UPDATE BONHIEM SET denNgay=?, trangThai='" + HRMConstants.TRANG_THAI_HET_HIEU_LUC + "' "
+                + "WHERE maNV=? AND trangThai='" + HRMConstants.TRANG_THAI_HIEU_LUC + "'";
         try (Connection conn = DatabaseConnection.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setDate(1, Date.valueOf(denNgay));
             ps.setString(2, maNV);
-            ps.executeUpdate();
+            return ps.executeUpdate();
         } catch (SQLException e) {
             throw new RuntimeException("Lỗi kết thúc tất cả bổ nhiệm: " + e.getMessage(), e);
         }
@@ -451,7 +451,7 @@ public class BoNhiemDAO {
      * (dùng khi kết thúc bổ nhiệm của quản lý để cascade maQuanLy lên cấp trên).
      */
     public List<String> findActiveSubordinateNVIds(String maNV) {
-        String sql = "SELECT DISTINCT maNV FROM BONHIEM WHERE maQuanLy=? AND trangThai='hieu_luc'";
+        String sql = "SELECT DISTINCT maNV FROM BONHIEM WHERE maQuanLy=? AND trangThai='" + HRMConstants.TRANG_THAI_HIEU_LUC + "'";
         List<String> result = new java.util.ArrayList<>();
         try (Connection conn = DatabaseConnection.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
@@ -469,10 +469,10 @@ public class BoNhiemDAO {
      * Cập nhật maQuanLy cho danh sách nhân viên (cascade khi quản lý kết thúc bổ nhiệm).
      * newMaQuanLy = null nếu người vừa kết thúc là CEO (không còn cấp trên nào).
      */
-    public void updateManagerForNVList(List<String> maNVList, String newMaQuanLy) {
-        if (maNVList == null || maNVList.isEmpty()) return;
+    public int updateManagerForNVList(List<String> maNVList, String newMaQuanLy) {
+        if (maNVList == null || maNVList.isEmpty()) return 0;
         String placeholders = String.join(",", java.util.Collections.nCopies(maNVList.size(), "?"));
-        String sql = "UPDATE BONHIEM SET maQuanLy=? WHERE maNV IN (" + placeholders + ") AND trangThai='hieu_luc'";
+        String sql = "UPDATE BONHIEM SET maQuanLy=? WHERE maNV IN (" + placeholders + ") AND trangThai='" + HRMConstants.TRANG_THAI_HIEU_LUC + "'";
         try (Connection conn = DatabaseConnection.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
             if (newMaQuanLy != null && !newMaQuanLy.isEmpty()) {
@@ -483,7 +483,7 @@ public class BoNhiemDAO {
             for (int i = 0; i < maNVList.size(); i++) {
                 ps.setString(2 + i, maNVList.get(i));
             }
-            ps.executeUpdate();
+            return ps.executeUpdate();
         } catch (SQLException e) {
             throw new RuntimeException("Lỗi cập nhật cấp trên cho cấp dưới: " + e.getMessage(), e);
         }

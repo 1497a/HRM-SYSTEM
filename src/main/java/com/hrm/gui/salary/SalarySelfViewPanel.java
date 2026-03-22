@@ -3,6 +3,7 @@ package com.hrm.gui.salary;
 import com.hrm.bus.LuongBUS;
 import com.hrm.model.BangLuong;
 import com.hrm.model.ChiTietLuong;
+import com.hrm.util.DialogUtil;
 import com.hrm.util.UIColors;
 import com.hrm.util.UIFonts;
 import com.hrm.util.UIHelper;
@@ -105,8 +106,7 @@ class SalarySelfViewPanel extends JPanel {
                 modelChiTiet.setRowCount(0);
             }
         } catch (Exception ex) {
-            JOptionPane.showMessageDialog(this, "Lỗi tải danh sách bảng lương: " + ex.getMessage(),
-                    "Lỗi", JOptionPane.ERROR_MESSAGE);
+            DialogUtil.showError(this, "Lỗi tải danh sách bảng lương: " + ex.getMessage());
         }
     }
 
@@ -118,8 +118,7 @@ class SalarySelfViewPanel extends JPanel {
             fillChiTietTable(currentChiTietList);
             btnXemChiTiet.setEnabled(ct != null);
         } catch (Exception ex) {
-            JOptionPane.showMessageDialog(this, "Lỗi tải phiếu lương cá nhân: " + ex.getMessage(),
-                    "Lỗi", JOptionPane.ERROR_MESSAGE);
+            DialogUtil.showError(this, "Lỗi tải phiếu lương cá nhân: " + ex.getMessage());
         }
     }
 
@@ -188,8 +187,7 @@ class SalarySelfViewPanel extends JPanel {
                     (Frame) SwingUtilities.getWindowAncestor(this), ct);
             dialog.setVisible(true);
         } catch (Exception ex) {
-            JOptionPane.showMessageDialog(this, "Lỗi mở chi tiết: " + ex.getMessage(),
-                    "Lỗi", JOptionPane.ERROR_MESSAGE);
+            DialogUtil.showError(this, "Lỗi mở chi tiết: " + ex.getMessage());
         }
     }
 

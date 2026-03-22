@@ -81,7 +81,7 @@ public class NghiPhepDAO {
         return 0;
     }
 
-    public void updateTrangThai(int maDon, String trangThai, String nguoiDuyet,
+    public int updateTrangThai(int maDon, String trangThai, String nguoiDuyet,
                                  LocalDateTime ngayDuyet, String lyDoTuChoi) {
         String sql = "UPDATE DONXINNGHIPHEP SET trangThai=?, nguoiDuyet=?, ngayDuyet=?, "
                 + "lyDoTuChoi=? WHERE maDon=?";
@@ -92,7 +92,7 @@ public class NghiPhepDAO {
             ps.setTimestamp(3, ngayDuyet != null ? Timestamp.valueOf(ngayDuyet) : null);
             ps.setString(4, lyDoTuChoi);
             ps.setInt(5, maDon);
-            ps.executeUpdate();
+            return ps.executeUpdate();
         } catch (SQLException e) {
             throw new RuntimeException("Lỗi cập nhật trạng thái đơn: " + e.getMessage(), e);
         }
@@ -320,7 +320,7 @@ public class NghiPhepDAO {
         return result;
     }
 
-    public void insertSoDungPhep(String maNV, int nam, String maLoaiPhep, double soNgayDuocCap) {
+    public int insertSoDungPhep(String maNV, int nam, String maLoaiPhep, double soNgayDuocCap) {
         String sql = "INSERT INTO SODUNGPHEP (maNV, nam, maLoaiPhep, soNgayDuocCap, soNgayDaDung) "
                 + "VALUES (?,?,?,?,0)";
         try (Connection conn = DatabaseConnection.getConnection();
@@ -329,13 +329,13 @@ public class NghiPhepDAO {
             ps.setInt(2, nam);
             ps.setString(3, maLoaiPhep);
             ps.setDouble(4, soNgayDuocCap);
-            ps.executeUpdate();
+            return ps.executeUpdate();
         } catch (SQLException e) {
             throw new RuntimeException("Lỗi thêm số dụng phép: " + e.getMessage(), e);
         }
     }
 
-    public void capNhatSoDaDung(String maNV, int nam, String maLoaiPhep, double soNgayThem) {
+    public int capNhatSoDaDung(String maNV, int nam, String maLoaiPhep, double soNgayThem) {
         String sql = "UPDATE SODUNGPHEP SET soNgayDaDung = soNgayDaDung + ? "
                 + "WHERE maNV=? AND nam=? AND maLoaiPhep=?";
         try (Connection conn = DatabaseConnection.getConnection();
@@ -344,7 +344,7 @@ public class NghiPhepDAO {
             ps.setString(2, maNV);
             ps.setInt(3, nam);
             ps.setString(4, maLoaiPhep);
-            ps.executeUpdate();
+            return ps.executeUpdate();
         } catch (SQLException e) {
             throw new RuntimeException("Lỗi cập nhật số ngày đã dùng: " + e.getMessage(), e);
         }

@@ -5,6 +5,7 @@ import com.hrm.bus.XacThucBUS;
 import com.hrm.gui.components.PurpleButton;
 import com.hrm.gui.components.RoundedPanel;
 import com.hrm.model.TaiKhoan;
+import com.hrm.util.DialogUtil;
 import com.hrm.util.UIColors;
 import com.hrm.util.UIFonts;
 import com.hrm.util.UIHelper;
@@ -77,24 +78,28 @@ class SettingsPanel extends JPanel {
         String newPass     = new String(next.getPassword());
         String confirmPass = new String(confirm.getPassword());
         if (currentPass.isEmpty() || newPass.isEmpty() || confirmPass.isEmpty()) {
-            JOptionPane.showMessageDialog(this, "Vui lòng nhập đầy đủ thông tin", "Lỗi", JOptionPane.WARNING_MESSAGE);
+            DialogUtil.showWarn(this, "Vui lòng nhập đầy đủ thông tin");
+            if (currentPass.isEmpty()) current.requestFocusInWindow();
+            else if (newPass.isEmpty()) next.requestFocusInWindow();
+            else confirm.requestFocusInWindow();
             return;
         }
         if (!newPass.equals(confirmPass)) {
-            JOptionPane.showMessageDialog(this, "Mật khẩu xác nhận không khớp", "Lỗi", JOptionPane.WARNING_MESSAGE);
+            DialogUtil.showWarn(this, "Mật khẩu xác nhận không khớp");
+            confirm.requestFocusInWindow();
             return;
         }
         TaiKhoan currentUser = authService.getCurrentUser();
         if (currentUser == null) {
-            JOptionPane.showMessageDialog(this, "Không tìm thấy người dùng hiện tại", "Lỗi", JOptionPane.ERROR_MESSAGE);
+            DialogUtil.showError(this, "Không tìm thấy người dùng hiện tại");
             return;
         }
         KetQua<Void> result = authService.changePassword(currentUser.getId(), currentPass, newPass);
         if (result.isSuccess()) {
-            JOptionPane.showMessageDialog(this, "Đổi mật khẩu thành công!", "Thông báo", JOptionPane.INFORMATION_MESSAGE);
+            DialogUtil.showInfo(this, "Đổi mật khẩu thành công!");
             current.setText(""); next.setText(""); confirm.setText("");
         } else {
-            JOptionPane.showMessageDialog(this, result.getMessage(), "Lỗi", JOptionPane.ERROR_MESSAGE);
+            DialogUtil.showError(this, result.getMessage());
         }
     }
 }

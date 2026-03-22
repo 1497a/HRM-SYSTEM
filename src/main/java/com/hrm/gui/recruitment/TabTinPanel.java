@@ -4,6 +4,7 @@ import com.hrm.bus.KetQua;
 import com.hrm.bus.TuyenDungBUS;
 import com.hrm.model.TinTuyenDung;
 import com.hrm.model.YeuCauTuyenDung;
+import com.hrm.util.DialogUtil;
 import com.hrm.util.PermissionCodes;
 import com.hrm.util.UIFonts;
 import com.hrm.util.SessionContext;
@@ -108,9 +109,7 @@ class TabTinPanel extends JPanel {
     private void dangTin() {
         List<YeuCauTuyenDung> dsYCDaDuyet = service.getYeuCauDaDuyet();
         if (dsYCDaDuyet.isEmpty()) {
-            JOptionPane.showMessageDialog(this,
-                    "Không có yêu cầu nào đã được duyệt. Vui lòng duyệt yêu cầu trước.",
-                    "Thông báo", JOptionPane.WARNING_MESSAGE);
+            DialogUtil.showWarn(this, "Không có yêu cầu nào đã được duyệt. Vui lòng duyệt yêu cầu trước.");
             return;
         }
         JComboBox<YeuCauTuyenDung> cboYeuCau = new JComboBox<>();
@@ -164,12 +163,12 @@ class TabTinPanel extends JPanel {
         }
         String tieuDe = txtTieuDe.getText().trim();
         if (tieuDe.isEmpty()) {
-            JOptionPane.showMessageDialog(this, "Vui lòng nhập tiêu đề.", "Lỗi", JOptionPane.WARNING_MESSAGE);
+            DialogUtil.showWarn(this, "Vui lòng nhập tiêu đề.");
             return;
         }
         YeuCauTuyenDung selectedYC = (YeuCauTuyenDung) cboYeuCau.getSelectedItem();
         if (selectedYC == null) {
-            JOptionPane.showMessageDialog(this, "Vui lòng chọn yêu cầu tuyển dụng.", "Lỗi", JOptionPane.WARNING_MESSAGE);
+            DialogUtil.showWarn(this, "Vui lòng chọn yêu cầu tuyển dụng.");
             return;
         }
         LocalDate hanNop = ((java.util.Date) spinHanNop.getValue()).toInstant()
@@ -183,7 +182,7 @@ class TabTinPanel extends JPanel {
             tin.setHanNopHoSo(hanNop);
             KetQua<?> sr = service.taoTin(tin);
             if (sr.isSuccess()) {
-                JOptionPane.showMessageDialog(this, "Đã đăng tin tuyển dụng!", "Thành công", JOptionPane.INFORMATION_MESSAGE);
+                DialogUtil.showSuccess(this, "Đã đăng tin tuyển dụng!");
                 load();
             } else {
                 TabUtils.showError(this, sr.getMessage());
@@ -196,18 +195,17 @@ class TabTinPanel extends JPanel {
     private void dongTin() {
         int viewRow = tbl.getSelectedRow();
         if (viewRow < 0) {
-            JOptionPane.showMessageDialog(this, "Vui lòng chọn tin.", "Thông báo", JOptionPane.WARNING_MESSAGE);
+            DialogUtil.showWarn(this, "Vui lòng chọn tin.");
             return;
         }
         int maTin = (Integer) model.getValueAt(tbl.convertRowIndexToModel(viewRow), 0);
-        if (JOptionPane.showConfirmDialog(this, "Đóng tin #" + maTin + "?", "Xác nhận",
-                JOptionPane.YES_NO_OPTION, JOptionPane.QUESTION_MESSAGE) != JOptionPane.YES_OPTION) {
+        if (!DialogUtil.showYesNo(this, "Đóng tin #" + maTin + "?", "Xác nhận")) {
             return;
         }
         try {
             KetQua<?> r = service.dongTin(maTin);
             if (r.isSuccess()) {
-                JOptionPane.showMessageDialog(this, "Đã đóng tin.", "Thành công", JOptionPane.INFORMATION_MESSAGE);
+                DialogUtil.showSuccess(this, "Đã đóng tin.");
                 load();
             } else {
                 TabUtils.showError(this, r.getMessage());

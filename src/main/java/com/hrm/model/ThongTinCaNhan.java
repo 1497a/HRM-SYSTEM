@@ -16,7 +16,6 @@ public class ThongTinCaNhan {
     private String dienThoai;
     private String email;
     private String diaChi;
-    private String diaChiThuongTru;
     private String queQuan;
     private String tinhTrangHonNhan; // "doc_than", "da_ket_hon", "ly_hon"
     private String fileCV;
@@ -27,7 +26,7 @@ public class ThongTinCaNhan {
 
     public ThongTinCaNhan(String maNV, String hoTen, LocalDate ngaySinh, String gioiTinh,
                           String cccd, String dienThoai, String email,
-                          String diaChi, String diaChiThuongTru, String queQuan,
+                          String diaChi, String queQuan,
                           String tinhTrangHonNhan) {
         this.maNV = maNV;
         this.hoTen = hoTen;
@@ -37,7 +36,6 @@ public class ThongTinCaNhan {
         this.dienThoai = dienThoai;
         this.email = email;
         this.diaChi = diaChi;
-        this.diaChiThuongTru = diaChiThuongTru;
         this.queQuan = queQuan;
         this.tinhTrangHonNhan = tinhTrangHonNhan;
     }
@@ -107,14 +105,6 @@ public class ThongTinCaNhan {
 
     public void setDiaChi(String diaChi) {
         this.diaChi = diaChi;
-    }
-
-    public String getDiaChiThuongTru() {
-        return diaChiThuongTru;
-    }
-
-    public void setDiaChiThuongTru(String diaChiThuongTru) {
-        this.diaChiThuongTru = diaChiThuongTru;
     }
 
     public String getQueQuan() {

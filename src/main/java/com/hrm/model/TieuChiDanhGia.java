@@ -13,7 +13,6 @@ public class TieuChiDanhGia {
     private String tenTieuChi;          // Tên tiêu chí (ví dụ: "Kỹ năng chuyên môn", "Thái độ làm việc")
     private String moTa;                // Mô tả chi tiết tiêu chí
     private String nhomTieuChi;         // Nhóm tiêu chí (ví dụ: "KPI", "Năng lực", "Thái độ")
-    private double diemToiDa;           // Điểm tối đa của tiêu chí (thường 5, 10, 100)
     private double trongSo;             // Trọng số (%) – dùng khi gán vào đợt đánh giá (tổng = 100)
     private boolean hoatDong;           // Trạng thái hoạt động (true = đang dùng, false = ngừng sử dụng)
     private LocalDateTime ngayTao;      // Thời điểm tạo tiêu chí
@@ -21,20 +20,18 @@ public class TieuChiDanhGia {
     // Transient (không lưu DB) - dùng để hiển thị
     private transient String tenNhomHienThi;
     public TieuChiDanhGia() {
-        this.diemToiDa = 10.0;
         this.trongSo = 0.0;
         this.hoatDong = true;
         this.ngayTao = LocalDateTime.now();
     }
 
     public TieuChiDanhGia(int maTieuChi, String tenTieuChi, String moTa, String nhomTieuChi,
-                          double diemToiDa, double trongSo) {
+                          double trongSo) {
         this();
         this.maTieuChi = maTieuChi;
         this.tenTieuChi = tenTieuChi;
         this.moTa = moTa;
         this.nhomTieuChi = nhomTieuChi;
-        this.diemToiDa = diemToiDa;
         this.trongSo = trongSo;
     }
 
@@ -71,14 +68,6 @@ public class TieuChiDanhGia {
 
     public void setNhomTieuChi(String nhomTieuChi) {
         this.nhomTieuChi = nhomTieuChi;
-    }
-
-    public double getDiemToiDa() {
-        return diemToiDa;
-    }
-
-    public void setDiemToiDa(double diemToiDa) {
-        this.diemToiDa = diemToiDa;
     }
 
     public double getTrongSo() {
@@ -146,7 +135,6 @@ public class TieuChiDanhGia {
                 "maTieuChi=" + maTieuChi +
                 ", tenTieuChi='" + tenTieuChi + '\'' +
                 ", nhomTieuChi='" + nhomTieuChi + '\'' +
-                ", diemToiDa=" + diemToiDa +
                 ", trongSo=" + trongSo +
                 ", hoatDong=" + hoatDong +
                 '}';

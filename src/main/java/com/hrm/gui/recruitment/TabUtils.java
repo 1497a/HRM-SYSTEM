@@ -1,5 +1,6 @@
 package com.hrm.gui.recruitment;
 
+import com.hrm.util.DialogUtil;
 import com.hrm.util.UIColors;
 import com.hrm.util.UIFonts;
 
@@ -35,7 +36,7 @@ final class TabUtils {
     }
 
     static void showError(Component parent, String msg) {
-        JOptionPane.showMessageDialog(parent, msg, "Lỗi", JOptionPane.ERROR_MESSAGE);
+        DialogUtil.showError(parent, msg);
     }
 
     static Comparator<Object> dateComparator() {

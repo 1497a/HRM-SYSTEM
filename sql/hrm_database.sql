@@ -30,6 +30,7 @@ CREATE TABLE CHUCVU (
     capBac INT NOT NULL DEFAULT 10,
     phuCapChucVu DECIMAL(15,2) DEFAULT 0,
     moTa NVARCHAR(500),
+    maVaiTro VARCHAR(20) NULL,
     trangThai ENUM('hoatDong', 'ngung_hoat_dong') DEFAULT 'hoatDong',
     ngayTao DATETIME DEFAULT CURRENT_TIMESTAMP,
     ngayCapNhat DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
@@ -58,7 +59,6 @@ CREATE TABLE THONGTINCANHAN (
     dienThoai VARCHAR(15),
     email VARCHAR(100),
     diaChi NVARCHAR(255),
-    diaChiThuongTru NVARCHAR(255),
     queQuan NVARCHAR(255),
     danToc NVARCHAR(50),
     tonGiao NVARCHAR(50),
@@ -167,6 +167,12 @@ CREATE TABLE HOPDONGLAODONG (
     fileDinhKem VARCHAR(255),
     noiDung TEXT,
     trangThai ENUM('cho_duyet', 'hieu_luc', 'het_han', 'thanh_ly', 'huy') DEFAULT 'cho_duyet',
+    nguoiTao VARCHAR(20) NULL,
+    nguoiDuyet VARCHAR(20) NULL,
+    ngayDuyet DATETIME NULL,
+    ngayThanhLy DATE NULL,
+    lyDoThanhLy VARCHAR(500) NULL,
+    ghiChu VARCHAR(1000) NULL,
     ngayTao DATETIME DEFAULT CURRENT_TIMESTAMP,
     ngayCapNhat DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     FOREIGN KEY (maNV) REFERENCES NHANVIEN(maNV) ON DELETE CASCADE
@@ -290,7 +296,7 @@ CREATE TABLE TIEUCHIDANHGIA (
     tenTieuChi NVARCHAR(100) NOT NULL,
     moTa NVARCHAR(500),
     nhomTieuChi NVARCHAR(50),
-    diemToiDa DECIMAL(5,2) DEFAULT 10,
+    trongSo DECIMAL(5,2) DEFAULT 0,
     trangThai ENUM('hoatDong', 'ngung_hoat_dong') DEFAULT 'hoatDong',
     ngayTao DATETIME DEFAULT CURRENT_TIMESTAMP
 ) ENGINE=InnoDB;
@@ -363,6 +369,10 @@ CREATE TABLE VAITRO_QUYEN (
     FOREIGN KEY (maVaiTro) REFERENCES VAITRO(maVaiTro) ON DELETE CASCADE,
     FOREIGN KEY (maQuyen)  REFERENCES QUYEN(maQuyen)   ON DELETE CASCADE
 ) ENGINE=InnoDB;
+
+-- FK cua CHUCVU -> VAITRO (them sau khi VAITRO da duoc tao)
+ALTER TABLE CHUCVU ADD CONSTRAINT FK_CHUCVU_VAITRO
+    FOREIGN KEY (maVaiTro) REFERENCES VAITRO(maVaiTro) ON DELETE SET NULL;
 
 CREATE TABLE TAIKHOAN (
     maTaiKhoan INT AUTO_INCREMENT PRIMARY KEY,
@@ -546,19 +556,20 @@ END //
 CREATE PROCEDURE sp_tinh_xep_loai(IN p_danh_gia_id INT)
 BEGIN
     DECLARE v_tong_diem DECIMAL(5,2);
-    DECLARE v_diem_toi_da DECIMAL(5,2);
     DECLARE v_ty_le DECIMAL(5,2);
     DECLARE v_xep_loai VARCHAR(20);
 
-    SELECT SUM(ct.diem * ddtc.trongSo), SUM(tc.diemToiDa * ddtc.trongSo)
-    INTO v_tong_diem, v_diem_toi_da
+    -- Thang diem co dinh 1-10, trong so tinh theo phan tram (tong = 100%)
+    -- tongDiem = SUM(diem * trongSo / 100), gia tri trong khoang 0-10
+    SELECT SUM(ct.diem * ddtc.trongSo / 100.0)
+    INTO v_tong_diem
     FROM CHITIETDANHGIA ct
-    JOIN TIEUCHIDANHGIA tc ON ct.maTieuChi = tc.maTieuChi
     JOIN DANHGIAHIEUSUAT dg ON ct.maDanhGia = dg.maDanhGia
     JOIN DOTDANHGIA_TIEUCHI ddtc ON dg.maDot = ddtc.maDot AND ct.maTieuChi = ddtc.maTieuChi
     WHERE ct.maDanhGia = p_danh_gia_id;
 
-    SET v_ty_le = (v_tong_diem / v_diem_toi_da) * 100;
+    -- Quy doi ve ty le % (0-100) de xep loai
+    SET v_ty_le = v_tong_diem * 10;
 
     SET v_xep_loai = CASE
         WHEN v_ty_le >= 90 THEN 'xuat_sac'

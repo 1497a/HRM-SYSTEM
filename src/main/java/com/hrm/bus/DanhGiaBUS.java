@@ -117,14 +117,13 @@ public class DanhGiaBUS {
     }
 
     public KetQua<TieuChiDanhGia> saveCriteria(String tenTieuChi, String moTa, String nhomTieuChi,
-                                               double diemToiDa, double trongSo) {
-        KetQua<Void> criteriaValidation = validateCriteriaInput(tenTieuChi, diemToiDa, trongSo);
+                                               double trongSo) {
+        KetQua<Void> criteriaValidation = validateCriteriaInput(tenTieuChi, trongSo);
         if (!criteriaValidation.isSuccess()) return KetQua.error(criteriaValidation.getMessage());
         TieuChiDanhGia tc = new TieuChiDanhGia();
         tc.setTenTieuChi(tenTieuChi.trim());
         tc.setMoTa(moTa != null ? moTa.trim() : "");
         tc.setNhomTieuChi(nhomTieuChi != null ? nhomTieuChi.trim() : "");
-        tc.setDiemToiDa(diemToiDa);
         tc.setTrongSo(trongSo);
         tc.setHoatDong(true);
         repository.saveCriteria(tc);
@@ -132,17 +131,16 @@ public class DanhGiaBUS {
     }
 
     public KetQua<TieuChiDanhGia> updateCriteria(int maTieuChi, String tenTieuChi, String moTa,
-                                                 String nhomTieuChi, double diemToiDa, double trongSo) {
+                                                 String nhomTieuChi, double trongSo) {
         TieuChiDanhGia tc = repository.getCriteria(maTieuChi);
         if (tc == null) {
             return KetQua.error("Không tìm thấy tiêu chí #" + maTieuChi);
         }
-        KetQua<Void> criteriaValidation = validateCriteriaInput(tenTieuChi, diemToiDa, trongSo);
+        KetQua<Void> criteriaValidation = validateCriteriaInput(tenTieuChi, trongSo);
         if (!criteriaValidation.isSuccess()) return KetQua.error(criteriaValidation.getMessage());
         tc.setTenTieuChi(tenTieuChi.trim());
         tc.setMoTa(moTa != null ? moTa.trim() : tc.getMoTa());
         tc.setNhomTieuChi(nhomTieuChi != null ? nhomTieuChi.trim() : tc.getNhomTieuChi());
-        tc.setDiemToiDa(diemToiDa);
         tc.setTrongSo(trongSo);
         repository.saveCriteria(tc);
         return KetQua.success(tc, "Đã cập nhật tiêu chí đánh giá thành công.");
@@ -157,12 +155,6 @@ public class DanhGiaBUS {
         return KetQua.success(null, "Đã vô hiệu hóa tiêu chí đánh giá thành công.");
     }
 
-    public int getTotalWeight() {
-        return repository.getAllCriteria().stream()
-                .filter(TieuChiDanhGia::isHoatDong)
-                .mapToInt(c -> (int) c.getDiemToiDa())
-                .sum();
-    }
 
     // ============================
     // Nộp đánh giá (Submission)
@@ -309,12 +301,9 @@ public class DanhGiaBUS {
         return KetQua.success(null, "");
     }
 
-    private KetQua<Void> validateCriteriaInput(String tenTieuChi, double diemToiDa, double trongSo) {
+    private KetQua<Void> validateCriteriaInput(String tenTieuChi, double trongSo) {
         if (tenTieuChi == null || tenTieuChi.trim().isEmpty()) {
             return KetQua.error("Tên tiêu chí không được để trống.");
-        }
-        if (diemToiDa <= 0) {
-            return KetQua.error("Điểm tối đa phải lớn hơn 0.");
         }
         if (trongSo < 0 || trongSo > 100) {
             return KetQua.error("Trọng số phải từ 0 đến 100.");

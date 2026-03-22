@@ -264,10 +264,7 @@ public class UserFormDialog extends BaseFormDialog {
         } else {
             rdoHoatDong.setSelected(true);
         }
-        String currentRoleCode = null;
-        if (editingUser.getVaiTros() != null && !editingUser.getVaiTros().isEmpty()) {
-            currentRoleCode = editingUser.getVaiTros().get(0).getId();
-        }
+        String currentRoleCode = editingUser.getVaiTro() != null ? editingUser.getVaiTro().getId() : null;
         for (Component comp : rolesPanel.getComponents()) {
             if (comp instanceof JRadioButton) {
                 JRadioButton rb = (JRadioButton) comp;
@@ -300,17 +297,19 @@ public class UserFormDialog extends BaseFormDialog {
         ButtonModel selectedModel = roleGroup.getSelection();
         if (selectedModel != null) selectedRoleCode = selectedModel.getActionCommand();
         if (selectedRoleCode == null || selectedRoleCode.isEmpty()) {
-            JOptionPane.showMessageDialog(this, "Vui lòng chọn vai trò", "Lỗi", JOptionPane.ERROR_MESSAGE);
+            showError("Vui lòng chọn vai trò");
             return;
         }
         if (editingUser == null) {
             NhanVien selectedNV = (NhanVien) cboNhanVien.getSelectedItem();
             if (selectedNV == null) {
-                JOptionPane.showMessageDialog(this, "Vui lòng chọn nhân viên", "Lỗi", JOptionPane.ERROR_MESSAGE);
+                showError("Vui lòng chọn nhân viên");
+                cboNhanVien.requestFocus();
                 return;
             }
             if (password.isEmpty()) {
-                JOptionPane.showMessageDialog(this, "Vui lòng nhập mật khẩu", "Lỗi", JOptionPane.ERROR_MESSAGE);
+                showError("Vui lòng nhập mật khẩu");
+                txtPassword.requestFocus();
                 return;
             }
             String username = selectedNV.getMaNhanVien();
@@ -321,24 +320,24 @@ public class UserFormDialog extends BaseFormDialog {
             } catch (Exception ex) { /* ignore */ }
             KetQua<Integer> result = authService.createUser(username, password, selectedNV.getMaNhanVien(), selectedRoleCode, email);
             if (!result.isSuccess()) {
-                JOptionPane.showMessageDialog(this, result.getMessage(), "Lỗi", JOptionPane.ERROR_MESSAGE);
+                showError(result.getMessage());
                 return;
             }
             successful = true;
-            JOptionPane.showMessageDialog(this,
-                    "Đã tạo tài khoản thành công!\nên đăng nhập: " + username + "\nật khẩu: " + password,
-                    "Thông báo", JOptionPane.INFORMATION_MESSAGE);
+            showInfo("Đã tạo tài khoản thành công!\nTên đăng nhập: " + username + "\nMật khẩu: " + password);
             dispose();
         } else {
             String fullName = txtFullName.getText().trim();
             String email = txtEmail.getText().trim();
             if (fullName.isEmpty()) {
-                JOptionPane.showMessageDialog(this, "Vui lòng nhập họ tên", "Lỗi", JOptionPane.ERROR_MESSAGE);
+                showError("Vui lòng nhập họ tên");
+                txtFullName.requestFocus();
                 return;
             }
             String emailErr = ValidationUtils.validateEmail(email);
             if (emailErr != null) {
-                JOptionPane.showMessageDialog(this, emailErr, "Lỗi", JOptionPane.WARNING_MESSAGE);
+                showError(emailErr);
+                txtEmail.requestFocus();
                 return;
             }
             editingUser.setHoTen(fullName);
@@ -352,19 +351,18 @@ public class UserFormDialog extends BaseFormDialog {
                         .filter(r -> r.getId().equals(roleCode))
                         .findFirst().orElse(null);
                 if (selectedRole != null) {
-                    editingUser.getVaiTros().clear();
-                    editingUser.getVaiTros().add(selectedRole);
+                    editingUser.setVaiTro(selectedRole);
                 }
             }
             KetQua<Void> result = authService.updateUser(editingUser);
             if (!result.isSuccess()) {
-                JOptionPane.showMessageDialog(this, result.getMessage(), "Loi", JOptionPane.ERROR_MESSAGE);
+                showError(result.getMessage());
                 return;
             }
             if (!password.isEmpty()) {
                 authService.resetPassword(editingUser.getId(), password);
             }
-            JOptionPane.showMessageDialog(this, "Đã cập nhật tài khoản thành công!", "Thông báo", JOptionPane.INFORMATION_MESSAGE);
+            showInfo("Đã cập nhật tài khoản thành công!");
             successful = true;
             dispose();
         }
@@ -374,8 +372,8 @@ public class UserFormDialog extends BaseFormDialog {
         if (editingUser == null) return false;
         if (HRMConstants.USERNAME_ADMIN.equalsIgnoreCase(editingUser.getTenDangNhap())) return true;
         if (currentUser == null || currentUser.getId() != editingUser.getId()) return false;
-        return currentUser.getVaiTros() != null
-                && currentUser.getVaiTros().stream().anyMatch(v -> HRMConstants.ROLE_ADMIN.equalsIgnoreCase(v.getId()));
+        return currentUser.getVaiTro() != null
+                && HRMConstants.ROLE_ADMIN.equalsIgnoreCase(currentUser.getVaiTro().getId());
     }
 
     public boolean isSuccessful() { return successful; }

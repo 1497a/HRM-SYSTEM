@@ -97,10 +97,7 @@ public class EvalDoDialog extends BaseFormDialog {
         btnHuy.addActionListener(e -> dispose());
         if (cycleCriteria.isEmpty()) {
             btnLuu.setEnabled(false);
-            JOptionPane.showMessageDialog(this,
-                    "Đợt đánh giá này chưa được cấu hình tiêu chí. Vui lòng cấu hình trước khi đánh giá.",
-                    "Thông báo",
-                    JOptionPane.WARNING_MESSAGE);
+            showWarning("Đợt đánh giá này chưa được cấu hình tiêu chí. Vui lòng cấu hình trước khi đánh giá.");
         }
         // Initial preview
         updatePreview();
@@ -123,9 +120,7 @@ public class EvalDoDialog extends BaseFormDialog {
             ));
         }
         if (cboEmployee.getItemCount() == 0) {
-            JOptionPane.showMessageDialog(null,
-                    "Tất cả nhân viên trong phạm vi của bạn đã được đánh giá.",
-                    "Thông báo", JOptionPane.INFORMATION_MESSAGE);
+            showInfo("Tất cả nhân viên trong phạm vi của bạn đã được đánh giá.");
         }
     }
 
@@ -267,14 +262,13 @@ public class EvalDoDialog extends BaseFormDialog {
     private void luuDanhGia() {
         NhanVienItem selected = (NhanVienItem) cboEmployee.getSelectedItem();
         if (selected == null) {
-            JOptionPane.showMessageDialog(this, "Vui lòng chọn nhân viên cần đánh giá.",
-                    "Thông báo", JOptionPane.WARNING_MESSAGE);
+            showWarning("Vui lòng chọn nhân viên cần đánh giá.");
+            cboEmployee.requestFocus();
             return;
         }
         List<ChiTietDanhGia> scores = buildScores();
         if (scores.isEmpty()) {
-            JOptionPane.showMessageDialog(this, "Không có tiêu chí nào để đánh giá.",
-                    "Thông báo", JOptionPane.WARNING_MESSAGE);
+            showWarning("Không có tiêu chí nào để đánh giá.");
             return;
         }
         String approverId = HRMConstants.USERNAME_ADMIN;
@@ -293,13 +287,11 @@ public class EvalDoDialog extends BaseFormDialog {
                 txtNhanXetChung.getText().trim()
         );
         if (result.isSuccess()) {
-            JOptionPane.showMessageDialog(this, result.getMessage(),
-                    "Thành công", JOptionPane.INFORMATION_MESSAGE);
+            showSuccess(result.getMessage());
             successful = true;
             dispose();
         } else {
-            JOptionPane.showMessageDialog(this, result.getMessage(),
-                    "Lỗi", JOptionPane.ERROR_MESSAGE);
+            showError(result.getMessage());
         }
     }
 

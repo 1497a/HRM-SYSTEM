@@ -1,5 +1,7 @@
 package com.hrm.gui.components;
 
+import com.hrm.util.DialogUtil;
+
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
 import java.awt.*;
@@ -34,15 +36,12 @@ public class BaseFormDialog extends JDialog {
         return new JScrollPane(component);
     }
 
-    protected void showInfo(String message) {
-        JOptionPane.showMessageDialog(this, message, "Thông báo", JOptionPane.INFORMATION_MESSAGE);
-    }
-
-    protected void showWarning(String message) {
-        JOptionPane.showMessageDialog(this, message, "Thông báo", JOptionPane.WARNING_MESSAGE);
-    }
-
-    protected void showError(String message) {
-        JOptionPane.showMessageDialog(this, message, "Lỗi", JOptionPane.ERROR_MESSAGE);
-    }
+    protected void showInfo(String message)    { DialogUtil.showInfo(this, message); }
+    protected void showWarning(String message) { DialogUtil.showWarn(this, message); }
+    protected void showError(String message)   { DialogUtil.showError(this, message); }
+    protected void showSuccess(String message) { DialogUtil.showSuccess(this, message); }
+    protected void showError(String message, String title)       { DialogUtil.showError(this, message, title); }
+    protected boolean showYesNo(String msg, String title)        { return DialogUtil.showYesNo(this, msg, title); }
+    protected boolean showYesNoWarning(String msg, String title) { return DialogUtil.showYesNoWarning(this, msg, title); }
+    protected boolean showOkCancel(String msg, String title)     { return DialogUtil.showOkCancel(this, msg, title); }
 }

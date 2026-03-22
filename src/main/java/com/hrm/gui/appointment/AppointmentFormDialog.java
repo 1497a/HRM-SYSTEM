@@ -104,25 +104,14 @@ public class AppointmentFormDialog extends BaseFormDialog {
         loadQuanLy();
         // Loại bổ nhiệm
         // DB ENUM: 'chinh', 'kiem_nhiem'
-        cboLoaiBoNhiem = new JComboBox<>(new String[] { "chinh", "kiem_nhiem" });
+        cboLoaiBoNhiem = new JComboBox<>(new String[] { HRMConstants.LOAI_BO_NHIEM_CHINH, HRMConstants.LOAI_BO_NHIEM_KIEM_NHIEM });
         cboLoaiBoNhiem.setFont(UIFonts.TEXT_NORMAL);
         cboLoaiBoNhiem.setRenderer(new DefaultListCellRenderer() {
             @Override
             public Component getListCellRendererComponent(JList<?> list, Object value,
                     int index, boolean isSelected, boolean cellHasFocus) {
                 super.getListCellRendererComponent(list, value, index, isSelected, cellHasFocus);
-                if (value != null) {
-                    switch (value.toString()) {
-                        case "chinh":
-                            setText("Chính thức");
-                            break;
-                        case "kiem_nhiem":
-                            setText("Kiêm nhiệm");
-                            break;
-                        default:
-                            setText(value.toString());
-                    }
-                }
+                if (value != null) setText(HRMConstants.display(value.toString()));
                 return this;
             }
         });
@@ -314,7 +303,7 @@ public class AppointmentFormDialog extends BaseFormDialog {
         // Action buttons for view mode (conditionally shown by status + permission)
         if (boNhiemHienThi != null && SessionContext.getInstance().hasPermission(PermissionCodes.APPOINTMENT_APPROVE)) {
             String status = boNhiemHienThi.getTrangThai();
-            if ("cho_duyet".equals(status)) {
+            if (HRMConstants.TRANG_THAI_CHO_DUYET.equals(status)) {
                 JButton btnTuChoi = new JButton("Từ chối");
                 styleActionButton(btnTuChoi, new Color(192, 57, 43));
                 btnTuChoi.addActionListener(e -> tuChoiBoNhiem());
@@ -323,7 +312,7 @@ public class AppointmentFormDialog extends BaseFormDialog {
                 btnPheDuyet.addActionListener(e -> pheDuyetBoNhiem());
                 btnPanel.add(btnTuChoi);
                 btnPanel.add(btnPheDuyet);
-            } else if ("hieu_luc".equals(status)) {
+            } else if (HRMConstants.TRANG_THAI_HIEU_LUC.equals(status)) {
                 JButton btnKetThuc = new JButton("Kết thúc");
                 styleActionButton(btnKetThuc, new Color(192, 57, 43));
                 btnKetThuc.addActionListener(e -> ketThucBoNhiem());
@@ -378,7 +367,7 @@ public class AppointmentFormDialog extends BaseFormDialog {
             }
         }
         // Loại bổ nhiệm
-        String loai = bn.getLoaiBoNhiem() != null ? bn.getLoaiBoNhiem() : "chinh_thuc";
+        String loai = bn.getLoaiBoNhiem() != null ? bn.getLoaiBoNhiem() : HRMConstants.LOAI_BO_NHIEM_CHINH;
         for (int i = 0; i < cboLoaiBoNhiem.getItemCount(); i++) {
             if (cboLoaiBoNhiem.getItemAt(i).equals(loai)) {
                 cboLoaiBoNhiem.setSelectedIndex(i);
@@ -450,23 +439,23 @@ public class AppointmentFormDialog extends BaseFormDialog {
         // Validate nhân viên
         NhanVien selectedNV = (NhanVien) cboNhanVien.getSelectedItem();
         if (selectedNV == null) {
-            JOptionPane.showMessageDialog(this, "Vui lòng chọn nhân viên.",
-                    "Lỗi nhập liệu", JOptionPane.ERROR_MESSAGE);
+            showError("Vui lòng chọn nhân viên.", "Lỗi nhập liệu");
+            cboNhanVien.requestFocus();
             return;
         }
         String maNV = selectedNV.getMaNhanVien();
         // Validate phòng ban
         PhongBan selectedDept = (PhongBan) cboPhongBan.getSelectedItem();
         if (selectedDept == null) {
-            JOptionPane.showMessageDialog(this, "Vui lòng chọn phòng ban.",
-                    "Lỗi nhập liệu", JOptionPane.ERROR_MESSAGE);
+            showError("Vui lòng chọn phòng ban.", "Lỗi nhập liệu");
+            cboPhongBan.requestFocus();
             return;
         }
         // Validate chức vụ
         ChucVu selectedPos = (ChucVu) cboChucVu.getSelectedItem();
         if (selectedPos == null) {
-            JOptionPane.showMessageDialog(this, "Vui lòng chọn chức vụ.",
-                    "Lỗi nhập liệu", JOptionPane.ERROR_MESSAGE);
+            showError("Vui lòng chọn chức vụ.", "Lỗi nhập liệu");
+            cboChucVu.requestFocus();
             return;
         }
         // Lấy loại bổ nhiệm (giá trị đã là DB value: 'chinh', 'kiem_nhiem')
@@ -497,13 +486,11 @@ public class AppointmentFormDialog extends BaseFormDialog {
         // Gọi service
         KetQua<BoNhiem> result = BoNhiemBUS.getInstance().taoBoNhiem(bn);
         if (result.isSuccess()) {
-            JOptionPane.showMessageDialog(this, result.getMessage(),
-                    "Thành công", JOptionPane.INFORMATION_MESSAGE);
+            showSuccess(result.getMessage());
             saved = true;
             dispose();
         } else {
-            JOptionPane.showMessageDialog(this, result.getMessage(),
-                    "Lỗi", JOptionPane.ERROR_MESSAGE);
+            showError(result.getMessage());
         }
     }
 
@@ -532,11 +519,8 @@ public class AppointmentFormDialog extends BaseFormDialog {
     // Action methods (view mode)
     // ============================
     private void pheDuyetBoNhiem() {
-        int confirm = JOptionPane.showConfirmDialog(this,
-                "Xác nhận phê duyệt bổ nhiệm #" + boNhiemHienThi.getId() + "?",
-                "Xác nhận phê duyệt", JOptionPane.YES_NO_OPTION);
-        if (confirm != JOptionPane.YES_OPTION)
-            return;
+        if (!showYesNo("Xác nhận phê duyệt bổ nhiệm #" + boNhiemHienThi.getId() + "?",
+                "Xác nhận phê duyệt")) return;
         String userId = HRMConstants.USERNAME_ADMIN;
         if (SessionContext.getInstance().getCurrentUser() != null) {
             String nvId = SessionContext.getInstance().getCurrentUser().getMaNV();
@@ -547,11 +531,11 @@ public class AppointmentFormDialog extends BaseFormDialog {
         KetQua<BoNhiem> result = BoNhiemBUS.getInstance().pheDuyetBoNhiem(
                 boNhiemHienThi.getId(), userId);
         if (result.isSuccess()) {
-            JOptionPane.showMessageDialog(this, result.getMessage(), "Thành công", JOptionPane.INFORMATION_MESSAGE);
+            showSuccess(result.getMessage());
             actionTaken = true;
             dispose();
         } else {
-            JOptionPane.showMessageDialog(this, result.getMessage(), "Lỗi", JOptionPane.ERROR_MESSAGE);
+            showError(result.getMessage());
         }
     }
 
@@ -566,11 +550,11 @@ public class AppointmentFormDialog extends BaseFormDialog {
         KetQua<BoNhiem> result = BoNhiemBUS.getInstance().tuChoiBoNhiem(
                 boNhiemHienThi.getId(), txtLyDo.getText().trim());
         if (result.isSuccess()) {
-            JOptionPane.showMessageDialog(this, result.getMessage(), "Thành công", JOptionPane.INFORMATION_MESSAGE);
+            showSuccess(result.getMessage());
             actionTaken = true;
             dispose();
         } else {
-            JOptionPane.showMessageDialog(this, result.getMessage(), "Lỗi", JOptionPane.ERROR_MESSAGE);
+            showError(result.getMessage());
         }
     }
 
@@ -584,11 +568,11 @@ public class AppointmentFormDialog extends BaseFormDialog {
         KetQua<BoNhiem> result = BoNhiemBUS.getInstance().ketThucBoNhiem(
                 boNhiemHienThi.getId(), LocalDate.now());
         if (result.isSuccess()) {
-            JOptionPane.showMessageDialog(this, result.getMessage(), "Thành công", JOptionPane.INFORMATION_MESSAGE);
+            showSuccess(result.getMessage());
             actionTaken = true;
             dispose();
         } else {
-            JOptionPane.showMessageDialog(this, result.getMessage(), "Lỗi", JOptionPane.ERROR_MESSAGE);
+            showError(result.getMessage());
         }
     }
 

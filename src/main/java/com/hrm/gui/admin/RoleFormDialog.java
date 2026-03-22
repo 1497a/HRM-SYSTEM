@@ -210,7 +210,8 @@ public class RoleFormDialog extends BaseFormDialog {
         String name = txtName.getText().trim();
         String description = txtDescription.getText().trim();
         if (name.isEmpty()) {
-            JOptionPane.showMessageDialog(this, "Vui lòng nhập tên vai trò.", "Lỗi", JOptionPane.ERROR_MESSAGE);
+            showError("Vui lòng nhập tên vai trò.");
+            txtName.requestFocus();
             return;
         }
         if (permissionTable.isEditing()) {
@@ -221,7 +222,7 @@ public class RoleFormDialog extends BaseFormDialog {
             String permissionCode = String.valueOf(permissionTableModel.getValueAt(row, 0));
             DataScope scope = extractScope(permissionTableModel.getValueAt(row, 4));
             if (scope == null) {
-                JOptionPane.showMessageDialog(this, "Phạm vi không hợp lệ cho quyền " + permissionCode + ".", "Lỗi", JOptionPane.ERROR_MESSAGE);
+                showError("Phạm vi không hợp lệ cho quyền " + permissionCode + ".");
                 return;
             }
             if (scope == DataScope.NONE) {
@@ -239,37 +240,28 @@ public class RoleFormDialog extends BaseFormDialog {
         if (editingRole == null) {
             KetQua<Void> createResult = authService.createRole(code, name, description.isEmpty() ? null : description);
             if (!createResult.isSuccess()) {
-                JOptionPane.showMessageDialog(this, createResult.getMessage(), "Lỗi", JOptionPane.ERROR_MESSAGE);
+                showError(createResult.getMessage());
                 return;
             }
             KetQua<Void> permissionResult = authService.setRolePermissions(code, selectedPermissions);
             if (!permissionResult.isSuccess()) {
-                JOptionPane.showMessageDialog(this,
-                        "Đã tạo vai trò nhưng không thể gán quyền: " + permissionResult.getMessage(),
-                        "Cảnh báo",
-                        JOptionPane.WARNING_MESSAGE);
+                showWarning("Đã tạo vai trò nhưng không thể gán quyền: " + permissionResult.getMessage());
             }
         } else {
             editingRole.setTenVaiTro(name);
             editingRole.setMoTa(description.isEmpty() ? null : description);
             KetQua<Void> updateResult = authService.updateRole(editingRole);
             if (!updateResult.isSuccess()) {
-                JOptionPane.showMessageDialog(this, updateResult.getMessage(), "Lỗi", JOptionPane.ERROR_MESSAGE);
+                showError(updateResult.getMessage());
                 return;
             }
             KetQua<Void> permissionResult = authService.setRolePermissions(editingRole.getId(), selectedPermissions);
             if (!permissionResult.isSuccess()) {
-                JOptionPane.showMessageDialog(this,
-                        "Đã cập nhật vai trò nhưng không thể cập nhật quyền: " + permissionResult.getMessage(),
-                        "Cảnh báo",
-                        JOptionPane.WARNING_MESSAGE);
+                showWarning("Đã cập nhật vai trò nhưng không thể cập nhật quyền: " + permissionResult.getMessage());
             }
         }
         successful = true;
-        JOptionPane.showMessageDialog(this,
-                editingRole == null ? "Đã tạo vai trò thành công." : "Đã cập nhật vai trò thành công.",
-                "Thông báo",
-                JOptionPane.INFORMATION_MESSAGE);
+        showInfo(editingRole == null ? "Đã tạo vai trò thành công." : "Đã cập nhật vai trò thành công.");
         dispose();
     }
 

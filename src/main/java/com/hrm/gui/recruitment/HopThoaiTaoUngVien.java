@@ -4,6 +4,7 @@ import com.hrm.bus.TuyenDungBUS;
 import com.hrm.bus.KetQua;
 import com.hrm.model.TinTuyenDung;
 import com.hrm.model.UngVien;
+import com.hrm.util.DialogUtil;
 import com.hrm.util.UIColors;
 import com.hrm.util.UIFonts;
 import com.hrm.util.UIHelper;
@@ -116,12 +117,14 @@ public class HopThoaiTaoUngVien extends JDialog {
     private void luu() {
         String hoTen = txtHoTen.getText().trim();
         if (hoTen.isEmpty()) {
-            JOptionPane.showMessageDialog(this, "vui lòng nhập họ tên.", "Lỗi", JOptionPane.WARNING_MESSAGE);
+            DialogUtil.showWarn(this, "Vui lòng nhập họ tên.");
+            txtHoTen.requestFocus();
             return;
         }
         TinTuyenDung tin = (TinTuyenDung) cboTin.getSelectedItem();
         if (tin == null || tin.getMaTin() == 0) {
-            JOptionPane.showMessageDialog(this, "Vui lòng chọn tin tuyển dụng.", "Lỗi", JOptionPane.WARNING_MESSAGE);
+            DialogUtil.showWarn(this, "Vui lòng chọn tin tuyển dụng.");
+            cboTin.requestFocus();
             return;
         }
         LocalDate ngaySinh = null;
@@ -130,24 +133,28 @@ public class HopThoaiTaoUngVien extends JDialog {
             try {
                 ngaySinh = LocalDate.parse(nsStr, DATE_FMT);
             } catch (DateTimeParseException ex) {
-                JOptionPane.showMessageDialog(this, "Ngày sinh không hợp lệ. Định dạng: dd/MM/yyyy", "Lỗi", JOptionPane.WARNING_MESSAGE);
+                DialogUtil.showWarn(this, "Ngày sinh không hợp lệ. Định dạng: dd/MM/yyyy");
+                txtNgaySinh.requestFocus();
                 return;
             }
             String dobErr = ValidationUtils.validateBirthDate(ngaySinh);
             if (dobErr != null) {
-                JOptionPane.showMessageDialog(this, dobErr, "Lỗi", JOptionPane.WARNING_MESSAGE);
+                DialogUtil.showWarn(this, dobErr);
+                txtNgaySinh.requestFocus();
                 return;
             }
         }
         // Validate email and phone
         String emailErr = ValidationUtils.validateEmail(txtEmail.getText().trim());
         if (emailErr != null) {
-            JOptionPane.showMessageDialog(this, emailErr, "Lỗi", JOptionPane.WARNING_MESSAGE);
+            DialogUtil.showWarn(this, emailErr);
+            txtEmail.requestFocus();
             return;
         }
         String phoneErr = ValidationUtils.validatePhone(txtDienThoai.getText().trim());
         if (phoneErr != null) {
-            JOptionPane.showMessageDialog(this, phoneErr, "Lỗi", JOptionPane.WARNING_MESSAGE);
+            DialogUtil.showWarn(this, phoneErr);
+            txtDienThoai.requestFocus();
             return;
         }
         UngVien uv = new UngVien();
@@ -166,11 +173,11 @@ public class HopThoaiTaoUngVien extends JDialog {
         uv.setNgayTao(LocalDate.now());
         KetQua<?> kq = tuyenDungBUS.tiepNhanUngVien(uv);
         if (kq.isSuccess()) {
-            JOptionPane.showMessageDialog(this, "Đã tạo ứng viên thành công!", "Thành công", JOptionPane.INFORMATION_MESSAGE);
+            DialogUtil.showSuccess(this, "Đã tạo ứng viên thành công!");
             thanhCong = true;
             dispose();
         } else {
-            JOptionPane.showMessageDialog(this, kq.getMessage(), "Lỗi", JOptionPane.ERROR_MESSAGE);
+            DialogUtil.showError(this, kq.getMessage());
         }
     }
 

@@ -7,6 +7,7 @@ import com.hrm.bus.TuyenDungBUS;
 import com.hrm.model.ChucVu;
 import com.hrm.model.PhongBan;
 import com.hrm.model.YeuCauTuyenDung;
+import com.hrm.util.DialogUtil;
 import com.hrm.util.PermissionCodes;
 import com.hrm.util.UIFonts;
 import com.hrm.util.SessionContext;
@@ -158,7 +159,7 @@ class TabYeuCauPanel extends JPanel {
         PhongBan pb = (PhongBan) cboPhongBan.getSelectedItem();
         ChucVu cv = (ChucVu) cboChucVu.getSelectedItem();
         if (pb == null || cv == null) {
-            JOptionPane.showMessageDialog(this, "Vui lòng chọn phòng ban và chức vụ.", "Lỗi", JOptionPane.WARNING_MESSAGE);
+            DialogUtil.showWarn(this, "Vui lòng chọn phòng ban và chức vụ.");
             return;
         }
         LocalDate hanTuyenDung = ((java.util.Date) spinHan.getValue()).toInstant()
@@ -172,7 +173,7 @@ class TabYeuCauPanel extends JPanel {
             yc.setLyDo(txtLyDo.getText().trim());
             KetQua<?> sr = service.taoYeuCau(yc);
             if (sr.isSuccess()) {
-                JOptionPane.showMessageDialog(this, "Tạo yêu cầu thành công!", "Thành công", JOptionPane.INFORMATION_MESSAGE);
+                DialogUtil.showSuccess(this, "Tạo yêu cầu thành công!");
                 load();
             } else {
                 TabUtils.showError(this, sr.getMessage());
@@ -185,14 +186,14 @@ class TabYeuCauPanel extends JPanel {
     private void pheDuyet() {
         int viewRow = tbl.getSelectedRow();
         if (viewRow < 0) {
-            JOptionPane.showMessageDialog(this, "Vui lòng chọn yêu cầu.", "Thông báo", JOptionPane.WARNING_MESSAGE);
+            DialogUtil.showWarn(this, "Vui lòng chọn yêu cầu.");
             return;
         }
         int maYC = (Integer) model.getValueAt(tbl.convertRowIndexToModel(viewRow), 0);
         try {
             KetQua<?> r = service.duyetYeuCau(maYC);
             if (r.isSuccess()) {
-                JOptionPane.showMessageDialog(this, "Đã phê duyệt.", "Thành công", JOptionPane.INFORMATION_MESSAGE);
+                DialogUtil.showSuccess(this, "Đã phê duyệt.");
                 load();
             } else {
                 TabUtils.showError(this, r.getMessage());
@@ -205,18 +206,17 @@ class TabYeuCauPanel extends JPanel {
     private void tuChoi() {
         int viewRow = tbl.getSelectedRow();
         if (viewRow < 0) {
-            JOptionPane.showMessageDialog(this, "Vui lòng chọn yêu cầu.", "Thông báo", JOptionPane.WARNING_MESSAGE);
+            DialogUtil.showWarn(this, "Vui lòng chọn yêu cầu.");
             return;
         }
         int maYC = (Integer) model.getValueAt(tbl.convertRowIndexToModel(viewRow), 0);
-        if (JOptionPane.showConfirmDialog(this, "Từ chối yêu cầu #" + maYC + "?", "Xác nhận",
-                JOptionPane.YES_NO_OPTION, JOptionPane.QUESTION_MESSAGE) != JOptionPane.YES_OPTION) {
+        if (!DialogUtil.showYesNo(this, "Từ chối yêu cầu #" + maYC + "?", "Xác nhận")) {
             return;
         }
         try {
             KetQua<?> r = service.tuChoiYeuCau(maYC);
             if (r.isSuccess()) {
-                JOptionPane.showMessageDialog(this, "Đã từ chối.", "Thành công", JOptionPane.INFORMATION_MESSAGE);
+                DialogUtil.showSuccess(this, "Đã từ chối.");
                 load();
             } else {
                 TabUtils.showError(this, r.getMessage());

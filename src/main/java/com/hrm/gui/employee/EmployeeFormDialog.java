@@ -6,8 +6,10 @@ import com.hrm.model.NhanVien;
 import com.hrm.model.ThongTinCaNhan;
 import com.hrm.bus.NhanVienBUS;
 import com.hrm.bus.KetQua;
+import com.hrm.util.HRMConstants;
 import com.hrm.util.UIColors;
 import com.hrm.util.UIFonts;
+import com.hrm.util.DialogUtil;
 import com.hrm.util.ValidationUtils;
 
 import javax.swing.*;
@@ -42,12 +44,12 @@ public class EmployeeFormDialog extends BaseFormDialog {
     private JTextField txtDienThoai;
     private JTextField txtEmail;
     private JTextField txtDiaChi;
-    private JTextField txtDiaChiThuongTru;
     private JTextField txtQueQuan;
     private JComboBox<String> cboTinhTrangHonNhan;
     private JTextField txtTrinhDoHocVan;
     private JTextArea txtKinhNghiem;
     private JTextField txtFileCV;
+    private JTabbedPane tabs;
     /**
      * @param parent  Frame cha
      * @param nv      null = tạo mới; có giá trị = sửa
@@ -84,7 +86,7 @@ public class EmployeeFormDialog extends BaseFormDialog {
         lblHeader.setBorder(BorderFactory.createEmptyBorder(0, 0, 8, 0));
         root.add(lblHeader, BorderLayout.NORTH);
         // Tabbed pane
-        JTabbedPane tabs = new JTabbedPane();
+        tabs = new JTabbedPane();
         tabs.setFont(UIFonts.TEXT_NORMAL);
         tabs.addTab("Thông tin lao động", buildTab1());
         tabs.addTab("Thông tin cá nhân", buildTab2());
@@ -107,7 +109,7 @@ public class EmployeeFormDialog extends BaseFormDialog {
         // Loại hợp đồng
         addLabel(panel, "Loại hợp đồng:", gbc, 0, 1);
         cboLoaiHopDong = new JComboBox<>(new String[]{
-            "thu_viec", "xac_dinh_thoi_han", "khong_xac_dinh"
+            HRMConstants.LOAI_HOP_DONG_THU_VIEC, HRMConstants.LOAI_HOP_DONG_XAC_DINH, HRMConstants.LOAI_HOP_DONG_KHONG_XAC_DINH
         });
         cboLoaiHopDong.setRenderer(new LoaiHDRenderer());
         addField(panel, cboLoaiHopDong, gbc, 1, 1);
@@ -129,6 +131,7 @@ public class EmployeeFormDialog extends BaseFormDialog {
         return panel;
     }
 
+
     private JPanel buildTab2() {
         JPanel panel = new JPanel(new GridBagLayout());
         panel.setBackground(Color.WHITE);
@@ -137,11 +140,11 @@ public class EmployeeFormDialog extends BaseFormDialog {
         addLabel(panel, "Họ tên (*):", gbc, 0, 0);
         txtHoTen = new JTextField(25);
         addField(panel, txtHoTen, gbc, 1, 0);
-        addLabel(panel, "Ngày sinh:", gbc, 0, 1);
+        addLabel(panel, "Ngày sinh (*):", gbc, 0, 1);
         txtNgaySinh = new JTextField("dd/MM/yyyy", 20);
         addField(panel, txtNgaySinh, gbc, 1, 1);
         addLabel(panel, "Giới tính:", gbc, 0, 2);
-        cboGioiTinh = new JComboBox<>(new String[]{"nam", "nu", "khac"});
+        cboGioiTinh = new JComboBox<>(new String[]{HRMConstants.GIOI_TINH_NAM, HRMConstants.GIOI_TINH_NU, HRMConstants.GIOI_TINH_KHAC});
         cboGioiTinh.setRenderer(new GioiTinhRenderer());
         addField(panel, cboGioiTinh, gbc, 1, 2);
         addLabel(panel, "CCCD (12 chữ số):", gbc, 0, 3);
@@ -153,39 +156,34 @@ public class EmployeeFormDialog extends BaseFormDialog {
         addLabel(panel, "Email:", gbc, 0, 5);
         txtEmail = new JTextField(25);
         addField(panel, txtEmail, gbc, 1, 5);
-        addLabel(panel, "Địa chỉ hiện tại:", gbc, 0, 6);
+        addLabel(panel, "Địa chỉ (*):", gbc, 0, 6);
         txtDiaChi = new JTextField(30);
         addField(panel, txtDiaChi, gbc, 1, 6);
-        addLabel(panel, "Địa chỉ thường trú:", gbc, 0, 7);
-        txtDiaChiThuongTru = new JTextField(30);
-        addField(panel, txtDiaChiThuongTru, gbc, 1, 7);
-        addLabel(panel, "Quê quán:", gbc, 0, 8);
+        addLabel(panel, "Quê quán:", gbc, 0, 7);
         txtQueQuan = new JTextField(25);
-        addField(panel, txtQueQuan, gbc, 1, 8);
-        addLabel(panel, "Tình trạng hôn nhân:", gbc, 0, 9);
-        cboTinhTrangHonNhan = new JComboBox<>(new String[]{"doc_than", "da_ket_hon", "ly_hon"});
+        addField(panel, txtQueQuan, gbc, 1, 7);
+        addLabel(panel, "Tình trạng hôn nhân:", gbc, 0, 8);
+        cboTinhTrangHonNhan = new JComboBox<>(new String[]{HRMConstants.HON_NHAN_DOC_THAN, HRMConstants.HON_NHAN_DA_KET_HON, HRMConstants.HON_NHAN_LY_HON});
         cboTinhTrangHonNhan.setRenderer(new HonNhanRenderer());
-        addField(panel, cboTinhTrangHonNhan, gbc, 1, 9);
-        // --- NEW FIELDS ---
-        addLabel(panel, "Trình độ học vấn:", gbc, 0, 10);
+        addField(panel, cboTinhTrangHonNhan, gbc, 1, 8);
+        addLabel(panel, "Trình độ học vấn:", gbc, 0, 9);
         txtTrinhDoHocVan = new JTextField(25);
-        addField(panel, txtTrinhDoHocVan, gbc, 1, 10);
-        addLabel(panel, "File CV (Link/Ten):", gbc, 0, 11);
+        addField(panel, txtTrinhDoHocVan, gbc, 1, 9);
+        addLabel(panel, "File CV (Link/Tên):", gbc, 0, 10);
         txtFileCV = new JTextField(25);
-        addField(panel, txtFileCV, gbc, 1, 11);
-        addLabel(panel, "Kinh nghiệm:", gbc, 0, 12);
+        addField(panel, txtFileCV, gbc, 1, 10);
+        addLabel(panel, "Kinh nghiệm:", gbc, 0, 11);
         txtKinhNghiem = new JTextArea(3, 25);
         txtKinhNghiem.setFont(UIFonts.TEXT_NORMAL);
         txtKinhNghiem.setLineWrap(true);
         txtKinhNghiem.setWrapStyleWord(true);
         JScrollPane scrollKinhNghiem = new JScrollPane(txtKinhNghiem);
         scrollKinhNghiem.setPreferredSize(new Dimension(300, 60));
-        gbc.gridx = 1; gbc.gridy = 12; gbc.fill = GridBagConstraints.BOTH;
+        gbc.gridx = 1; gbc.gridy = 11; gbc.fill = GridBagConstraints.BOTH;
         panel.add(scrollKinhNghiem, gbc);
         gbc.fill = GridBagConstraints.HORIZONTAL;
         return panel;
     }
-
     private JPanel buildButtonPanel() {
         JPanel panel = new JPanel(new FlowLayout(FlowLayout.RIGHT, 8, 4));
         panel.setOpaque(false);
@@ -225,7 +223,6 @@ public class EmployeeFormDialog extends BaseFormDialog {
         txtDienThoai.setText(thongTinCaNhan.getDienThoai() != null ? thongTinCaNhan.getDienThoai() : "");
         txtEmail.setText(thongTinCaNhan.getEmail() != null ? thongTinCaNhan.getEmail() : "");
         txtDiaChi.setText(thongTinCaNhan.getDiaChi() != null ? thongTinCaNhan.getDiaChi() : "");
-        txtDiaChiThuongTru.setText(thongTinCaNhan.getDiaChiThuongTru() != null ? thongTinCaNhan.getDiaChiThuongTru() : "");
         txtQueQuan.setText(thongTinCaNhan.getQueQuan() != null ? thongTinCaNhan.getQueQuan() : "");
         if (thongTinCaNhan.getTinhTrangHonNhan() != null) {
             cboTinhTrangHonNhan.setSelectedItem(thongTinCaNhan.getTinhTrangHonNhan());
@@ -238,13 +235,14 @@ public class EmployeeFormDialog extends BaseFormDialog {
     private void prefillNew() {
         txtMaNhanVien.setText(nvService.generateMaNhanVien());
         txtNgayVaoLam.setText(LocalDate.now().format(dtf));
-        cboLoaiHopDong.setSelectedItem("xac_dinh_thoi_han");
-        cboGioiTinh.setSelectedItem("nam");
-        cboTinhTrangHonNhan.setSelectedItem("doc_than");
+        cboLoaiHopDong.setSelectedItem(HRMConstants.LOAI_HOP_DONG_XAC_DINH);
+        cboGioiTinh.setSelectedItem(HRMConstants.GIOI_TINH_NAM);
+        cboTinhTrangHonNhan.setSelectedItem(HRMConstants.HON_NHAN_DOC_THAN);
     }
 
     // ============================
     // Save
+    // ============================
     // ============================
     private void onSave() {
         // Collect Tab 1
@@ -260,7 +258,6 @@ public class EmployeeFormDialog extends BaseFormDialog {
         String dienThoai = txtDienThoai.getText().trim();
         String email = txtEmail.getText().trim();
         String diaChi = txtDiaChi.getText().trim();
-        String diaChiThuongTru = txtDiaChiThuongTru.getText().trim();
         String queQuan = txtQueQuan.getText().trim();
         String tinhTrangHonNhan = (String) cboTinhTrangHonNhan.getSelectedItem();
         String trinhDoHocVan, kinhNghiem, fileCV;
@@ -271,46 +268,66 @@ public class EmployeeFormDialog extends BaseFormDialog {
         // Basic validation
         if (maNhanVien.isEmpty()) {
             showError("Mã nhân viên không được để trống.");
+            SwingUtilities.invokeLater(() -> { tabs.setSelectedIndex(0); txtMaNhanVien.requestFocusInWindow(); });
             return;
         }
         if (hoTen.isEmpty()) {
             showError("Họ tên không được để trống.");
+            SwingUtilities.invokeLater(() -> { tabs.setSelectedIndex(1); txtHoTen.requestFocusInWindow(); });
             return;
         }
-        // Parse ngày vào làm
+        if (ngaySinhStr.isEmpty() || ngaySinhStr.equals("dd/MM/yyyy")) {
+            showError("Ngày sinh không được để trống.");
+            SwingUtilities.invokeLater(() -> { tabs.setSelectedIndex(1); txtNgaySinh.requestFocusInWindow(); });
+            return;
+        }
+        if (diaChi.isEmpty()) {
+            showError("Địa chỉ không được để trống.");
+            SwingUtilities.invokeLater(() -> { tabs.setSelectedIndex(1); txtDiaChi.requestFocusInWindow(); });
+            return;
+        }
         LocalDate ngayVaoLam = null;
         if (!ngayVaoLamStr.isEmpty() && !ngayVaoLamStr.equals("dd/MM/yyyy")) {
             try {
                 ngayVaoLam = LocalDate.parse(ngayVaoLamStr, dtf);
             } catch (DateTimeParseException e) {
                 showError("Ngày vào làm không hợp lệ. Định dạng: dd/MM/yyyy");
+                SwingUtilities.invokeLater(() -> { tabs.setSelectedIndex(0); txtNgayVaoLam.requestFocusInWindow(); });
                 return;
             }
         }
-        // Parse ngày sinh
-        LocalDate ngaySinh = null;
-        if (!ngaySinhStr.isEmpty() && !ngaySinhStr.equals("dd/MM/yyyy")) {
-            try {
-                ngaySinh = LocalDate.parse(ngaySinhStr, dtf);
-            } catch (DateTimeParseException e) {
-                showError("Ngày sinh không hợp lệ. Định dạng: dd/MM/yyyy");
-                return;
-            }
-            String dobErr = ValidationUtils.validateBirthDate(ngaySinh);
-            if (dobErr != null) { showError(dobErr); return; }
+        LocalDate ngaySinh;
+        try {
+            ngaySinh = LocalDate.parse(ngaySinhStr, dtf);
+        } catch (DateTimeParseException e) {
+            showError("Ngày sinh không hợp lệ. Định dạng: dd/MM/yyyy");
+            SwingUtilities.invokeLater(() -> { tabs.setSelectedIndex(1); txtNgaySinh.requestFocusInWindow(); });
+            return;
         }
-        // Validate email and phone
+        String dobErr = ValidationUtils.validateBirthDate(ngaySinh);
+        if (dobErr != null) {
+            showError(dobErr);
+            SwingUtilities.invokeLater(() -> { tabs.setSelectedIndex(1); txtNgaySinh.requestFocusInWindow(); });
+            return;
+        }
         String emailErr = ValidationUtils.validateEmail(email);
-        if (emailErr != null) { showError(emailErr); return; }
+        if (emailErr != null) {
+            showError(emailErr);
+            SwingUtilities.invokeLater(() -> { tabs.setSelectedIndex(1); txtEmail.requestFocusInWindow(); });
+            return;
+        }
         String phoneErr = ValidationUtils.validatePhone(dienThoai);
-        if (phoneErr != null) { showError(phoneErr); return; }
-        // Build model objects
+        if (phoneErr != null) {
+            showError(phoneErr);
+            SwingUtilities.invokeLater(() -> { tabs.setSelectedIndex(1); txtDienThoai.requestFocusInWindow(); });
+            return;
+        }
         nhanVien.setMaNhanVien(maNhanVien);
         nhanVien.setLoaiHopDong(loaiHopDong);
         nhanVien.setNgayVaoLam(ngayVaoLam);
         nhanVien.setGhiChu(ghiChu);
         if (!isEdit) {
-            nhanVien.setTrangThai("dang_lam_viec");
+            nhanVien.setTrangThai(HRMConstants.TRANG_THAI_DANG_LAM_VIEC);
         }
         thongTinCaNhan.setHoTen(hoTen);
         thongTinCaNhan.setNgaySinh(ngaySinh);
@@ -318,13 +335,13 @@ public class EmployeeFormDialog extends BaseFormDialog {
         thongTinCaNhan.setCccd(cccd.isEmpty() ? null : cccd);
         thongTinCaNhan.setDienThoai(dienThoai.isEmpty() ? null : dienThoai);
         thongTinCaNhan.setEmail(email.isEmpty() ? null : email);
-        thongTinCaNhan.setDiaChi(diaChi.isEmpty() ? null : diaChi);
-        thongTinCaNhan.setDiaChiThuongTru(diaChiThuongTru.isEmpty() ? null : diaChiThuongTru);
+        thongTinCaNhan.setDiaChi(diaChi);
         thongTinCaNhan.setQueQuan(queQuan.isEmpty() ? null : queQuan);
         thongTinCaNhan.setTinhTrangHonNhan(tinhTrangHonNhan);
         thongTinCaNhan.setTrinhDoHocVan(trinhDoHocVan.isEmpty() ? null : trinhDoHocVan);
         thongTinCaNhan.setKinhNghiem(kinhNghiem.isEmpty() ? null : kinhNghiem);
         thongTinCaNhan.setFileCv(fileCV.isEmpty() ? null : fileCV);
+        // Basic validation
         if (isEdit) {
             // Update thông tin lao động (chỉ cho phép sửa một số trường)
             KetQua<ThongTinCaNhan> result = nvService.capNhatThongTinCaNhan(thongTinCaNhan);

@@ -162,7 +162,7 @@ public class ChamCongDAO {
     /**
      * INSERT or UPDATE depending on whether the record already exists.
      */
-    public void saveCaLam(CaLam caLam) {
+    public int saveCaLam(CaLam caLam) {
         boolean exists = findCaLamById(caLam.getId()) != null;
         if (exists) {
             String sql = "UPDATE CALAM SET tenCaLam=?, gioBatDau=?, gioKetThuc=?, soGioChuan=?, "
@@ -177,7 +177,7 @@ public class ChamCongDAO {
                 ps.setString(6, caLam.getMoTa());
                 ps.setString(7, caLam.getTrangThai() != null ? caLam.getTrangThai().getDbValue() : HRMConstants.TRANG_THAI_HOAT_DONG);
                 ps.setString(8, caLam.getId());
-                ps.executeUpdate();
+                return ps.executeUpdate();
             } catch (SQLException e) {
                 throw new RuntimeException("Lỗi cập nhật ca làm: " + e.getMessage(), e);
             }
@@ -194,19 +194,19 @@ public class ChamCongDAO {
                 ps.setBoolean(6, caLam.isChoPhepLamThem());
                 ps.setString(7, caLam.getMoTa());
                 ps.setString(8, caLam.getTrangThai() != null ? caLam.getTrangThai().getDbValue() : HRMConstants.TRANG_THAI_HOAT_DONG);
-                ps.executeUpdate();
+                return ps.executeUpdate();
             } catch (SQLException e) {
                 throw new RuntimeException("Lỗi thêm ca làm: " + e.getMessage(), e);
             }
         }
     }
 
-    public void deleteCaLam(String id) {
+    public int deleteCaLam(String id) {
         String sql = "UPDATE CALAM SET trangThai='" + HRMConstants.TRANG_THAI_NGUNG_HOAT_DONG + "' WHERE maCaLam=?";
         try (Connection conn = DatabaseConnection.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setString(1, id);
-            ps.executeUpdate();
+            return ps.executeUpdate();
         } catch (SQLException e) {
             throw new RuntimeException("Lỗi xóa ca làm: " + e.getMessage(), e);
         }
@@ -280,7 +280,7 @@ public class ChamCongDAO {
         return 0;
     }
 
-    public void updateChamCong(ChamCong cc) {
+    public int updateChamCong(ChamCong cc) {
         String sql = "UPDATE CHAMCONG SET gioVao=?, gioRa=?, soGioLam=?, gioLamThem=?, "
                 + "trangThai=?, phuongThucChamCong=?, ghiChu=? WHERE maChamCong=?";
         try (Connection conn = DatabaseConnection.getConnection();
@@ -293,13 +293,13 @@ public class ChamCongDAO {
             ps.setString(6, cc.getPhuongThucChamCong() != null ? cc.getPhuongThucChamCong().getDbValue() : "thu_cong");
             ps.setString(7, cc.getGhiChu());
             ps.setInt(8, cc.getId());
-            ps.executeUpdate();
+            return ps.executeUpdate();
         } catch (SQLException e) {
             throw new RuntimeException("Lỗi cập nhật chấm công: " + e.getMessage(), e);
         }
     }
 
-    public void updateChamCongByManager(ChamCong cc) {
+    public int updateChamCongByManager(ChamCong cc) {
         if (hasChamCongAuditColumns()) {
             String sql = "UPDATE CHAMCONG SET ngay=?, maCaLam=?, gioVao=?, gioRa=?, soGioLam=?, gioLamThem=?, "
                     + "trangThai=?, phuongThucChamCong=?, ghiChu=?, nguoiChinhSua=?, lyDoChinhSua=?, ngayChinhSua=? "
@@ -319,8 +319,7 @@ public class ChamCongDAO {
                 ps.setString(11, cc.getLyDoChinhSua());
                 ps.setTimestamp(12, cc.getNgayChinhSua() != null ? Timestamp.valueOf(cc.getNgayChinhSua()) : null);
                 ps.setInt(13, cc.getId());
-                ps.executeUpdate();
-                return;
+                return ps.executeUpdate();
             } catch (SQLException e) {
                 throw new RuntimeException("Lỗi cập nhật chấm công: " + e.getMessage(), e);
             }
@@ -340,7 +339,7 @@ public class ChamCongDAO {
             ps.setString(8, cc.getPhuongThucChamCong() != null ? cc.getPhuongThucChamCong().getDbValue() : "thu_cong");
             ps.setString(9, ghiChuMoi);
             ps.setInt(10, cc.getId());
-            ps.executeUpdate();
+            return ps.executeUpdate();
         } catch (SQLException e) {
             throw new RuntimeException("Lỗi cập nhật chấm công: " + e.getMessage(), e);
         }
@@ -607,7 +606,7 @@ public class ChamCongDAO {
         return 0;
     }
 
-    public void updateTrangThai(int id, String trangThai, String nguoiDuyet, LocalDateTime ngayDuyet) {
+    public int updateTrangThai(int id, String trangThai, String nguoiDuyet, LocalDateTime ngayDuyet) {
         String sql = "UPDATE DANGKY_LAMTHEM SET trangThai=?, nguoiDuyet=?, ngayDuyet=? WHERE maDK=?";
         try (Connection conn = DatabaseConnection.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
@@ -615,7 +614,7 @@ public class ChamCongDAO {
             if (nguoiDuyet != null && !nguoiDuyet.isEmpty()) ps.setString(2, nguoiDuyet); else ps.setNull(2, Types.VARCHAR);
             ps.setTimestamp(3, ngayDuyet != null ? Timestamp.valueOf(ngayDuyet) : null);
             ps.setInt(4, id);
-            ps.executeUpdate();
+            return ps.executeUpdate();
         } catch (SQLException e) {
             throw new RuntimeException("Lỗi cập nhật trạng thái đơn OT: " + e.getMessage(), e);
         }
@@ -840,13 +839,13 @@ public class ChamCongDAO {
     }
 
     /** Update heSoOT on a DangKyLamThem record. */
-    public void updateHeSoOT(int id, double heSo) {
+    public int updateHeSoOT(int id, double heSo) {
         String sql = "UPDATE DANGKY_LAMTHEM SET heSoOT=? WHERE maDK=?";
         try (Connection conn = DatabaseConnection.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setDouble(1, heSo);
             ps.setInt(2, id);
-            ps.executeUpdate();
+            return ps.executeUpdate();
         } catch (SQLException e) {
             throw new RuntimeException("Lỗi cập nhật hệ số OT: " + e.getMessage(), e);
         }
@@ -910,7 +909,7 @@ public class ChamCongDAO {
         return 0;
     }
 
-    public void updateCauHinhPC(CauHinhPhuCap pc) {
+    public int updateCauHinhPC(CauHinhPhuCap pc) {
         String sql = "UPDATE CAUHINH_PHUCAP SET loai=?, tenKhoan=?, kieuTinh=?, giaTri=?, nguon=? WHERE maCauHinh=?";
         try (Connection conn = DatabaseConnection.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
@@ -920,18 +919,18 @@ public class ChamCongDAO {
             ps.setDouble(4, pc.getGiaTri());
             ps.setString(5, pc.getNguon());
             ps.setInt(6, pc.getId());
-            ps.executeUpdate();
+            return ps.executeUpdate();
         } catch (SQLException e) {
             throw new RuntimeException("Lỗi cập nhật cấu hình phụ cấp: " + e.getMessage(), e);
         }
     }
 
-    public void deactivateCauHinhPC(int id) {
+    public int deactivateCauHinhPC(int id) {
         String sql = "UPDATE CAUHINH_PHUCAP SET hoatDong=0 WHERE maCauHinh=?";
         try (Connection conn = DatabaseConnection.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setInt(1, id);
-            ps.executeUpdate();
+            return ps.executeUpdate();
         } catch (SQLException e) {
             throw new RuntimeException("Lỗi ngừng cấu hình phụ cấp: " + e.getMessage(), e);
         }
@@ -1049,14 +1048,14 @@ public class ChamCongDAO {
     }
 
     /** Xóa đơn OT (chỉ xóa nếu đang ở trạng thái chờ duyệt). */
-    public void deleteDangKyLamThem(int maDK) {
+    public int deleteDangKyLamThem(int maDK) {
         String sql = "DELETE FROM DANGKY_LAMTHEM WHERE maDK=?";
         try (Connection conn = DatabaseConnection.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setInt(1, maDK);
-            ps.executeUpdate();
+            return ps.executeUpdate();
         } catch (SQLException e) {
-            System.err.println("[DB] deleteDangKyLamThem: " + e.getMessage());
+            throw new RuntimeException("Loi deleteDangKyLamThem: " + e.getMessage(), e);
         }
     }
 

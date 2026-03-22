@@ -9,7 +9,6 @@ import com.hrm.util.PasswordUtil;
 import com.hrm.util.SessionContext;
 import com.hrm.util.ValidationUtils;
 
-import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -110,7 +109,8 @@ public class XacThucBUS {
         if (SessionContext.getInstance().isAdmin()) {
             return com.hrm.model.DataScope.ALL;
         }
-        for (com.hrm.model.VaiTro role : user.getVaiTros()) {
+        com.hrm.model.VaiTro role = user.getVaiTro();
+        if (role != null) {
             for (com.hrm.model.Quyen q : role.getQuyens()) {
                 if (action.equals(q.getId()) && q.getPhamVi() != null) {
                     return q.getPhamVi();
@@ -357,6 +357,19 @@ public class XacThucBUS {
     }
 
     /**
+     * Cập nhật vai trò của tài khoản theo mã nhân viên.
+     * Dùng khi bổ nhiệm được duyệt để tự động cập nhật role.
+     */
+    public KetQua<Void> updateUserRole(String maNV, String maVaiTro) {
+        TaiKhoan tk = findByMaNV(maNV);
+        if (tk == null) {
+            return KetQua.error("Không tìm thấy tài khoản cho NV " + maNV);
+        }
+        taiKhoanRepo.updateRole(tk.getId(), maVaiTro);
+        return KetQua.success(null, "Cập nhật vai trò thành công.");
+    }
+
+    /**
      * Tạo vai trò kèm quyền (tùy chọn).
      */
     public KetQua<Void> createRoleWithPermissions(String maVaiTro, String tenVaiTro, List<Quyen> permissions) {
@@ -394,9 +407,10 @@ public class XacThucBUS {
         TaiKhoan user = taiKhoanRepo.findById(maTaiKhoan);
         if (user == null) return new HashSet<>();
         Set<String> fromRoles = new HashSet<>();
-        user.getVaiTros().forEach(role ->
-                role.getQuyens().forEach(p -> fromRoles.add(p.getId()))
-        );
+        VaiTro role = user.getVaiTro();
+        if (role != null) {
+            role.getQuyens().forEach(p -> fromRoles.add(p.getId()));
+        }
         return fromRoles;
     }
 
@@ -430,16 +444,14 @@ public class XacThucBUS {
         updateTarget.setBiKhoa(false);
         VaiTro adminRole = getRoleByCode(ROLE_ADMIN);
         if (adminRole == null) return;
-        List<VaiTro> fixedRoles = new ArrayList<>();
-        fixedRoles.add(adminRole);
-        updateTarget.setVaiTros(fixedRoles);
+        updateTarget.setVaiTro(adminRole);
     }
 
     private void updatePrimaryRole(TaiKhoan user) {
-        if (user.getVaiTros() == null || user.getVaiTros().isEmpty()) {
+        if (user.getVaiTro() == null) {
             return;
         }
-        taiKhoanRepo.updateRole(user.getId(), user.getVaiTros().get(0).getId());
+        taiKhoanRepo.updateRole(user.getId(), user.getVaiTro().getId());
     }
 
     private TaiKhoan findExistingUser(TaiKhoan user) {

@@ -82,22 +82,22 @@ public class ChamCongBUS {
         KetQua<Void> permission = validateAttendanceManagePermission();
         if (!permission.isSuccess()) return KetQua.error(permission.getMessage());
         CaLam existing = repository.findCaLamById(ma.trim());
-        if (existing != null) return KetQua.error("Ma ca da ton tai.");
+        if (existing != null) return KetQua.error("Mã ca đã tồn tại.");
         LocalTime tBD, tKT;
         try {
             tBD = LocalTime.parse(gioBD.trim());
             tKT = LocalTime.parse(gioKT.trim());
         } catch (Exception e) {
-            return KetQua.error("Dinh dang gio khong hop le (HH:mm).");
+            return KetQua.error("Định dạng giờ không hợp lệ (HH:mm).");
         }
         try {
             CaLam ca = new CaLam(ma.trim(), ten.trim(), tBD, tKT);
             ca.setSoGioChuan(sg);
             ca.setChoPhepLamThem(ot);
             repository.saveCaLam(ca);
-            return KetQua.success(ca, "Da them ca lam '" + ten + "'.");
+            return KetQua.success(ca, "Đã thêm ca làm '" + ten + "'.");
         } catch (Exception e) {
-            return KetQua.error("Loi luu ca lam: " + e.getMessage());
+            return KetQua.error("Lỗi lưu ca làm: " + e.getMessage());
         }
     }
 
@@ -105,13 +105,13 @@ public class ChamCongBUS {
         KetQua<Void> permission = validateAttendanceManagePermission();
         if (!permission.isSuccess()) return KetQua.error(permission.getMessage());
         CaLam ca = repository.findCaLamById(ma);
-        if (ca == null) return KetQua.error("Khong tim thay ca lam.");
+        if (ca == null) return KetQua.error("Không tìm thấy ca làm.");
         LocalTime tBD, tKT;
         try {
             tBD = LocalTime.parse(gioBD.trim());
             tKT = LocalTime.parse(gioKT.trim());
         } catch (Exception e) {
-            return KetQua.error("Dinh dang gio khong hop le (HH:mm).");
+            return KetQua.error("Định dạng giờ không hợp lệ (HH:mm).");
         }
         try {
             ca.setTenCaLam(ten.trim());
@@ -120,9 +120,9 @@ public class ChamCongBUS {
             ca.setSoGioChuan(sg);
             ca.setChoPhepLamThem(ot);
             repository.saveCaLam(ca);
-            return KetQua.success(ca, "Da cap nhat ca lam.");
+            return KetQua.success(ca, "Đã cập nhật ca làm.");
         } catch (Exception e) {
-            return KetQua.error("Loi cap nhat ca lam: " + e.getMessage());
+            return KetQua.error("Lỗi cập nhật ca làm: " + e.getMessage());
         }
     }
 
@@ -162,7 +162,7 @@ public class ChamCongBUS {
 
     // Legacy: used by existing AttendancePanel
     public KetQua<ChamCong> checkIn(String maNV, String maCaLam) {
-        return checkIn(maNV, maCaLam, "thu_cong");
+        return checkIn(maNV, maCaLam, HRMConstants.PHUONG_THUC_CHAM_CONG_THU_CONG);
     }
 
     /**
@@ -207,16 +207,16 @@ public class ChamCongBUS {
         KetQua<Void> permission = validateAttendanceManagePermission();
         if (!permission.isSuccess()) return KetQua.error(permission.getMessage());
         if (ValidationUtils.isBlank(maNV)) {
-            return KetQua.error("Ma nhan vien khong hop le.");
+            return KetQua.error("Mã nhân viên không hợp lệ.");
         }
         if (ngay == null) {
-            return KetQua.error("Ngay cham cong khong duoc de trong.");
+            return KetQua.error("Ngày chấm công không được để trống.");
         }
         if (gioVao == null || gioRa == null) {
-            return KetQua.error("Gio vao va gio ra khong duoc de trong.");
+            return KetQua.error("Giờ vào và giờ ra không được để trống.");
         }
         if (!gioRa.isAfter(gioVao)) {
-            return KetQua.error("Gio ra phai sau gio vao.");
+            return KetQua.error("Giờ ra phải sau giờ vào.");
         }
         CaLam caLam = repository.findCaLamById(maCaLam);
         if (caLam == null) {
@@ -305,7 +305,7 @@ public class ChamCongBUS {
 
     public List<ChamCong> getLichSuChamCong(String maNV, LocalDate tu, LocalDate den) {
         if (!canViewAttendanceOf(maNV)) return java.util.Collections.emptyList();
-        // Approximate using findByNVAndThang for the month range
+        // Ước lượng bằng findByNVAndThang cho khoảng của tháng
         return repository.findByNVAndThang(maNV, tu.getMonthValue(), tu.getYear());
     }
 

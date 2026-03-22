@@ -25,7 +25,7 @@ public class ChucVuDAO {
      */
     public List<ChucVu> findAll() {
         List<ChucVu> list = new ArrayList<>();
-        String sql = "SELECT maChucVu, tenChucVu, capBac, phuCapChucVu, moTa, trangThai "
+        String sql = "SELECT maChucVu, tenChucVu, capBac, phuCapChucVu, moTa, maVaiTro, trangThai "
                    + "FROM CHUCVU ORDER BY capBac, maChucVu";
         try (Connection conn = DatabaseConnection.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql);
@@ -44,7 +44,7 @@ public class ChucVuDAO {
      * Tìm chức vụ theo mã.
      */
     public ChucVu findById(String maChucVu) {
-        String sql = "SELECT maChucVu, tenChucVu, capBac, phuCapChucVu, moTa, trangThai "
+        String sql = "SELECT maChucVu, tenChucVu, capBac, phuCapChucVu, moTa, maVaiTro, trangThai "
                    + "FROM CHUCVU WHERE maChucVu = ?";
         try (Connection conn = DatabaseConnection.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
@@ -66,7 +66,7 @@ public class ChucVuDAO {
      */
     public List<ChucVu> findActive() {
         List<ChucVu> list = new ArrayList<>();
-        String sql = "SELECT maChucVu, tenChucVu, capBac, phuCapChucVu, moTa, trangThai "
+        String sql = "SELECT maChucVu, tenChucVu, capBac, phuCapChucVu, moTa, maVaiTro, trangThai "
                    + "FROM CHUCVU WHERE trangThai = '" + HRMConstants.TRANG_THAI_HOAT_DONG + "' ORDER BY capBac, maChucVu";
         try (Connection conn = DatabaseConnection.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql);
@@ -120,9 +120,9 @@ public class ChucVuDAO {
     /**
      * Thêm chức vụ mới vào cơ sở dữ liệu.
      */
-    public void save(ChucVu position) {
-        String sql = "INSERT INTO CHUCVU (maChucVu, tenChucVu, capBac, phuCapChucVu, moTa, trangThai) "
-                   + "VALUES (?, ?, ?, ?, ?, ?)";
+    public int save(ChucVu position) {
+        String sql = "INSERT INTO CHUCVU (maChucVu, tenChucVu, capBac, phuCapChucVu, moTa, maVaiTro, trangThai) "
+                   + "VALUES (?, ?, ?, ?, ?, ?, ?)";
         try (Connection conn = DatabaseConnection.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setString(1, position.getId());
@@ -130,19 +130,19 @@ public class ChucVuDAO {
             ps.setInt(3, position.getCapBac());
             ps.setDouble(4, position.getPhuCapChucVu());
             ps.setString(5, position.getMoTa());
-            ps.setString(6, position.getTrangThai());
-            ps.executeUpdate();
+            ps.setString(6, position.getMaVaiTro());
+            ps.setString(7, position.getTrangThai());
+            return ps.executeUpdate();
         } catch (SQLException e) {
-            System.err.println("Lỗi ChucVuDAO.save: " + e.getMessage());
-            e.printStackTrace();
+            throw new RuntimeException("Loi ChucVuDAO.save: " + e.getMessage(), e);
         }
     }
 
     /**
      * Cập nhật thông tin chức vụ.
      */
-    public void update(ChucVu position) {
-        String sql = "UPDATE CHUCVU SET tenChucVu = ?, capBac = ?, phuCapChucVu = ?, moTa = ?, trangThai = ? "
+    public int update(ChucVu position) {
+        String sql = "UPDATE CHUCVU SET tenChucVu = ?, capBac = ?, phuCapChucVu = ?, moTa = ?, maVaiTro = ?, trangThai = ? "
                    + "WHERE maChucVu = ?";
         try (Connection conn = DatabaseConnection.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
@@ -150,20 +150,39 @@ public class ChucVuDAO {
             ps.setInt(2, position.getCapBac());
             ps.setDouble(3, position.getPhuCapChucVu());
             ps.setString(4, position.getMoTa());
-            ps.setString(5, position.getTrangThai());
-            ps.setString(6, position.getId());
-            ps.executeUpdate();
+            ps.setString(5, position.getMaVaiTro());
+            ps.setString(6, position.getTrangThai());
+            ps.setString(7, position.getId());
+            return ps.executeUpdate();
         } catch (SQLException e) {
-            System.err.println("Lỗi ChucVuDAO.update: " + e.getMessage());
-            e.printStackTrace();
+            throw new RuntimeException("Loi ChucVuDAO.update: " + e.getMessage(), e);
         }
     }
 
     // =====================================================================
     // ==================== Private Helpers ================================
     // =====================================================================
+    /**
+     * Cập nhật chỉ trường maVaiTro của chức vụ (dùng cho màn hình mapping ChucVu → VaiTro).
+     */
+    public int updateMaVaiTro(String maChucVu, String maVaiTro) {
+        String sql = "UPDATE CHUCVU SET maVaiTro = ? WHERE maChucVu = ?";
+        try (Connection conn = DatabaseConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            if (maVaiTro == null || maVaiTro.isEmpty()) {
+                ps.setNull(1, java.sql.Types.VARCHAR);
+            } else {
+                ps.setString(1, maVaiTro.trim());
+            }
+            ps.setString(2, maChucVu);
+            return ps.executeUpdate();
+        } catch (SQLException e) {
+            throw new RuntimeException("Loi ChucVuDAO.updateMaVaiTro: " + e.getMessage(), e);
+        }
+    }
+
     private ChucVu mapRow(ResultSet rs) throws SQLException {
-        return new ChucVu(
+        ChucVu cv = new ChucVu(
                 rs.getString("maChucVu"),
                 rs.getString("tenChucVu"),
                 rs.getInt("capBac"),
@@ -171,5 +190,7 @@ public class ChucVuDAO {
                 rs.getString("moTa"),
                 rs.getString("trangThai")
         );
+        cv.setMaVaiTro(rs.getString("maVaiTro"));
+        return cv;
     }
 }

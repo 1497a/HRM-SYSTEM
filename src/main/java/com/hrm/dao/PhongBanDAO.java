@@ -124,7 +124,7 @@ public class PhongBanDAO {
     /**
      * Thêm phòng ban mới vào cơ sở dữ liệu.
      */
-    public void save(PhongBan department) {
+    public int save(PhongBan department) {
         String sql = "INSERT INTO PHONGBAN (maPhongBan, tenPhongBan, phongBanCha, trangThai) VALUES (?, ?, ?, ?)";
         try (Connection conn = DatabaseConnection.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
@@ -136,17 +136,16 @@ public class PhongBanDAO {
                 ps.setNull(3, Types.VARCHAR);
             }
             ps.setString(4, department.getTrangThai());
-            ps.executeUpdate();
+            return ps.executeUpdate();
         } catch (SQLException e) {
-            System.err.println("Lỗi PhongBanDAO.save: " + e.getMessage());
-            e.printStackTrace();
+            throw new RuntimeException("Loi PhongBanDAO.save: " + e.getMessage(), e);
         }
     }
 
     /**
      * Cập nhật thông tin phòng ban.
      */
-    public void update(PhongBan department) {
+    public int update(PhongBan department) {
         String sql = "UPDATE PHONGBAN SET tenPhongBan = ?, phongBanCha = ?, trangThai = ? WHERE maPhongBan = ?";
         try (Connection conn = DatabaseConnection.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
@@ -158,10 +157,9 @@ public class PhongBanDAO {
             }
             ps.setString(3, department.getTrangThai());
             ps.setString(4, department.getId());
-            ps.executeUpdate();
+            return ps.executeUpdate();
         } catch (SQLException e) {
-            System.err.println("Lỗi PhongBanDAO.update: " + e.getMessage());
-            e.printStackTrace();
+            throw new RuntimeException("Loi PhongBanDAO.update: " + e.getMessage(), e);
         }
     }
 

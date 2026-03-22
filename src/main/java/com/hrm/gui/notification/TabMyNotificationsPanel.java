@@ -4,6 +4,7 @@ import com.hrm.bus.KetQua;
 import com.hrm.bus.ThongBaoBUS;
 import com.hrm.model.TaiKhoan;
 import com.hrm.model.ThongBao;
+import com.hrm.util.DialogUtil;
 import com.hrm.util.HRMConstants;
 import com.hrm.util.UIColors;
 import com.hrm.util.UIFonts;
@@ -116,25 +117,27 @@ class TabMyNotificationsPanel extends JPanel {
                 });
             }
         } catch (Exception ex) {
-            JOptionPane.showMessageDialog(this, "Lỗi tải thông báo: " + ex.getMessage(),
-                    "Lỗi", JOptionPane.ERROR_MESSAGE);
+            DialogUtil.showError(this, "Lỗi tải thông báo: " + ex.getMessage());
         }
     }
 
     private void danhDauDaDoc() {
         int row = tblThongBao.getSelectedRow();
         if (row < 0) {
-            JOptionPane.showMessageDialog(this, "Vui lòng chọn thông báo cần đánh dấu.",
-                    "Thông báo", JOptionPane.INFORMATION_MESSAGE);
+            DialogUtil.showInfo(this, "Vui lòng chọn thông báo cần đánh dấu.");
             return;
         }
         int maThongBao = (int) modelThongBao.getValueAt(row, 0);
         try {
             KetQua<Void> result = service.danhDauDaDoc(maThongBao);
-            if (result.isSuccess()) loadThongBao();
-            else JOptionPane.showMessageDialog(this, result.getMessage(), "Lỗi", JOptionPane.ERROR_MESSAGE);
+            if (result.isSuccess()) {
+                DialogUtil.showSuccess(this, result.getMessage());
+                loadThongBao();
+            } else {
+                DialogUtil.showError(this, result.getMessage());
+            }
         } catch (Exception ex) {
-            JOptionPane.showMessageDialog(this, "Lỗi: " + ex.getMessage(), "Lỗi", JOptionPane.ERROR_MESSAGE);
+            DialogUtil.showError(this, "Lỗi: " + ex.getMessage());
         }
     }
 
@@ -144,18 +147,19 @@ class TabMyNotificationsPanel extends JPanel {
             KetQua<Void> result = service.danhDauTatCaDaDoc(currentUser.getId());
             if (result.isSuccess()) {
                 loadThongBao();
-                JOptionPane.showMessageDialog(this, "Đã đánh dấu tất cả là đã đọc.",
-                        "Thành công", JOptionPane.INFORMATION_MESSAGE);
+                DialogUtil.showSuccess(this, "Đã đánh dấu tất cả là đã đọc.");
             } else {
-                JOptionPane.showMessageDialog(this, result.getMessage(), "Lỗi", JOptionPane.ERROR_MESSAGE);
+                DialogUtil.showError(this, result.getMessage());
             }
         } catch (Exception ex) {
-            JOptionPane.showMessageDialog(this, "Lỗi: " + ex.getMessage(), "Lỗi", JOptionPane.ERROR_MESSAGE);
+            DialogUtil.showError(this, "Lỗi: " + ex.getMessage());
         }
     }
 
     private void markAsRead(int maThongBao) {
-        try { service.danhDauDaDoc(maThongBao); loadThongBao(); } catch (Exception ignored) {}
+        KetQua<Void> result = service.danhDauDaDoc(maThongBao);
+        if (result.isSuccess()) loadThongBao();
+        // silent on error — auto-mark khi mở nội dung, không làm ngắt luồng UI
     }
 
     private void showNoiDung(ThongBao tb) {

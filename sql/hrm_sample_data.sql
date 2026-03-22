@@ -102,21 +102,21 @@ INSERT INTO NHANVIEN (maNV, loaiHopDong, ngayVaoLam, trangThai, ghiChu) VALUES
 -- =====================================================
 -- 4. THÔNG TIN CÁ NHÂN
 -- =====================================================
-INSERT INTO THONGTINCANHAN (maNV, hoTen, ngaySinh, gioiTinh, cccd, dienThoai, email, diaChi, diaChiThuongTru, queQuan, danToc, tonGiao, tinhTrangHonNhan) VALUES
-('admin', 'Quản trị viên',          NULL,         'khac',NULL,            NULL,         'admin@abctech.vn',         NULL,                                  NULL,                                  NULL,          NULL,   NULL,         'doc_than'),
-('NV001', 'Nguyễn Đức Hùng',      '1978-05-12', 'nam', '001078005121', '0901000001', 'hung.nguyen@abctech.vn',    '10 Lê Duẩn, Q1, TP.HCM',             '10 Lê Duẩn, Q1, TP.HCM',             'Hà Nội',      'Kinh', 'Không',      'da_ket_hon'),
-('NV002', 'Nguyễn Thị Thu Hương', '1985-07-25', 'nu',  '079085007251', '0901000002', 'huong.nguyen@abctech.vn',   '22 Lý Tự Trọng, Q1, TP.HCM',         '22 Lý Tự Trọng, Q1, TP.HCM',         'Nghệ An',     'Kinh', 'Phật giáo',  'da_ket_hon'),
-('NV003', 'Đặng Thị Lan Anh',     '1992-02-18', 'nu',  '079092002181', '0901000003', 'lananh.dang@abctech.vn',    '67 Nguyễn Thị Minh Khai, Q3',        '67 Nguyễn Thị Minh Khai, Q3',        'Bình Định',   'Kinh', 'Không',      'doc_than'),
-('NV004', 'Hoàng Thị Bích Ngọc',  '1984-12-03', 'nu',  '079084012031', '0901000004', 'ngoc.hoang@abctech.vn',     '45 Nam Kỳ Khởi Nghĩa, Q3',           '45 Nam Kỳ Khởi Nghĩa, Q3',           'Huế',         'Kinh', 'Phật giáo',  'da_ket_hon'),
-('NV005', 'Lý Thị Thanh Tâm',     '1993-01-29', 'nu',  '079093001291', '0901000005', 'thanhTam.ly@abctech.vn',    '56 Bạch Đằng, BT, TP.HCM',           '56 Bạch Đằng, BT, TP.HCM',           'Bến Tre',     'Kinh', 'Không',      'doc_than'),
-('NV006', 'Nguyễn Anh Tuấn',      '1983-06-14', 'nam', '079083006141', '0901000006', 'anh.tuan@abctech.vn',       '22 Pasteur, Q1, TP.HCM',             '22 Pasteur, Q1, TP.HCM',             'Hà Nội',      'Kinh', 'Không',      'da_ket_hon'),
-('NV007', 'Lê Minh Hoàng',        '1991-12-25', 'nam', '079091012251', '0901000007', 'hoang.le@abctech.vn',       '15 CMT8, Q10, TP.HCM',               '15 CMT8, Q10, TP.HCM',               'Bình Dương',  'Kinh', 'Không',      'da_ket_hon'),
-('NV008', 'Đinh Quang Sơn',       '1982-08-30', 'nam', '079082008301', '0901000008', 'son.dinh@abctech.vn',       '10 Nguyễn Văn Cừ, Q5, TP.HCM',      '10 Nguyễn Văn Cừ, Q5, TP.HCM',      'Hải Phòng',   'Kinh', 'Không',      'da_ket_hon'),
-('NV009', 'Nguyễn Văn Khoa',      '1990-04-05', 'nam', '079090004051', '0901000009', 'khoa.nguyen@abctech.vn',    '26 Trương Định, Q3, TP.HCM',         '26 Trương Định, Q3, TP.HCM',         'Quảng Ngãi',  'Kinh', 'Không',      'da_ket_hon'),
-('NV010', 'Hoàng Minh Trí',       '1995-07-01', 'nam', '079095007011', '0901000010', 'tri.hoang@abctech.vn',      '38 Võ Văn Tần, Q3, TP.HCM',          '38 Võ Văn Tần, Q3, TP.HCM',          'Hà Nội',      'Kinh', 'Không',      'doc_than'),
-('NV011', 'Võ Thị Cẩm Tú',        '2001-08-07', 'nu',  '079101008071', '0901000011', 'camtu.vo@abctech.vn',       '25 Đinh Tiên Hoàng, BT, TP.HCM',    '25 Đinh Tiên Hoàng, BT, TP.HCM',    'TP.HCM',      'Kinh', 'Không',      'doc_than'),
-('NV012', 'Lê Thị Phương Linh',   '1986-10-09', 'nu',  '079086010091', '0901000012', 'phuonglinh.le@abctech.vn',  '30 Nguyễn Trọng Tuyển, PN, TP.HCM', '30 Nguyễn Trọng Tuyển, PN, TP.HCM', 'TP.HCM',      'Kinh', 'Không',      'da_ket_hon'),
-('NV013', 'Phạm Đình Khang',      '1993-05-04', 'nam', '079093005041', '0901000013', 'khang.pham@abctech.vn',     '52 Phú Nhuận, PN, TP.HCM',           '52 Phú Nhuận, PN, TP.HCM',           'Bình Phước',  'Kinh', 'Không',      'doc_than');
+INSERT INTO THONGTINCANHAN (maNV, hoTen, ngaySinh, gioiTinh, cccd, dienThoai, email, diaChi, queQuan, danToc, tonGiao, tinhTrangHonNhan) VALUES
+('admin', 'Quản trị viên',          NULL,         'khac',NULL,            NULL,         'admin@abctech.vn',         NULL,                                  NULL,          NULL,   NULL,         'doc_than'),
+('NV001', 'Nguyễn Đức Hùng',      '1978-05-12', 'nam', '001078005121', '0901000001', 'hung.nguyen@abctech.vn',    '10 Lê Duẩn, Q1, TP.HCM',             'Hà Nội',      'Kinh', 'Không',      'da_ket_hon'),
+('NV002', 'Nguyễn Thị Thu Hương', '1985-07-25', 'nu',  '079085007251', '0901000002', 'huong.nguyen@abctech.vn',   '22 Lý Tự Trọng, Q1, TP.HCM',         'Nghệ An',     'Kinh', 'Phật giáo',  'da_ket_hon'),
+('NV003', 'Đặng Thị Lan Anh',     '1992-02-18', 'nu',  '079092002181', '0901000003', 'lananh.dang@abctech.vn',    '67 Nguyễn Thị Minh Khai, Q3',        'Bình Định',   'Kinh', 'Không',      'doc_than'),
+('NV004', 'Hoàng Thị Bích Ngọc',  '1984-12-03', 'nu',  '079084012031', '0901000004', 'ngoc.hoang@abctech.vn',     '45 Nam Kỳ Khởi Nghĩa, Q3',           'Huế',         'Kinh', 'Phật giáo',  'da_ket_hon'),
+('NV005', 'Lý Thị Thanh Tâm',     '1993-01-29', 'nu',  '079093001291', '0901000005', 'thanhTam.ly@abctech.vn',    '56 Bạch Đằng, BT, TP.HCM',           'Bến Tre',     'Kinh', 'Không',      'doc_than'),
+('NV006', 'Nguyễn Anh Tuấn',      '1983-06-14', 'nam', '079083006141', '0901000006', 'anh.tuan@abctech.vn',       '22 Pasteur, Q1, TP.HCM',             'Hà Nội',      'Kinh', 'Không',      'da_ket_hon'),
+('NV007', 'Lê Minh Hoàng',        '1991-12-25', 'nam', '079091012251', '0901000007', 'hoang.le@abctech.vn',       '15 CMT8, Q10, TP.HCM',               'Bình Dương',  'Kinh', 'Không',      'da_ket_hon'),
+('NV008', 'Đinh Quang Sơn',       '1982-08-30', 'nam', '079082008301', '0901000008', 'son.dinh@abctech.vn',       '10 Nguyễn Văn Cừ, Q5, TP.HCM',      'Hải Phòng',   'Kinh', 'Không',      'da_ket_hon'),
+('NV009', 'Nguyễn Văn Khoa',      '1990-04-05', 'nam', '079090004051', '0901000009', 'khoa.nguyen@abctech.vn',    '26 Trương Định, Q3, TP.HCM',         'Quảng Ngãi',  'Kinh', 'Không',      'da_ket_hon'),
+('NV010', 'Hoàng Minh Trí',       '1995-07-01', 'nam', '079095007011', '0901000010', 'tri.hoang@abctech.vn',      '38 Võ Văn Tần, Q3, TP.HCM',          'Hà Nội',      'Kinh', 'Không',      'doc_than'),
+('NV011', 'Võ Thị Cẩm Tú',        '2001-08-07', 'nu',  '079101008071', '0901000011', 'camtu.vo@abctech.vn',       '25 Đinh Tiên Hoàng, BT, TP.HCM',    'TP.HCM',      'Kinh', 'Không',      'doc_than'),
+('NV012', 'Lê Thị Phương Linh',   '1986-10-09', 'nu',  '079086010091', '0901000012', 'phuonglinh.le@abctech.vn',  '30 Nguyễn Trọng Tuyển, PN, TP.HCM', 'TP.HCM',      'Kinh', 'Không',      'da_ket_hon'),
+('NV013', 'Phạm Đình Khang',      '1993-05-04', 'nam', '079093005041', '0901000013', 'khang.pham@abctech.vn',     '52 Phú Nhuận, PN, TP.HCM',           'Bình Phước',  'Kinh', 'Không',      'doc_than');
 
 -- =====================================================
 -- 5. BỔ NHIỆM
@@ -161,6 +161,14 @@ INSERT INTO VAITRO (maVaiTro, tenVaiTro, moTa, laVaiTroHeThong, trangThai) VALUE
 ('NHAN_SU',         'Nhân sự',                 'Nhân viên phòng Nhân sự — nghiệp vụ HR',        FALSE, 'hoatDong'),
 ('KE_TOAN',         'Kế toán',                 'Nhân viên phòng Kế toán — nghiệp vụ tài chính', FALSE, 'hoatDong'),
 ('NHAN_VIEN',       'Nhân viên',               'Nhân viên thông thường',                         FALSE, 'hoatDong');
+
+-- Mapping mac dinh ChucVu -> VaiTro (sau khi VAITRO da ton tai)
+UPDATE CHUCVU SET maVaiTro = 'TONG_GIAM_DOC' WHERE maChucVu = 'GD';
+UPDATE CHUCVU SET maVaiTro = 'TRUONG_PHONG'  WHERE maChucVu = 'TP';
+UPDATE CHUCVU SET maVaiTro = 'QUAN_LY'       WHERE maChucVu = 'TT';
+UPDATE CHUCVU SET maVaiTro = 'KE_TOAN'       WHERE maChucVu = 'KTV';
+UPDATE CHUCVU SET maVaiTro = 'NHAN_SU'       WHERE maChucVu = 'NSV';
+UPDATE CHUCVU SET maVaiTro = 'NHAN_VIEN'     WHERE maChucVu IN ('NV', 'CV', 'TV');
 
 -- QUYEN
 INSERT INTO QUYEN (maQuyen, tenQuyen, nhomQuyen, moTa) VALUES
@@ -862,7 +870,7 @@ INSERT INTO DANHGIAHIEUSUAT (maDot, maNV, nguoiDanhGia, tongDiem, xepLoai, nhanX
 
 
 
-INSERT INTO TIEUCHIDANHGIA (tenTieuChi, moTa, nhomTieuChi, diemToiDa, trangThai) VALUES
+INSERT INTO TIEUCHIDANHGIA (tenTieuChi, moTa, nhomTieuChi, trongSo, trangThai) VALUES
 ('Chất lượng công việc',    'Chất lượng đầu ra, sản phẩm, dịch vụ cung cấp',        'Kết quả',  30, 'hoatDong'),
 ('Tiến độ hoàn thành',      'Hoàn thành đúng hạn, không trễ deadline',               'Kết quả',  20, 'hoatDong'),
 ('Khả năng sáng tạo',       'Đề xuất giải pháp, cải tiến quy trình',                'Năng lực', 10, 'hoatDong'),

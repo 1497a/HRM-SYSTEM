@@ -6,7 +6,6 @@ import com.hrm.model.NhanVien;
 import com.hrm.model.ThongTinCaNhan;
 import com.hrm.util.HRMConstants;
 import com.hrm.util.UIColors;
-import com.hrm.util.UIFonts;
 import com.hrm.util.ValidationUtils;
 
 import javax.swing.*;
@@ -36,7 +35,6 @@ class TabThongTinCaNhanPanel extends JPanel {
     private JTextField txtDienThoai;
     private JTextField txtEmail;
     private JTextField txtDiaChi;
-    private JTextField txtDiaChiThuongTru;
     private JTextField txtQueQuan;
     private JTextField txtTrinhDoHocVan;
     private JTextField txtFileCV;
@@ -60,7 +58,7 @@ class TabThongTinCaNhanPanel extends JPanel {
         addInfoRow(nvPanel, 2, "Ngày vào làm:",
                 nhanVien != null && nhanVien.getNgayVaoLam() != null
                         ? nhanVien.getNgayVaoLam().format(DATE_FMT) : "");
-        cboTrangThaiNhanVien = new JComboBox<>(new String[]{"dang_lam_viec", "tam_nghi", "nghi_viec"});
+        cboTrangThaiNhanVien = new JComboBox<>(new String[]{HRMConstants.TRANG_THAI_DANG_LAM_VIEC, HRMConstants.TRANG_THAI_TAM_NGHI, HRMConstants.TRANG_THAI_NGHI_VIEC});
         cboTrangThaiNhanVien.setFont(com.hrm.util.UIFonts.TEXT_NORMAL);
         cboTrangThaiNhanVien.setRenderer(new DefaultListCellRenderer() {
             @Override
@@ -71,7 +69,7 @@ class TabThongTinCaNhanPanel extends JPanel {
                 return this;
             }
         });
-        cboTrangThaiNhanVien.setSelectedItem(nhanVien != null ? nhanVien.getTrangThai() : "dang_lam_viec");
+        cboTrangThaiNhanVien.setSelectedItem(nhanVien != null ? nhanVien.getTrangThai() : HRMConstants.TRANG_THAI_DANG_LAM_VIEC);
         setStatusEditMode(false);
         addInfoRow(nvPanel, 3, "Trạng thái:", cboTrangThaiNhanVien);
         content.add(nvPanel);
@@ -82,15 +80,16 @@ class TabThongTinCaNhanPanel extends JPanel {
         if (ttcn != null) {
             txtHoTen = createReadOnlyTextField();
             txtNgaySinh = createReadOnlyTextField();
-            cboGioiTinh = new JComboBox<>(new String[]{"nam", "nu", "khac"});
+            cboGioiTinh = new JComboBox<>(new String[]{HRMConstants.GIOI_TINH_NAM, HRMConstants.GIOI_TINH_NU, HRMConstants.GIOI_TINH_KHAC});
+            cboGioiTinh.setRenderer(new DisplayValueRenderer());
             txtCCCD = createReadOnlyTextField();
             txtDienThoai = createReadOnlyTextField();
             txtEmail = createReadOnlyTextField();
             txtDiaChi = createReadOnlyTextField();
-            txtDiaChiThuongTru = createReadOnlyTextField();
             txtQueQuan = createReadOnlyTextField();
-            cboTinhTrangHonNhan = new JComboBox<>(new String[]{"doc_than", "da_ket_hon", "ly_hon"});
             txtTrinhDoHocVan = createReadOnlyTextField();
+            cboTinhTrangHonNhan = new JComboBox<>(new String[]{HRMConstants.HON_NHAN_DOC_THAN, HRMConstants.HON_NHAN_DA_KET_HON, HRMConstants.HON_NHAN_LY_HON});
+            cboTinhTrangHonNhan.setRenderer(new DisplayValueRenderer());
             txtFileCV = createReadOnlyTextField();
             txtKinhNghiem = createReadOnlyTextArea();
             addInfoRow(ttcnPanel, 0, "Họ và tên:", txtHoTen);
@@ -100,12 +99,11 @@ class TabThongTinCaNhanPanel extends JPanel {
             addInfoRow(ttcnPanel, 4, "Số điện thoại:", txtDienThoai);
             addInfoRow(ttcnPanel, 5, "Email:", txtEmail);
             addInfoRow(ttcnPanel, 6, "Địa chỉ:", txtDiaChi);
-            addInfoRow(ttcnPanel, 7, "Địa chỉ thường trú:", txtDiaChiThuongTru);
-            addInfoRow(ttcnPanel, 8, "Quê quán:", txtQueQuan);
-            addInfoRow(ttcnPanel, 9, "Tình trạng hôn nhân:", cboTinhTrangHonNhan);
-            addInfoRow(ttcnPanel, 10, "Trình độ học vấn:", txtTrinhDoHocVan);
-            addInfoRow(ttcnPanel, 11, "File CV:", txtFileCV);
-            addInfoRow(ttcnPanel, 12, "Kinh nghiệm:", new JScrollPane(txtKinhNghiem));
+            addInfoRow(ttcnPanel, 7, "Quê quán:", txtQueQuan);
+            addInfoRow(ttcnPanel, 8, "Tình trạng hôn nhân:", cboTinhTrangHonNhan);
+            addInfoRow(ttcnPanel, 9, "Trình độ học vấn:", txtTrinhDoHocVan);
+            addInfoRow(ttcnPanel, 10, "File CV:", txtFileCV);
+            addInfoRow(ttcnPanel, 11, "Kinh nghiệm:", new JScrollPane(txtKinhNghiem));
             loadFields();
             setEditMode(false);
         } else {
@@ -153,9 +151,7 @@ class TabThongTinCaNhanPanel extends JPanel {
         txtDienThoai.setEditable(editable);
         txtEmail.setEditable(editable);
         txtDiaChi.setEditable(editable);
-        txtDiaChiThuongTru.setEditable(editable);
         txtQueQuan.setEditable(editable);
-        cboTinhTrangHonNhan.setEnabled(editable);
         txtTrinhDoHocVan.setEditable(editable);
         txtFileCV.setEditable(editable);
         txtKinhNghiem.setEditable(editable);
@@ -169,13 +165,13 @@ class TabThongTinCaNhanPanel extends JPanel {
         applyVisual(txtDienThoai, bg, border);
         applyVisual(txtEmail, bg, border);
         applyVisual(txtDiaChi, bg, border);
-        applyVisual(txtDiaChiThuongTru, bg, border);
         applyVisual(txtQueQuan, bg, border);
         applyVisual(txtTrinhDoHocVan, bg, border);
         applyVisual(txtFileCV, bg, border);
         applyVisual(txtKinhNghiem, bg, border);
         cboGioiTinh.setBackground(bg);
         cboGioiTinh.setBorder(border);
+        cboTinhTrangHonNhan.setEnabled(editable);
         cboTinhTrangHonNhan.setBackground(bg);
         cboTinhTrangHonNhan.setBorder(border);
     }
@@ -199,9 +195,7 @@ class TabThongTinCaNhanPanel extends JPanel {
             || !eq(txtDienThoai.getText(), ttcn.getDienThoai())
             || !eq(txtEmail.getText(), ttcn.getEmail())
             || !eq(txtDiaChi.getText(), ttcn.getDiaChi())
-            || !eq(txtDiaChiThuongTru.getText(), ttcn.getDiaChiThuongTru())
             || !eq(txtQueQuan.getText(), ttcn.getQueQuan())
-            || !eq((String) cboTinhTrangHonNhan.getSelectedItem(), ttcn.getTinhTrangHonNhan())
             || !eq(txtTrinhDoHocVan.getText(), ttcn.getTrinhDoHocVan())
             || !eq(txtFileCV.getText(), ttcn.getFileCv())
             || !eq(txtKinhNghiem.getText(), ttcn.getKinhNghiem());
@@ -237,10 +231,10 @@ class TabThongTinCaNhanPanel extends JPanel {
         ttcn.setCccd(empty(txtCCCD.getText()));
         ttcn.setDienThoai(empty(sdt));
         ttcn.setEmail(empty(email));
-        ttcn.setDiaChi(empty(txtDiaChi.getText().trim()));
-        ttcn.setDiaChiThuongTru(empty(txtDiaChiThuongTru.getText().trim()));
+        String diaChi = txtDiaChi.getText().trim();
+        if (diaChi.isEmpty()) return KetQua.error("Địa chỉ không được để trống.");
+        ttcn.setDiaChi(diaChi);
         ttcn.setQueQuan(empty(txtQueQuan.getText().trim()));
-        ttcn.setTinhTrangHonNhan((String) cboTinhTrangHonNhan.getSelectedItem());
         ttcn.setTrinhDoHocVan(empty(txtTrinhDoHocVan.getText().trim()));
         ttcn.setFileCv(empty(txtFileCV.getText().trim()));
         ttcn.setKinhNghiem(empty(txtKinhNghiem.getText().trim()));
@@ -283,14 +277,12 @@ class TabThongTinCaNhanPanel extends JPanel {
         if (ttcn == null) return;
         txtHoTen.setText(safe(ttcn.getHoTen()));
         txtNgaySinh.setText(ttcn.getNgaySinh() != null ? ttcn.getNgaySinh().format(DATE_FMT) : "");
-        cboGioiTinh.setSelectedItem(ttcn.getGioiTinh() != null ? ttcn.getGioiTinh() : "nam");
+        cboGioiTinh.setSelectedItem(ttcn.getGioiTinh() != null ? ttcn.getGioiTinh() : HRMConstants.GIOI_TINH_NAM);
         txtCCCD.setText(safe(ttcn.getCccd()));
         txtDienThoai.setText(safe(ttcn.getDienThoai()));
         txtEmail.setText(safe(ttcn.getEmail()));
         txtDiaChi.setText(safe(ttcn.getDiaChi()));
-        txtDiaChiThuongTru.setText(safe(ttcn.getDiaChiThuongTru()));
         txtQueQuan.setText(safe(ttcn.getQueQuan()));
-        cboTinhTrangHonNhan.setSelectedItem(ttcn.getTinhTrangHonNhan() != null ? ttcn.getTinhTrangHonNhan() : "doc_than");
         txtTrinhDoHocVan.setText(safe(ttcn.getTrinhDoHocVan()));
         txtFileCV.setText(safe(ttcn.getFileCv()));
         txtKinhNghiem.setText(safe(ttcn.getKinhNghiem()));
@@ -411,11 +403,11 @@ class TabThongTinCaNhanPanel extends JPanel {
     static Color resolveColor(String key) {
         if (key == null) return Color.GRAY;
         return switch (key) {
-            case "dang_lam_viec", "hieu_luc", "dung_gio" -> UIColors.SUCCESS_GREEN;
-            case "tam_nghi", "cho_duyet", "di_muon", "ve_som" -> UIColors.WARNING_ORANGE;
-            case "nghi_viec", "tu_choi", "huy", "vang_mat" -> UIColors.DANGER_RED;
-            case "het_han", "het_hieu_luc" -> Color.GRAY;
-            case "thanh_ly" -> UIColors.INFO_TEAL;
+            case HRMConstants.TRANG_THAI_DANG_LAM_VIEC, HRMConstants.TRANG_THAI_HIEU_LUC, "dung_gio" -> UIColors.SUCCESS_GREEN;
+            case HRMConstants.TRANG_THAI_TAM_NGHI, HRMConstants.TRANG_THAI_CHO_DUYET, "di_muon", "ve_som" -> UIColors.WARNING_ORANGE;
+            case HRMConstants.TRANG_THAI_NGHI_VIEC, HRMConstants.TRANG_THAI_TU_CHOI, HRMConstants.TRANG_THAI_HUY, "vang_mat" -> UIColors.DANGER_RED;
+            case HRMConstants.TRANG_THAI_HET_HAN, HRMConstants.TRANG_THAI_HET_HIEU_LUC -> Color.GRAY;
+            case HRMConstants.TRANG_THAI_THANH_LY -> UIColors.INFO_TEAL;
             case "nghi_phep" -> UIColors.LEAVE_BLUE;
             case "cong_tac" -> UIColors.TRIP_PURPLE;
             default -> Color.GRAY;
@@ -426,6 +418,16 @@ class TabThongTinCaNhanPanel extends JPanel {
         String na = a == null ? "" : a.trim();
         String nb = b == null ? "" : b.trim();
         return na.equals(nb);
+    }
+
+    private static class DisplayValueRenderer extends DefaultListCellRenderer {
+        @Override
+        public Component getListCellRendererComponent(JList<?> list, Object value,
+                int index, boolean isSelected, boolean cellHasFocus) {
+            super.getListCellRendererComponent(list, value, index, isSelected, cellHasFocus);
+            setText(HRMConstants.display((String) value));
+            return this;
+        }
     }
 
     private static String safe(String s) {

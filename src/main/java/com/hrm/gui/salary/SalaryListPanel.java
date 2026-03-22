@@ -7,6 +7,7 @@ import com.hrm.model.BangLuong;
 import com.hrm.model.ChiTietLuong;
 import com.hrm.model.DataScope;
 import com.hrm.model.TaiKhoan;
+import com.hrm.util.DialogUtil;
 import com.hrm.util.PermissionCodes;
 import com.hrm.util.UIFonts;
 import com.hrm.util.SessionContext;
@@ -224,9 +225,7 @@ public class SalaryListPanel extends JPanel {
                 restoreBangLuongSelection(currentSelection);
             }
         } catch (Exception ex) {
-            JOptionPane.showMessageDialog(this,
-                    "Lỗi tải danh sách bảng lương: " + ex.getMessage(),
-                    "Lỗi", JOptionPane.ERROR_MESSAGE);
+            DialogUtil.showError(this, "Lỗi tải danh sách bảng lương: " + ex.getMessage());
         }
     }
 
@@ -256,9 +255,7 @@ public class SalaryListPanel extends JPanel {
             fillChiTietTable(currentChiTietList);
             updateActionButtonsForSelection();
         } catch (Exception ex) {
-            JOptionPane.showMessageDialog(this,
-                    "Lỗi tải chi tiết lương: " + ex.getMessage(),
-                    "Lỗi", JOptionPane.ERROR_MESSAGE);
+            DialogUtil.showError(this, "Lỗi tải chi tiết lương: " + ex.getMessage());
         }
     }
 
@@ -318,164 +315,133 @@ public class SalaryListPanel extends JPanel {
         try {
             KetQua<BangLuong> sr = salaryService.tinhLuong(thang, nam);
             if (sr.isSuccess()) {
-                JOptionPane.showMessageDialog(this,
-                        "Tính lương tháng " + thang + "/" + nam + " thành công!",
-                        "Thành công", JOptionPane.INFORMATION_MESSAGE);
+                DialogUtil.showSuccess(this, "Tính lương tháng " + thang + "/" + nam + " thành công!");
                 loadBangLuong();
                 if (sr.getData() != null) {
                     restoreBangLuongSelection(sr.getData().getMaBL());
                 }
             } else {
-                JOptionPane.showMessageDialog(this, sr.getMessage(), "Lỗi", JOptionPane.ERROR_MESSAGE);
+                DialogUtil.showError(this, sr.getMessage());
             }
         } catch (Exception ex) {
-            JOptionPane.showMessageDialog(this,
-                    "Lỗi tính lương: " + ex.getMessage(), "Lỗi", JOptionPane.ERROR_MESSAGE);
+            DialogUtil.showError(this, "Lỗi tính lương: " + ex.getMessage());
         }
     }
 
     private void tinhLaiBangLuong() {
         BangLuong bangLuong = getSelectedBangLuong();
         if (bangLuong == null) {
-            JOptionPane.showMessageDialog(this,
-                    "Vui lòng chọn bảng lương cần tính lại.",
-                    "Thông báo", JOptionPane.WARNING_MESSAGE);
+            DialogUtil.showWarn(this, "Vui lòng chọn bảng lương cần tính lại.");
             return;
         }
         if (bangLuong.getTrangThai() != BangLuong.TrangThai.DA_TINH) {
-            JOptionPane.showMessageDialog(this,
-                    "Chỉ được tính lại bảng lương ở trạng thái Đã tính.",
-                    "Thông báo", JOptionPane.WARNING_MESSAGE);
+            DialogUtil.showWarn(this, "Chỉ được tính lại bảng lương ở trạng thái Đã tính.");
             return;
         }
-        int confirm = JOptionPane.showConfirmDialog(this,
+        if (!DialogUtil.showYesNoWarning(this,
                 "Tính lại toàn bộ kỳ lương " + buildBangLuongName(bangLuong) + "?",
-                "Xác nhận tính lại", JOptionPane.YES_NO_OPTION, JOptionPane.WARNING_MESSAGE);
-        if (confirm != JOptionPane.YES_OPTION) {
+                "Xác nhận tính lại")) {
             return;
         }
         try {
             KetQua<Void> sr = salaryService.tinhLaiBangLuong(bangLuong.getMaBL());
             if (sr.isSuccess()) {
-                JOptionPane.showMessageDialog(this, sr.getMessage(), "Thành công", JOptionPane.INFORMATION_MESSAGE);
+                DialogUtil.showSuccess(this, sr.getMessage());
                 loadBangLuong();
                 restoreBangLuongSelection(bangLuong.getMaBL());
             } else {
-                JOptionPane.showMessageDialog(this, sr.getMessage(), "Lỗi", JOptionPane.ERROR_MESSAGE);
+                DialogUtil.showError(this, sr.getMessage());
             }
         } catch (Exception ex) {
-            JOptionPane.showMessageDialog(this,
-                    "Lỗi tính lại bảng lương: " + ex.getMessage(), "Lỗi", JOptionPane.ERROR_MESSAGE);
+            DialogUtil.showError(this, "Lỗi tính lại bảng lương: " + ex.getMessage());
         }
     }
 
     private void tinhLaiNhanVien() {
         BangLuong bangLuong = getSelectedBangLuong();
         if (bangLuong == null) {
-            JOptionPane.showMessageDialog(this,
-                    "Vui lòng chọn bảng lương trước.",
-                    "Thông báo", JOptionPane.WARNING_MESSAGE);
+            DialogUtil.showWarn(this, "Vui lòng chọn bảng lương trước.");
             return;
         }
         if (bangLuong.getTrangThai() != BangLuong.TrangThai.DA_TINH) {
-            JOptionPane.showMessageDialog(this,
-                    "Chỉ được tính lại nhân viên khi bảng lương ở trạng thái Đã tính.",
-                    "Thông báo", JOptionPane.WARNING_MESSAGE);
+            DialogUtil.showWarn(this, "Chỉ được tính lại nhân viên khi bảng lương ở trạng thái Đã tính.");
             return;
         }
         int row = tblChiTiet.getSelectedRow();
         if (row < 0 || row >= currentChiTietList.size()) {
-            JOptionPane.showMessageDialog(this,
-                    "Vui lòng chọn nhân viên cần tính lại.",
-                    "Thông báo", JOptionPane.WARNING_MESSAGE);
+            DialogUtil.showWarn(this, "Vui lòng chọn nhân viên cần tính lại.");
             return;
         }
         ChiTietLuong ct = currentChiTietList.get(row);
-        int confirm = JOptionPane.showConfirmDialog(this,
+        if (!DialogUtil.showYesNoWarning(this,
                 "Tính lại lương cho nhân viên " + ct.getMaNV() + " - " + ct.getTenNV() + "?",
-                "Xác nhận tính lại", JOptionPane.YES_NO_OPTION, JOptionPane.WARNING_MESSAGE);
-        if (confirm != JOptionPane.YES_OPTION) {
+                "Xác nhận tính lại")) {
             return;
         }
         try {
             KetQua<Void> sr = salaryService.tinhLaiChoNhanVien(bangLuong.getMaBL(), ct.getMaNV());
             if (sr.isSuccess()) {
-                JOptionPane.showMessageDialog(this, sr.getMessage(), "Thành công", JOptionPane.INFORMATION_MESSAGE);
+                DialogUtil.showSuccess(this, sr.getMessage());
                 loadBangLuong();
                 restoreBangLuongSelection(bangLuong.getMaBL());
                 restoreChiTietSelection(ct.getMaNV());
             } else {
-                JOptionPane.showMessageDialog(this, sr.getMessage(), "Lỗi", JOptionPane.ERROR_MESSAGE);
+                DialogUtil.showError(this, sr.getMessage());
             }
         } catch (Exception ex) {
-            JOptionPane.showMessageDialog(this,
-                    "Lỗi tính lại lương nhân viên: " + ex.getMessage(), "Lỗi", JOptionPane.ERROR_MESSAGE);
+            DialogUtil.showError(this, "Lỗi tính lại lương nhân viên: " + ex.getMessage());
         }
     }
 
     private void duyetBangLuong() {
         int row = tblBangLuong.getSelectedRow();
         if (row < 0) {
-            JOptionPane.showMessageDialog(this,
-                    "Vui lòng chọn bảng lương cần duyệt.",
-                    "Thông báo", JOptionPane.WARNING_MESSAGE);
+            DialogUtil.showWarn(this, "Vui lòng chọn bảng lương cần duyệt.");
             return;
         }
         int maBL = (int) modelBangLuong.getValueAt(row, 0);
         String tenBL = (String) modelBangLuong.getValueAt(row, 3);
-        int confirm = JOptionPane.showConfirmDialog(this,
-                "Duyệt bảng lương: " + tenBL + "?",
-                "Xác nhận duyệt", JOptionPane.YES_NO_OPTION, JOptionPane.QUESTION_MESSAGE);
-        if (confirm != JOptionPane.YES_OPTION) {
+        if (!DialogUtil.showYesNo(this, "Duyệt bảng lương: " + tenBL + "?", "Xác nhận duyệt")) {
             return;
         }
         try {
             KetQua<Void> sr = salaryService.duyetBangLuong(maBL);
             if (sr.isSuccess()) {
-                JOptionPane.showMessageDialog(this,
-                        "Đã duyệt bảng lương thành công.",
-                        "Thành công", JOptionPane.INFORMATION_MESSAGE);
+                DialogUtil.showSuccess(this, "Đã duyệt bảng lương thành công.");
                 loadBangLuong();
                 restoreBangLuongSelection(maBL);
             } else {
-                JOptionPane.showMessageDialog(this, sr.getMessage(), "Lỗi", JOptionPane.ERROR_MESSAGE);
+                DialogUtil.showError(this, sr.getMessage());
             }
         } catch (Exception ex) {
-            JOptionPane.showMessageDialog(this,
-                    "Lỗi duyệt bảng lương: " + ex.getMessage(), "Lỗi", JOptionPane.ERROR_MESSAGE);
+            DialogUtil.showError(this, "Lỗi duyệt bảng lương: " + ex.getMessage());
         }
     }
 
     private void khoaBangLuong() {
         int row = tblBangLuong.getSelectedRow();
         if (row < 0) {
-            JOptionPane.showMessageDialog(this,
-                    "Vui lòng chọn bảng lương cần khóa.",
-                    "Thông báo", JOptionPane.WARNING_MESSAGE);
+            DialogUtil.showWarn(this, "Vui lòng chọn bảng lương cần khóa.");
             return;
         }
         int maBL = (int) modelBangLuong.getValueAt(row, 0);
         String tenBL = (String) modelBangLuong.getValueAt(row, 3);
-        int confirm = JOptionPane.showConfirmDialog(this,
+        if (!DialogUtil.showYesNoWarning(this,
                 "Khóa bảng lương: " + tenBL + "?\nHành động này không thể hoàn tác.",
-                "Xác nhận khóa", JOptionPane.YES_NO_OPTION, JOptionPane.WARNING_MESSAGE);
-        if (confirm != JOptionPane.YES_OPTION) {
+                "Xác nhận khóa")) {
             return;
         }
         try {
             KetQua<Void> sr = salaryService.khoaBangLuong(maBL);
             if (sr.isSuccess()) {
-                JOptionPane.showMessageDialog(this,
-                        "Đã khóa bảng lương thành công.",
-                        "Thành công", JOptionPane.INFORMATION_MESSAGE);
+                DialogUtil.showSuccess(this, "Đã khóa bảng lương thành công.");
                 loadBangLuong();
                 restoreBangLuongSelection(maBL);
             } else {
-                JOptionPane.showMessageDialog(this, sr.getMessage(), "Lỗi", JOptionPane.ERROR_MESSAGE);
+                DialogUtil.showError(this, sr.getMessage());
             }
         } catch (Exception ex) {
-            JOptionPane.showMessageDialog(this,
-                    "Lỗi khóa bảng lương: " + ex.getMessage(), "Lỗi", JOptionPane.ERROR_MESSAGE);
+            DialogUtil.showError(this, "Lỗi khóa bảng lương: " + ex.getMessage());
         }
     }
 
@@ -490,8 +456,7 @@ public class SalaryListPanel extends JPanel {
                     (Frame) SwingUtilities.getWindowAncestor(this), ct);
             dialog.setVisible(true);
         } catch (Exception ex) {
-            JOptionPane.showMessageDialog(this,
-                    "Lỗi mở chi tiết: " + ex.getMessage(), "Lỗi", JOptionPane.ERROR_MESSAGE);
+            DialogUtil.showError(this, "Lỗi mở chi tiết: " + ex.getMessage());
         }
     }
 

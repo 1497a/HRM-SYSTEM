@@ -1,5 +1,6 @@
 package com.hrm.gui;
 
+import com.hrm.bus.NhanVienBUS;
 import com.hrm.bus.XacThucBUS;
 import com.hrm.gui.admin.DepartmentPanel;
 import com.hrm.gui.admin.PositionPanel;
@@ -16,7 +17,9 @@ import com.hrm.gui.recruitment.RecruitmentPanel;
 import com.hrm.gui.report.ReportPanel;
 import com.hrm.gui.salary.SalaryListPanel;
 import com.hrm.model.DataScope;
+import com.hrm.model.NhanVien;
 import com.hrm.model.TaiKhoan;
+import com.hrm.util.DialogUtil;
 import com.hrm.util.PermissionCodes;
 import com.hrm.util.SessionContext;
 import com.hrm.util.UIColors;
@@ -58,7 +61,7 @@ public class MainFrame extends JFrame {
     public MainFrame() {
         authService = XacThucBUS.getInstance();
         if (!authService.isLoggedIn()) {
-            JOptionPane.showMessageDialog(null, "Phiên làm việc không hợp lệ");
+            DialogUtil.showInfo(null, "Phiên làm việc không hợp lệ");
             dispose();
             new LoginFrame().setVisible(true);
             return;
@@ -153,12 +156,13 @@ public class MainFrame extends JFrame {
         setLayout(new BorderLayout());
         TaiKhoan user = SessionContext.getInstance().getCurrentUser();
         String displayName = user != null ? user.getHoTen() : "Khách";
-        String roleName = user != null ? user.getVaiTros().toString() : "";
+        String roleName = user != null ? user.getTenVaiTro() : "";
+        String positionName = resolvePositionName(user);
         headerPanel.setBorder(new EmptyBorder(0, 20, 0, 20));
         headerPanel.add(createLogoPanel(), BorderLayout.WEST);
-        headerPanel.add(createHeaderUserPanel(displayName, roleName), BorderLayout.EAST);
+        headerPanel.add(createHeaderUserPanel(displayName, roleName, positionName), BorderLayout.EAST);
         add(headerPanel, BorderLayout.NORTH);
-        add(createSidebar(displayName, roleName), BorderLayout.WEST);
+        add(createSidebar(displayName, roleName, positionName), BorderLayout.WEST);
         add(contentPanel, BorderLayout.CENTER);
     }
 
@@ -172,13 +176,13 @@ public class MainFrame extends JFrame {
         return panel;
     }
 
-    private JPanel createHeaderUserPanel(String displayName, String roleName) {
+    private JPanel createHeaderUserPanel(String displayName, String roleName, String positionName) {
         JPanel panel = new JPanel(new FlowLayout(FlowLayout.RIGHT, 15, 0));
         panel.setOpaque(false);
         JLabel lblHeaderUser = new JLabel(displayName);
         lblHeaderUser.setFont(UIFonts.TEXT_NORMAL);
         lblHeaderUser.setForeground(Color.WHITE);
-        JLabel lblHeaderRole = new JLabel(roleName);
+        JLabel lblHeaderRole = new JLabel(buildUserMeta(roleName, positionName));
         lblHeaderRole.setFont(UIFonts.BOLD_SMALL);
         lblHeaderRole.setForeground(new Color(255, 255, 255, 180));
         JLabel separator = new JLabel(" | ");
@@ -214,11 +218,11 @@ public class MainFrame extends JFrame {
         return button;
     }
 
-    private JScrollPane createSidebar(String displayName, String roleName) {
+    private JScrollPane createSidebar(String displayName, String roleName, String positionName) {
         JPanel sidebarContent = new JPanel();
         sidebarContent.setLayout(new BoxLayout(sidebarContent, BoxLayout.Y_AXIS));
         sidebarContent.setBackground(Color.WHITE);
-        sidebarContent.add(createProfilePanel(displayName, roleName));
+        sidebarContent.add(createProfilePanel(displayName, roleName, positionName));
         sidebarContent.add(Box.createVerticalStrut(15));
         sidebarContent.add(createMenuLabel());
         for (JButton button : navigationButtons()) {
@@ -236,11 +240,11 @@ public class MainFrame extends JFrame {
         return scrollPane;
     }
 
-    private JPanel createProfilePanel(String displayName, String roleName) {
+    private JPanel createProfilePanel(String displayName, String roleName, String positionName) {
         JPanel panel = new JPanel();
         panel.setLayout(new BoxLayout(panel, BoxLayout.Y_AXIS));
         panel.setBackground(UIColors.LIGHT_PURPLE);
-        panel.setMaximumSize(new Dimension(240, 120));
+        panel.setMaximumSize(new Dimension(240, 145));
         panel.setBorder(new EmptyBorder(20, 20, 20, 20));
         panel.setAlignmentX(Component.LEFT_ALIGNMENT);
         JLabel lblAvatar = new JLabel(getInitials(displayName));
@@ -260,11 +264,19 @@ public class MainFrame extends JFrame {
         lblUserRole.setFont(UIFonts.BOLD_SMALL);
         lblUserRole.setForeground(Color.GRAY);
         lblUserRole.setAlignmentX(Component.LEFT_ALIGNMENT);
+        JLabel lblUserPosition = new JLabel(positionName);
+        lblUserPosition.setFont(UIFonts.TEXT_NORMAL);
+        lblUserPosition.setForeground(UIColors.TEXT_DARK);
+        lblUserPosition.setAlignmentX(Component.LEFT_ALIGNMENT);
         panel.add(lblAvatar);
         panel.add(Box.createVerticalStrut(10));
         panel.add(lblUserName);
         panel.add(Box.createVerticalStrut(2));
         panel.add(lblUserRole);
+        if (!positionName.isBlank()) {
+            panel.add(Box.createVerticalStrut(2));
+            panel.add(lblUserPosition);
+        }
         return panel;
     }
 
@@ -292,6 +304,31 @@ public class MainFrame extends JFrame {
         return parts.length >= 2
                 ? ("" + parts[0].charAt(0) + parts[parts.length - 1].charAt(0)).toUpperCase()
                 : String.valueOf(name.charAt(0)).toUpperCase();
+    }
+
+    private String resolvePositionName(TaiKhoan user) {
+        if (user == null || user.getMaNV() == null || user.getMaNV().isBlank()) {
+            return "";
+        }
+        try {
+            NhanVien nhanVien = NhanVienBUS.getInstance().getByMaNhanVien(user.getMaNV());
+            if (nhanVien == null || nhanVien.getTenChucVuHienTai() == null) {
+                return "";
+            }
+            return nhanVien.getTenChucVuHienTai().trim();
+        } catch (Exception ex) {
+            return "";
+        }
+    }
+
+    private String buildUserMeta(String roleName, String positionName) {
+        if (roleName == null || roleName.isBlank()) {
+            return positionName == null ? "" : positionName;
+        }
+        if (positionName == null || positionName.isBlank()) {
+            return roleName;
+        }
+        return roleName + " | " + positionName;
     }
 
     private void setupEvents() {
@@ -367,12 +404,9 @@ public class MainFrame extends JFrame {
             renderContent(createPageShell(title, factory.get()));
         } catch (Exception ex) {
             ex.printStackTrace();
-            JOptionPane.showMessageDialog(
-                    this,
+            DialogUtil.showError(this,
                     "Không mở được màn hình '" + title + "'.\nChi tiết: " + ex.getMessage(),
-                    "Lỗi mở màn hình",
-                    JOptionPane.ERROR_MESSAGE
-            );
+                    "Lỗi mở màn hình");
             JPanel errorPanel = new JPanel(new BorderLayout());
             errorPanel.setBackground(Color.WHITE);
             errorPanel.setBorder(new EmptyBorder(20, 20, 20, 20));
@@ -415,9 +449,7 @@ public class MainFrame extends JFrame {
     }
 
     private void logout() {
-        int confirm = JOptionPane.showConfirmDialog(this, "Bạn có chắc muốn đăng xuất?",
-                "Xác nhận đăng xuất", JOptionPane.YES_NO_OPTION, JOptionPane.QUESTION_MESSAGE);
-        if (confirm == JOptionPane.YES_OPTION) {
+        if (DialogUtil.showYesNo(this, "Bạn có chắc muốn đăng xuất?", "Xác nhận đăng xuất")) {
             authService.logout();
             dispose();
             new LoginFrame().setVisible(true);
@@ -425,9 +457,7 @@ public class MainFrame extends JFrame {
     }
 
     private void confirmExit() {
-        int confirm = JOptionPane.showConfirmDialog(this, "Bạn có chắc muốn thoát ứng dụng?",
-                "Xác nhận thoát", JOptionPane.YES_NO_OPTION, JOptionPane.QUESTION_MESSAGE);
-        if (confirm == JOptionPane.YES_OPTION) {
+        if (DialogUtil.showYesNo(this, "Bạn có chắc muốn thoát ứng dụng?", "Xác nhận thoát")) {
             authService.logout();
             System.exit(0);
         }

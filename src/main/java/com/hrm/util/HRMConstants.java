@@ -42,10 +42,23 @@ public final class HRMConstants {
     public static final String LOAI_HOP_DONG_THU_VIEC         = "thu_viec";
     public static final String LOAI_HOP_DONG_XAC_DINH         = "xac_dinh_thoi_han";
     public static final String LOAI_HOP_DONG_KHONG_XAC_DINH   = "khong_xac_dinh";
+    public static final String LOAI_PHEP_NAM                  = "PHEP_NAM";
     // Loại thông báo
     public static final String LOAI_TB_HE_THONG          = "he_thong";
     public static final String LOAI_TB_DON_TU            = "don_tu";
     public static final String LOAI_TB_CHUNG             = "thong_bao_chung";
+    public static final String PHUONG_THUC_CHAM_CONG_THU_CONG = "thu_cong";
+    // Giới tính
+    public static final String GIOI_TINH_NAM  = "nam";
+    public static final String GIOI_TINH_NU   = "nu";
+    public static final String GIOI_TINH_KHAC = "khac";
+    // Tình trạng hôn nhân
+    public static final String HON_NHAN_DOC_THAN   = "doc_than";
+    public static final String HON_NHAN_DA_KET_HON = "da_ket_hon";
+    public static final String HON_NHAN_LY_HON     = "ly_hon";
+    // Trạng thái bảng lương
+    public static final String TRANG_THAI_DANG_XU_LY = "dang_xu_ly";
+    public static final String TRANG_THAI_DA_KHOA     = "da_khoa";
     // Recruitment posting status
     public static final String TIN_NHAP = "Nhập";
     public static final String TIN_DANG_TUYEN = "Đang tuyển";
@@ -93,6 +106,17 @@ public final class HRMConstants {
             case LOAI_TB_HE_THONG:  return "Hệ thống";
             case LOAI_TB_DON_TU:    return "Đơn từ";
             case LOAI_TB_CHUNG:     return "Thông báo chung";
+            // Giới tính
+            case GIOI_TINH_NAM:     return "Nam";
+            case GIOI_TINH_NU:      return "Nữ";
+            case GIOI_TINH_KHAC:    return "Khác";
+            // Tình trạng hôn nhân
+            case HON_NHAN_DOC_THAN:     return "Độc thân";
+            case HON_NHAN_DA_KET_HON:   return "Đã kết hôn";
+            case HON_NHAN_LY_HON:       return "Ly hôn";
+            // Bảng lương
+            case TRANG_THAI_DANG_XU_LY: return "Đang xử lý";
+            case TRANG_THAI_DA_KHOA:    return "Đã khóa";
             default:                return raw;
         }
     }

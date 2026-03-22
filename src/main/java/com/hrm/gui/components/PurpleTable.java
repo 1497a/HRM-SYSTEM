@@ -1,7 +1,6 @@
 package com.hrm.gui.components;
 
 import com.hrm.util.UIColors;
-import com.hrm.util.UIFonts;
 
 import javax.swing.*;
 import javax.swing.table.*;
@@ -125,41 +124,6 @@ public class PurpleTable extends JTable {
         TableColumn column = getColumnModel().getColumn(columnIndex);
         column.setMinWidth(minWidth);
         column.setPreferredWidth(minWidth);
-    }
-
-    /**
-     * Add status badge renderer to a column
-     */
-    public void setStatusBadgeColumn(int columnIndex) {
-        TableColumn column = getColumnModel().getColumn(columnIndex);
-        column.setCellRenderer(new StatusBadgeRenderer());
-    }
-
-    /**
-     * Custom renderer for status badge columns
-     */
-    private class StatusBadgeRenderer extends DefaultTableCellRenderer {
-        @Override
-        public Component getTableCellRendererComponent(JTable table, Object value,
-                boolean isSelected, boolean hasFocus, int row, int column) {
-            if (value == null) {
-                return super.getTableCellRendererComponent(table, value,
-                        isSelected, hasFocus, row, column);
-            }
-            StatusBadge badge = new StatusBadge(value.toString());
-            // Handle selection
-            if (isSelected) {
-                JPanel panel = new JPanel(new FlowLayout(FlowLayout.CENTER, 0, 5));
-                panel.setBackground(UIColors.LIGHT_PURPLE);
-                panel.add(badge);
-                return panel;
-            } else {
-                JPanel panel = new JPanel(new FlowLayout(FlowLayout.CENTER, 0, 5));
-                panel.setBackground(row % 2 == 0 ? Color.WHITE : UIColors.TABLE_ROW_ALT);
-                panel.add(badge);
-                return panel;
-            }
-        }
     }
 
     /**

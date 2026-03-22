@@ -8,6 +8,7 @@ import com.hrm.bus.BoNhiemBUS;
 import com.hrm.bus.HopDongBUS;
 import com.hrm.bus.KetQua;
 import com.hrm.bus.NhanVienBUS;
+import com.hrm.util.DialogUtil;
 import com.hrm.util.HRMConstants;
 import com.hrm.util.SessionContext;
 import com.hrm.util.UIFonts;
@@ -147,8 +148,7 @@ public class EmployeeDetailPanel extends JDialog {
 
     private void onSuaThongTin() {
         if (statusEditMode) {
-            JOptionPane.showMessageDialog(this, "Đang ở chế độ đổi trạng thái, vui lòng lưu trước.",
-                    "Thông báo", JOptionPane.WARNING_MESSAGE);
+            DialogUtil.showWarn(this, "Đang ở chế độ đổi trạng thái, vui lòng lưu trước.");
             return;
         }
         if (!personalEditMode) {
@@ -165,9 +165,10 @@ public class EmployeeDetailPanel extends JDialog {
         }
         KetQua<ThongTinCaNhan> result = personalTab.save();
         if (!result.isSuccess()) {
-            JOptionPane.showMessageDialog(this, result.getMessage(), "Lỗi", JOptionPane.ERROR_MESSAGE);
+            DialogUtil.showError(this, result.getMessage());
             return;
         }
+        DialogUtil.showSuccess(this, "Lưu thông tin thành công.");
         dataChanged = true;
         personalEditMode = false;
         btnSuaThongTin.setText("Sửa thông tin");
@@ -180,8 +181,7 @@ public class EmployeeDetailPanel extends JDialog {
     private void onDoiTrangThai() {
         if (nhanVien == null) return;
         if (personalEditMode) {
-            JOptionPane.showMessageDialog(this, "Đang ở chế độ sửa thông tin. Vui lòng lưu trước.",
-                    "Thông báo", JOptionPane.WARNING_MESSAGE);
+            DialogUtil.showWarn(this, "Đang ở chế độ sửa thông tin. Vui lòng lưu trước.");
             return;
         }
         if (!statusEditMode) {
@@ -201,9 +201,10 @@ public class EmployeeDetailPanel extends JDialog {
         }
         KetQua<NhanVien> result = nvService.capNhatTrangThai(nhanVien.getMaNhanVien(), trangThaiMoi, "");
         if (!result.isSuccess()) {
-            JOptionPane.showMessageDialog(this, result.getMessage(), "Lỗi", JOptionPane.ERROR_MESSAGE);
+            DialogUtil.showError(this, result.getMessage());
             return;
         }
+        DialogUtil.showSuccess(this, result.getMessage());
         dataChanged = true;
         statusEditMode = false;
         personalTab.setStatusEditMode(false);

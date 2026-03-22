@@ -152,18 +152,14 @@ public class LeaveCreateDialog extends BaseFormDialog {
         Date endDate = (Date) spnEndDate.getValue();
         String reason = txtReason.getText().trim();
         if (reason.isEmpty()) {
-            JOptionPane.showMessageDialog(this,
-                    "Vui lòng nhập lý do nghỉ phép",
-                    "Lỗi",
-                    JOptionPane.ERROR_MESSAGE);
+            showError("Vui lòng nhập lý do nghỉ phép");
             txtReason.requestFocus();
             return;
         }
         LocalDate start = startDate.toInstant().atZone(ZoneId.systemDefault()).toLocalDate();
         LocalDate end = endDate.toInstant().atZone(ZoneId.systemDefault()).toLocalDate();
         if (start.isAfter(end)) {
-            JOptionPane.showMessageDialog(this, "Ngay bat dau phai truoc hoac bang Ngay ket thuc.",
-                    "Loi nhap lieu", JOptionPane.ERROR_MESSAGE);
+            showError("Ngày bắt đầu phải trước hoặc bằng Ngày kết thúc.", "Lỗi nhập liệu");
             spnStartDate.requestFocus();
             return;
         }
@@ -175,17 +171,11 @@ public class LeaveCreateDialog extends BaseFormDialog {
                 end,
                 reason);
         if (result.isSuccess()) {
-            JOptionPane.showMessageDialog(this,
-                    result.getMessage(),
-                    "Thành công",
-                    JOptionPane.INFORMATION_MESSAGE);
+            showSuccess(result.getMessage());
             successful = true;
             dispose();
         } else {
-            JOptionPane.showMessageDialog(this,
-                    result.getMessage(),
-                    "Lỗi",
-                    JOptionPane.ERROR_MESSAGE);
+            showError(result.getMessage());
         }
     }
 

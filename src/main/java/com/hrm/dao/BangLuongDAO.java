@@ -4,6 +4,7 @@ import com.hrm.model.BangLuong;
 import com.hrm.model.ChiTietLuong;
 import com.hrm.model.ThanhPhanLuong;
 import com.hrm.util.DatabaseConnection;
+import com.hrm.util.HRMConstants;
 import com.hrm.util.SessionContext;
 
 import java.sql.*;
@@ -126,13 +127,13 @@ public class BangLuongDAO {
         return result;
     }
 
-    public void lockBangLuong(int id, int nguoiKhoa) {
-        String sql = "UPDATE BANGLUONG SET trangThai='da_khoa', ngayKhoa=NOW(), nguoiKhoa=? WHERE maBangLuong=?";
+    public int lockBangLuong(int id, int nguoiKhoa) {
+        String sql = "UPDATE BANGLUONG SET trangThai='" + HRMConstants.TRANG_THAI_DA_KHOA + "', ngayKhoa=NOW(), nguoiKhoa=? WHERE maBangLuong=?";
         try (Connection conn = DatabaseConnection.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setInt(1, nguoiKhoa);
             ps.setInt(2, id);
-            ps.executeUpdate();
+            return ps.executeUpdate();
         } catch (SQLException e) {
             throw new RuntimeException("Lỗi khóa bảng lương: " + e.getMessage(), e);
         }
@@ -190,33 +191,31 @@ public class BangLuongDAO {
     }
 
     private String blStatusToDb(BangLuong.TrangThai tt) {
-        if (tt == null) return "dang_xu_ly";
+        if (tt == null) return HRMConstants.TRANG_THAI_DANG_XU_LY;
         switch (tt) {
-            case DA_TINH:  return "dang_xu_ly";
-            case DA_DUYET: return "da_duyet";
-            case DA_KHOA:  return "da_khoa";
-            default:       return "dang_xu_ly";
+            case DA_TINH:  return HRMConstants.TRANG_THAI_DANG_XU_LY;
+            case DA_DUYET: return HRMConstants.TRANG_THAI_DA_DUYET;
+            case DA_KHOA:  return HRMConstants.TRANG_THAI_DA_KHOA;
+            default:       return HRMConstants.TRANG_THAI_DANG_XU_LY;
         }
     }
 
     private BangLuong.TrangThai dbToBlStatus(String db) {
         if (db == null) return BangLuong.TrangThai.NHAP;
-        switch (db) {
-            case "dang_xu_ly": return BangLuong.TrangThai.DA_TINH;
-            case "da_duyet":   return BangLuong.TrangThai.DA_DUYET;
-            case "da_khoa":    return BangLuong.TrangThai.DA_KHOA;
-            default:           return BangLuong.TrangThai.NHAP;
-        }
+        if (HRMConstants.TRANG_THAI_DANG_XU_LY.equals(db)) return BangLuong.TrangThai.DA_TINH;
+        if (HRMConstants.TRANG_THAI_DA_DUYET.equals(db))   return BangLuong.TrangThai.DA_DUYET;
+        if (HRMConstants.TRANG_THAI_DA_KHOA.equals(db))    return BangLuong.TrangThai.DA_KHOA;
+        return BangLuong.TrangThai.NHAP;
     }
 
-    public void approveBangLuong(int id, int nguoiDuyet) {
-        String sql = "UPDATE BANGLUONG SET trangThai='da_duyet', ngayDuyet=NOW(), nguoiDuyet=? "
-                + "WHERE maBangLuong=? AND trangThai='dang_xu_ly'";
+    public int approveBangLuong(int id, int nguoiDuyet) {
+        String sql = "UPDATE BANGLUONG SET trangThai='" + HRMConstants.TRANG_THAI_DA_DUYET + "', ngayDuyet=NOW(), nguoiDuyet=? "
+                + "WHERE maBangLuong=? AND trangThai='" + HRMConstants.TRANG_THAI_DANG_XU_LY + "'";
         try (Connection conn = DatabaseConnection.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setInt(1, nguoiDuyet);
             ps.setInt(2, id);
-            ps.executeUpdate();
+            return ps.executeUpdate();
         } catch (SQLException e) {
             throw new RuntimeException("Lỗi duyệt bảng lương: " + e.getMessage(), e);
         }
@@ -325,7 +324,7 @@ public class BangLuongDAO {
     /** Lấy mã phòng ban hiện tại của nhân viên từ bổ nhiệm chính còn hiệu lực. */
     public String getPhongBanCuaNV(String nhanVienId) {
         String sql = "SELECT b.maPhongBan FROM BONHIEM b "
-                + "WHERE b.maNV=? AND b.trangThai='hieu_luc' AND b.loaiBoNhiem='chinh' "
+                + "WHERE b.maNV=? AND b.trangThai='" + HRMConstants.TRANG_THAI_HIEU_LUC + "' AND b.loaiBoNhiem='" + HRMConstants.LOAI_BO_NHIEM_CHINH + "' "
                 + "ORDER BY b.tuNgay DESC LIMIT 1";
         try (Connection conn = DatabaseConnection.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
@@ -341,24 +340,24 @@ public class BangLuongDAO {
         return null;
     }
 
-    public void deleteChiTietByBangLuong(int bangLuongId) {
+    public int deleteChiTietByBangLuong(int bangLuongId) {
         String sql = "DELETE FROM CHITIETLUONG WHERE maBangLuong=?";
         try (Connection conn = DatabaseConnection.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setInt(1, bangLuongId);
-            ps.executeUpdate();
+            return ps.executeUpdate();
         } catch (SQLException e) {
             throw new RuntimeException("Lỗi xóa chi tiết bảng lương: " + e.getMessage(), e);
         }
     }
 
-    public void deleteChiTietByBangLuongAndNV(int bangLuongId, String nhanVienId) {
+    public int deleteChiTietByBangLuongAndNV(int bangLuongId, String nhanVienId) {
         String sql = "DELETE FROM CHITIETLUONG WHERE maBangLuong=? AND maNV=?";
         try (Connection conn = DatabaseConnection.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setInt(1, bangLuongId);
             ps.setString(2, nhanVienId);
-            ps.executeUpdate();
+            return ps.executeUpdate();
         } catch (SQLException e) {
             throw new RuntimeException("Lỗi xóa chi tiết lương nhân viên: " + e.getMessage(), e);
         }
@@ -387,8 +386,8 @@ public class BangLuongDAO {
     // THANH_PHAN_LUONGS
     // =====================================================================
     /** Batch insert list of ThanhPhanLuong. */
-    public void insertThanhPhanBatch(List<ThanhPhanLuong> list) {
-        if (list == null || list.isEmpty()) return;
+    public int insertThanhPhanBatch(List<ThanhPhanLuong> list) {
+        if (list == null || list.isEmpty()) return 0;
         String sql = "INSERT INTO THANHPHANLUONG (maChiTiet, tenThanhPhan, loai, soTien, ghiChu) "
                 + "VALUES (?,?,?,?,?)";
         try (Connection conn = DatabaseConnection.getConnection();
@@ -401,7 +400,10 @@ public class BangLuongDAO {
                 ps.setString(5, tp.getNguon());
                 ps.addBatch();
             }
-            ps.executeBatch();
+            int[] counts = ps.executeBatch();
+            int total = 0;
+            for (int c : counts) total += (c >= 0 ? c : 0);
+            return total;
         } catch (SQLException e) {
             throw new RuntimeException("Lỗi thêm thành phần lương: " + e.getMessage(), e);
         }
@@ -461,7 +463,7 @@ public class BangLuongDAO {
     public double getLuongCoSoFromHopDong(String nhanVienId, java.time.LocalDate ngayBatDauKy, java.time.LocalDate ngayCuoiKy) {
         String sql = "SELECT luongCoSo FROM HOPDONGLAODONG "
                 + "WHERE maNV=? "
-                + "  AND trangThai IN ('hieu_luc','het_han') "
+                + "  AND trangThai IN ('" + HRMConstants.TRANG_THAI_HIEU_LUC + "','" + HRMConstants.TRANG_THAI_HET_HAN + "') "
                 + "  AND ngayHieuLuc <= ? "
                 + "  AND (ngayHetHieuLuc IS NULL OR ngayHetHieuLuc >= ?) "
                 + "ORDER BY ngayHieuLuc DESC LIMIT 1";
@@ -487,7 +489,7 @@ public class BangLuongDAO {
         String sql = "SELECT b.tyLeHuongLuong, cv.phuCapChucVu "
                 + "FROM BONHIEM b "
                 + "JOIN CHUCVU cv ON b.maChucVu = cv.maChucVu "
-                + "WHERE b.maNV=? AND b.trangThai='hieu_luc'";
+                + "WHERE b.maNV=? AND b.trangThai='" + HRMConstants.TRANG_THAI_HIEU_LUC + "'";
         double total = 0;
         try (Connection conn = DatabaseConnection.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
@@ -546,7 +548,7 @@ public class BangLuongDAO {
     /** Tổng tiền OT = giờ OT quy đổi * đơn giá giờ công chuẩn. */
     public double getTienOT(String nhanVienId, int thang, int nam, double luongCoBan) {
         String sql = "SELECT COALESCE(SUM(soGio * heSoOT), 0) FROM DANGKY_LAMTHEM "
-                + "WHERE maNV=? AND MONTH(ngay)=? AND YEAR(ngay)=? AND trangThai='da_duyet'";
+                + "WHERE maNV=? AND MONTH(ngay)=? AND YEAR(ngay)=? AND trangThai='" + HRMConstants.TRANG_THAI_DA_DUYET + "'";
         try (Connection conn = DatabaseConnection.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setString(1, nhanVienId);
@@ -585,7 +587,7 @@ public class BangLuongDAO {
     /** Tổng giờ OT thô (để lưu vào soGioLamThem và hiển thị chi tiết). */
     public double getTongGioOT(String nhanVienId, int thang, int nam) {
         String sql = "SELECT COALESCE(SUM(soGio),0) FROM DANGKY_LAMTHEM "
-                + "WHERE maNV=? AND MONTH(ngay)=? AND YEAR(ngay)=? AND trangThai='da_duyet'";
+                + "WHERE maNV=? AND MONTH(ngay)=? AND YEAR(ngay)=? AND trangThai='" + HRMConstants.TRANG_THAI_DA_DUYET + "'";
         try (Connection conn = DatabaseConnection.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setString(1, nhanVienId);

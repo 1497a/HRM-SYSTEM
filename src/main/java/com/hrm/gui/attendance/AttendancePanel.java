@@ -5,9 +5,11 @@ import com.hrm.bus.ChamCongBUS;
 import com.hrm.bus.KetQua;
 import com.hrm.bus.XacThucBUS;
 import com.hrm.dao.ChamCongDAO;
+import com.hrm.util.HRMConstants;
 import com.hrm.util.PermissionCodes;
 import com.hrm.util.UIFonts;
 import com.hrm.util.SessionContext;
+import com.hrm.util.DialogUtil;
 import com.hrm.util.UIColors;
 
 import javax.swing.*;
@@ -152,7 +154,7 @@ public class AttendancePanel extends JPanel {
         JButton bL=btn("Lọc dữ liệu",UIColors.PRIMARY_PURPLE); bL.addActionListener(e->loadCC()); tb.add(bL);
         tb.add(Box.createHorizontalStrut(20));
         JButton bT=btn("+ Thêm thủ công",UIColors.SUCCESS_GREEN); bT.addActionListener(e->dlgThemCC()); tb.add(bT);
-        JButton bS=btn("Sửa chấm công",UIColors.PRIMARY_PURPLE); bS.addActionListener(e->dlgSuaCC()); tb.add(bS);
+        JButton bS=btn("Xem chi tiết",UIColors.PRIMARY_PURPLE); bS.addActionListener(e->dlgChiTietCC()); tb.add(bS);
         initTongHopFilters(tb);
         p.add(tb,BorderLayout.NORTH);
         String[]cols={"Mã NV","Họ tên","Ngày","Ca làm","Giờ vào","Giờ ra","Số giờ","OT","Trạng thái"};
@@ -241,11 +243,11 @@ public class AttendancePanel extends JPanel {
         String[] maNVRef = {null};
         btnTim.addActionListener(e -> {
             String ma = txtMaNV.getText().trim();
-            if (ma.isEmpty()) { JOptionPane.showMessageDialog(d, "Vui lòng nhập mã nhân viên."); return; }
+            if (ma.isEmpty()) { DialogUtil.showInfo(d, "Vui lòng nhập mã nhân viên."); return; }
                 var info = svc.findNhanVienByMaForManualAttendance(ma);
             if (info == null) {
                 infoPanel.setVisible(false); maNVRef[0] = null;
-                JOptionPane.showMessageDialog(d, "Không tìm thấy nhân viên: " + ma, "Lỗi", JOptionPane.ERROR_MESSAGE);
+                DialogUtil.showError(d, "Không tìm thấy nhân viên: " + ma);
             } else {
                 maNVRef[0] = info.maNV;
                 lblHoTenVal.setText(info.hoTen);
@@ -253,7 +255,7 @@ public class AttendancePanel extends JPanel {
                 lblChucVuVal.setText(info.tenChucVu.isEmpty() ? "(Chưa có)" : info.tenChucVu);
                 lblPBVal.setText(info.tenPhongBan.isEmpty() ? "(Chưa có)" : info.tenPhongBan);
                 lblTTVal.setText(formatTrangThaiNV(info.trangThai));
-                lblTTVal.setForeground("dang_lam_viec".equals(info.trangThai) ? UIColors.SUCCESS_GREEN : UIColors.DANGER_RED);
+                lblTTVal.setForeground(HRMConstants.TRANG_THAI_DANG_LAM_VIEC.equals(info.trangThai) ? UIColors.SUCCESS_GREEN : UIColors.DANGER_RED);
                 infoPanel.setVisible(true); d.revalidate(); d.repaint();
             }
         });
@@ -297,14 +299,14 @@ public class AttendancePanel extends JPanel {
         bLuu.addActionListener(e -> {
             try {
                 if (maNVRef[0] == null) {
-                    JOptionPane.showMessageDialog(d, "Vui lòng tìm kiếm nhân viên trước khi lưu.", "Thiếu thông tin", JOptionPane.WARNING_MESSAGE);
+                    DialogUtil.showWarn(d, "Vui lòng tìm kiếm nhân viên trước khi lưu.");
                     return;
                 }
                 LocalDate ngay;
                 try {
                     ngay = LocalDate.parse(txtNgay.getText().trim(), DateTimeFormatter.ofPattern("dd/MM/yyyy"));
                 } catch (Exception ex) {
-                    JOptionPane.showMessageDialog(d, "Định dạng ngày không hợp lệ. Dùng: dd/MM/yyyy", "Lỗi", JOptionPane.ERROR_MESSAGE);
+                    DialogUtil.showError(d, "Định dạng ngày không hợp lệ. Dùng: dd/MM/yyyy");
                     return;
                 }
                 String maCa = ((String) cCa.getSelectedItem()).split(" - ")[0].trim();
@@ -314,26 +316,82 @@ public class AttendancePanel extends JPanel {
                 LocalDateTime gioRa = ngay.atTime(Integer.parseInt(r[0]), Integer.parseInt(r[1]));
                 KetQua<ChamCong> res = svc.themChamCongThuCong(
                         maNVRef[0], ngay, maCa, gioVao, gioRa, tts[cTT.getSelectedIndex()], "Nhập thủ công");
-                JOptionPane.showMessageDialog(d, res.getMessage(),
-                        res.isSuccess() ? "Thành công" : "Lỗi",
-                        res.isSuccess() ? JOptionPane.INFORMATION_MESSAGE : JOptionPane.ERROR_MESSAGE);
-                if (res.isSuccess()) {
-                    d.dispose();
-                    loadCC();
-                }
+                if (res.isSuccess()) { DialogUtil.showSuccess(d, res.getMessage()); d.dispose(); loadCC(); }
+                else DialogUtil.showError(d, res.getMessage());
             } catch (Exception ex) {
-                JOptionPane.showMessageDialog(d, "Lỗi: " + ex.getMessage(), "Lỗi", JOptionPane.ERROR_MESSAGE);
+                DialogUtil.showError(d, "Lỗi: " + ex.getMessage());
             }
         });
         d.setContentPane(f); d.setVisible(true);
     }
 
-    private void dlgSuaCC() {
+    private void dlgChiTietCC() {
         ChamCong selected = getSelectedChamCong();
         if (selected == null) {
-            JOptionPane.showMessageDialog(this, "Chọn bản ghi chấm công cần sửa.");
+            DialogUtil.showInfo(this, "Chọn bản ghi chấm công cần xem.");
             return;
         }
+        JDialog d = new JDialog((Frame) SwingUtilities.getWindowAncestor(this), "Chi tiết chấm công", true);
+        d.setSize(620, 720);
+        d.setLocationRelativeTo(this);
+        ChamCongDAO.NhanVienInfo info = svc.findNhanVienByMaForManualAttendance(selected.getMaNV());
+        DateTimeFormatter fDate = DateTimeFormatter.ofPattern("dd/MM/yyyy");
+        DateTimeFormatter fTime = DateTimeFormatter.ofPattern("HH:mm");
+        DateTimeFormatter fAudit = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm");
+        JPanel content = new JPanel(new BorderLayout(0, 12));
+        content.setBorder(new EmptyBorder(16, 16, 16, 16));
+
+        JPanel infoPanel = new JPanel(new GridLayout(0, 2, 8, 6));
+        infoPanel.setBackground(UIColors.LIGHT_PURPLE);
+        infoPanel.setBorder(BorderFactory.createCompoundBorder(
+            BorderFactory.createLineBorder(UIColors.PRIMARY_PURPLE, 1),
+            new EmptyBorder(10, 12, 10, 12)));
+        infoPanel.add(boldLabel("Mã nhân viên:")); infoPanel.add(new JLabel(selected.getMaNV()));
+        infoPanel.add(boldLabel("Họ tên:")); infoPanel.add(new JLabel(info != null ? info.hoTen : selected.getTenNhanVien()));
+        infoPanel.add(boldLabel("Email:")); infoPanel.add(new JLabel(info != null && !info.email.isBlank() ? info.email : "(Chưa có)"));
+        infoPanel.add(boldLabel("Chức vụ:")); infoPanel.add(new JLabel(info != null && !info.tenChucVu.isBlank() ? info.tenChucVu : "(Chưa có)"));
+        infoPanel.add(boldLabel("Phòng ban:")); infoPanel.add(new JLabel(info != null && !info.tenPhongBan.isBlank() ? info.tenPhongBan : "(Chưa có)"));
+        content.add(infoPanel, BorderLayout.NORTH);
+
+        JPanel details = new JPanel(new GridBagLayout());
+        GridBagConstraints g = gbc();
+        g.insets = new Insets(6, 8, 6, 8);
+
+        addDetailRow(details, g, 0, "Ngày:", selected.getNgay() != null ? selected.getNgay().format(fDate) : "-");
+        addDetailRow(details, g, 1, "Ca làm:", selected.getTenCaLam() != null ? selected.getTenCaLam() + " (" + selected.getMaCaLam() + ")" : selected.getMaCaLam());
+        addDetailRow(details, g, 2, "Giờ vào:", selected.getGioVao() != null ? selected.getGioVao().format(fTime) : "-");
+        addDetailRow(details, g, 3, "Giờ ra:", selected.getGioRa() != null ? selected.getGioRa().format(fTime) : "-");
+        addDetailRow(details, g, 4, "Số giờ làm:", String.format("%.1f", selected.getSoGioLam()));
+        addDetailRow(details, g, 5, "Giờ làm thêm:", selected.getGioLamThem() > 0 ? String.format("%.1f", selected.getGioLamThem()) : "-");
+        addDetailRow(details, g, 6, "Trạng thái:", selected.getTrangThai() != null ? selected.getTrangThai().getDisplayName() : "-");
+        addDetailRow(details, g, 7, "Phương thức chấm công:", selected.getPhuongThucChamCong() != null ? selected.getPhuongThucChamCong().getDisplayName() : "-");
+        addTextAreaRow(details, g, 8, "Ghi chú:", selected.getGhiChu());
+        addDetailRow(details, g, 9, "Người sửa gần nhất:", selected.getNguoiChinhSua() != null && !selected.getNguoiChinhSua().isBlank() ? selected.getNguoiChinhSua() : "(chưa có)");
+        addDetailRow(details, g, 10, "Thời điểm sửa:", selected.getNgayChinhSua() != null ? selected.getNgayChinhSua().format(fAudit) : "(chưa có)");
+        addTextAreaRow(details, g, 11, "Lý do chỉnh sửa:", selected.getLyDoChinhSua());
+
+        JScrollPane scroll = new JScrollPane(details);
+        scroll.setBorder(BorderFactory.createTitledBorder("Thông tin chấm công"));
+        content.add(scroll, BorderLayout.CENTER);
+
+        JPanel actions = new JPanel(new FlowLayout(FlowLayout.RIGHT, 10, 0));
+        actions.setOpaque(false);
+        JButton btnClose = btn("Đóng", Color.GRAY);
+        JButton btnEdit = btn("Sửa chấm công", UIColors.SUCCESS_GREEN);
+        btnEdit.addActionListener(e -> {
+            d.dispose();
+            dlgSuaCC(selected);
+        });
+        btnClose.addActionListener(e -> d.dispose());
+        actions.add(btnClose);
+        actions.add(btnEdit);
+        content.add(actions, BorderLayout.SOUTH);
+
+        d.setContentPane(content);
+        d.setVisible(true);
+    }
+
+    private void dlgSuaCC(ChamCong selected) {
         JDialog d = new JDialog((Frame) SwingUtilities.getWindowAncestor(this), "Sửa chấm công", true);
         d.setSize(560, 620);
         d.setLocationRelativeTo(this);
@@ -438,21 +496,38 @@ public class AttendancePanel extends JPanel {
                 LocalDateTime gioRa = ngay.atTime(Integer.parseInt(ra[0]), Integer.parseInt(ra[1]));
                 KetQua<ChamCong> res = svc.suaChamCongThuCong(
                     selected.getId(), ngay, maCa, gioVao, gioRa, tts[cTT.getSelectedIndex()], txtLyDo.getText().trim());
-                JOptionPane.showMessageDialog(d, res.getMessage(),
-                    res.isSuccess() ? "Thành công" : "Lỗi",
-                    res.isSuccess() ? JOptionPane.INFORMATION_MESSAGE : JOptionPane.ERROR_MESSAGE);
-                if (res.isSuccess()) {
-                    d.dispose();
-                    loadCC();
-                }
+                if (res.isSuccess()) { DialogUtil.showSuccess(d, res.getMessage()); d.dispose(); loadCC(); }
+                else DialogUtil.showError(d, res.getMessage());
             } catch (Exception ex) {
-                JOptionPane.showMessageDialog(d, "Kiểm tra lại ngày giờ theo định dạng dd/MM/yyyy và HH:mm.",
-                    "Lỗi định dạng", JOptionPane.ERROR_MESSAGE);
+                DialogUtil.showError(d, "Kiểm tra lại ngày giờ theo định dạng dd/MM/yyyy và HH:mm.", "Lỗi định dạng");
             }
         });
 
         d.setContentPane(f);
         d.setVisible(true);
+    }
+
+    private void addDetailRow(JPanel panel, GridBagConstraints g, int row, String label, String value) {
+        g.gridx = 0; g.gridy = row; g.gridwidth = 1; g.weightx = 0; g.fill = GridBagConstraints.NONE; g.anchor = GridBagConstraints.NORTHWEST;
+        panel.add(boldLabel(label), g);
+        g.gridx = 1; g.weightx = 1; g.fill = GridBagConstraints.HORIZONTAL;
+        JLabel val = new JLabel(value != null && !value.isBlank() ? value : "-");
+        val.setFont(UIFonts.TEXT_NORMAL);
+        panel.add(val, g);
+    }
+
+    private void addTextAreaRow(JPanel panel, GridBagConstraints g, int row, String label, String value) {
+        g.gridx = 0; g.gridy = row; g.gridwidth = 1; g.weightx = 0; g.fill = GridBagConstraints.NONE; g.anchor = GridBagConstraints.NORTHWEST;
+        panel.add(boldLabel(label), g);
+        JTextArea area = new JTextArea(value != null && !value.isBlank() ? value : "-");
+        area.setEditable(false);
+        area.setLineWrap(true);
+        area.setWrapStyleWord(true);
+        area.setFont(UIFonts.TEXT_NORMAL);
+        area.setOpaque(false);
+        area.setBorder(BorderFactory.createEmptyBorder(4, 0, 4, 0));
+        g.gridx = 1; g.weightx = 1; g.fill = GridBagConstraints.HORIZONTAL;
+        panel.add(area, g);
     }
 
     private ChamCong getSelectedChamCong() {
@@ -465,12 +540,7 @@ public class AttendancePanel extends JPanel {
     }
 
     private String formatTrangThaiNV(String tt) {
-        return switch (tt) {
-            case "dang_lam_viec" -> "Đang làm việc";
-            case "tam_nghi"      -> "Tạm nghỉ";
-            case "nghi_viec"     -> "Nghỉ việc";
-            default              -> tt;
-        };
+        return HRMConstants.display(tt);
     }
 
     private JLabel boldLabel(String text) {
@@ -487,7 +557,7 @@ public class AttendancePanel extends JPanel {
         JPanel bp=new JPanel(new FlowLayout(FlowLayout.RIGHT,10,0)); bp.setOpaque(false);
         JButton bT=btn("+ Thêm ca mới",UIColors.SUCCESS_GREEN); bT.addActionListener(e->dlgCaLam(null));
         JButton bS=btn("Sửa",UIColors.PRIMARY_PURPLE); bS.addActionListener(e->{
-            int row=tableCaLam.getSelectedRow(); if(row<0){JOptionPane.showMessageDialog(this,"Chọn ca làm việc.");return;}
+            int row=tableCaLam.getSelectedRow(); if(row<0){DialogUtil.showInfo(this,"Chọn ca làm việc.");return;}
             String maCa = (String) modelCaLam.getValueAt(row,0);
             CaLam ca = svc.getAllCaLam().stream().filter(c -> c.getId().equals(maCa)).findFirst().orElse(null);
             if(ca!=null)dlgCaLam(ca);});
@@ -529,25 +599,28 @@ public class AttendancePanel extends JPanel {
         JCheckBox chk=new JCheckBox("Có",!edit||ex.isChoPhepLamThem()); chk.setOpaque(false); g.gridx=1; f.add(chk,g);
         JButton bL=btn(edit?"Cập nhật":"Thêm mới",UIColors.PRIMARY_PURPLE); bL.setFont(new Font("Segoe UI",Font.BOLD,14));
         bL.addActionListener(e->{try{String ma=tMa.getText().trim(),ten=tTen.getText().trim();
-            if(ma.isEmpty()||ten.isEmpty()){JOptionPane.showMessageDialog(d,"Không để trống.");return;}
+            if(ma.isEmpty()||ten.isEmpty()){DialogUtil.showInfo(d,"Không để trống.");return;}
             double sg=Double.parseDouble(tGio.getText().trim());
             KetQua<CaLam> res=edit?svc.suaCaLam(ma,ten,tBD.getText().trim(),tKT.getText().trim(),sg,chk.isSelected())
                 :svc.themCaLam(ma,ten,tBD.getText().trim(),tKT.getText().trim(),sg,chk.isSelected());
-            if(res.isSuccess()){JOptionPane.showMessageDialog(d,res.getMessage());d.dispose();loadCaLam();}
-            else JOptionPane.showMessageDialog(d,res.getMessage(),"Lỗi",JOptionPane.ERROR_MESSAGE);
-        }catch(NumberFormatException x){JOptionPane.showMessageDialog(d,"Số giờ phải là số.");}
-         catch(Exception x){JOptionPane.showMessageDialog(d,"Lỗi: "+x.getMessage());}});
+            if(res.isSuccess()){DialogUtil.showSuccess(d,res.getMessage());d.dispose();loadCaLam();}
+            else DialogUtil.showError(d,res.getMessage());
+        }catch(NumberFormatException x){DialogUtil.showInfo(d,"Số giờ phải là số.");}
+         catch(Exception x){DialogUtil.showError(d,"Lỗi: "+x.getMessage());}});
         g.gridx=0; g.gridy=6; g.gridwidth=2; g.insets=new Insets(20,8,8,8); f.add(bL,g);
         d.setContentPane(f); d.setVisible(true);
     }
 
     private void xoaCaLam() {
         int row=tableCaLam.getSelectedRow();
-        if(row<0){JOptionPane.showMessageDialog(this,"Vui lòng chọn ca làm.");return;}
+        if(row<0){DialogUtil.showInfo(this,"Vui lòng chọn ca làm.");return;}
         String ma=(String)modelCaLam.getValueAt(row,0),ten=(String)modelCaLam.getValueAt(row,1);
-        if(((String)modelCaLam.getValueAt(row,6)).contains("Ngung")){JOptionPane.showMessageDialog(this,"Ca làm đã ngừng.");return;}
-        if(JOptionPane.showConfirmDialog(this,"Xác nhận ngừng '"+ten+"'?","Xác nhận",JOptionPane.YES_NO_OPTION)==JOptionPane.YES_OPTION){
-            svc.xoaCaLam(ma); loadCaLam();}
+        if(((String)modelCaLam.getValueAt(row,6)).contains("Ngung")){DialogUtil.showInfo(this,"Ca làm đã ngừng.");return;}
+        if(DialogUtil.showYesNo(this,"Xác nhận ngừng '"+ten+"'?","Xác nhận")){
+            KetQua<?> res = svc.xoaCaLam(ma);
+            if (res.isSuccess()) { DialogUtil.showSuccess(this, res.getMessage()); loadCaLam(); }
+            else DialogUtil.showError(this, res.getMessage());
+        }
     }
 
     // ===============================================
@@ -605,34 +678,36 @@ public class AttendancePanel extends JPanel {
 
     private void duyetOT() {
         int row=tableDonOT.getSelectedRow();
-        if(row<0){JOptionPane.showMessageDialog(this,"Chọn đơn."); return;}
-        if(!canApproveOT){JOptionPane.showMessageDialog(this,"Bạn không có quyền duyệt đơn OT."); return;}
+        if(row<0){DialogUtil.showInfo(this,"Chọn đơn."); return;}
+        if(!canApproveOT){DialogUtil.showWarn(this,"Bạn không có quyền duyệt đơn OT."); return;}
         int maDK=(int)modelOT.getValueAt(row,0);
         String tt=(String)modelOT.getValueAt(row,6);
         if (!DangKyLamThem.TrangThai.CHO_DUYET.getDisplayName().equals(tt)) {
-            JOptionPane.showMessageDialog(this, "Đơn đã xử lý."); return;
+            DialogUtil.showInfo(this, "Đơn đã xử lý."); return;
         }
         String[]opts={"x1.5 (ngày thường)","x2.0 (cuối tuần)","x3.0 (ngày lễ)"};
         String ch=(String)JOptionPane.showInputDialog(this,"Chọn hệ số OT:","Hệ số OT",
             JOptionPane.QUESTION_MESSAGE,null,opts,opts[0]); if(ch==null)return;
         double hs=ch.contains("2.0")?2.0:ch.contains("3.0")?3.0:1.5;
         String maNVNguoiDuyet = getMaNVNguoiDuyet();
-        if(maNVNguoiDuyet==null){JOptionPane.showMessageDialog(this,"Không tìm thấy thông tin nhân viên."); return;}
+        if(maNVNguoiDuyet==null){DialogUtil.showError(this,"Không tìm thấy thông tin nhân viên."); return;}
         KetQua<?> res=svc.duyetDonLamThem(maDK,maNVNguoiDuyet,hs);
-        JOptionPane.showMessageDialog(this,res.getMessage()); loadOT();
+        if(res.isSuccess()) DialogUtil.showSuccess(this,res.getMessage()); else DialogUtil.showError(this,res.getMessage()); loadOT();
     }
 
     private void tuChoiOT() {
         int row=tableDonOT.getSelectedRow();
-        if(row<0){JOptionPane.showMessageDialog(this,"Chọn đơn."); return;}
-        if(!canApproveOT){JOptionPane.showMessageDialog(this,"Bạn không có quyền duyệt đơn OT."); return;}
+        if(row<0){DialogUtil.showInfo(this,"Chọn đơn."); return;}
+        if(!canApproveOT){DialogUtil.showWarn(this,"Bạn không có quyền duyệt đơn OT."); return;}
         int maDK=(int)modelOT.getValueAt(row,0); String tt=(String)modelOT.getValueAt(row,6);
         if (!DangKyLamThem.TrangThai.CHO_DUYET.getDisplayName().equals(tt)) {
-            JOptionPane.showMessageDialog(this, "Đơn đã xử lý."); return;
+            DialogUtil.showInfo(this, "Đơn đã xử lý."); return;
         }
         String maNVNguoiDuyet = getMaNVNguoiDuyet();
-        if(maNVNguoiDuyet==null){JOptionPane.showMessageDialog(this,"Không tìm thấy thông tin nhân viên."); return;}
-        svc.tuChoiDonLamThem(maDK,maNVNguoiDuyet); loadOT();
+        if(maNVNguoiDuyet==null){DialogUtil.showError(this,"Không tìm thấy thông tin nhân viên."); return;}
+        KetQua<?> res = svc.tuChoiDonLamThem(maDK,maNVNguoiDuyet);
+        if (res.isSuccess()) { DialogUtil.showSuccess(this, res.getMessage()); loadOT(); }
+        else DialogUtil.showError(this, res.getMessage());
     }
 
     private String getMaNVNguoiDuyet() {
@@ -641,17 +716,18 @@ public class AttendancePanel extends JPanel {
 
     private void chinhHeSo() {
         int row=tableDonOT.getSelectedRow();
-        if(row<0){JOptionPane.showMessageDialog(this,"Chọn đơn."); return;}
-        if(!canApproveOT){JOptionPane.showMessageDialog(this,"Bạn không có quyền chỉnh hệ số OT."); return;}
+        if(row<0){DialogUtil.showInfo(this,"Chọn đơn."); return;}
+        if(!canApproveOT){DialogUtil.showWarn(this,"Bạn không có quyền chỉnh hệ số OT."); return;}
         int maDK=(int)modelOT.getValueAt(row,0);
         String input=JOptionPane.showInputDialog(this,"Nhập hệ số mới (vd: 1.5):","Chỉnh hệ số",JOptionPane.QUESTION_MESSAGE);
         if(input==null||input.trim().isEmpty())return;
         try {
             double hs = Double.parseDouble(input.trim());
-            svc.capNhatHeSoOT(maDK, hs);
-            loadOT();
+            KetQua<?> res = svc.capNhatHeSoOT(maDK, hs);
+            if (res.isSuccess()) { DialogUtil.showSuccess(this, res.getMessage()); loadOT(); }
+            else DialogUtil.showError(this, res.getMessage());
         } catch (NumberFormatException e) {
-            JOptionPane.showMessageDialog(this, "He so phai la so hop le (vd: 1.5).");
+            DialogUtil.showInfo(this, "Hệ số phải là số hợp lệ (vd: 1.5).");
         }
     }
 
@@ -669,7 +745,7 @@ public class AttendancePanel extends JPanel {
         JButton bSua  = btn("Sửa", UIColors.PRIMARY_PURPLE);
         bSua.addActionListener(e -> {
             int row = tablePC.getSelectedRow();
-            if (row < 0) { JOptionPane.showMessageDialog(this, "Chọn khoản để sửa."); return; }
+            if (row < 0) { DialogUtil.showInfo(this, "Chọn khoản để sửa."); return; }
             int maPC = (int) modelPC.getValueAt(row, 0);
             CauHinhPhuCap pc = svc.getCauHinhPCById(maPC);
             if (pc != null) dlgPhuCap(pc);
@@ -750,19 +826,19 @@ public class AttendancePanel extends JPanel {
         bLuu.addActionListener(e -> {
             try {
                 String ten = tTen.getText().trim();
-                if (ten.isEmpty()) { JOptionPane.showMessageDialog(d, "Tên khoản không được để trống.", "Lỗi", JOptionPane.WARNING_MESSAGE); return; }
+                if (ten.isEmpty()) { DialogUtil.showWarn(d, "Tên khoản không được để trống."); return; }
                 double giaTri = Double.parseDouble(tGiaTri.getText().trim());
-                if (giaTri <= 0) { JOptionPane.showMessageDialog(d, "Giá trị phải lớn hơn 0.", "Lỗi", JOptionPane.WARNING_MESSAGE); return; }
+                if (giaTri <= 0) { DialogUtil.showWarn(d, "Giá trị phải lớn hơn 0."); return; }
                 ThanhPhanLuong.Loai loai = cboLoai.getSelectedIndex()==0 ? ThanhPhanLuong.Loai.PHU_CAP : ThanhPhanLuong.Loai.KHAU_TRU;
                 CauHinhPhuCap.KieuTinh kieu = cboKieu.getSelectedIndex()==0 ? CauHinhPhuCap.KieuTinh.CO_DINH : CauHinhPhuCap.KieuTinh.PHAN_TRAM;
                 String nguon = (String) cboNguon.getSelectedItem();
                 KetQua<?> res = edit
                     ? svc.suaCauHinhPC(existing.getId(), loai, ten, kieu, giaTri, nguon)
                     : svc.themCauHinhPC(loai, ten, kieu, giaTri, nguon);
-                if (res.isSuccess()) { JOptionPane.showMessageDialog(d, res.getMessage(), "Thành công", JOptionPane.INFORMATION_MESSAGE); d.dispose(); loadPhuCap(); }
-                else JOptionPane.showMessageDialog(d, res.getMessage(), "Lỗi", JOptionPane.ERROR_MESSAGE);
+                if (res.isSuccess()) { DialogUtil.showSuccess(d, res.getMessage()); d.dispose(); loadPhuCap(); }
+                else DialogUtil.showError(d, res.getMessage());
             } catch (NumberFormatException ex) {
-                JOptionPane.showMessageDialog(d, "Giá trị phải là số.\nVD: 500000 hoặc 8", "Lỗi", JOptionPane.ERROR_MESSAGE);
+                DialogUtil.showError(d, "Giá trị phải là số.\nVD: 500000 hoặc 8");
             }
         });
         g.gridx=0; g.gridy=6; g.gridwidth=2; g.insets=new Insets(20,8,8,8); f.add(bLuu,g);
@@ -771,15 +847,14 @@ public class AttendancePanel extends JPanel {
 
     private void xoaPhuCap() {
         int row = tablePC.getSelectedRow();
-        if (row < 0) { JOptionPane.showMessageDialog(this, "Chọn khoản để xóa."); return; }
+        if (row < 0) { DialogUtil.showInfo(this, "Chọn khoản để xóa."); return; }
         int maPC = (int) modelPC.getValueAt(row, 0);
         String ten = (String) modelPC.getValueAt(row, 2);
         String tt  = (String) modelPC.getValueAt(row, 6);
-        if (tt.contains("Ngung")) { JOptionPane.showMessageDialog(this, "Khoản này đã ngừng."); return; }
-        if (JOptionPane.showConfirmDialog(this, "Ngừng khoản '" + ten + "'?\n(Sẽ không áp dụng khi tính lương)",
-                "Xác nhận", JOptionPane.YES_NO_OPTION, JOptionPane.WARNING_MESSAGE) == JOptionPane.YES_OPTION) {
+        if (tt.contains("Ngung")) { DialogUtil.showInfo(this, "Khoản này đã ngừng."); return; }
+        if (DialogUtil.showYesNoWarning(this, "Ngừng khoản '" + ten + "'?\n(Sẽ không áp dụng khi tính lương)", "Xác nhận")) {
             KetQua<Void> res = svc.xoaCauHinhPC(maPC);
-            JOptionPane.showMessageDialog(this, res.getMessage()); loadPhuCap();
+            if (res.isSuccess()) DialogUtil.showSuccess(this, res.getMessage()); else DialogUtil.showError(this, res.getMessage()); loadPhuCap();
         }
     }
 
@@ -842,19 +917,13 @@ public class AttendancePanel extends JPanel {
         chkOT.setForeground(UIColors.PRIMARY_PURPLE); chkOT.setEnabled(false);
         chkOT.setToolTipText("Chỉ có thể chọn khi bạn có đơn OT đã được duyệt cho hôm nay");
         btnCheckInCN.addActionListener(e -> {
-                JOptionPane.showMessageDialog(this, "Chỉ có thể check-in cho chính bạn.", "Thông báo", JOptionPane.WARNING_MESSAGE);
             KetQua<ChamCong> res = svc.checkInAuto(maNVCaNhan, chkOT.isSelected());
-            JOptionPane.showMessageDialog(this, res.getMessage(),
-                res.isSuccess() ? "Thành công" : "Lỗi",
-                res.isSuccess() ? JOptionPane.INFORMATION_MESSAGE : JOptionPane.ERROR_MESSAGE);
+            if (res.isSuccess()) DialogUtil.showSuccess(this, res.getMessage()); else DialogUtil.showError(this, res.getMessage());
             refreshCaNhan(chkOT); loadLichSuCaNhan();
         });
         btnCheckOutCN.addActionListener(e -> {
-                JOptionPane.showMessageDialog(this, "Chỉ có thể check-out cho chính bạn.", "Thông báo", JOptionPane.WARNING_MESSAGE);
             KetQua<ChamCong> res = svc.checkOut(maNVCaNhan);
-            JOptionPane.showMessageDialog(this, res.getMessage(),
-                res.isSuccess() ? "Thành công" : "Lỗi",
-                res.isSuccess() ? JOptionPane.INFORMATION_MESSAGE : JOptionPane.ERROR_MESSAGE);
+            if (res.isSuccess()) DialogUtil.showSuccess(this, res.getMessage()); else DialogUtil.showError(this, res.getMessage());
             refreshCaNhan(chkOT); loadLichSuCaNhan();
         });
         JLabel hintCheckIn = new JLabel("(Hệ thống tự nhận diện ca làm theo giờ hiện tại)");
@@ -982,7 +1051,7 @@ public class AttendancePanel extends JPanel {
     private void searchCaNhan(JPanel panel, JCheckBox chkOT) {
         String ma = txtMaNVCN.getText().trim();
         if (ma.isEmpty()) {
-            JOptionPane.showMessageDialog(this, "Vui lòng nhập mã nhân viên.", "Thông báo", JOptionPane.WARNING_MESSAGE);
+            DialogUtil.showWarn(this, "Vui lòng nhập mã nhân viên.");
             return;
         }
         var info = svc.findNhanVienByMa(ma);
@@ -991,7 +1060,7 @@ public class AttendancePanel extends JPanel {
             chamCongStatusPanelCN.setVisible(false);
             if (histPanelCN != null) histPanelCN.setVisible(false);
             maNVTimKiem = null;
-            JOptionPane.showMessageDialog(this, "Không tìm thấy nhân viên: " + ma, "Lỗi", JOptionPane.ERROR_MESSAGE);
+            DialogUtil.showError(this, "Không tìm thấy nhân viên: " + ma);
             return;
         }
         maNVTimKiem = info.maNV;
@@ -1148,22 +1217,22 @@ public class AttendancePanel extends JPanel {
                 java.time.LocalTime gioVao = java.time.LocalTime.parse(txtGioVaoOT.getText().trim(), DateTimeFormatter.ofPattern("HH:mm"));
                 java.time.LocalTime gioRa  = java.time.LocalTime.parse(txtGioRaOT.getText().trim(),  DateTimeFormatter.ofPattern("HH:mm"));
                 String lyDo = txtLyDo.getText().trim();
-                if (lyDo.isEmpty()) { JOptionPane.showMessageDialog(this, "Vui lòng nhập lý do."); return; }
+                if (lyDo.isEmpty()) { DialogUtil.showWarn(this, "Vui lòng nhập lý do."); return; }
                 KetQua<DangKyLamThem> res = svc.taoDonLamThem(maNVCaNhan, ngay, gioVao, gioRa, lyDo);
-                JOptionPane.showMessageDialog(this, res.getMessage());
-                if (res.isSuccess()) { txtLyDo.setText(""); loadDonOTCaNhan(); }
+                if (res.isSuccess()) { DialogUtil.showSuccess(this, res.getMessage()); txtLyDo.setText(""); loadDonOTCaNhan(); }
+                else DialogUtil.showError(this, res.getMessage());
             } catch (Exception ex) {
-                JOptionPane.showMessageDialog(this, "Kiểm tra lại: Ngày (dd/MM/yyyy), Giờ (HH:mm).", "Lỗi định dạng", JOptionPane.ERROR_MESSAGE);
+                DialogUtil.showError(this, "Kiểm tra lại: Ngày (dd/MM/yyyy), Giờ (HH:mm).", "Lỗi định dạng");
             }
         });
         btnHuyDon.addActionListener(e -> {
             int row = tableDonOTCaNhan.getSelectedRow();
-            if (row < 0) { JOptionPane.showMessageDialog(this, "Chọn đơn cần hủy."); return; }
+            if (row < 0) { DialogUtil.showInfo(this, "Chọn đơn cần hủy."); return; }
             String tt = (String) modelDonOTCaNhan.getValueAt(row, 5);
-            if (!tt.contains("Cho")) { JOptionPane.showMessageDialog(this, "Chỉ hủy đơn chờ duyệt."); return; }
+            if (!tt.contains("Cho")) { DialogUtil.showInfo(this, "Chỉ hủy đơn chờ duyệt."); return; }
             int maDK = (int) modelDonOTCaNhan.getValueAt(row, 0);
             KetQua<Void> res = svc.xoaDonLamThem(maDK, maNVCaNhan);
-            JOptionPane.showMessageDialog(this, res.getMessage()); loadDonOTCaNhan();
+            if (res.isSuccess()) DialogUtil.showSuccess(this, res.getMessage()); else DialogUtil.showError(this, res.getMessage()); loadDonOTCaNhan();
         });
         btnLamMoi.addActionListener(e -> loadDonOTCaNhan());
         p.add(topOT, BorderLayout.NORTH);

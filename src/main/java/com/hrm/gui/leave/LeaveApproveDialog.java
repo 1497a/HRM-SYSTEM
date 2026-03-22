@@ -38,10 +38,7 @@ public class LeaveApproveDialog extends BaseFormDialog {
         this.requestId = requestId;
         this.request = leaveService.getRequest(requestId);
         if (request == null) {
-            JOptionPane.showMessageDialog(parent,
-                    "Không tìm thấy đơn nghỉ phép: " + requestId,
-                    "Lỗi",
-                    JOptionPane.ERROR_MESSAGE);
+            showError("Không tìm thấy đơn nghỉ phép: " + requestId);
             dispose();
             return;
         }
@@ -133,19 +130,12 @@ public class LeaveApproveDialog extends BaseFormDialog {
     private void processRequest(boolean approve) {
         String note = txtNote.getText().trim();
         if (!approve && note.isEmpty()) {
-            JOptionPane.showMessageDialog(this,
-                    "Vui lòng nhập lý do từ chối.",
-                    "Thông báo",
-                    JOptionPane.WARNING_MESSAGE);
+            showWarning("Vui lòng nhập lý do từ chối.");
             txtNote.requestFocus();
             return;
         }
         String action = approve ? "Duyệt" : "Từ chối";
-        int confirm = JOptionPane.showConfirmDialog(this,
-                "Bạn có chắc muốn " + action + " đơn nghỉ phép này?",
-                "Xác nhận",
-                JOptionPane.YES_NO_OPTION);
-        if (confirm != JOptionPane.YES_OPTION) {
+        if (!showYesNo("Bạn có chắc muốn " + action + " đơn nghỉ phép này?", "Xác nhận")) {
             return;
         }
         String approverId = HRMConstants.USERNAME_ADMIN;
@@ -161,16 +151,10 @@ public class LeaveApproveDialog extends BaseFormDialog {
                 approverName,
                 note);
         if (result.isSuccess()) {
-            JOptionPane.showMessageDialog(this,
-                    result.getMessage(),
-                    "Thành công",
-                    JOptionPane.INFORMATION_MESSAGE);
+            showSuccess(result.getMessage());
             dispose();
         } else {
-            JOptionPane.showMessageDialog(this,
-                    result.getMessage(),
-                    "Lỗi",
-                    JOptionPane.ERROR_MESSAGE);
+            showError(result.getMessage());
         }
     }
 

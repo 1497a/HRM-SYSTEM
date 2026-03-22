@@ -40,11 +40,54 @@ class DashboardPanel extends JPanel {
         this.authService = authService;
         setLayout(new BorderLayout());
         setBackground(Color.WHITE);
-        DataScope scope = authService.getScopeForAction(PermissionCodes.EMPLOYEE_VIEW);
-        JPanel inner = (scope == DataScope.ALL || scope == DataScope.DEPT || scope == DataScope.TEAM)
-                ? buildManagerDashboard(scope)
-                : buildPersonalDashboard();
-        add(inner, BorderLayout.CENTER);
+        add(createLoadingPanel(), BorderLayout.CENTER);
+        loadDashboardAsync();
+    }
+
+    private void loadDashboardAsync() {
+        SwingWorker<JPanel, Void> worker = new SwingWorker<>() {
+            @Override
+            protected JPanel doInBackground() {
+                DataScope scope = authService.getScopeForAction(PermissionCodes.EMPLOYEE_VIEW);
+                return (scope == DataScope.ALL || scope == DataScope.DEPT || scope == DataScope.TEAM)
+                        ? buildManagerDashboard(scope)
+                        : buildPersonalDashboard();
+            }
+
+            @Override
+            protected void done() {
+                try {
+                    removeAll();
+                    add(get(), BorderLayout.CENTER);
+                } catch (Exception ignored) {
+                    removeAll();
+                    add(createErrorPanel(), BorderLayout.CENTER);
+                }
+                revalidate();
+                repaint();
+            }
+        };
+        worker.execute();
+    }
+
+    private JPanel createLoadingPanel() {
+        JPanel panel = new JPanel(new GridBagLayout());
+        panel.setBackground(Color.WHITE);
+        JLabel label = new JLabel("Dang tai tong quan...");
+        label.setFont(UIFonts.TEXT_NORMAL);
+        label.setForeground(UIColors.TEXT_DARK);
+        panel.add(label);
+        return panel;
+    }
+
+    private JPanel createErrorPanel() {
+        JPanel panel = new JPanel(new GridBagLayout());
+        panel.setBackground(Color.WHITE);
+        JLabel label = new JLabel("Khong tai duoc du lieu tong quan.");
+        label.setFont(UIFonts.TEXT_NORMAL);
+        label.setForeground(UIColors.DANGER_RED);
+        panel.add(label);
+        return panel;
     }
 
     private JPanel buildManagerDashboard(DataScope scope) {

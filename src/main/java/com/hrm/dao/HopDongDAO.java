@@ -2,9 +2,11 @@ package com.hrm.dao;
 
 import com.hrm.model.HopDongLaoDong;
 import com.hrm.util.DatabaseConnection;
+import com.hrm.util.HRMConstants;
 
 import java.sql.*;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -44,6 +46,14 @@ public class HopDongDAO {
         hd.setFileDinhKem(rs.getString("fileDinhKem"));
         hd.setNoiDung(rs.getString("noiDung"));
         hd.setTrangThai(rs.getString("trangThai"));
+        Date ngayThanhLy = rs.getDate("ngayThanhLy");
+        if (ngayThanhLy != null) hd.setNgayThanhLy(ngayThanhLy.toLocalDate());
+        hd.setLyDoThanhLy(rs.getString("lyDoThanhLy"));
+        hd.setGhiChu(rs.getString("ghiChu"));
+        hd.setNguoiTao(rs.getString("nguoiTao"));
+        hd.setNguoiDuyet(rs.getString("nguoiDuyet"));
+        Timestamp ngayDuyet = rs.getTimestamp("ngayDuyet");
+        if (ngayDuyet != null) hd.setNgayDuyet(ngayDuyet.toLocalDateTime());
         return hd;
     }
 
@@ -53,11 +63,12 @@ public class HopDongDAO {
     public int insert(HopDongLaoDong hd) throws SQLException {
         String sql = "INSERT INTO HOPDONGLAODONG "
                 + "(soHopDong, maNV, loaiHopDong, luongCoSo, ngayKy, ngayHieuLuc, "
-                + " ngayHetHieuLuc, fileDinhKem, noiDung, trangThai) "
-                + "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+                + " ngayHetHieuLuc, fileDinhKem, noiDung, trangThai, "
+                + " ngayThanhLy, lyDoThanhLy, ghiChu, nguoiTao) "
+                + "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
         try (Connection conn = DatabaseConnection.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
-            setParams(ps, hd);
+            setInsertParams(ps, hd);
             ps.executeUpdate();
             try (ResultSet keys = ps.getGeneratedKeys()) {
                 if (keys.next()) {
@@ -73,34 +84,73 @@ public class HopDongDAO {
     // ============================
     // update
     // ============================
-    public void update(HopDongLaoDong hd) {
+    public int update(HopDongLaoDong hd) {
         String sql = "UPDATE HOPDONGLAODONG SET "
                 + "soHopDong=?, maNV=?, loaiHopDong=?, luongCoSo=?, ngayKy=?, ngayHieuLuc=?, "
-                + "ngayHetHieuLuc=?, fileDinhKem=?, noiDung=?, trangThai=? "
+                + "ngayHetHieuLuc=?, fileDinhKem=?, noiDung=?, trangThai=?, "
+                + "ngayThanhLy=?, lyDoThanhLy=?, ghiChu=?, nguoiTao=? "
                 + "WHERE maHopDong=?";
         try (Connection conn = DatabaseConnection.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
-            setParams(ps, hd);
-            ps.setInt(11, hd.getMaHopDong());
-            ps.executeUpdate();
+            setInsertParams(ps, hd);
+            ps.setInt(15, hd.getMaHopDong());
+            return ps.executeUpdate();
         } catch (SQLException e) {
             throw new RuntimeException("Lỗi cập nhật hợp đồng: " + e.getMessage(), e);
         }
     }
 
     // ============================
-    // updateTrangThai
+    // updateTrangThai — dùng cho thanh_ly, huy, het_han
     // ============================
-    public void updateTrangThai(int maHopDong, String trangThai) {
+    public int updateTrangThai(int maHopDong, String trangThai) {
         String sql = "UPDATE HOPDONGLAODONG SET trangThai=? WHERE maHopDong=?";
         try (Connection conn = DatabaseConnection.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setString(1, trangThai);
             ps.setInt(2, maHopDong);
-            ps.executeUpdate();
+            return ps.executeUpdate();
         } catch (SQLException e) {
             throw new RuntimeException("Lỗi cập nhật trạng thái hợp đồng: " + e.getMessage(), e);
         }
+    }
+
+    // ============================
+    // updateApproval — dùng khi phê duyệt hợp đồng
+    // ============================
+    public int updateApproval(int maHopDong, String trangThai, String nguoiDuyet, LocalDateTime ngayDuyet) {
+        String sql = "UPDATE HOPDONGLAODONG SET trangThai=?, nguoiDuyet=?, ngayDuyet=? WHERE maHopDong=?";
+        try (Connection conn = DatabaseConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setString(1, trangThai);
+            ps.setString(2, nguoiDuyet);
+            ps.setTimestamp(3, Timestamp.valueOf(ngayDuyet));
+            ps.setInt(4, maHopDong);
+            return ps.executeUpdate();
+        } catch (SQLException e) {
+            throw new RuntimeException("Lỗi phê duyệt hợp đồng: " + e.getMessage(), e);
+        }
+    }
+
+    // ============================
+    // findById
+    // ============================
+    public HopDongLaoDong findById(int maHopDong) {
+        String sql = buildJoinQuery("WHERE h.maHopDong = ?", "LIMIT 1");
+        try (Connection conn = DatabaseConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setInt(1, maHopDong);
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    HopDongLaoDong hd = mapRow(rs);
+                    hd.setTenNV(rs.getString("hoTen"));
+                    return hd;
+                }
+            }
+        } catch (SQLException e) {
+            throw new RuntimeException("Lỗi tải hợp đồng theo ID: " + e.getMessage(), e);
+        }
+        return null;
     }
 
     // ============================
@@ -129,7 +179,7 @@ public class HopDongDAO {
     // findHieuLuc - returns current active contract
     // ============================
     public HopDongLaoDong findHieuLuc(String maNV) {
-        String sql = buildJoinQuery("WHERE h.maNV = ? AND h.trangThai = 'hieu_luc'", "LIMIT 1");
+        String sql = buildJoinQuery("WHERE h.maNV = ? AND h.trangThai = '" + HRMConstants.TRANG_THAI_HIEU_LUC + "'", "LIMIT 1");
         try (Connection conn = DatabaseConnection.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setString(1, maNV);
@@ -147,7 +197,7 @@ public class HopDongDAO {
     }
 
     public HopDongLaoDong findChoDuyet(String maNV) {
-        String sql = buildJoinQuery("WHERE h.maNV = ? AND h.trangThai = 'cho_duyet'", "LIMIT 1");
+        String sql = buildJoinQuery("WHERE h.maNV = ? AND h.trangThai = '" + HRMConstants.TRANG_THAI_CHO_DUYET + "'", "LIMIT 1");
         try (Connection conn = DatabaseConnection.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setString(1, maNV);
@@ -171,7 +221,7 @@ public class HopDongDAO {
         LocalDate today = LocalDate.now();
         LocalDate deadline = today.plusDays(soNgay);
         String sql = buildJoinQuery(
-                "WHERE h.trangThai = 'hieu_luc' AND h.ngayHetHieuLuc IS NOT NULL "
+                "WHERE h.trangThai = '" + HRMConstants.TRANG_THAI_HIEU_LUC + "' AND h.ngayHetHieuLuc IS NOT NULL "
                         + "AND h.ngayHetHieuLuc >= ? AND h.ngayHetHieuLuc <= ?",
                 "ORDER BY h.ngayHetHieuLuc ASC");
         List<HopDongLaoDong> result = new ArrayList<>();
@@ -237,14 +287,14 @@ public class HopDongDAO {
      * Cập nhật trangThai → 'het_han' cho các hợp đồng đã qua ngayHetHieuLuc.
      * Gọi lazy mỗi khi load danh sách hợp đồng.
      */
-    public void expireHetHanContracts() {
-        String sql = "UPDATE HOPDONGLAODONG SET trangThai='het_han' "
-                + "WHERE trangThai='hieu_luc' AND ngayHetHieuLuc IS NOT NULL AND ngayHetHieuLuc < CURDATE()";
+    public int expireHetHanContracts() {
+        String sql = "UPDATE HOPDONGLAODONG SET trangThai='" + HRMConstants.TRANG_THAI_HET_HAN + "' "
+                + "WHERE trangThai='" + HRMConstants.TRANG_THAI_HIEU_LUC + "' AND ngayHetHieuLuc IS NOT NULL AND ngayHetHieuLuc < CURDATE()";
         try (Connection conn = DatabaseConnection.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
-            ps.executeUpdate();
+            return ps.executeUpdate();
         } catch (SQLException e) {
-            System.err.println("Lỗi expire hợp đồng hết hạn: " + e.getMessage());
+            throw new RuntimeException("Loi expire hop dong het han: " + e.getMessage(), e);
         }
     }
 
@@ -276,7 +326,7 @@ public class HopDongDAO {
                 + orderAndLimit;
     }
 
-    private void setParams(PreparedStatement ps, HopDongLaoDong hd) throws SQLException {
+    private void setInsertParams(PreparedStatement ps, HopDongLaoDong hd) throws SQLException {
         ps.setString(1, hd.getSoHopDong());
         ps.setString(2, hd.getMaNV());
         ps.setString(3, hd.getLoaiHopDong());
@@ -287,5 +337,9 @@ public class HopDongDAO {
         ps.setString(8, hd.getFileDinhKem());
         ps.setString(9, hd.getNoiDung());
         ps.setString(10, hd.getTrangThai());
+        ps.setDate(11, hd.getNgayThanhLy() != null ? Date.valueOf(hd.getNgayThanhLy()) : null);
+        ps.setString(12, hd.getLyDoThanhLy());
+        ps.setString(13, hd.getGhiChu());
+        ps.setString(14, hd.getNguoiTao());
     }
 }

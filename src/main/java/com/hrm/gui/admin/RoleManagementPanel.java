@@ -3,6 +3,7 @@ package com.hrm.gui.admin;
 import com.hrm.model.VaiTro;
 import com.hrm.bus.XacThucBUS;
 import com.hrm.bus.KetQua;
+import com.hrm.util.DialogUtil;
 import com.hrm.util.PermissionCodes;
 import com.hrm.util.SessionContext;
 import com.hrm.util.UIColors;
@@ -99,6 +100,14 @@ public class RoleManagementPanel extends JPanel {
         JButton btnLamMoi = new JButton("Làm mới");
         btnLamMoi.addActionListener(e -> loadData());
         buttonPanel.add(btnLamMoi);
+        if (sessionContext.hasPermission(PermissionCodes.ROLE_UPDATE)) {
+            JButton btnMapping = UIHelper.createDefaultButton("Cấu hình Chức vụ → Vai trò");
+            btnMapping.addActionListener(e -> {
+                Frame frame = (Frame) SwingUtilities.getWindowAncestor(this);
+                new ChucVuRoleMappingDialog(frame).setVisible(true);
+            });
+            buttonPanel.add(btnMapping);
+        }
         if (sessionContext.hasPermission(PermissionCodes.ROLE_CREATE)) {
             buttonPanel.add(btnCreate);
         }
@@ -148,10 +157,7 @@ public class RoleManagementPanel extends JPanel {
     private void editRole() {
         int selectedRow = table.getSelectedRow();
         if (selectedRow < 0) {
-            JOptionPane.showMessageDialog(this,
-                    "Vui lòng chọn vai trò cần sửa.",
-                    "Thông báo",
-                    JOptionPane.WARNING_MESSAGE);
+            DialogUtil.showWarn(this, "Vui lòng chọn vai trò cần sửa.");
             return;
         }
         int modelRow = table.convertRowIndexToModel(selectedRow);
@@ -170,32 +176,20 @@ public class RoleManagementPanel extends JPanel {
     private void deleteRole() {
         int selectedRow = table.getSelectedRow();
         if (selectedRow < 0) {
-            JOptionPane.showMessageDialog(this,
-                    "Vui lòng chọn vai trò cần xóa.",
-                    "Thông báo",
-                    JOptionPane.WARNING_MESSAGE);
+            DialogUtil.showWarn(this, "Vui lòng chọn vai trò cần xóa.");
             return;
         }
         int modelRow = table.convertRowIndexToModel(selectedRow);
         String roleCode = (String) tableModel.getValueAt(modelRow, 0);
-        int confirm = JOptionPane.showConfirmDialog(this,
+        if (DialogUtil.showYesNoWarning(this,
                 "Bạn có chắc muốn xóa vai trò '" + roleCode + "'?",
-                "Xác nhận xóa",
-                JOptionPane.YES_NO_OPTION,
-                JOptionPane.WARNING_MESSAGE);
-        if (confirm == JOptionPane.YES_OPTION) {
+                "Xác nhận xóa")) {
             KetQua<Void> result = authService.deleteRole(roleCode);
             if (result.isSuccess()) {
-                JOptionPane.showMessageDialog(this,
-                        "Đã xóa vai trò thành công!",
-                        "Thông báo",
-                        JOptionPane.INFORMATION_MESSAGE);
+                DialogUtil.showInfo(this, "Đã xóa vai trò thành công!");
                 loadData();
             } else {
-                JOptionPane.showMessageDialog(this,
-                        result.getMessage(),
-                        "Lỗi",
-                        JOptionPane.ERROR_MESSAGE);
+                DialogUtil.showError(this, result.getMessage());
             }
         }
     }

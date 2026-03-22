@@ -2,6 +2,7 @@ package com.hrm.model;
 
 import com.hrm.util.HRMConstants;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.Objects;
 
 /**
@@ -24,10 +25,13 @@ public class HopDongLaoDong {
     private LocalDate ngayThanhLy;        // Ngày thanh lý (nếu có)
     private String lyDoThanhLy;           // Lý do thanh lý/hủy
     private String ghiChu;                // Ghi chú bổ sung
+    private String nguoiTao;              // maTaiKhoan người tạo hợp đồng
+    private String nguoiDuyet;            // maTaiKhoan người phê duyệt
+    private LocalDateTime ngayDuyet;      // Thời điểm phê duyệt
     // Transient (không lưu DB) - dùng để hiển thị
     private transient String tenNV;
     public HopDongLaoDong() {
-        this.trangThai = "cho_duyet";
+        this.trangThai = HRMConstants.TRANG_THAI_CHO_DUYET;
     }
 
     // Constructor đầy đủ
@@ -167,6 +171,30 @@ public class HopDongLaoDong {
         this.ghiChu = ghiChu;
     }
 
+    public String getNguoiTao() {
+        return nguoiTao;
+    }
+
+    public void setNguoiTao(String nguoiTao) {
+        this.nguoiTao = nguoiTao;
+    }
+
+    public String getNguoiDuyet() {
+        return nguoiDuyet;
+    }
+
+    public void setNguoiDuyet(String nguoiDuyet) {
+        this.nguoiDuyet = nguoiDuyet;
+    }
+
+    public LocalDateTime getNgayDuyet() {
+        return ngayDuyet;
+    }
+
+    public void setNgayDuyet(LocalDateTime ngayDuyet) {
+        this.ngayDuyet = ngayDuyet;
+    }
+
     public String getTenNV() {
         return tenNV;
     }
@@ -184,7 +212,7 @@ public class HopDongLaoDong {
      */
     public boolean isHieuLuc() {
         LocalDate today = LocalDate.now();
-        return "hieu_luc".equals(trangThai)
+        return HRMConstants.TRANG_THAI_HIEU_LUC.equals(trangThai)
                 && ngayHieuLuc != null && !today.isBefore(ngayHieuLuc)
                 && (ngayHetHieuLuc == null || !today.isAfter(ngayHetHieuLuc));
     }
@@ -209,7 +237,7 @@ public class HopDongLaoDong {
      * Kiểm tra hợp đồng có thể thanh lý/hủy (đang hiệu lực và chưa thanh lý).
      */
     public boolean coTheThanhLy() {
-        return "hieu_luc".equals(trangThai) && !isHetHan();
+        return HRMConstants.TRANG_THAI_HIEU_LUC.equals(trangThai) && !isHetHan();
     }
 
     @Override

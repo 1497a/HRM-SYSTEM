@@ -3,16 +3,21 @@ package com.hrm.bus;
 import com.hrm.dao.BoNhiemDAO;
 import com.hrm.dao.HopDongDAO;
 import com.hrm.dao.NhanVienDAO;
+import com.hrm.dao.TuyenDungDAO;
 import com.hrm.model.DataScope;
 import com.hrm.model.HopDongLaoDong;
 import com.hrm.model.NhanVien;
 import com.hrm.model.TaiKhoan;
+import com.hrm.model.TinTuyenDung;
+import com.hrm.model.UngVien;
+import com.hrm.model.YeuCauTuyenDung;
 import com.hrm.util.HRMConstants;
 import com.hrm.util.PermissionCodes;
 import com.hrm.util.SessionContext;
 import com.hrm.util.ValidationUtils;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.List;
 
@@ -21,12 +26,10 @@ public class HopDongBUS {
     private static final String ACTION_CONTRACT_CREATE  = PermissionCodes.CONTRACT_CREATE;
     private static final String ACTION_CONTRACT_APPROVE = PermissionCodes.CONTRACT_APPROVE;
     private static final String ACTION_CONTRACT_MANAGE  = PermissionCodes.CONTRACT_MANAGE;
-    private static final String LOAI_THU_VIEC = "thu_viec";
-    private static final String LOAI_XAC_DINH_THOI_HAN = "xac_dinh_thoi_han";
-    private static final String LOAI_KHONG_XAC_DINH_THOI_HAN = "khong_xac_dinh";
     private static HopDongBUS instance;
     private final HopDongDAO hopDongRepo = HopDongDAO.getInstance();
     private final NhanVienDAO nvRepo = NhanVienDAO.getInstance();
+    private final TuyenDungDAO tuyenDungRepo = TuyenDungDAO.getInstance();
     private HopDongBUS() {
     }
 
@@ -44,37 +47,41 @@ public class HopDongBUS {
     public KetQua<HopDongLaoDong> taoHopDongSystem(String maNV, long luongCoSo, String ghiChu) {
         NhanVien nv = nvRepo.findByMaNhanVien(maNV);
         if (nv == null) {
-            return KetQua.error("Khong tim thay nhan vien " + maNV);
+            return KetQua.error("Không tìm thấy nhân viên " + maNV);
         }
         HopDongLaoDong existing = hopDongRepo.findHieuLuc(maNV);
         if (existing != null) {
-            return KetQua.error("Nhan vien da co hop dong hieu luc.");
+            return KetQua.error("Nhân viên đã có hợp đồng hiệu lực.");
         }
         HopDongLaoDong pending = hopDongRepo.findChoDuyet(maNV);
         if (pending != null) {
-            return KetQua.error("Nhan vien da co hop dong cho duyet.");
+            return KetQua.error("Nhân viên đã có hợp đồng chờ duyệt.");
         }
         HopDongLaoDong hd = new HopDongLaoDong();
         hd.setMaNV(maNV);
         hd.setSoHopDong(generateSoHopDong());
-        hd.setLoaiHopDong(LOAI_THU_VIEC);
+        hd.setLoaiHopDong(HRMConstants.LOAI_HOP_DONG_THU_VIEC);
         hd.setLuongCoSo(luongCoSo);
         hd.setNgayKy(LocalDate.now());
         hd.setNgayHieuLuc(LocalDate.now());
         hd.setNgayHetHieuLuc(LocalDate.now().plusDays(60));
         hd.setTrangThai(HRMConstants.TRANG_THAI_CHO_DUYET);
         hd.setGhiChu(ghiChu);
+        TaiKhoan creator = SessionContext.getInstance().getCurrentUser();
+        if (creator != null) {
+            hd.setNguoiTao(creator.getTenDangNhap());
+        }
         try {
             hopDongRepo.insert(hd);
-            return KetQua.success(hd, "Tao hop dong thu viec thanh cong (cho phe duyet).");
+            return KetQua.success(hd, "Tạo hợp đồng thử việc thành công (chờ phê duyệt).");
         } catch (Exception e) {
-            return KetQua.error("Loi tao hop dong tu dong: " + e.getMessage());
+            return KetQua.error("Lỗi tạo hợp đồng tự động: " + e.getMessage());
         }
     }
 
     public KetQua<HopDongLaoDong> taoHopDong(HopDongLaoDong hd) {
         if (hd == null || ValidationUtils.isBlank(hd.getMaNV())) {
-            return KetQua.error("Nhan vien hop dong khong hop le.");
+            return KetQua.error("Nhân viên hợp đồng không hợp lệ.");
         }
         KetQua<Void> permission = validateContractPermission(ACTION_CONTRACT_CREATE, hd.getMaNV());
         if (!permission.isSuccess()) {
@@ -82,14 +89,14 @@ public class HopDongBUS {
         }
         if (SelfApprovalGuard.isSelfAction(getCurrentUserNhanVienId(), hd.getMaNV())
                 && !SelfApprovalGuard.currentUserCanBypassSelfRestriction()) {
-            return KetQua.error("Ban khong the tu ky hop dong cho chinh minh.");
+            return KetQua.error("Bạn không thể tự ký hợp đồng cho chính mình.");
         }
         NhanVien nv = nvRepo.findByMaNhanVien(hd.getMaNV());
         if (nv == null) {
-            return KetQua.error("Khong tim thay nhan vien.");
+            return KetQua.error("Không tìm thấy nhân viên.");
         }
         if (hd.getLuongCoSo() <= 0) {
-            return KetQua.error("Luong co so phai lon hon 0.");
+            return KetQua.error("Lương cơ sở phải lớn hơn 0.");
         }
         hd.setSoHopDong(generateSoHopDong());
         KetQua<Void> dateValidation = validateNgayKyVaNgayHieuLuc(hd);
@@ -102,67 +109,95 @@ public class HopDongBUS {
         }
         HopDongLaoDong existing = hopDongRepo.findHieuLuc(hd.getMaNV());
         if (existing != null) {
-            return KetQua.error("Nhan vien da co hop dong dang hieu luc (so HD: " + existing.getSoHopDong() + ").");
+            return KetQua.error("Nhân viên đã có hợp đồng đang hiệu lực (số HĐ: " + existing.getSoHopDong() + ").");
         }
         HopDongLaoDong pending = hopDongRepo.findChoDuyet(hd.getMaNV());
         if (pending != null) {
-            return KetQua.error("Nhan vien da co hop dong dang cho phe duyet (so HD: " + pending.getSoHopDong() + ").");
+            return KetQua.error("Nhân viên đã có hợp đồng đang chờ phê duyệt (số HĐ: " + pending.getSoHopDong() + ").");
         }
         hd.setTrangThai(HRMConstants.TRANG_THAI_CHO_DUYET);
+        TaiKhoan currentUser = SessionContext.getInstance().getCurrentUser();
+        if (currentUser != null) {
+            hd.setNguoiTao(currentUser.getTenDangNhap());
+        }
         try {
             hopDongRepo.insert(hd);
-            return KetQua.success(hd, "Tao hop dong thanh cong. Hop dong dang cho phe duyet.");
+            return KetQua.success(hd, "Tạo hợp đồng thành công. Hợp đồng đang chờ phê duyệt.");
         } catch (Exception e) {
-            return KetQua.error("Loi tao hop dong: " + e.getMessage());
+            return KetQua.error("Lỗi tạo hợp đồng: " + e.getMessage());
         }
     }
 
     public KetQua<Void> pheDuyetHopDong(int maHopDong) {
         TaiKhoan currentUser = SessionContext.getInstance().getCurrentUser();
-        if (currentUser == null) return KetQua.error("Phien dang nhap khong hop le.");
+        if (currentUser == null) return KetQua.error("Phiên đăng nhập không hợp lệ.");
         if (!SessionContext.getInstance().isAdmin()
                 && !currentUser.coQuyen(ACTION_CONTRACT_APPROVE)) {
-            return KetQua.error("Ban khong co quyen phe duyet hop dong.");
+            return KetQua.error("Bạn không có quyền phê duyệt hợp đồng.");
         }
         HopDongLaoDong hd = findById(maHopDong);
-        if (hd == null) return KetQua.error("Khong tim thay hop dong.");
+        if (hd == null) return KetQua.error("Không tìm thấy hợp đồng.");
         if (!HRMConstants.TRANG_THAI_CHO_DUYET.equals(hd.getTrangThai())) {
-            return KetQua.error("Chi phe duyet hop dong dang o trang thai 'cho phe duyet'.");
+            return KetQua.error("Chỉ phê duyệt hợp đồng đang ở trạng thái 'chờ phê duyệt'.");
         }
-        hopDongRepo.updateTrangThai(maHopDong, HRMConstants.TRANG_THAI_HIEU_LUC);
+        String maTK = currentUser.getTenDangNhap();
+        LocalDateTime ngayDuyet = LocalDateTime.now();
+        try {
+            int rows = hopDongRepo.updateApproval(maHopDong, HRMConstants.TRANG_THAI_HIEU_LUC, maTK, ngayDuyet);
+            if (rows <= 0) {
+                return KetQua.error("Không thể phê duyệt hợp đồng. Vui lòng thử lại.");
+            }
+        } catch (Exception e) {
+            return KetQua.error("Lỗi phê duyệt hợp đồng: " + e.getMessage());
+        }
         NhanVien nv = nvRepo.findByMaNhanVien(hd.getMaNV());
         if (nv != null) {
             nv.setLoaiHopDong(hd.getLoaiHopDong());
-            nvRepo.update(nv);
+            try {
+                nvRepo.update(nv);
+            } catch (Exception e) {
+                System.err.println("Cảnh báo: Không thể cập nhật loại hợp đồng cho NV " + hd.getMaNV() + ": " + e.getMessage());
+            }
         }
-        return KetQua.success(null, "Hop dong da duoc phe duyet va co hieu luc.");
+        String boNhiemMsg = "";
+        if (HRMConstants.LOAI_HOP_DONG_THU_VIEC.equals(hd.getLoaiHopDong())) {
+            boNhiemMsg = tuDongBoNhiemTuHopDong(hd);
+        }
+        return KetQua.success(null, "Hợp đồng đã được phê duyệt và có hiệu lực." + boNhiemMsg);
     }
 
     public KetQua<Void> thanhLyHopDong(int maHopDong) {
         HopDongLaoDong hd = findById(maHopDong);
         if (hd == null) {
-            return KetQua.error("Khong tim thay hop dong.");
+            return KetQua.error("Không tìm thấy hợp đồng.");
         }
         KetQua<Void> permission = validateContractPermission(ACTION_CONTRACT_MANAGE, hd.getMaNV());
         if (!permission.isSuccess()) {
             return permission;
         }
         if (HRMConstants.TRANG_THAI_THANH_LY.equals(hd.getTrangThai())) {
-            return KetQua.error("Hop dong da duoc thanh ly.");
+            return KetQua.error("Hợp đồng đã được thanh lý.");
         }
-        if ("het_han".equals(hd.getTrangThai())) {
-            return KetQua.error("Khong the thanh ly hop dong da het han. Chi thanh ly hop dong dang hieu luc.");
+        if (HRMConstants.TRANG_THAI_HET_HAN.equals(hd.getTrangThai())) {
+            return KetQua.error("Không thể thanh lý hợp đồng đã hết hạn. Chỉ thanh lý hợp đồng đang hiệu lực.");
         }
-        hopDongRepo.updateTrangThai(maHopDong, HRMConstants.TRANG_THAI_THANH_LY);
+        try {
+            int rows = hopDongRepo.updateTrangThai(maHopDong, HRMConstants.TRANG_THAI_THANH_LY);
+            if (rows <= 0) {
+                return KetQua.error("Không thể thanh lý hợp đồng. Vui lòng thử lại.");
+            }
+        } catch (Exception e) {
+            return KetQua.error("Lỗi thanh lý hợp đồng: " + e.getMessage());
+        }
         if (hd.getMaNV() != null) {
             BoNhiemDAO.getInstance().endAllActiveBoNhiemForNV(hd.getMaNV(), LocalDate.now());
         }
-        return KetQua.success(null, "Thanh ly hop dong thanh cong. Da ket thuc cac bo nhiem hieu luc.");
+        return KetQua.success(null, "Thanh lý hợp đồng thành công. Đã kết thúc các bổ nhiệm hiệu lực.");
     }
 
     public boolean isHopDongHetHan(int maHopDong) {
         HopDongLaoDong hd = findById(maHopDong);
-        return hd != null && "het_han".equals(hd.getTrangThai());
+        return hd != null && HRMConstants.TRANG_THAI_HET_HAN.equals(hd.getTrangThai());
     }
 
     public List<HopDongLaoDong> getSapHetHan(int soNgay) {
@@ -186,16 +221,16 @@ public class HopDongBUS {
     private KetQua<Void> validateContractPermission(String action, String targetMaNV) {
         TaiKhoan currentUser = SessionContext.getInstance().getCurrentUser();
         if (currentUser == null) {
-            return KetQua.error("Phien dang nhap khong hop le.");
+            return KetQua.error("Phiên đăng nhập không hợp lệ.");
         }
         if (SessionContext.getInstance().isAdmin()) {
             return KetQua.success(null, "");
         }
         if (!currentUser.coQuyen(action)) {
-            return KetQua.error("Ban khong co quyen thao tac hop dong nay.");
+            return KetQua.error("Bạn không có quyền thao tác hợp đồng này.");
         }
         if (!isTargetWithinActionScope(action, currentUser.getMaNV(), targetMaNV)) {
-            return KetQua.error("Ban khong co pham vi thao tac tren nhan vien nay.");
+            return KetQua.error("Bạn không có phạm vi thao tác trên nhân viên này.");
         }
         return KetQua.success(null, "");
     }
@@ -220,23 +255,33 @@ public class HopDongBUS {
     }
 
     private HopDongLaoDong findById(int maHopDong) {
-        for (HopDongLaoDong hd : hopDongRepo.findAll()) {
-            if (hd.getMaHopDong() == maHopDong) {
-                return hd;
-            }
+        return hopDongRepo.findById(maHopDong);
+    }
+
+    private String tuDongBoNhiemTuHopDong(HopDongLaoDong hd) {
+        UngVien uv = tuyenDungRepo.findUngVienByMaNV(hd.getMaNV());
+        if (uv == null) return "";
+        TinTuyenDung tin = tuyenDungRepo.findTinById(uv.getMaTin());
+        if (tin == null) return "";
+        YeuCauTuyenDung yc = tuyenDungRepo.findYeuCauById(tin.getMaYeuCau());
+        if (yc == null || ValidationUtils.isBlank(yc.getMaChucVu())) return "";
+        KetQua<Void> kq = BoNhiemBUS.getInstance().taoBoNhiemTuHopDong(
+                hd.getMaNV(), yc, hd.getNgayHieuLuc(), hd.getMaHopDong());
+        if (kq.isSuccess()) {
+            return " | Bổ nhiệm đã được tạo tự động. Vui lòng phê duyệt trong mục Bổ nhiệm.";
         }
-        return null;
+        return " | Tạo bổ nhiệm tự động thất bại: " + kq.getMessage();
     }
 
     private KetQua<Void> validateNgayKyVaNgayHieuLuc(HopDongLaoDong hd) {
         if (hd.getNgayKy() == null) {
-            return KetQua.error("Ngay ky khong duoc de trong.");
+            return KetQua.error("Ngày ký không được để trống.");
         }
         if (hd.getNgayHieuLuc() == null) {
-            return KetQua.error("Ngay hieu luc khong duoc de trong.");
+            return KetQua.error("Ngày hiệu lực không được để trống.");
         }
         if (hd.getNgayHieuLuc().isBefore(hd.getNgayKy())) {
-            return KetQua.error("Ngay hieu luc phai bang hoac sau ngay ky.");
+            return KetQua.error("Ngày hiệu lực phải bằng hoặc sau ngày ký.");
         }
         return KetQua.success(null, "");
     }
@@ -244,44 +289,44 @@ public class HopDongBUS {
     private KetQua<Void> validateTheoLoaiHopDong(HopDongLaoDong hd) {
         String loai = hd.getLoaiHopDong();
         if (ValidationUtils.isBlank(loai)) {
-            return KetQua.error("Loai hop dong khong duoc de trong.");
+            return KetQua.error("Loại hợp đồng không được để trống.");
         }
-        if (LOAI_THU_VIEC.equals(loai)) {
+        if (HRMConstants.LOAI_HOP_DONG_THU_VIEC.equals(loai)) {
             return validateHopDongThuViec(hd);
         }
-        if (LOAI_XAC_DINH_THOI_HAN.equals(loai)) {
+        if (HRMConstants.LOAI_HOP_DONG_XAC_DINH.equals(loai)) {
             return validateHopDongXacDinhThoiHan(hd);
         }
-        if (!LOAI_KHONG_XAC_DINH_THOI_HAN.equals(loai)) {
-            return KetQua.error("Loai hop dong khong hop le.");
+        if (!HRMConstants.LOAI_HOP_DONG_KHONG_XAC_DINH.equals(loai)) {
+            return KetQua.error("Loại hợp đồng không hợp lệ.");
         }
         return KetQua.success(null, "");
     }
 
     private KetQua<Void> validateHopDongThuViec(HopDongLaoDong hd) {
         if (hd.getNgayHetHieuLuc() == null) {
-            return KetQua.error("Hop dong thu viec phai co ngay het hieu luc.");
+            return KetQua.error("Hợp đồng thử việc phải có ngày hết hiệu lực.");
         }
         long soNgay = ChronoUnit.DAYS.between(hd.getNgayHieuLuc(), hd.getNgayHetHieuLuc());
         if (soNgay > 60) {
-            return KetQua.error("Hop dong thu viec khong duoc vuot qua 60 ngay.");
+            return KetQua.error("Hợp đồng thử việc không được vượt quá 60 ngày.");
         }
         if (soNgay <= 0) {
-            return KetQua.error("Ngay het hieu luc phai sau ngay hieu luc.");
+            return KetQua.error("Ngày hết hiệu lực phải sau ngày hiệu lực.");
         }
         return KetQua.success(null, "");
     }
 
     private KetQua<Void> validateHopDongXacDinhThoiHan(HopDongLaoDong hd) {
         if (hd.getNgayHetHieuLuc() == null) {
-            return KetQua.error("Hop dong xac dinh thoi han phai co ngay het hieu luc.");
+            return KetQua.error("Hợp đồng xác định thời hạn phải có ngày hết hiệu lực.");
         }
         long soThang = ChronoUnit.MONTHS.between(hd.getNgayHieuLuc(), hd.getNgayHetHieuLuc());
         if (soThang > 36) {
-            return KetQua.error("Hop dong xac dinh thoi han khong duoc vuot qua 36 thang.");
+            return KetQua.error("Hợp đồng xác định thời hạn không được vượt quá 36 tháng.");
         }
         if (hd.getNgayHetHieuLuc().isBefore(hd.getNgayHieuLuc())) {
-            return KetQua.error("Ngay het hieu luc phai sau ngay hieu luc.");
+            return KetQua.error("Ngày hết hiệu lực phải sau ngày hiệu lực.");
         }
         return KetQua.success(null, "");
     }

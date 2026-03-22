@@ -20,20 +20,13 @@ import java.time.LocalDate;
 import java.util.List;
 
 /**
- * Service quan ly nhan vien.
+ * Service quản lý nhân viên.
  * Singleton pattern.
  */
 public class NhanVienBUS {
     private static final String ACTION_EMPLOYEE_VIEW = PermissionCodes.EMPLOYEE_VIEW;
     private static final String ACTION_EMPLOYEE_UPDATE = PermissionCodes.EMPLOYEE_UPDATE;
     private static final String ACTION_EMPLOYEE_STATUS_UPDATE = PermissionCodes.EMPLOYEE_STATUS_UPDATE;
-    private static final String TRANG_THAI_DANG_LAM_VIEC = HRMConstants.TRANG_THAI_DANG_LAM_VIEC;
-    private static final String TRANG_THAI_TAM_NGHI = "tam_nghi";
-    private static final String TRANG_THAI_NGHI_VIEC = "nghi_viec";
-    private static final String MA_LOAI_PHEP_NAM = "PHEP_NAM";
-    private static final String REGEX_EMAIL = "^[\\w.-]+@[\\w.-]+\\.[a-zA-Z]{2,}$";
-    private static final String REGEX_PHONE = "0\\d{9,10}";
-    private static final String ROLE_ADMIN = HRMConstants.ROLE_ADMIN;
     private static NhanVienBUS instance;
     private final NhanVienDAO nvRepo = NhanVienDAO.getInstance();
     private final ThongTinCaNhanDAO ttcnRepo = ThongTinCaNhanDAO.getInstance();
@@ -51,20 +44,25 @@ public class NhanVienBUS {
 
     public KetQua<NhanVien> taoHoSo(NhanVien nv, ThongTinCaNhan ttcn) {
         if (ValidationUtils.isBlank(nv.getMaNhanVien())) {
-            return KetQua.error("Ma nhan vien khong duoc de trong.");
+            return KetQua.error("Mã nhân viên không được để trống.");
         }
         if (nvRepo.existsByMaNhanVien(nv.getMaNhanVien().trim())) {
-            return KetQua.error("Ma nhan vien '" + nv.getMaNhanVien() + "' da ton tai.");
+            return KetQua.error("Mã nhân viên '" + nv.getMaNhanVien() + "' đã tồn tại.");
         }
         if (ValidationUtils.isBlank(ttcn.getHoTen())) {
-            return KetQua.error("Ho ten khong duoc de trong.");
+            return KetQua.error("Họ tên không được để trống.");
         }
-        if (ttcn.getNgaySinh() != null) {
-            String birthErr = ValidationUtils.validateBirthDate(ttcn.getNgaySinh());
-            if (birthErr != null) {
-                return KetQua.error(birthErr);
-            }
+        if (ttcn.getNgaySinh() == null) {
+            return KetQua.error("Ngày sinh không được để trống.");
         }
+        String birthErr = ValidationUtils.validateBirthDate(ttcn.getNgaySinh());
+        if (birthErr != null) {
+            return KetQua.error(birthErr);
+        }
+        if (ValidationUtils.isBlank(ttcn.getDiaChi())) {
+            return KetQua.error("Địa chỉ không được để trống.");
+        }
+        ttcn.setDiaChi(ttcn.getDiaChi().trim());
         String emailErr = ValidationUtils.validateEmail(ttcn.getEmail());
         if (emailErr != null) {
             return KetQua.error(emailErr);
@@ -78,10 +76,10 @@ public class NhanVienBUS {
             return KetQua.error(cccdValidation.getMessage());
         }
         if (nv.getNgayVaoLam() == null) {
-            return KetQua.error("Ngay vao lam khong duoc de trong.");
+            return KetQua.error("Ngày vào làm không được để trống.");
         }
         if (ValidationUtils.isBlank(nv.getTrangThai())) {
-            nv.setTrangThai(TRANG_THAI_DANG_LAM_VIEC);
+            nv.setTrangThai(HRMConstants.TRANG_THAI_DANG_LAM_VIEC);
         }
         try (Connection conn = DatabaseConnection.getConnection()) {
             conn.setAutoCommit(false);
@@ -89,55 +87,60 @@ public class NhanVienBUS {
                 String maNV = nvRepo.insert(conn, nv);
                 ttcn.setMaNV(maNV);
                 ttcnRepo.insert(conn, ttcn);
-                insertSoDungPhep(conn, maNV, LocalDate.now().getYear(), MA_LOAI_PHEP_NAM, 12.0);
+                insertSoDungPhep(conn, maNV, LocalDate.now().getYear(), HRMConstants.LOAI_PHEP_NAM, 12.0);
                 conn.commit();
                 nv.setHoTen(ttcn.getHoTen());
-                return KetQua.success(nv, "Tao ho so nhan vien thanh cong. Ma NV: " + maNV);
+                return KetQua.success(nv, "Tạo hồ sơ nhân viên thành công. Mã NV: " + maNV);
             } catch (Exception ex) {
                 conn.rollback();
-                return KetQua.error("Loi khi tao ho so: " + ex.getMessage());
+                return KetQua.error("Lỗi khi tạo hồ sơ: " + ex.getMessage());
             }
         } catch (SQLException e) {
-            return KetQua.error("Loi ket noi co so du lieu: " + e.getMessage());
+            return KetQua.error("Lỗi kết nối cơ sở dữ liệu: " + e.getMessage());
         }
     }
 
     public KetQua<ThongTinCaNhan> capNhatThongTinCaNhan(ThongTinCaNhan ttcn) {
         if (ValidationUtils.isBlank(ttcn.getMaNV())) {
-            return KetQua.error("Ma nhan vien khong hop le.");
+            return KetQua.error("Mã nhân viên không hợp lệ.");
         }
         if (!canEditEmployeeProfile(ttcn.getMaNV())) {
-            return KetQua.error("Ban khong co quyen cap nhat thong tin nhan vien nay.");
+            return KetQua.error("Bạn không có quyền cập nhật thông tin nhân viên này.");
         }
         KetQua<Void> cccdValidation = validateCCCD(ttcn.getCccd(), ttcn.getMaNV());
         if (!cccdValidation.isSuccess()) {
             return KetQua.error(cccdValidation.getMessage());
         }
-        if (ttcn.getNgaySinh() != null) {
-            String birthErr = ValidationUtils.validateBirthDate(ttcn.getNgaySinh());
-            if (birthErr != null) {
-                return KetQua.error(birthErr);
-            }
+        if (ttcn.getNgaySinh() == null) {
+            return KetQua.error("Ngày sinh không được để trống.");
         }
+        String birthErr = ValidationUtils.validateBirthDate(ttcn.getNgaySinh());
+        if (birthErr != null) {
+            return KetQua.error(birthErr);
+        }
+        if (ValidationUtils.isBlank(ttcn.getDiaChi())) {
+            return KetQua.error("Địa chỉ không được để trống.");
+        }
+        ttcn.setDiaChi(ttcn.getDiaChi().trim());
         String emailErr = ValidationUtils.validateEmail(ttcn.getEmail());
         if (emailErr != null) return KetQua.error(emailErr);
         String phoneErr = ValidationUtils.validatePhone(ttcn.getDienThoai());
         if (phoneErr != null) return KetQua.error(phoneErr);
         try {
             ttcnRepo.update(ttcn);
-            return KetQua.success(ttcn, "Cap nhat thong tin ca nhan thanh cong.");
+            return KetQua.success(ttcn, "Cập nhật thông tin cá nhân thành công.");
         } catch (Exception e) {
-            return KetQua.error("Loi cap nhat thong tin ca nhan: " + e.getMessage());
+            return KetQua.error("Lỗi cập nhật thông tin cá nhân: " + e.getMessage());
         }
     }
 
     public KetQua<NhanVien> capNhatTrangThai(String maNV, String trangThaiMoi, String lyDo) {
         if (ValidationUtils.isBlank(maNV)) {
-            return KetQua.error("Ma nhan vien khong hop le.");
+            return KetQua.error("Mã nhân viên không hợp lệ.");
         }
         NhanVien nv = nvRepo.findByMaNhanVien(maNV);
         if (nv == null) {
-            return KetQua.error("Khong tim thay nhan vien voi ma: " + maNV);
+            return KetQua.error("Không tìm thấy nhân viên với mã: " + maNV);
         }
         KetQua<Void> permissionValidation = validateStatusChangePermission(nv, trangThaiMoi);
         if (!permissionValidation.isSuccess()) {
@@ -149,11 +152,11 @@ public class NhanVienBUS {
         }
         nv.setTrangThai(trangThaiMoi);
         nvRepo.update(nv);
-        if (TRANG_THAI_NGHI_VIEC.equals(trangThaiMoi)) {
+        if (HRMConstants.TRANG_THAI_NGHI_VIEC.equals(trangThaiMoi)) {
             boNhiemRepo.endAllActiveBoNhiemForNV(maNV, LocalDate.now());
             taiKhoanRepo.deactivateByMaNV(maNV);
         }
-        return KetQua.success(nv, "Cap nhat trang thai nhan vien thanh cong.");
+        return KetQua.success(nv, "Cập nhật trạng thái nhân viên thành công.");
     }
 
     public boolean canChangeEmployeeStatus(String maNV) {
@@ -226,31 +229,31 @@ public class NhanVienBUS {
         }
         String cccd = cccdRaw.trim();
         if (!cccd.matches("\\d{12}")) {
-            return KetQua.error("CCCD phai la 12 chu so.");
+            return KetQua.error("CCCD phải là 12 chữ số.");
         }
         if (ttcnRepo.existsByCCCD(cccd, maNV)) {
-            return KetQua.error("CCCD '" + cccdRaw + "' da duoc dang ky cho nhan vien khac.");
+            return KetQua.error("CCCD '" + cccdRaw + "' đã được đăng ký cho nhân viên khác.");
         }
         return KetQua.success(null, "");
     }
 
     private KetQua<Void> validateTrangThaiTransition(String trangThaiHienTai, String trangThaiMoi) {
         boolean valid = false;
-        if (TRANG_THAI_DANG_LAM_VIEC.equals(trangThaiHienTai)
-                && (TRANG_THAI_TAM_NGHI.equals(trangThaiMoi) || TRANG_THAI_NGHI_VIEC.equals(trangThaiMoi))) {
+        if (HRMConstants.TRANG_THAI_DANG_LAM_VIEC.equals(trangThaiHienTai)
+                && (HRMConstants.TRANG_THAI_TAM_NGHI.equals(trangThaiMoi) || HRMConstants.TRANG_THAI_NGHI_VIEC.equals(trangThaiMoi))) {
             valid = true;
         }
-        if (TRANG_THAI_TAM_NGHI.equals(trangThaiHienTai)
-                && (TRANG_THAI_DANG_LAM_VIEC.equals(trangThaiMoi) || TRANG_THAI_NGHI_VIEC.equals(trangThaiMoi))) {
+        if (HRMConstants.TRANG_THAI_TAM_NGHI.equals(trangThaiHienTai)
+                && (HRMConstants.TRANG_THAI_DANG_LAM_VIEC.equals(trangThaiMoi) || HRMConstants.TRANG_THAI_NGHI_VIEC.equals(trangThaiMoi))) {
             valid = true;
         }
         if (valid) {
             return KetQua.success(null, "");
         }
-        if (TRANG_THAI_NGHI_VIEC.equals(trangThaiHienTai)) {
-            return KetQua.error("Nhan vien da nghi viec, khong the thay doi trang thai.");
+        if (HRMConstants.TRANG_THAI_NGHI_VIEC.equals(trangThaiHienTai)) {
+            return KetQua.error("Nhân viên đã nghỉ việc, không thể thay đổi trạng thái.");
         }
-        return KetQua.error("Chuyen trang thai khong hop le tu '" + trangThaiHienTai + "' sang '" + trangThaiMoi + "'.");
+        return KetQua.error("Chuyển trạng thái không hợp lệ từ '" + trangThaiHienTai + "' sang '" + trangThaiMoi + "'.");
     }
 
     private boolean canEditEmployeeProfile(NhanVien target) {
@@ -277,18 +280,18 @@ public class NhanVienBUS {
     private KetQua<Void> validateStatusPermission(NhanVien target) {
         TaiKhoan currentUser = SessionContext.getInstance().getCurrentUser();
         if (currentUser == null) {
-            return KetQua.error("Phien dang nhap khong hop le.");
+            return KetQua.error("Phiên đăng nhập không hợp lệ.");
         }
         if (target == null || ValidationUtils.isBlank(target.getMaNhanVien())) {
-            return KetQua.error("Nhan vien muc tieu khong hop le.");
+            return KetQua.error("Nhân viên mục tiêu không hợp lệ.");
         }
         String currentMaNV = currentUser.getMaNV();
         if (SelfApprovalGuard.isSelfAction(currentMaNV, target.getMaNhanVien())
                 && !SelfApprovalGuard.currentUserCanBypassSelfRestriction()) {
-            return KetQua.error("Khong the tu doi trang thai cua chinh minh.");
+            return KetQua.error("Không thể tự đổi trạng thái của chính mình.");
         }
         if (!isCurrentUserAllowedForAction(currentUser, ACTION_EMPLOYEE_STATUS_UPDATE)) {
-            return KetQua.error("Ban khong co quyen doi trang thai nhan vien nay.");
+            return KetQua.error("Bạn không có quyền đổi trạng thái nhân viên này.");
         }
         return KetQua.success(null, "");
     }

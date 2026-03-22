@@ -10,6 +10,8 @@ import com.hrm.model.DataScope;
 import com.hrm.model.NhanVien;
 import com.hrm.model.PhongBan;
 import com.hrm.model.TaiKhoan;
+import com.hrm.util.DialogUtil;
+import com.hrm.util.HRMConstants;
 import com.hrm.util.PermissionCodes;
 import com.hrm.util.UIFonts;
 import com.hrm.util.SessionContext;
@@ -251,11 +253,13 @@ class TabSendNotificationPanel extends JPanel {
         String tieuDe = txtTieuDe.getText().trim();
         String noiDung = txtNoiDung.getText().trim();
         if (tieuDe.isEmpty()) {
-            JOptionPane.showMessageDialog(this, "Vui lòng nhập tiêu đề thông báo.", "Lỗi", JOptionPane.WARNING_MESSAGE);
+            DialogUtil.showWarn(this, "Vui lòng nhập tiêu đề thông báo.");
+            txtTieuDe.requestFocus();
             return;
         }
         if (noiDung.isEmpty()) {
-            JOptionPane.showMessageDialog(this, "Vui lòng nhập nội dung thông báo.", "Lỗi", JOptionPane.WARNING_MESSAGE);
+            DialogUtil.showWarn(this, "Vui lòng nhập nội dung thông báo.");
+            txtNoiDung.requestFocus();
             return;
         }
         if (currentUser == null) {
@@ -266,15 +270,18 @@ class TabSendNotificationPanel extends JPanel {
             return;
         }
         if (RECIPIENT_EMPLOYEE.equals(recipientType) && cboNhanVien.getSelectedItem() == null) {
-            JOptionPane.showMessageDialog(this, "Vui lòng chọn nhân viên để gửi.", "Lỗi", JOptionPane.WARNING_MESSAGE);
+            DialogUtil.showWarn(this, "Vui lòng chọn nhân viên để gửi.");
+            cboNhanVien.requestFocus();
             return;
         }
         if (RECIPIENT_DEPARTMENT.equals(recipientType) && cboPhongBan.getSelectedItem() == null) {
-            JOptionPane.showMessageDialog(this, "Vui lòng chọn phòng ban để gửi.", "Lỗi", JOptionPane.WARNING_MESSAGE);
+            DialogUtil.showWarn(this, "Vui lòng chọn phòng ban để gửi.");
+            cboPhongBan.requestFocus();
             return;
         }
         if (RECIPIENT_POSITION.equals(recipientType) && cboChucVu.getSelectedItem() == null) {
-            JOptionPane.showMessageDialog(this, "Vui lòng chọn chức vụ để gửi.", "Lỗi", JOptionPane.WARNING_MESSAGE);
+            DialogUtil.showWarn(this, "Vui lòng chọn chức vụ để gửi.");
+            cboChucVu.requestFocus();
             return;
         }
         String target;
@@ -292,11 +299,9 @@ class TabSendNotificationPanel extends JPanel {
         } else {
             target = "chức vụ: " + ((ChucVu) cboChucVu.getSelectedItem()).getTenChucVu();
         }
-        if (JOptionPane.showConfirmDialog(
-                this,
+        if (!DialogUtil.showYesNo(this,
                 "Gửi thông báo \"" + tieuDe + "\" đến " + target + "?",
-                "Xác nhận gửi",
-                JOptionPane.YES_NO_OPTION) != JOptionPane.YES_OPTION) {
+                "Xác nhận gửi")) {
             return;
         }
         String loai = getSelectedLoaiCode();
@@ -329,22 +334,22 @@ class TabSendNotificationPanel extends JPanel {
                         loai);
             }
             if (!result.isSuccess()) {
-                JOptionPane.showMessageDialog(this, result.getMessage(), "Lỗi", JOptionPane.ERROR_MESSAGE);
+                DialogUtil.showError(this, result.getMessage());
                 return;
             }
-            JOptionPane.showMessageDialog(this, result.getMessage(), "Thành công", JOptionPane.INFORMATION_MESSAGE);
+            DialogUtil.showSuccess(this, result.getMessage());
             txtTieuDe.setText("");
             txtNoiDung.setText("");
         } catch (Exception ex) {
-            JOptionPane.showMessageDialog(this, "Lỗi gửi thông báo: " + ex.getMessage(), "Lỗi", JOptionPane.ERROR_MESSAGE);
+            DialogUtil.showError(this, "Lỗi gửi thông báo: " + ex.getMessage());
         }
     }
 
     private String getSelectedLoaiCode() {
         Object sel = cboLoai.getSelectedItem();
-        if ("Hệ thống".equals(sel)) return "he_thong";
-        if ("Đơn từ".equals(sel)) return "don_tu";
-        return "thong_bao_chung";
+        if (HRMConstants.display(HRMConstants.LOAI_TB_HE_THONG).equals(sel)) return HRMConstants.LOAI_TB_HE_THONG;
+        if (HRMConstants.display(HRMConstants.LOAI_TB_DON_TU).equals(sel)) return HRMConstants.LOAI_TB_DON_TU;
+        return HRMConstants.LOAI_TB_CHUNG;
     }
 
     private List<String> getScopedNhanVienIds() {

@@ -7,6 +7,7 @@ import com.hrm.model.NhanVien;
 import com.hrm.bus.HopDongBUS;
 import com.hrm.bus.NhanVienBUS;
 import com.hrm.bus.KetQua;
+import com.hrm.util.HRMConstants;
 import com.hrm.util.PermissionCodes;
 import com.hrm.util.UIFonts;
 import com.hrm.util.UIColors;
@@ -17,6 +18,7 @@ import java.awt.*;
 import java.awt.Font;
 import java.text.NumberFormat;
 import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
 import java.time.ZoneId;
 import java.util.Date;
 import java.util.Locale;
@@ -39,6 +41,8 @@ public class ContractFormDialog extends BaseFormDialog {
     private JSpinner spnNgayHetHieuLuc;
     private JTextArea txtGhiChu;
     private JCheckBox chkKhongXacDinhNgayHet;
+    // Audit fields (chỉ hiển thị trong view mode)
+    private JPanel pnlAudit;
     // Buttons
     private PurpleButton btnLuu;
     private PurpleButton btnPheDuyet;
@@ -99,7 +103,7 @@ public class ContractFormDialog extends BaseFormDialog {
         });
         // Loại hợp đồng
         cboLoaiHopDong = new JComboBox<>(new String[]{
-            "thu_viec", "co_thoi_han", "khong_xac_dinh_thoi_han"
+            HRMConstants.LOAI_HOP_DONG_THU_VIEC, HRMConstants.LOAI_HOP_DONG_XAC_DINH, HRMConstants.LOAI_HOP_DONG_KHONG_XAC_DINH
         });
         cboLoaiHopDong.setFont(UIFonts.TEXT_NORMAL);
         cboLoaiHopDong.setRenderer(new DefaultListCellRenderer() {
@@ -107,14 +111,7 @@ public class ContractFormDialog extends BaseFormDialog {
             public Component getListCellRendererComponent(JList<?> list, Object value,
                     int index, boolean isSelected, boolean cellHasFocus) {
                 super.getListCellRendererComponent(list, value, index, isSelected, cellHasFocus);
-                if (value != null) {
-                    switch (value.toString()) {
-                        case "thu_viec":                  setText("Thử việc");                  break;
-                        case "co_thoi_han":               setText("Có thời hạn");               break;
-                        case "khong_xac_dinh_thoi_han":   setText("Không xác định thời hạn");   break;
-                        default:                          setText(value.toString());
-                    }
-                }
+                if (value != null) setText(HRMConstants.display(value.toString()));
                 return this;
             }
         });
@@ -166,11 +163,18 @@ public class ContractFormDialog extends BaseFormDialog {
         // Ẩn mặc định, setReadOnly() sẽ bật nếu đủ điều kiện
         btnPheDuyet.setVisible(false);
         btnThanhLy.setVisible(false);
+        // Audit panel — chỉ hiển thị trong view mode
+        pnlAudit = new JPanel(new GridLayout(0, 2, 8, 4));
+        pnlAudit.setBackground(new Color(245, 245, 250));
+        pnlAudit.setBorder(BorderFactory.createCompoundBorder(
+                BorderFactory.createLineBorder(new Color(200, 200, 220)),
+                new EmptyBorder(8, 12, 8, 12)));
+        pnlAudit.setVisible(false);
     }
 
     private void onLoaiHopDongChanged() {
         String loai = (String) cboLoaiHopDong.getSelectedItem();
-        boolean isKhongXacDinh = "khong_xac_dinh_thoi_han".equals(loai);
+        boolean isKhongXacDinh = HRMConstants.LOAI_HOP_DONG_KHONG_XAC_DINH.equals(loai);
         if (isKhongXacDinh) {
             chkKhongXacDinhNgayHet.setSelected(true);
             spnNgayHetHieuLuc.setEnabled(false);
@@ -249,6 +253,7 @@ public class ContractFormDialog extends BaseFormDialog {
         gbc.fill = GridBagConstraints.NONE;
         gbc.weightx = 0;
         mainPanel.add(formPanel, BorderLayout.CENTER);
+        mainPanel.add(pnlAudit, BorderLayout.NORTH);
         // Button panel
         JPanel btnPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT, 8, 0));
         btnPanel.setOpaque(false);
@@ -289,17 +294,8 @@ public class ContractFormDialog extends BaseFormDialog {
                 break;
             }
         }
-        // Loại hợp đồng - map DB value to combo items
-        String loai = hd.getLoaiHopDong();
-        String comboLoai = loai;
-        if ("xac_dinh_thoi_han".equals(loai)) comboLoai = "co_thoi_han";
-        else if ("khong_xac_dinh".equals(loai)) comboLoai = "khong_xac_dinh_thoi_han";
-        for (int i = 0; i < cboLoaiHopDong.getItemCount(); i++) {
-            if (cboLoaiHopDong.getItemAt(i).equals(comboLoai)) {
-                cboLoaiHopDong.setSelectedIndex(i);
-                break;
-            }
-        }
+        // Loại hợp đồng - combo now uses DB values directly
+        cboLoaiHopDong.setSelectedItem(hd.getLoaiHopDong());
         txtLuongCoSo.setValue(hd.getLuongCoSo());
         if (hd.getNgayKy() != null) {
             spnNgayKy.setValue(Date.from(hd.getNgayKy().atStartOfDay(ZoneId.systemDefault()).toInstant()));
@@ -314,6 +310,26 @@ public class ContractFormDialog extends BaseFormDialog {
             spnNgayHetHieuLuc.setEnabled(false);
         }
         txtGhiChu.setText(hd.getNoiDung() != null ? hd.getNoiDung() : "");
+        // Audit fields
+        if (hd.getNguoiTao() != null || hd.getNguoiDuyet() != null) {
+            pnlAudit.removeAll();
+            DateTimeFormatter dtFmt = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm");
+            addAuditRow("Người tạo:", hd.getNguoiTao() != null ? hd.getNguoiTao() : "(hệ thống)");
+            addAuditRow("Người phê duyệt:", hd.getNguoiDuyet() != null ? hd.getNguoiDuyet() : "(chưa duyệt)");
+            addAuditRow("Ngày phê duyệt:", hd.getNgayDuyet() != null ? hd.getNgayDuyet().format(dtFmt) : "—");
+            pnlAudit.setVisible(true);
+        }
+    }
+
+    private void addAuditRow(String labelText, String value) {
+        JLabel lbl = new JLabel(labelText);
+        lbl.setFont(UIFonts.TEXT_NORMAL.deriveFont(Font.BOLD));
+        lbl.setForeground(UIColors.TEXT_DARK);
+        JLabel val = new JLabel(value);
+        val.setFont(UIFonts.TEXT_NORMAL);
+        val.setForeground(Color.DARK_GRAY);
+        pnlAudit.add(lbl);
+        pnlAudit.add(val);
     }
 
     private void setReadOnly() {
@@ -329,23 +345,21 @@ public class ContractFormDialog extends BaseFormDialog {
         setTitle("Chi Tiết Hợp Đồng");
         com.hrm.util.SessionContext sc = com.hrm.util.SessionContext.getInstance();
         String trangThai = hopDongHienThi.getTrangThai();
-        btnPheDuyet.setVisible(sc.hasPermission(PermissionCodes.CONTRACT_APPROVE) && "cho_duyet".equals(trangThai));
+        btnPheDuyet.setVisible(sc.hasPermission(PermissionCodes.CONTRACT_APPROVE) && HRMConstants.TRANG_THAI_CHO_DUYET.equals(trangThai));
         btnThanhLy.setVisible(sc.hasPermission(PermissionCodes.CONTRACT_MANAGE)
-                && ("hieu_luc".equals(trangThai) || "het_hieu_luc".equals(trangThai)));
+                && (HRMConstants.TRANG_THAI_HIEU_LUC.equals(trangThai) || HRMConstants.TRANG_THAI_HET_HIEU_LUC.equals(trangThai)));
     }
 
     private void pheDuyetHopDong() {
-        int confirm = JOptionPane.showConfirmDialog(this,
-                "Phê duyệt hợp đồng số '" + hopDongHienThi.getSoHopDong() + "'?\nHợp đồng sẽ có hiệu lực ngay.",
-                "Xác nhận phê duyệt", JOptionPane.YES_NO_OPTION);
-        if (confirm != JOptionPane.YES_OPTION) return;
+        if (!showYesNo("Phê duyệt hợp đồng số '" + hopDongHienThi.getSoHopDong() + "'?\nHợp đồng sẽ có hiệu lực ngay.",
+                "Xác nhận phê duyệt")) return;
         KetQua<Void> result = HopDongBUS.getInstance().pheDuyetHopDong(hopDongHienThi.getMaHopDong());
         if (result.isSuccess()) {
-            JOptionPane.showMessageDialog(this, result.getMessage(), "Thành công", JOptionPane.INFORMATION_MESSAGE);
+            showSuccess(result.getMessage());
             saved = true;
             dispose();
         } else {
-            JOptionPane.showMessageDialog(this, result.getMessage(), "Lỗi", JOptionPane.ERROR_MESSAGE);
+            showError(result.getMessage());
         }
     }
 
@@ -356,15 +370,14 @@ public class ContractFormDialog extends BaseFormDialog {
                     + "Số HD: " + hopDongHienThi.getSoHopDong() + "\n"
                     + "ưu ý: Các bổ nhiệm hiệu lực sẽ bị kết thúc.";
         }
-        int confirm = JOptionPane.showConfirmDialog(this, confirmMsg, "Xác nhận thanh lý", JOptionPane.YES_NO_OPTION);
-        if (confirm != JOptionPane.YES_OPTION) return;
+        if (!showYesNo(confirmMsg, "Xác nhận thanh lý")) return;
         KetQua<Void> result = HopDongBUS.getInstance().thanhLyHopDong(hopDongHienThi.getMaHopDong());
         if (result.isSuccess()) {
-            JOptionPane.showMessageDialog(this, result.getMessage(), "Thành công", JOptionPane.INFORMATION_MESSAGE);
+            showSuccess(result.getMessage());
             saved = true;
             dispose();
         } else {
-            JOptionPane.showMessageDialog(this, result.getMessage(), "Lỗi", JOptionPane.ERROR_MESSAGE);
+            showError(result.getMessage());
         }
     }
 
@@ -375,8 +388,8 @@ public class ContractFormDialog extends BaseFormDialog {
         // Validate nhân viên
         NhanVien selectedNV = (NhanVien) cboNhanVien.getSelectedItem();
         if (selectedNV == null) {
-            JOptionPane.showMessageDialog(this, "Vui lòng chọn nhân viên.",
-                    "Lỗi nhập liệu", JOptionPane.ERROR_MESSAGE);
+            showError("Vui lòng chọn nhân viên.", "Lỗi nhập liệu");
+            cboNhanVien.requestFocus();
             return;
         }
         String maNV = selectedNV.getMaNhanVien();
@@ -391,8 +404,7 @@ public class ContractFormDialog extends BaseFormDialog {
             luongCoSo = 0;
         }
         if (luongCoSo <= 0) {
-            JOptionPane.showMessageDialog(this, "Lương cơ sở phải lớn hơn 0.",
-                    "Lỗi nhập liệu", JOptionPane.ERROR_MESSAGE);
+            showError("Lương cơ sở phải lớn hơn 0.", "Lỗi nhập liệu");
             txtLuongCoSo.requestFocus();
             return;
         }
@@ -401,8 +413,7 @@ public class ContractFormDialog extends BaseFormDialog {
         LocalDate ngayKy = ngayKyDate.toInstant().atZone(ZoneId.systemDefault()).toLocalDate();
         LocalDate ngayHieuLuc = ngayHieuLucDate.toInstant().atZone(ZoneId.systemDefault()).toLocalDate();
         if (ngayKy.isAfter(ngayHieuLuc)) {
-            JOptionPane.showMessageDialog(this, "Ngay ky phai truoc hoac bang Ngay hieu luc.",
-                    "Loi nhap lieu", JOptionPane.ERROR_MESSAGE);
+            showError("Ngày ký phải trước hoặc bằng Ngày hiệu lực.", "Lỗi nhập liệu");
             spnNgayKy.requestFocus();
             return;
         }
@@ -412,21 +423,14 @@ public class ContractFormDialog extends BaseFormDialog {
             Date ngayHetDate = (Date) spnNgayHetHieuLuc.getValue();
             ngayHetHieuLuc = ngayHetDate.toInstant().atZone(ZoneId.systemDefault()).toLocalDate();
             if (ngayHetHieuLuc.isBefore(ngayHieuLuc)) {
-                JOptionPane.showMessageDialog(this, "Ngay het hieu luc phai sau hoac bang Ngay hieu luc.",
-                        "Loi nhap lieu", JOptionPane.ERROR_MESSAGE);
+                showError("Ngày hết hiệu lực phải sau hoặc bằng Ngày hiệu lực.", "Lỗi nhập liệu");
                 spnNgayHetHieuLuc.requestFocus();
                 return;
             }
         }
-        // Map combo loại HĐ -> DB value
-        String comboLoai = (String) cboLoaiHopDong.getSelectedItem();
-        String loaiHopDong;
-        if ("thu_viec".equals(comboLoai)) {
-            loaiHopDong = "thu_viec";
-        } else if ("co_thoi_han".equals(comboLoai)) {
-            loaiHopDong = "xac_dinh_thoi_han";
-        } else {
-            loaiHopDong = "khong_xac_dinh";
+        // Combo uses DB values directly
+        String loaiHopDong = (String) cboLoaiHopDong.getSelectedItem();
+        if (HRMConstants.LOAI_HOP_DONG_KHONG_XAC_DINH.equals(loaiHopDong)) {
             ngayHetHieuLuc = null; // Đảm bảo null
         }
         // Ghi chú
@@ -443,13 +447,11 @@ public class ContractFormDialog extends BaseFormDialog {
         // Gọi service
         KetQua<HopDongLaoDong> result = HopDongBUS.getInstance().taoHopDong(hd);
         if (result.isSuccess()) {
-            JOptionPane.showMessageDialog(this, result.getMessage(),
-                    "Thành công", JOptionPane.INFORMATION_MESSAGE);
+            showSuccess(result.getMessage());
             saved = true;
             dispose();
         } else {
-            JOptionPane.showMessageDialog(this, result.getMessage(),
-                    "Lỗi", JOptionPane.ERROR_MESSAGE);
+            showError(result.getMessage());
         }
     }
 

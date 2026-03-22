@@ -106,8 +106,7 @@ public class TuyenDungDAO {
                 if (keys.next()) return keys.getInt(1);
             }
         } catch (SQLException e) {
-            System.err.println("Lỗi insertYeuCau: " + e.getMessage());
-            e.printStackTrace();
+            throw new RuntimeException("Loi insertYeuCau: " + e.getMessage(), e);
         }
         return -1;
     }
@@ -115,7 +114,7 @@ public class TuyenDungDAO {
     /**
      * Cập nhật trạng thái yêu cầu tuyển dụng.
      */
-    public void updateYeuCauTrangThai(int maYeuCau, String trangThai, int nguoiDuyet, LocalDateTime ngayDuyet) {
+    public int updateYeuCauTrangThai(int maYeuCau, String trangThai, int nguoiDuyet, LocalDateTime ngayDuyet) {
         String sql = "UPDATE YEUCAUTUYENDUNG SET trangThai = ?, nguoiDuyet = ?, ngayDuyet = ? WHERE maYeuCau = ?";
         try (Connection conn = DatabaseConnection.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
@@ -127,10 +126,9 @@ public class TuyenDungDAO {
             }
             ps.setTimestamp(3, ngayDuyet != null ? Timestamp.valueOf(ngayDuyet) : null);
             ps.setInt(4, maYeuCau);
-            ps.executeUpdate();
+            return ps.executeUpdate();
         } catch (SQLException e) {
-            System.err.println("Lỗi updateYeuCauTrangThai: " + e.getMessage());
-            e.printStackTrace();
+            throw new RuntimeException("Loi updateYeuCauTrangThai: " + e.getMessage(), e);
         }
     }
 
@@ -229,8 +227,7 @@ public class TuyenDungDAO {
                 if (keys.next()) return keys.getInt(1);
             }
         } catch (SQLException e) {
-            System.err.println("Lỗi insertTin: " + e.getMessage());
-            e.printStackTrace();
+            throw new RuntimeException("Loi insertTin: " + e.getMessage(), e);
         }
         return -1;
     }
@@ -238,7 +235,7 @@ public class TuyenDungDAO {
     /**
      * Cập nhật tin tuyển dụng.
      */
-    public void updateTin(TinTuyenDung tin) {
+    public int updateTin(TinTuyenDung tin) {
         String sql = "UPDATE TINTUYENDUNG SET tieuDe=?, noiDung=?, mucLuong=?, diaDiem=?, "
                 + "hanNopHoSo=?, trangThai=?, ngayCapNhat=CURDATE() WHERE maTin=?";
         try (Connection conn = DatabaseConnection.getConnection();
@@ -250,10 +247,9 @@ public class TuyenDungDAO {
             ps.setDate(5, tin.getHanNopHoSo() != null ? Date.valueOf(tin.getHanNopHoSo()) : null);
             ps.setString(6, tin.getTrangThai());
             ps.setInt(7, tin.getMaTin());
-            ps.executeUpdate();
+            return ps.executeUpdate();
         } catch (SQLException e) {
-            System.err.println("Lỗi updateTin: " + e.getMessage());
-            e.printStackTrace();
+            throw new RuntimeException("Loi updateTin: " + e.getMessage(), e);
         }
     }
 
@@ -370,8 +366,7 @@ public class TuyenDungDAO {
                 if (keys.next()) return keys.getInt(1);
             }
         } catch (SQLException e) {
-            System.err.println("Lỗi insertUngVien: " + e.getMessage());
-            e.printStackTrace();
+            throw new RuntimeException("Loi insertUngVien: " + e.getMessage(), e);
         }
         return -1;
     }
@@ -379,7 +374,7 @@ public class TuyenDungDAO {
     /**
      * Cập nhật thông tin ứng viên.
      */
-    public void updateUngVien(UngVien uv) {
+    public int updateUngVien(UngVien uv) {
         String sql = "UPDATE UNGVIEN SET trangThai=?, nhanXet=?, maNV=? WHERE maUngVien=?";
         try (Connection conn = DatabaseConnection.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
@@ -391,10 +386,9 @@ public class TuyenDungDAO {
                 ps.setString(3, uv.getMaNV());
             }
             ps.setInt(4, uv.getMaUngVien());
-            ps.executeUpdate();
+            return ps.executeUpdate();
         } catch (SQLException e) {
-            System.err.println("Lỗi updateUngVien: " + e.getMessage());
-            e.printStackTrace();
+            throw new RuntimeException("Loi updateUngVien: " + e.getMessage(), e);
         }
     }
 
@@ -458,6 +452,22 @@ public class TuyenDungDAO {
         } catch (SQLException e) {
             System.err.println("Lỗi findById (UngVien): " + e.getMessage());
             e.printStackTrace();
+        }
+        return null;
+    }
+
+    public UngVien findUngVienByMaNV(String maNV) {
+        String sql = UV_BASE_SELECT + "WHERE uv.maNV = ? LIMIT 1";
+        try (Connection conn = DatabaseConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setString(1, maNV);
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    return mapUngVienWithDetails(rs);
+                }
+            }
+        } catch (SQLException e) {
+            System.err.println("Lỗi findUngVienByMaNV: " + e.getMessage());
         }
         return null;
     }

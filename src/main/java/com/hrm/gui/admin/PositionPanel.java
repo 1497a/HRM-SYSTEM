@@ -2,7 +2,9 @@ package com.hrm.gui.admin;
 
 import com.hrm.bus.ChucVuBUS;
 import com.hrm.bus.KetQua;
+import com.hrm.bus.XacThucBUS;
 import com.hrm.model.ChucVu;
+import com.hrm.model.VaiTro;
 import com.hrm.util.DialogUtil;
 import com.hrm.util.HRMConstants;
 import com.hrm.util.PermissionCodes;
@@ -15,6 +17,7 @@ import javax.swing.table.DefaultTableModel;
 import javax.swing.table.TableRowSorter;
 import java.awt.*;
 import java.text.NumberFormat;
+import java.util.List;
 import java.util.Locale;
 
 public class PositionPanel extends JPanel {
@@ -34,18 +37,18 @@ public class PositionPanel extends JPanel {
         setLayout(new BorderLayout());
         setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
         JPanel topPanel = new JPanel(new BorderLayout());
-        JLabel title = new JLabel("QUAN LY CHUC VU");
+        JLabel title = new JLabel("QUẢN LÝ CHỨC VỤ");
         title.setFont(new Font("Arial", Font.BOLD, 16));
         title.setBorder(BorderFactory.createEmptyBorder(0, 0, 10, 0));
         topPanel.add(title, BorderLayout.NORTH);
-        JLabel lblHint = new JLabel("Tim theo: Ma / Ten chuc vu / Trang thai");
+        JLabel lblHint = new JLabel("Tìm theo: Mã / Tên chức vụ / Trạng thái");
         lblHint.setFont(new Font("Arial", Font.ITALIC, 11));
         topPanel.add(lblHint, BorderLayout.SOUTH);
         JPanel searchFilterPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
-        JLabel lblSearch = new JLabel("Tim kiem:");
+        JLabel lblSearch = new JLabel("Tìm kiếm:");
         txtSearch = new JTextField(20);
-        txtSearch.setToolTipText("Nhap ma hoac ten chuc vu de tim kiem");
-        JLabel lblFilter = new JLabel("    Trang thai:");
+        txtSearch.setToolTipText("Nhập mã hoặc tên chức vụ để tìm kiếm");
+        JLabel lblFilter = new JLabel("    Trạng thái:");
         cboFilter = new JComboBox<>(new String[]{STATUS_ALL, STATUS_ACTIVE, STATUS_INACTIVE});
         searchFilterPanel.add(lblSearch);
         searchFilterPanel.add(txtSearch);
@@ -54,7 +57,7 @@ public class PositionPanel extends JPanel {
         topPanel.add(searchFilterPanel, BorderLayout.CENTER);
         add(topPanel, BorderLayout.NORTH);
         tableModel = new DefaultTableModel(
-                new Object[]{"Ma CV", "Ten chuc vu", "Cap bac", "Phu cap (VND)", "Trang thai"}, 0) {
+                new Object[]{"Mã CV", "Tên chức vụ", "Cấp bậc", "Phụ cấp (VND)", "Trạng thái"}, 0) {
             @Override
             public boolean isCellEditable(int row, int col) {
                 return false;
@@ -71,10 +74,10 @@ public class PositionPanel extends JPanel {
         sorter = new TableRowSorter<>(tableModel);
         table.setRowSorter(sorter);
         add(new JScrollPane(table), BorderLayout.CENTER);
-        btnThem = UIHelper.createPrimaryButton("+ Them");
+        btnThem = UIHelper.createPrimaryButton("+ Thêm");
         JPanel btnPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
         btnPanel.add(btnThem);
-        JButton btnLamMoi = new JButton("Lam moi");
+        JButton btnLamMoi = new JButton("Làm mới");
         btnLamMoi.addActionListener(e -> refreshTable());
         btnPanel.add(btnLamMoi);
         add(btnPanel, BorderLayout.SOUTH);
@@ -146,31 +149,40 @@ public class PositionPanel extends JPanel {
         JTextField txtPhuCap = new JTextField("0");
         JTextArea txtMoTa = new JTextArea(3, 20);
         txtMoTa.setLineWrap(true);
-        Object[] fields = {
-                "Ma chuc vu (*):", txtMa,
-                "Ten chuc vu (*):", txtTen,
-                "Cap bac (1 = cao nhat):", txtCapBac,
-                "Phu cap (VND):", txtPhuCap,
-                "Mo ta:", new JScrollPane(txtMoTa)
-        };
-        int ok = JOptionPane.showConfirmDialog(this, fields, "Them chuc vu moi", JOptionPane.OK_CANCEL_OPTION);
+        boolean canSetRole = SessionContext.getInstance().hasPermission(PermissionCodes.ROLE_UPDATE);
+        JComboBox<String> cboVaiTro = buildRoleComboBox(null);
+        cboVaiTro.setEnabled(canSetRole);
+        Object[] fields = canSetRole
+                ? new Object[]{
+                        "Mã chức vụ (*):", txtMa,
+                        "Tên chức vụ (*):", txtTen,
+                        "Cấp bậc (1 = cao nhất):", txtCapBac,
+                        "Phụ cấp (VND):", txtPhuCap,
+                        "Mô tả:", new JScrollPane(txtMoTa),
+                        "Vai trò mặc định:", cboVaiTro}
+                : new Object[]{
+                        "Mã chức vụ (*):", txtMa,
+                        "Tên chức vụ (*):", txtTen,
+                        "Cấp bậc (1 = cao nhất):", txtCapBac,
+                        "Phụ cấp (VND):", txtPhuCap,
+                        "Mô tả:", new JScrollPane(txtMoTa)};
+        int ok = JOptionPane.showConfirmDialog(this, fields, "Thêm chức vụ mới", JOptionPane.OK_CANCEL_OPTION);
         if (ok != JOptionPane.OK_OPTION) {
             return;
         }
         String maChucVu = txtMa.getText().trim();
         if (maChucVu.isEmpty()) {
-            JOptionPane.showMessageDialog(this, "Ma chuc vu khong duoc de trong.", "Loi nhap lieu", JOptionPane.ERROR_MESSAGE);
+            DialogUtil.showError(this, "Mã chức vụ không được để trống.", "Lỗi nhập liệu");
             return;
         }
         if (service.existsActiveByCode(maChucVu)) {
-            JOptionPane.showMessageDialog(this,
-                    "Ma chuc vu '" + maChucVu + "' da ton tai va dang hoat dong. Vui long dung ma khac.",
-                    "Trung ma chuc vu", JOptionPane.ERROR_MESSAGE);
+            DialogUtil.showError(this,
+                    "Mã chức vụ '" + maChucVu + "' đã tồn tại và đang hoạt động. Vui lòng dùng mã khác.");
             return;
         }
         String tenChucVu = txtTen.getText().trim();
         if (tenChucVu.isEmpty()) {
-            JOptionPane.showMessageDialog(this, "Ten chuc vu khong duoc de trong.", "Loi nhap lieu", JOptionPane.ERROR_MESSAGE);
+            DialogUtil.showError(this, "Tên chức vụ không được để trống.", "Lỗi nhập liệu");
             return;
         }
         Integer capBac = parseCapBac(txtCapBac.getText(), this);
@@ -181,12 +193,14 @@ public class PositionPanel extends JPanel {
         if (phuCap == null) {
             return;
         }
+        String selectedRole = getSelectedRoleCode(cboVaiTro);
         KetQua<Void> kq = service.addPosition(
                 maChucVu,
                 tenChucVu,
                 capBac,
                 phuCap,
-                txtMoTa.getText().trim()
+                txtMoTa.getText().trim(),
+                selectedRole
         );
         if (!kq.isSuccess()) {
             DialogUtil.showError(this, kq.getMessage());
@@ -208,8 +222,9 @@ public class PositionPanel extends JPanel {
             return;
         }
         boolean canEdit = SessionContext.getInstance().hasPermission(PermissionCodes.POSITION_MANAGE);
+        boolean canEditRole = SessionContext.getInstance().hasPermission(PermissionCodes.ROLE_UPDATE);
         Frame frame = (Frame) SwingUtilities.getWindowAncestor(this);
-        JDialog dialog = new JDialog(frame, "Chi tiet chuc vu - " + pos.getTenChucVu(), true);
+        JDialog dialog = new JDialog(frame, "Chi tiết chức vụ - " + pos.getTenChucVu(), true);
         JTextField txtMa = new JTextField(pos.getId());
         txtMa.setEnabled(false);
         JTextField txtTen = new JTextField(pos.getTenChucVu());
@@ -217,6 +232,8 @@ public class PositionPanel extends JPanel {
         JTextField txtPhuCap = new JTextField(String.valueOf(pos.getPhuCapChucVu()));
         JTextArea txtMoTa = new JTextArea(pos.getMoTa() != null ? pos.getMoTa() : "", 3, 20);
         txtMoTa.setLineWrap(true);
+        JComboBox<String> cboVaiTro = buildRoleComboBox(pos.getMaVaiTro());
+        cboVaiTro.setEnabled(canEditRole);
         JComboBox<String> cboTrangThai = new JComboBox<>(new String[]{STATUS_ACTIVE, STATUS_INACTIVE});
         cboTrangThai.setSelectedItem(toTrangThaiDisplay(pos.getTrangThai()));
         cboTrangThai.setEnabled(canEdit);
@@ -233,9 +250,9 @@ public class PositionPanel extends JPanel {
         gbc.insets = new Insets(5, 8, 5, 8);
         gbc.anchor = GridBagConstraints.WEST;
         String[] labels = {
-                "Ma chuc vu:", "Ten chuc vu (*):", "Cap bac:", "Phu cap (VND):", "Mo ta:", "Trang thai:"
+                "Mã chức vụ:", "Tên chức vụ (*):", "Cấp bậc:", "Phụ cấp (VND):", "Mô tả:", "Vai trò mặc định:", "Trạng thái:"
         };
-        JComponent[] fields = {txtMa, txtTen, txtCapBac, txtPhuCap, new JScrollPane(txtMoTa), cboTrangThai};
+        JComponent[] fields = {txtMa, txtTen, txtCapBac, txtPhuCap, new JScrollPane(txtMoTa), cboVaiTro, cboTrangThai};
         for (int i = 0; i < labels.length; i++) {
             gbc.gridx = 0;
             gbc.gridy = i;
@@ -251,23 +268,26 @@ public class PositionPanel extends JPanel {
             form.add(fields[i], gbc);
         }
         JPanel btnPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT, 8, 8));
-        JButton btnHuy = UIHelper.createDefaultButton("Huy");
+        JButton btnHuy = UIHelper.createDefaultButton("Hủy");
         btnHuy.addActionListener(e -> dialog.dispose());
         btnPanel.add(btnHuy);
         if (canEdit) {
-            JButton btnLuu = UIHelper.createSuccessButton("Luu");
+            JButton btnLuu = UIHelper.createSuccessButton("Lưu");
             btnLuu.addActionListener(e -> {
                 String tenChucVu = txtTen.getText().trim();
                 if (tenChucVu.isEmpty()) {
-                    JOptionPane.showMessageDialog(dialog, "Ten chuc vu khong duoc de trong.", "Loi nhap lieu", JOptionPane.ERROR_MESSAGE);
+                    DialogUtil.showError(dialog, "Tên chức vụ không được để trống.", "Lỗi nhập liệu");
+                    txtTen.requestFocusInWindow();
                     return;
                 }
                 Integer capBac = parseCapBac(txtCapBac.getText(), dialog);
                 if (capBac == null) {
+                    txtCapBac.requestFocusInWindow();
                     return;
                 }
                 Double phuCap = parsePhuCap(txtPhuCap.getText(), dialog);
                 if (phuCap == null) {
+                    txtPhuCap.requestFocusInWindow();
                     return;
                 }
                 KetQua<Void> kqCapNhat = service.updatePosition(
@@ -275,7 +295,8 @@ public class PositionPanel extends JPanel {
                         tenChucVu,
                         capBac,
                         phuCap,
-                        txtMoTa.getText().trim()
+                        txtMoTa.getText().trim(),
+                        getSelectedRoleCode(cboVaiTro)
                 );
                 if (!kqCapNhat.isSuccess()) {
                     DialogUtil.showError(dialog, kqCapNhat.getMessage());
@@ -296,7 +317,7 @@ public class PositionPanel extends JPanel {
                 }
                 refreshTable();
                 dialog.dispose();
-                DialogUtil.showSuccess(PositionPanel.this, "Cap nhat chuc vu thanh cong!");
+                DialogUtil.showSuccess(PositionPanel.this, "Cập nhật chức vụ thành công!");
             });
             btnPanel.add(btnLuu);
         }
@@ -308,6 +329,36 @@ public class PositionPanel extends JPanel {
         dialog.setMinimumSize(new Dimension(420, 320));
         dialog.setLocationRelativeTo(this);
         dialog.setVisible(true);
+    }
+
+    private static final String ROLE_NONE = "(Không gán)";
+
+    /** Tao JComboBox danh sach vai tro; selectedMaVaiTro = null → chon "(Khong gan)" */
+    private JComboBox<String> buildRoleComboBox(String selectedMaVaiTro) {
+        List<VaiTro> roles = XacThucBUS.getInstance().getAllRoles();
+        String[] items = new String[roles.size() + 1];
+        items[0] = ROLE_NONE;
+        int selectedIdx = 0;
+        for (int i = 0; i < roles.size(); i++) {
+            VaiTro r = roles.get(i);
+            items[i + 1] = r.getTenVaiTro() + " (" + r.getId() + ")";
+            if (r.getId().equals(selectedMaVaiTro)) {
+                selectedIdx = i + 1;
+            }
+        }
+        JComboBox<String> cbo = new JComboBox<>(items);
+        cbo.setSelectedIndex(selectedIdx);
+        return cbo;
+    }
+
+    /** Lay maVaiTro tu combobox; null neu chon "(Khong gan)" */
+    private String getSelectedRoleCode(JComboBox<String> cbo) {
+        String selected = (String) cbo.getSelectedItem();
+        if (selected == null || ROLE_NONE.equals(selected)) return null;
+        int start = selected.lastIndexOf('(');
+        int end = selected.lastIndexOf(')');
+        if (start >= 0 && end > start) return selected.substring(start + 1, end);
+        return null;
     }
 
     private String toTrangThaiDisplay(String raw) {
@@ -325,18 +376,18 @@ public class PositionPanel extends JPanel {
     private Integer parseCapBac(String rawValue, Component parent) {
         String text = rawValue == null ? "" : rawValue.trim();
         if (text.isEmpty()) {
-            JOptionPane.showMessageDialog(parent, "Cấp bậc không được để trống.", "Lỗi nhập liệu", JOptionPane.ERROR_MESSAGE);
+            DialogUtil.showError(parent, "Cấp bậc không được để trống.", "Lỗi nhập liệu");
             return null;
         }
         try {
             int capBac = Integer.parseInt(text);
             if (capBac < 1 || capBac > 20) {
-                JOptionPane.showMessageDialog(parent, "Cấp bậc phải là số từ 1 đến 20.", "Lỗi nhập liệu", JOptionPane.ERROR_MESSAGE);
+                DialogUtil.showError(parent, "Cấp bậc phải là số từ 1 đến 20.", "Lỗi nhập liệu");
                 return null;
             }
             return capBac;
         } catch (NumberFormatException e) {
-            JOptionPane.showMessageDialog(parent, "Cấp bậc phải là số nguyên hợp lệ.", "Lỗi nhập liệu", JOptionPane.ERROR_MESSAGE);
+            DialogUtil.showError(parent, "Cấp bậc phải là số nguyên hợp lệ.", "Lỗi nhập liệu");
             return null;
         }
     }
@@ -344,18 +395,18 @@ public class PositionPanel extends JPanel {
     private Double parsePhuCap(String rawValue, Component parent) {
         String text = rawValue == null ? "" : rawValue.trim();
         if (text.isEmpty()) {
-            JOptionPane.showMessageDialog(parent, "Phu cap khong duoc de trong.", "Loi nhap lieu", JOptionPane.ERROR_MESSAGE);
+            DialogUtil.showError(parent, "Phu cap khong duoc de trong.", "Lỗi nhập liệu");
             return null;
         }
         try {
             double phuCap = Double.parseDouble(text);
             if (phuCap < 0) {
-                JOptionPane.showMessageDialog(parent, "Phu cap phai la so >= 0.", "Loi nhap lieu", JOptionPane.ERROR_MESSAGE);
+                DialogUtil.showError(parent, "Phu cap phai la so >= 0.", "Lỗi nhập liệu");
                 return null;
             }
             return phuCap;
         } catch (NumberFormatException e) {
-            JOptionPane.showMessageDialog(parent, "Phu cap phai la so hop le.", "Loi nhap lieu", JOptionPane.ERROR_MESSAGE);
+            DialogUtil.showError(parent, "Phu cap phai la so hop le.", "Lỗi nhập liệu");
             return null;
         }
     }

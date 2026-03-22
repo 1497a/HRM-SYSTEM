@@ -18,7 +18,6 @@ import java.util.List;
  */
 public class NghiPhepBUS {
 
-    private static final String MA_LOAI_PHEP_NAM = "AL";
     private static final String ACTION_LEAVE_APPROVE = PermissionCodes.LEAVE_APPROVE;
     private static final String ACTION_LEAVE_VIEW = PermissionCodes.LEAVE_VIEW;
     private static NghiPhepBUS instance;
@@ -75,7 +74,7 @@ public class NghiPhepBUS {
             return KetQua.error("Ngày kết thúc phải sau ngày bắt đầu.");
         }
         if (ValidationUtils.isBlank(lyDo)) {
-            return KetQua.error("Ly do nghi phep khong duoc de trong.");
+            return KetQua.error("L� do ngh? ph�p kh�ng du?c d? tr?ng.");
         }
         LoaiPhep loaiPhep = repository.findLoaiPhepById(maLoaiPhep);
         if (loaiPhep == null) {
@@ -86,7 +85,7 @@ public class NghiPhepBUS {
             return KetQua.error("Không có ngày làm việc nào trong khoảng thời gian này.");
         }
         // Kiểm tra số ngày phép còn lại (chỉ áp dụng cho phép năm - AL)
-        if (MA_LOAI_PHEP_NAM.equals(maLoaiPhep)) {
+        if (HRMConstants.LOAI_PHEP_NAM.equals(maLoaiPhep)) {
             int namHienTai = LocalDate.now().getYear();
             SoDungPhep soDu = repository.findByMaNVAndNamAndLoai(maNV, namHienTai, maLoaiPhep);
             if (soDu == null || soDu.getSoNgayConLai() < soNgayNghi) {
@@ -131,13 +130,13 @@ public class NghiPhepBUS {
         LocalDateTime now = LocalDateTime.now();
         if (duyet) {
             // Trừ số ngày phép nếu là phép năm
-            if (MA_LOAI_PHEP_NAM.equals(don.getMaLoaiPhep())) {
+            if (HRMConstants.LOAI_PHEP_NAM.equals(don.getMaLoaiPhep())) {
                 int namHienTai = LocalDate.now().getYear();
-                SoDungPhep soDu = repository.findByMaNVAndNamAndLoai(don.getMaNV(), namHienTai, MA_LOAI_PHEP_NAM);
+                SoDungPhep soDu = repository.findByMaNVAndNamAndLoai(don.getMaNV(), namHienTai, HRMConstants.LOAI_PHEP_NAM);
                 if (soDu == null || soDu.getSoNgayConLai() < don.getSoNgayNghi()) {
                     return KetQua.error("Số ngày phép còn lại không đủ để duyệt đơn này.");
                 }
-                repository.capNhatSoDaDung(don.getMaNV(), namHienTai, MA_LOAI_PHEP_NAM, don.getSoNgayNghi());
+                repository.capNhatSoDaDung(don.getMaNV(), namHienTai, HRMConstants.LOAI_PHEP_NAM, don.getSoNgayNghi());
             }
             createAttendanceForApprovedLeave(don);
             don.setTrangThai(DonXinNghiPhep.TrangThai.DA_DUYET);

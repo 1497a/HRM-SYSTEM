@@ -32,15 +32,18 @@ public class TaiKhoanDAO {
      */
     public TaiKhoan findByUsername(String username) {
         if (username == null || username.trim().isEmpty()) return null;
-        String sql = "SELECT maTaiKhoan, tenDangNhap, matKhau, email, hoatDong, biKhoa, maNV "
-                   + "FROM TAIKHOAN WHERE tenDangNhap = ?";
+        String sql = "SELECT tk.maTaiKhoan, tk.tenDangNhap, tk.matKhau, tk.email, tk.hoatDong, tk.biKhoa, tk.maNV, "
+                   + "tk.maVaiTro, tt.hoTen "
+                   + "FROM TAIKHOAN tk "
+                   + "LEFT JOIN THONGTINCANHAN tt ON tt.maNV = tk.maNV "
+                   + "WHERE tk.tenDangNhap = ?";
         try (Connection conn = DatabaseConnection.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setString(1, username.trim());
             try (ResultSet rs = ps.executeQuery()) {
                 if (rs.next()) {
                     TaiKhoan user = mapRowToUser(rs);
-                    loadUserRoleAndPermissions(user, user.getId());
+                    loadUserRoleAndPermissions(conn, user, rs.getString("maVaiTro"));
                     return user;
                 }
             }
@@ -55,15 +58,18 @@ public class TaiKhoanDAO {
      * Tìm người dùng theo ID tài khoản (maTaiKhoan - int).
      */
     public TaiKhoan findById(int id) {
-        String sql = "SELECT maTaiKhoan, tenDangNhap, matKhau, email, hoatDong, biKhoa, maNV "
-                   + "FROM TAIKHOAN WHERE maTaiKhoan = ?";
+        String sql = "SELECT tk.maTaiKhoan, tk.tenDangNhap, tk.matKhau, tk.email, tk.hoatDong, tk.biKhoa, tk.maNV, "
+                   + "tk.maVaiTro, tt.hoTen "
+                   + "FROM TAIKHOAN tk "
+                   + "LEFT JOIN THONGTINCANHAN tt ON tt.maNV = tk.maNV "
+                   + "WHERE tk.maTaiKhoan = ?";
         try (Connection conn = DatabaseConnection.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setInt(1, id);
             try (ResultSet rs = ps.executeQuery()) {
                 if (rs.next()) {
                     TaiKhoan user = mapRowToUser(rs);
-                    loadUserRoleAndPermissions(user, user.getId());
+                    loadUserRoleAndPermissions(conn, user, rs.getString("maVaiTro"));
                     return user;
                 }
             }
@@ -79,14 +85,17 @@ public class TaiKhoanDAO {
      */
     public List<TaiKhoan> findAll() {
         List<TaiKhoan> list = new ArrayList<>();
-        String sql = "SELECT maTaiKhoan, tenDangNhap, matKhau, email, hoatDong, biKhoa, maNV "
-                   + "FROM TAIKHOAN WHERE tenDangNhap != 'admin' ORDER BY maTaiKhoan";
+        String sql = "SELECT tk.maTaiKhoan, tk.tenDangNhap, tk.matKhau, tk.email, tk.hoatDong, tk.biKhoa, tk.maNV, "
+                   + "tk.maVaiTro, tt.hoTen "
+                   + "FROM TAIKHOAN tk "
+                   + "LEFT JOIN THONGTINCANHAN tt ON tt.maNV = tk.maNV "
+                   + "WHERE tk.tenDangNhap != 'admin' ORDER BY tk.maTaiKhoan";
         try (Connection conn = DatabaseConnection.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql);
              ResultSet rs = ps.executeQuery()) {
             while (rs.next()) {
                 TaiKhoan user = mapRowToUser(rs);
-                loadUserRoleAndPermissions(user, user.getId());
+                loadUserRoleAndPermissions(conn, user, rs.getString("maVaiTro"));
                 list.add(user);
             }
         } catch (SQLException e) {
@@ -121,8 +130,7 @@ public class TaiKhoanDAO {
                 }
             }
         } catch (SQLException e) {
-            System.err.println("Lỗi insert tài khoản '" + tenDangNhap + "': " + e.getMessage());
-            e.printStackTrace();
+            throw new RuntimeException("Loi insert tai khoan '" + tenDangNhap + "': " + e.getMessage(), e);
         }
         return -1;
     }
@@ -131,7 +139,7 @@ public class TaiKhoanDAO {
      * Cập nhật thông tin tài khoản (hoatDong, biKhoa, email).
      * Vai trò được cập nhật riêng qua updateRole().
      */
-    public void update(TaiKhoan user) {
+    public int update(TaiKhoan user) {
         String sql = "UPDATE TAIKHOAN SET hoatDong = ?, biKhoa = ?, email = ?, ngayCapNhat = NOW() "
                    + "WHERE maTaiKhoan = ?";
         try (Connection conn = DatabaseConnection.getConnection();
@@ -140,10 +148,9 @@ public class TaiKhoanDAO {
             ps.setBoolean(2, user.isBiKhoa());
             ps.setString(3, user.getEmail());
             ps.setInt(4, user.getId());
-            ps.executeUpdate();
+            return ps.executeUpdate();
         } catch (SQLException e) {
-            System.err.println("Lỗi update tài khoản #" + user.getId() + ": " + e.getMessage());
-            e.printStackTrace();
+            throw new RuntimeException("Loi update tai khoan #" + user.getId() + ": " + e.getMessage(), e);
         }
     }
 
@@ -186,15 +193,18 @@ public class TaiKhoanDAO {
      */
     public TaiKhoan findByMaNV(String maNV) {
         if (maNV == null || maNV.trim().isEmpty()) return null;
-        String sql = "SELECT maTaiKhoan, tenDangNhap, matKhau, email, hoatDong, biKhoa, maNV "
-                   + "FROM TAIKHOAN WHERE maNV = ? LIMIT 1";
+        String sql = "SELECT tk.maTaiKhoan, tk.tenDangNhap, tk.matKhau, tk.email, tk.hoatDong, tk.biKhoa, tk.maNV, "
+                   + "tk.maVaiTro, tt.hoTen "
+                   + "FROM TAIKHOAN tk "
+                   + "LEFT JOIN THONGTINCANHAN tt ON tt.maNV = tk.maNV "
+                   + "WHERE tk.maNV = ? LIMIT 1";
         try (Connection conn = DatabaseConnection.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setString(1, maNV.trim());
             try (ResultSet rs = ps.executeQuery()) {
                 if (rs.next()) {
                     TaiKhoan user = mapRowToUser(rs);
-                    loadUserRoleAndPermissions(user, user.getId());
+                    loadUserRoleAndPermissions(conn, user, rs.getString("maVaiTro"));
                     return user;
                 }
             }
@@ -208,32 +218,30 @@ public class TaiKhoanDAO {
     /**
      * Cập nhật vai trò cho tài khoản.
      */
-    public void updateRole(int maTaiKhoan, String maVaiTro) {
+    public int updateRole(int maTaiKhoan, String maVaiTro) {
         String sql = "UPDATE TAIKHOAN SET maVaiTro = ?, ngayCapNhat = NOW() WHERE maTaiKhoan = ?";
         try (Connection conn = DatabaseConnection.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setString(1, maVaiTro != null ? maVaiTro.trim() : null);
             ps.setInt(2, maTaiKhoan);
-            ps.executeUpdate();
+            return ps.executeUpdate();
         } catch (SQLException e) {
-            System.err.println("Lỗi updateRole #" + maTaiKhoan + ": " + e.getMessage());
-            e.printStackTrace();
+            throw new RuntimeException("Loi updateRole #" + maTaiKhoan + ": " + e.getMessage(), e);
         }
     }
 
     /**
      * Vô hiệu hóa tài khoản liên kết với nhân viên (khi NV nghỉ việc).
      */
-    public void deactivateByMaNV(String maNV) {
-        if (maNV == null || maNV.trim().isEmpty()) return;
+    public int deactivateByMaNV(String maNV) {
+        if (maNV == null || maNV.trim().isEmpty()) return 0;
         String sql = "UPDATE TAIKHOAN SET hoatDong = FALSE, ngayCapNhat = NOW() WHERE maNV = ?";
         try (Connection conn = DatabaseConnection.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setString(1, maNV.trim());
-            ps.executeUpdate();
+            return ps.executeUpdate();
         } catch (SQLException e) {
-            System.err.println("Lỗi deactivateByMaNV '" + maNV + "': " + e.getMessage());
-            e.printStackTrace();
+            throw new RuntimeException("Loi deactivateByMaNV '" + maNV + "': " + e.getMessage(), e);
         }
     }
 
@@ -287,22 +295,8 @@ public class TaiKhoanDAO {
 
     public VaiTro findRoleByCode(String code) {
         if (code == null || code.trim().isEmpty()) return null;
-        String sql = "SELECT maVaiTro, tenVaiTro, moTa, laVaiTroHeThong FROM VAITRO WHERE maVaiTro = ?";
-        try (Connection conn = DatabaseConnection.getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql)) {
-            ps.setString(1, code.trim());
-            try (ResultSet rs = ps.executeQuery()) {
-                if (rs.next()) {
-                    VaiTro role = new VaiTro(
-                            rs.getString("maVaiTro"),
-                            rs.getString("tenVaiTro"),
-                            rs.getString("moTa")
-                    );
-                    role.setLaHeThong(rs.getBoolean("laVaiTroHeThong"));
-                    role.getQuyens().addAll(findPermissionsByRole(code));
-                    return role;
-                }
-            }
+        try (Connection conn = DatabaseConnection.getConnection()) {
+            return findRoleByCode(conn, code.trim());
         } catch (SQLException e) {
             System.err.println("Lỗi findRoleByCode '" + code + "': " + e.getMessage());
             e.printStackTrace();
@@ -320,24 +314,21 @@ public class TaiKhoanDAO {
             ps.setString(3, moTa != null ? moTa.trim() : null);
             return ps.executeUpdate();
         } catch (SQLException e) {
-            System.err.println("Lỗi insertRole '" + maVaiTro + "': " + e.getMessage());
-            e.printStackTrace();
+            throw new RuntimeException("Loi insertRole '" + maVaiTro + "': " + e.getMessage(), e);
         }
-        return 0;
     }
 
-    public void updateRole(VaiTro role) {
-        if (role == null || role.getId() == null) return;
+    public int updateRole(VaiTro role) {
+        if (role == null || role.getId() == null) return 0;
         String sql = "UPDATE VAITRO SET tenVaiTro = ?, moTa = ? WHERE maVaiTro = ?";
         try (Connection conn = DatabaseConnection.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setString(1, role.getTenVaiTro());
             ps.setString(2, role.getMoTa());
             ps.setString(3, role.getId().trim());
-            ps.executeUpdate();
+            return ps.executeUpdate();
         } catch (SQLException e) {
-            System.err.println("Lỗi updateRole '" + role.getId() + "': " + e.getMessage());
-            e.printStackTrace();
+            throw new RuntimeException("Loi updateRole '" + role.getId() + "': " + e.getMessage(), e);
         }
     }
 
@@ -451,17 +442,18 @@ public class TaiKhoanDAO {
         return list;
     }
 
-    public void setRolePermissions(String maVaiTro, List<Quyen> permissions) {
-        if (maVaiTro == null || maVaiTro.trim().isEmpty()) return;
+    public int setRolePermissions(String maVaiTro, List<Quyen> permissions) {
+        if (maVaiTro == null || maVaiTro.trim().isEmpty()) return 0;
         String deleteSql = "DELETE FROM VAITRO_QUYEN WHERE maVaiTro = ?";
         String insertSql = "INSERT INTO VAITRO_QUYEN (maVaiTro, maQuyen, phamVi) VALUES (?, ?, ?)";
         try (Connection conn = DatabaseConnection.getConnection()) {
             conn.setAutoCommit(false);
             try {
+                int total = 0;
                 // Xóa quyền cũ
                 try (PreparedStatement ps = conn.prepareStatement(deleteSql)) {
                     ps.setString(1, maVaiTro.trim());
-                    ps.executeUpdate();
+                    total += ps.executeUpdate();
                 }
                 // Thêm quyền mới
                 if (permissions != null && !permissions.isEmpty()) {
@@ -479,10 +471,12 @@ public class TaiKhoanDAO {
                                 ps.setString(3, scope.name());
                                 ps.addBatch();
                         }
-                        ps.executeBatch();
+                        int[] counts = ps.executeBatch();
+                        for (int ct : counts) total += (ct >= 0 ? ct : 0);
                     }
                 }
                 conn.commit();
+                return total;
             } catch (SQLException e) {
                 conn.rollback();
                 throw e;
@@ -490,8 +484,7 @@ public class TaiKhoanDAO {
                 conn.setAutoCommit(true);
             }
         } catch (SQLException e) {
-            System.err.println("Lỗi setRolePermissions cho vai trò '" + maVaiTro + "': " + e.getMessage());
-            e.printStackTrace();
+            throw new RuntimeException("Loi setRolePermissions cho vai tro '" + maVaiTro + "': " + e.getMessage(), e);
         }
     }
 
@@ -507,7 +500,10 @@ public class TaiKhoanDAO {
         boolean biKhoa = rs.getBoolean("biKhoa");
         String maNV = rs.getString("maNV");  // String
         // Lấy họ tên nếu có
-        String fullName = resolveFullName(maNV, username);
+        String fullName = rs.getString("hoTen");
+        if (fullName == null || fullName.trim().isEmpty()) {
+            fullName = username;
+        }
         TaiKhoan user = new TaiKhoan(id, username, password, fullName, email);
         user.setHoatDong(hoatDong);
         user.setBiKhoa(biKhoa);
@@ -515,6 +511,66 @@ public class TaiKhoanDAO {
             user.setMaNV(maNV.trim());
         }
         return user;
+    }
+
+    private void loadUserRoleAndPermissions(Connection conn, TaiKhoan user, String maVaiTro) {
+        try {
+            if (maVaiTro != null && !maVaiTro.trim().isEmpty()) {
+                VaiTro role = findRoleByCode(conn, maVaiTro.trim());
+                if (role != null) {
+                    user.setVaiTro(role);
+                }
+            }
+        } catch (SQLException e) {
+            System.err.println("Lá»—i loadUserRoleAndPermissions #" + user.getId() + ": " + e.getMessage());
+        }
+    }
+
+    private VaiTro findRoleByCode(Connection conn, String code) throws SQLException {
+        String sql = "SELECT maVaiTro, tenVaiTro, moTa, laVaiTroHeThong FROM VAITRO WHERE maVaiTro = ?";
+        try (PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setString(1, code);
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    VaiTro role = new VaiTro(
+                            rs.getString("maVaiTro"),
+                            rs.getString("tenVaiTro"),
+                            rs.getString("moTa")
+                    );
+                    role.setLaHeThong(rs.getBoolean("laVaiTroHeThong"));
+                    role.getQuyens().addAll(findPermissionsByRole(conn, code));
+                    return role;
+                }
+            }
+        }
+        return null;
+    }
+
+    private List<Quyen> findPermissionsByRole(Connection conn, String maVaiTro) throws SQLException {
+        List<Quyen> list = new ArrayList<>();
+        String sql = "SELECT q.maQuyen, q.tenQuyen, q.nhomQuyen, q.moTa, q.coPhamVi, vq.phamVi "
+                   + "FROM QUYEN q JOIN VAITRO_QUYEN vq ON q.maQuyen = vq.maQuyen "
+                   + "WHERE vq.maVaiTro = ? ORDER BY q.nhomQuyen, q.maQuyen";
+        try (PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setString(1, maVaiTro);
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    Quyen q = new Quyen(
+                            rs.getString("maQuyen"),
+                            rs.getString("tenQuyen"),
+                            rs.getString("nhomQuyen")
+                    );
+                    q.setMoTa(rs.getString("moTa"));
+                    q.setCoPhamVi(rs.getBoolean("coPhamVi"));
+                    String pv = rs.getString("phamVi");
+                    if (pv != null) {
+                        try { q.setPhamVi(DataScope.valueOf(pv)); } catch (IllegalArgumentException ignored) {}
+                    }
+                    list.add(q);
+                }
+            }
+        }
+        return list;
     }
 
     private void loadUserRoleAndPermissions(TaiKhoan user, int maTaiKhoan) {
@@ -529,7 +585,7 @@ public class TaiKhoanDAO {
                     if (maVaiTro != null && !maVaiTro.trim().isEmpty()) {
                         VaiTro role = findRoleByCode(maVaiTro.trim());
                         if (role != null) {
-                            user.getVaiTros().add(role);
+                            user.setVaiTro(role);
                         }
                     }
                 }
