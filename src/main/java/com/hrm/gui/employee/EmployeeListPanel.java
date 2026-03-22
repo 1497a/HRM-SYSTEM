@@ -14,7 +14,6 @@ import com.hrm.util.UIColors;
 import com.hrm.util.UIHelper;
 
 import javax.swing.*;
-import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.table.DefaultTableModel;
 import javax.swing.table.TableRowSorter;
 
@@ -105,7 +104,7 @@ public class EmployeeListPanel extends JPanel {
         tableModel = PurpleTable.createNonEditableModel(COL_NAMES);
         table = new PurpleTable(tableModel);
         table.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
-        table.setDefaultRenderer(Object.class, new StatusColorRenderer());
+        table.getColumnModel().getColumn(7).setCellRenderer(new com.hrm.gui.components.StatusCellRenderer());
         int[] widths = {45, 80, 160, 160, 140, 110, 130, 120};
         for (int i = 0; i < widths.length; i++) {
             table.getColumnModel().getColumn(i).setPreferredWidth(widths[i]);
@@ -294,32 +293,6 @@ public class EmployeeListPanel extends JPanel {
             }
         }
         return null;
-    }
-
-    private class StatusColorRenderer extends DefaultTableCellRenderer {
-        @Override
-        public Component getTableCellRendererComponent(JTable t, Object value,
-                boolean isSelected, boolean hasFocus, int row, int col) {
-            Component c = super.getTableCellRendererComponent(t, value, isSelected, hasFocus, row, col);
-            setHorizontalAlignment(SwingConstants.CENTER);
-            setBorder(BorderFactory.createEmptyBorder(0, 8, 0, 8));
-            if (!isSelected) {
-                c.setBackground(row % 2 == 0 ? Color.WHITE : UIColors.TABLE_ROW_ALT);
-                c.setForeground(UIColors.TEXT_DARK);
-                if (col == 7 && value != null) {
-                    String val = value.toString();
-                    if ("Đang làm việc".equals(val)) {
-                        c.setForeground(UIColors.SUCCESS_GREEN);
-                    } else if ("Tạm nghỉ".equals(val)) {
-                        c.setForeground(UIColors.WARNING_ORANGE);
-                    } else if ("Nghỉ việc".equals(val)) {
-                        c.setForeground(UIColors.DANGER_RED);
-                    }
-                    ((JLabel) c).setFont(com.hrm.util.UIFonts.BOLD_SMALL);
-                }
-            }
-            return c;
-        }
     }
 
 }

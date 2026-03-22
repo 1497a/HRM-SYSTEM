@@ -36,6 +36,7 @@ class TabYeuCauPanel extends JPanel {
     private JButton btnTao;
     private JButton btnPheDuyet;
     private JButton btnTuChoi;
+    private JTextField txtTimKiem;
     TabYeuCauPanel(TuyenDungBUS service) {
         this.service = service;
         setLayout(new BorderLayout(8, 8));
@@ -53,9 +54,12 @@ class TabYeuCauPanel extends JPanel {
                 new String[]{"Tất cả", "Chờ duyệt", "Đã duyệt", "Từ chối", "Đã tuyển đủ"});
         JButton btnLamMoi = UIHelper.createDefaultButton("Làm mới");
         btnLamMoi.addActionListener(e -> load());
+        txtTimKiem = UIHelper.createSearchField("Tìm theo vị trí, phòng ban...");
         toolbar.add(btnTao);
         toolbar.add(btnPheDuyet);
         toolbar.add(btnTuChoi);
+        toolbar.add(new JLabel("Tìm kiếm:"));
+        toolbar.add(txtTimKiem);
         toolbar.add(new JLabel("Trạng thái:"));
         toolbar.add(cboTrangThai);
         toolbar.add(btnLamMoi);
@@ -72,14 +76,14 @@ class TabYeuCauPanel extends JPanel {
         };
         tbl = TabUtils.buildTable(model);
         TabUtils.applyColWidths(tbl, new int[]{70, 220, 180, 80, 120, 130});
-        tbl.getColumnModel().getColumn(5).setCellRenderer(new RecruitmentStatusRenderer());
+        tbl.getColumnModel().getColumn(5).setCellRenderer(new com.hrm.gui.components.StatusCellRenderer());
         TableRowSorter<DefaultTableModel> sorter = new TableRowSorter<>(model);
         tbl.setRowSorter(sorter);
         sorter.setComparator(0, Comparator.comparingInt(a -> (Integer) a));
         sorter.setComparator(3, Comparator.comparingInt(a -> (Integer) a));
         sorter.setComparator(4, TabUtils.dateComparator());
         sorter.setSortKeys(List.of(new SortKey(0, ASCENDING)));
-        UIHelper.attachStatusFilter(sorter, cboTrangThai, 5);
+        UIHelper.attachSearchAndStatusFilter(txtTimKiem, cboTrangThai, sorter, 5, new int[]{1, 2});
         JScrollPane scroll = new JScrollPane(tbl);
         scroll.setBorder(BorderFactory.createLineBorder(Color.LIGHT_GRAY));
         add(toolbar, BorderLayout.NORTH);

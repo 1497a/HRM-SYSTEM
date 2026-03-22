@@ -438,7 +438,10 @@ public class TuyenDungBUS {
     private void capNhatUngVienDaChuyen(UngVien uv, String maNV) {
         uv.setMaNV(maNV);
         uv.setTrangThai(RecruitmentStatus.UngVien.DA_CHUYEN_NHAN_VIEN);
-        recruitmentRepo.updateUngVien(uv);
+        int rows = recruitmentRepo.updateUngVien(uv);
+        if (rows <= 0) {
+            System.err.println("Canh bao: Khong the cap nhat trang thai ung vien " + uv.getMaUngVien() + " sau khi chuyen thanh nhan vien.");
+        }
     }
 
     private void capNhatTrangThaiYeuCauNeuDuSoLuong(TinTuyenDung tin) {
@@ -451,7 +454,10 @@ public class TuyenDungBUS {
         }
         int daChuyen = recruitmentRepo.countConvertedByYeuCau(tin.getMaYeuCau());
         if (daChuyen >= yc.getSoLuong()) {
-            recruitmentRepo.updateYeuCauTrangThai(tin.getMaYeuCau(), RecruitmentStatus.YeuCau.DA_TUYEN_DU, 0, null);
+            int rows = recruitmentRepo.updateYeuCauTrangThai(tin.getMaYeuCau(), RecruitmentStatus.YeuCau.DA_TUYEN_DU, 0, null);
+            if (rows <= 0) {
+                System.err.println("Canh bao: Khong the cap nhat trang thai yeu cau tuyen dung " + tin.getMaYeuCau() + " thanh DA_TUYEN_DU.");
+            }
         }
     }
 

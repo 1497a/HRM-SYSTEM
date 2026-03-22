@@ -16,7 +16,6 @@ import com.hrm.util.UIHelper;
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
 import javax.swing.border.TitledBorder;
-import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.table.DefaultTableModel;
 import javax.swing.table.TableRowSorter;
 
@@ -39,6 +38,8 @@ public class EvalCycleListPanel extends JPanel {
     private JButton btnConfigCriteria;
     private JButton btnEvaluate;
     private JButton btnViewDetail;
+    private TableRowSorter<DefaultTableModel> sorter;
+    private JTextField txtTimKiem;
     private static final DateTimeFormatter DATE_FORMAT = DateTimeFormatter.ofPattern("dd/MM/yyyy");
     private static final String STATUS_CHUA = "Chưa bắt đầu";
     private static final String STATUS_DANG = "Đang diễn ra";
@@ -61,10 +62,12 @@ public class EvalCycleListPanel extends JPanel {
         String[] cycleColumns = {"ID", "Tên đợt đánh giá", "Kỳ", "Năm", "Bắt đầu", "Kết thúc", "Trạng thái"};
         cycleTableModel = PurpleTable.createNonEditableModel(cycleColumns);
         cycleTable = new PurpleTable(cycleTableModel);
-        TableRowSorter<DefaultTableModel> sorter = new TableRowSorter<>(cycleTableModel);
+        sorter = new TableRowSorter<>(cycleTableModel);
         cycleTable.setRowSorter(sorter);
         sorter.setComparator(0, java.util.Comparator.comparingInt(a -> (Integer) a));
         sorter.setSortKeys(java.util.List.of(new javax.swing.RowSorter.SortKey(0, javax.swing.SortOrder.ASCENDING)));
+        txtTimKiem = UIHelper.createSearchField("Tìm theo tên đợt, kỳ, năm...");
+        UIHelper.attachTextSearch(txtTimKiem, sorter, 1, 2, 3);
         cycleTable.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
         cycleTable.getSelectionModel().addListSelectionListener(e -> onCycleSelected());
         cycleTable.getColumnModel().getColumn(0).setPreferredWidth(40);
@@ -74,20 +77,7 @@ public class EvalCycleListPanel extends JPanel {
         cycleTable.getColumnModel().getColumn(4).setPreferredWidth(100);
         cycleTable.getColumnModel().getColumn(5).setPreferredWidth(100);
         cycleTable.getColumnModel().getColumn(6).setPreferredWidth(120);
-        cycleTable.getColumnModel().getColumn(6).setCellRenderer(new DefaultTableCellRenderer() {
-            @Override
-            public Component getTableCellRendererComponent(JTable t, Object value,
-                                                           boolean sel, boolean focus, int row, int col) {
-                Component c = super.getTableCellRendererComponent(t, value, sel, focus, row, col);
-                if (!sel && value != null) {
-                    String s = value.toString();
-                    if (STATUS_DANG.equals(s)) c.setBackground(UIColors.BG_SUCCESS);
-                    else if (STATUS_DA_KET.equals(s)) c.setBackground(Color.LIGHT_GRAY);
-                    else c.setBackground(UIColors.BG_WARNING);
-                }
-                return c;
-            }
-        });
+        cycleTable.getColumnModel().getColumn(6).setCellRenderer(new com.hrm.gui.components.StatusCellRenderer());
         btnTaoDot = UIHelper.createSuccessButton("+ Tạo đợt mới");
         btnOpenCycle = UIHelper.createPrimaryButton("Mở kỳ đánh giá");
         btnCloseCycle = UIHelper.createDangerButton("Đóng kỳ đánh giá");
@@ -116,6 +106,8 @@ public class EvalCycleListPanel extends JPanel {
     private void setupLayout() {
         JPanel topPanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 8, 5));
         topPanel.setOpaque(false);
+        topPanel.add(new JLabel("Tìm kiếm:"));
+        topPanel.add(txtTimKiem);
         if (isAdmin) {
             topPanel.add(btnTaoDot);
             topPanel.add(btnOpenCycle);

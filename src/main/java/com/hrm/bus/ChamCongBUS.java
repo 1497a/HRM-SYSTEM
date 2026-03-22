@@ -70,7 +70,10 @@ public class ChamCongBUS {
             return KetQua.error("Giờ bắt đầu và kết thúc không được để trống.");
         }
         try {
-            repository.saveCaLam(caLam);
+            int rows = repository.saveCaLam(caLam);
+            if (rows <= 0) {
+                return KetQua.error("Không thể lưu ca làm. Vui lòng thử lại.");
+            }
             return KetQua.success(caLam, "Đã lưu ca làm '" + caLam.getTenCaLam() + "'.");
         } catch (Exception e) {
             return KetQua.error("Lỗi lưu ca làm: " + e.getMessage());
@@ -94,7 +97,10 @@ public class ChamCongBUS {
             CaLam ca = new CaLam(ma.trim(), ten.trim(), tBD, tKT);
             ca.setSoGioChuan(sg);
             ca.setChoPhepLamThem(ot);
-            repository.saveCaLam(ca);
+            int rows = repository.saveCaLam(ca);
+            if (rows <= 0) {
+                return KetQua.error("Không thể thêm ca làm. Vui lòng thử lại.");
+            }
             return KetQua.success(ca, "Đã thêm ca làm '" + ten + "'.");
         } catch (Exception e) {
             return KetQua.error("Lỗi lưu ca làm: " + e.getMessage());
@@ -119,7 +125,10 @@ public class ChamCongBUS {
             ca.setGioKetThuc(tKT);
             ca.setSoGioChuan(sg);
             ca.setChoPhepLamThem(ot);
-            repository.saveCaLam(ca);
+            int rows = repository.saveCaLam(ca);
+            if (rows <= 0) {
+                return KetQua.error("Không thể cập nhật ca làm. Vui lòng thử lại.");
+            }
             return KetQua.success(ca, "Đã cập nhật ca làm.");
         } catch (Exception e) {
             return KetQua.error("Lỗi cập nhật ca làm: " + e.getMessage());
@@ -131,7 +140,10 @@ public class ChamCongBUS {
         if (!permission.isSuccess()) return permission;
         CaLam ca = repository.findCaLamById(ma);
         if (ca == null) return KetQua.error("Không tìm thấy ca làm.");
-        repository.deleteCaLam(ma);
+        int rows = repository.deleteCaLam(ma);
+        if (rows <= 0) {
+            return KetQua.error("Không thể xóa ca làm. Vui lòng thử lại.");
+        }
         return KetQua.success(null, "Đã ngừng ca làm '" + ca.getTenCaLam() + "'.");
     }
 
@@ -156,7 +168,10 @@ public class ChamCongBUS {
             return KetQua.error("Ca làm không hợp lệ.");
         }
         ChamCong cc = taoBanGhiCheckIn(maNV, today, caLam, LocalDateTime.now(), resolvePhuongThuc(phuongThuc), false);
-        repository.saveChamCong(cc);
+        int id = repository.saveChamCong(cc);
+        if (id <= 0) {
+            return KetQua.error("Không thể lưu chấm công check-in. Vui lòng thử lại.");
+        }
         return KetQua.success(cc, "Check-in thành công lúc " + cc.getGioVao().toLocalTime().toString().substring(0, 5) + ".");
     }
 
@@ -193,7 +208,10 @@ public class ChamCongBUS {
                 cc.setGioLamThem(Math.round((cc.getSoGioLam() - caLam.getSoGioChuan()) * 100.0) / 100.0);
             }
         }
-        repository.updateChamCong(cc);
+        int rows = repository.updateChamCong(cc);
+        if (rows <= 0) {
+            return KetQua.error("Không thể lưu chấm công check-out. Vui lòng thử lại.");
+        }
         return KetQua.success(cc, "Check-out thành công. Tổng giờ làm: "
                 + String.format("%.2f", cc.getSoGioLam()) + "h.");
     }
@@ -238,7 +256,10 @@ public class ChamCongBUS {
         cc.setTrangThai(trangThai != null ? trangThai : ChamCong.TrangThai.DUNG_GIO);
         cc.setPhuongThucChamCong(ChamCong.PhuongThuc.THU_CONG);
         cc.setGhiChu(ghiChu);
-        repository.saveChamCong(cc);
+        int id = repository.saveChamCong(cc);
+        if (id <= 0) {
+            return KetQua.error("Không thể lưu chấm công thủ công. Vui lòng thử lại.");
+        }
         return KetQua.success(cc, "Đã thêm chấm công thủ công cho ngày " + ngay + ".");
     }
 
@@ -280,7 +301,10 @@ public class ChamCongBUS {
         cc.setNguoiChinhSua(resolveCurrentEditorCode());
         cc.setLyDoChinhSua(lyDoChinhSua.trim());
         cc.setNgayChinhSua(LocalDateTime.now());
-        repository.updateChamCongByManager(cc);
+        int rows = repository.updateChamCongByManager(cc);
+        if (rows <= 0) {
+            return KetQua.error("Không thể cập nhật chấm công. Vui lòng thử lại.");
+        }
         return KetQua.success(cc, "Đã cập nhật chấm công ngày " + ngay + ".");
     }
 
@@ -330,7 +354,10 @@ public class ChamCongBUS {
                     OT_TONG_TOI_DA_THANG, conLai));
         }
         DangKyLamThem dk = new DangKyLamThem(maNV, ngay, soGio, lyDo.trim());
-        repository.saveDangKyLamThem(dk);
+        int id = repository.saveDangKyLamThem(dk);
+        if (id <= 0) {
+            return KetQua.error("Không thể tạo đơn đăng ký làm thêm. Vui lòng thử lại.");
+        }
         return KetQua.success(dk, "Đã tạo đơn đăng ký làm thêm " + soGio + " giờ.");
     }
 
@@ -382,7 +409,10 @@ public class ChamCongBUS {
         if (dk == null) return KetQua.error("Không tìm thấy đơn OT.");
         KetQua<Void> permission = validateOvertimeApprovePermission(dk.getMaNV());
         if (!permission.isSuccess()) return permission;
-        repository.updateHeSoOT(maDK, heSo);
+        int rows = repository.updateHeSoOT(maDK, heSo);
+        if (rows <= 0) {
+            return KetQua.error("Không thể cập nhật hệ số OT. Vui lòng thử lại.");
+        }
         return KetQua.success(null, "Đã cập nhật hệ số OT thành x" + heSo + ".");
     }
 
@@ -404,7 +434,10 @@ public class ChamCongBUS {
         KetQua<Void> validation = validateKhoanLuongInput(tenKhoan, giaTri);
         if (!validation.isSuccess()) return KetQua.error(validation.getMessage());
         CauHinhPhuCap pc = new CauHinhPhuCap(loai, tenKhoan.trim(), kieuTinh, giaTri, nguon);
-        repository.insertCauHinhPC(pc);
+        int id = repository.insertCauHinhPC(pc);
+        if (id <= 0) {
+            return KetQua.error("Không thể thêm khoản phụ cấp. Vui lòng thử lại.");
+        }
         return KetQua.success(pc, "Đã thêm khoản '" + tenKhoan + "'.");
     }
 
@@ -421,7 +454,10 @@ public class ChamCongBUS {
         pc.setKieuTinh(kieuTinh);
         pc.setGiaTri(giaTri);
         pc.setNguon(nguon);
-        repository.updateCauHinhPC(pc);
+        int rows = repository.updateCauHinhPC(pc);
+        if (rows <= 0) {
+            return KetQua.error("Không thể cập nhật khoản phụ cấp. Vui lòng thử lại.");
+        }
         return KetQua.success(pc, "Đã cập nhật khoản '" + tenKhoan + "'.");
     }
 
@@ -430,7 +466,10 @@ public class ChamCongBUS {
         if (!permission.isSuccess()) return permission;
         CauHinhPhuCap pc = repository.findCauHinhPCById(maPC);
         if (pc == null) return KetQua.error("Không tìm thấy khoản phụ cấp.");
-        repository.deactivateCauHinhPC(maPC);
+        int rows = repository.deactivateCauHinhPC(maPC);
+        if (rows <= 0) {
+            return KetQua.error("Không thể ngừng khoản phụ cấp. Vui lòng thử lại.");
+        }
         return KetQua.success(null, "Đã ngừng khoản '" + pc.getTenKhoan() + "'.");
     }
 
@@ -477,7 +516,10 @@ public class ChamCongBUS {
                 LocalDateTime.now(),
                 ChamCong.PhuongThuc.THU_CONG,
                 laOT);
-        repository.saveChamCong(cc);
+        int id = repository.saveChamCong(cc);
+        if (id <= 0) {
+            return KetQua.error("Không thể lưu chấm công. Vui lòng thử lại.");
+        }
         String otTag = laOT ? " [CA OT]" : "";
         return KetQua.success(cc, "Check-in thành công" + otTag + " — Ca: "
             + caLamPhuHop.getTenCaLam()
@@ -544,7 +586,10 @@ public class ChamCongBUS {
             return KetQua.error(overtimeValidation.getMessage());
         }
         DangKyLamThem dk = new DangKyLamThem(maNV, ngay, gioVao, gioRa, lyDo.trim());
-        repository.saveDangKyLamThem(dk);
+        int id = repository.saveDangKyLamThem(dk);
+        if (id <= 0) {
+            return KetQua.error("Không thể tạo đơn OT. Vui lòng thử lại.");
+        }
         return KetQua.success(dk, "Đã tạo đơn OT: " + gioVao + " → " + gioRa
             + " (" + String.format("%.1f", soGio) + " giờ).");
     }
@@ -559,7 +604,10 @@ public class ChamCongBUS {
         if (ValidationUtils.isBlank(maNV) || !maNV.equals(dk.getMaNV())) {
             return KetQua.error("Bạn không có quyền xóa đơn OT này.");
         }
-        repository.deleteDangKyLamThem(maDK);
+        int rows = repository.deleteDangKyLamThem(maDK);
+        if (rows <= 0) {
+            return KetQua.error("Không thể xóa đơn OT. Vui lòng thử lại.");
+        }
         return KetQua.success(null, "Đã xóa đơn OT.");
     }
 
@@ -600,11 +648,19 @@ public class ChamCongBUS {
                     : "Bạn không thể tự từ chối đơn làm thêm của chính mình.");
         }
         if (approve && heSoOT != null) {
-            repository.updateHeSoOT(maDK, heSoOT);
+            int hesoRows = repository.updateHeSoOT(maDK, heSoOT);
+            if (hesoRows <= 0) {
+                System.err.println("Canh bao: Khong the cap nhat he so OT cho don " + maDK);
+            }
             dk.setHeSoOT(heSoOT);
         }
         LocalDateTime now = LocalDateTime.now();
-        repository.updateTrangThai(maDK, approve ? HRMConstants.TRANG_THAI_DA_DUYET : HRMConstants.TRANG_THAI_TU_CHOI, nguoiDuyetId, now);
+        int rows = repository.updateTrangThai(maDK, approve ? HRMConstants.TRANG_THAI_DA_DUYET : HRMConstants.TRANG_THAI_TU_CHOI, nguoiDuyetId, now);
+        if (rows <= 0) {
+            return KetQua.error(approve
+                    ? "Không thể duyệt đơn làm thêm. Vui lòng thử lại."
+                    : "Không thể từ chối đơn làm thêm. Vui lòng thử lại.");
+        }
         dk.setTrangThai(approve ? DangKyLamThem.TrangThai.DA_DUYET : DangKyLamThem.TrangThai.TU_CHOI);
         dk.setNguoiDuyet(nguoiDuyetId);
         dk.setNgayDuyet(now);

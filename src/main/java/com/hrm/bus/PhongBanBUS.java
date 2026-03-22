@@ -53,7 +53,10 @@ public class PhongBanBUS {
         }
         String maCha = normalizeOptional(phongBanCha);
         PhongBan department = new PhongBan(maPhongBan.trim(), tenPhongBan.trim(), maCha, HRMConstants.TRANG_THAI_HOAT_DONG);
-        repository.save(department);
+        int rows = repository.save(department);
+        if (rows <= 0) {
+            return KetQua.error("Không thể thêm phòng ban. Vui lòng thử lại.");
+        }
         return KetQua.success(null, "Thêm phòng ban thành công.");
     }
 
@@ -83,7 +86,10 @@ public class PhongBanBUS {
         }
         department.setTenPhongBan(tenMoi.trim());
         department.setPhongBanChaId(normalizeOptional(phongBanChaMoi));
-        repository.update(department);
+        int rows = repository.update(department);
+        if (rows <= 0) {
+            return KetQua.error("Không thể cập nhật phòng ban. Vui lòng thử lại.");
+        }
         return KetQua.success(null, "Cập nhật phòng ban thành công.");
     }
 
@@ -106,7 +112,10 @@ public class PhongBanBUS {
             return KetQua.error("Không thể ngừng hoạt động khi phòng ban vẫn còn bổ nhiệm hiệu lực.");
         }
         department.setTrangThai(HRMConstants.TRANG_THAI_NGUNG_HOAT_DONG);
-        repository.update(department);
+        int rows = repository.update(department);
+        if (rows <= 0) {
+            return KetQua.error("Không thể ngừng hoạt động phòng ban. Vui lòng thử lại.");
+        }
         return KetQua.success(null, "Đã ngừng hoạt động phòng ban.");
     }
 
@@ -127,7 +136,10 @@ public class PhongBanBUS {
             }
         }
         department.setTrangThai(HRMConstants.TRANG_THAI_HOAT_DONG);
-        repository.update(department);
+        int rows = repository.update(department);
+        if (rows <= 0) {
+            return KetQua.error("Không thể kích hoạt phòng ban. Vui lòng thử lại.");
+        }
         return KetQua.success(null, "Đã kích hoạt lại phòng ban.");
     }
 

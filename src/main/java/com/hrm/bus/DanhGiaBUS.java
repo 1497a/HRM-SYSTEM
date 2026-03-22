@@ -59,7 +59,10 @@ public class DanhGiaBUS {
             return KetQua.error("Đợt đánh giá đã kết thúc, không thể mở lại.");
         }
         dot.setTrangThai(DotDanhGia.TrangThai.DANG_DIEN_RA);
-        repository.updateCycle(dot);
+        int rows = repository.updateCycle(dot);
+        if (rows <= 0) {
+            return KetQua.error("Không thể mở đợt đánh giá. Vui lòng thử lại.");
+        }
         return KetQua.success(dot, "Đã mở đợt đánh giá thành công.");
     }
 
@@ -72,7 +75,10 @@ public class DanhGiaBUS {
             return KetQua.error("Chỉ có thể đóng đợt đang diễn ra.");
         }
         dot.setTrangThai(DotDanhGia.TrangThai.DA_KET_THUC);
-        repository.updateCycle(dot);
+        int rows = repository.updateCycle(dot);
+        if (rows <= 0) {
+            return KetQua.error("Không thể đóng đợt đánh giá. Vui lòng thử lại.");
+        }
         return KetQua.success(dot, "Đã đóng đợt đánh giá thành công.");
     }
 
@@ -126,8 +132,11 @@ public class DanhGiaBUS {
         tc.setNhomTieuChi(nhomTieuChi != null ? nhomTieuChi.trim() : "");
         tc.setTrongSo(trongSo);
         tc.setHoatDong(true);
-        repository.saveCriteria(tc);
-        return KetQua.success(tc, "Đã lưu tiêu chí đánh giá thành công.");
+        TieuChiDanhGia saved = repository.saveCriteria(tc);
+        if (saved == null) {
+            return KetQua.error("Không thể lưu tiêu chí đánh giá. Vui lòng thử lại.");
+        }
+        return KetQua.success(saved, "Đã lưu tiêu chí đánh giá thành công.");
     }
 
     public KetQua<TieuChiDanhGia> updateCriteria(int maTieuChi, String tenTieuChi, String moTa,
@@ -142,8 +151,11 @@ public class DanhGiaBUS {
         tc.setMoTa(moTa != null ? moTa.trim() : tc.getMoTa());
         tc.setNhomTieuChi(nhomTieuChi != null ? nhomTieuChi.trim() : tc.getNhomTieuChi());
         tc.setTrongSo(trongSo);
-        repository.saveCriteria(tc);
-        return KetQua.success(tc, "Đã cập nhật tiêu chí đánh giá thành công.");
+        TieuChiDanhGia updated = repository.saveCriteria(tc);
+        if (updated == null) {
+            return KetQua.error("Không thể cập nhật tiêu chí đánh giá. Vui lòng thử lại.");
+        }
+        return KetQua.success(updated, "Đã cập nhật tiêu chí đánh giá thành công.");
     }
 
     public KetQua<Void> deleteCriteria(int maTieuChi) {
@@ -151,7 +163,10 @@ public class DanhGiaBUS {
         if (tc == null) {
             return KetQua.error("Không tìm thấy tiêu chí #" + maTieuChi);
         }
-        repository.deleteCriteria(maTieuChi);
+        int rows = repository.deleteCriteria(maTieuChi);
+        if (rows <= 0) {
+            return KetQua.error("Không thể vô hiệu hóa tiêu chí đánh giá. Vui lòng thử lại.");
+        }
         return KetQua.success(null, "Đã vô hiệu hóa tiêu chí đánh giá thành công.");
     }
 
@@ -207,7 +222,10 @@ public class DanhGiaBUS {
             return KetQua.error("Không thể lưu đánh giá.");
         }
         // Lưu chi tiết điểm
-        repository.saveScores(maDanhGia, chiTiets);
+        int scoreRows = repository.saveScores(maDanhGia, chiTiets);
+        if (scoreRows <= 0) {
+            System.err.println("Canh bao: Khong the luu chi tiet diem cho danh gia " + maDanhGia);
+        }
         dg.setId(maDanhGia);
         return KetQua.success(dg, String.format("Đã lưu đánh giá thành công. Tổng điểm: %.2f - Xếp loại: %s",
                 tongDiem, dg.getXepLoai().name()));

@@ -15,6 +15,7 @@ import javax.swing.border.EmptyBorder;
 import javax.swing.border.TitledBorder;
 import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.table.DefaultTableModel;
+import javax.swing.table.TableRowSorter;
 import java.awt.*;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
@@ -29,6 +30,9 @@ class TabMyNotificationsPanel extends JPanel {
     private final TaiKhoan currentUser;
     private JTable tblThongBao;
     private DefaultTableModel modelThongBao;
+    private TableRowSorter<DefaultTableModel> sorterTB;
+    private JTextField txtTimKiem;
+    private JComboBox<String> cboTrangThaiFilter;
     private List<ThongBao> danhSachThongBao;
     TabMyNotificationsPanel(ThongBaoBUS service, TaiKhoan currentUser) {
         this.service = service;
@@ -44,6 +48,12 @@ class TabMyNotificationsPanel extends JPanel {
         btnDanhDauDaDoc.addActionListener(e -> danhDauDaDoc());
         btnDanhDauTatCa.addActionListener(e -> danhDauTatCa());
         btnLamMoi.addActionListener(e -> loadThongBao());
+        txtTimKiem = UIHelper.createSearchField("Tìm theo tiêu đề, loại thông báo...");
+        cboTrangThaiFilter = new JComboBox<>(new String[]{"Tất cả", "Chưa đọc", "Đã đọc"});
+        toolbar.add(new JLabel("Tìm kiếm:"));
+        toolbar.add(txtTimKiem);
+        toolbar.add(new JLabel("Trạng thái:"));
+        toolbar.add(cboTrangThaiFilter);
         toolbar.add(btnDanhDauDaDoc);
         toolbar.add(btnDanhDauTatCa);
         toolbar.add(btnLamMoi);
@@ -52,6 +62,9 @@ class TabMyNotificationsPanel extends JPanel {
             @Override public boolean isCellEditable(int row, int col) { return false; }
         };
         tblThongBao = new JTable(modelThongBao);
+        sorterTB = new TableRowSorter<>(modelThongBao);
+        tblThongBao.setRowSorter(sorterTB);
+        UIHelper.attachSearchAndStatusFilter(txtTimKiem, cboTrangThaiFilter, sorterTB, 4, new int[]{1, 2});
         tblThongBao.setRowHeight(28);
         tblThongBao.setFont(com.hrm.util.UIFonts.TEXT_NORMAL);
         tblThongBao.getTableHeader().setFont(com.hrm.util.UIFonts.BOLD_NORMAL);
@@ -89,11 +102,14 @@ class TabMyNotificationsPanel extends JPanel {
         });
         tblThongBao.getSelectionModel().addListSelectionListener(e -> {
             if (!e.getValueIsAdjusting()) {
-                int row = tblThongBao.getSelectedRow();
-                if (row >= 0 && danhSachThongBao != null && row < danhSachThongBao.size()) {
-                    ThongBao tb = danhSachThongBao.get(row);
-                    if (!tb.isDaDoc()) markAsRead(tb.getMaThongBao());
-                    showNoiDung(tb);
+                int viewRow = tblThongBao.getSelectedRow();
+                if (viewRow >= 0 && danhSachThongBao != null) {
+                    int modelRow = tblThongBao.convertRowIndexToModel(viewRow);
+                    if (modelRow >= 0 && modelRow < danhSachThongBao.size()) {
+                        ThongBao tb = danhSachThongBao.get(modelRow);
+                        if (!tb.isDaDoc()) markAsRead(tb.getMaThongBao());
+                        showNoiDung(tb);
+                    }
                 }
             }
         });
@@ -122,11 +138,12 @@ class TabMyNotificationsPanel extends JPanel {
     }
 
     private void danhDauDaDoc() {
-        int row = tblThongBao.getSelectedRow();
-        if (row < 0) {
+        int viewRow = tblThongBao.getSelectedRow();
+        if (viewRow < 0) {
             DialogUtil.showInfo(this, "Vui lòng chọn thông báo cần đánh dấu.");
             return;
         }
+        int row = tblThongBao.convertRowIndexToModel(viewRow);
         int maThongBao = (int) modelThongBao.getValueAt(row, 0);
         try {
             KetQua<Void> result = service.danhDauDaDoc(maThongBao);

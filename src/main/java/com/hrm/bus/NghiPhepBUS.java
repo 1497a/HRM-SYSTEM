@@ -105,7 +105,10 @@ public class NghiPhepBUS {
         don.setLyDo(lyDo != null ? lyDo.trim() : "");
         don.setTrangThai(DonXinNghiPhep.TrangThai.CHO_DUYET);
         try {
-            repository.insert(don);
+            int id = repository.insert(don);
+            if (id <= 0) {
+                return KetQua.error("Không thể tạo đơn xin nghỉ phép. Vui lòng thử lại.");
+            }
             return KetQua.success(don, "Tạo đơn xin nghỉ phép thành công.");
         } catch (Exception e) {
             return KetQua.error("Lỗi khi tạo đơn xin nghỉ phép: " + e.getMessage());
@@ -136,15 +139,24 @@ public class NghiPhepBUS {
                 if (soDu == null || soDu.getSoNgayConLai() < don.getSoNgayNghi()) {
                     return KetQua.error("Số ngày phép còn lại không đủ để duyệt đơn này.");
                 }
-                repository.capNhatSoDaDung(don.getMaNV(), namHienTai, HRMConstants.LOAI_PHEP_NAM, don.getSoNgayNghi());
+                int capNhatRows = repository.capNhatSoDaDung(don.getMaNV(), namHienTai, HRMConstants.LOAI_PHEP_NAM, don.getSoNgayNghi());
+                if (capNhatRows <= 0) {
+                    return KetQua.error("Không thể cập nhật số ngày phép đã dùng. Vui lòng thử lại.");
+                }
             }
             createAttendanceForApprovedLeave(don);
             don.setTrangThai(DonXinNghiPhep.TrangThai.DA_DUYET);
-        repository.updateTrangThai(maDon, HRMConstants.TRANG_THAI_DA_DUYET, maNguoiDuyet, now, null);
+            int duyetRows = repository.updateTrangThai(maDon, HRMConstants.TRANG_THAI_DA_DUYET, maNguoiDuyet, now, null);
+            if (duyetRows <= 0) {
+                return KetQua.error("Không thể duyệt đơn xin nghỉ phép. Vui lòng thử lại.");
+            }
             return KetQua.success(don, "Đã duyệt đơn xin nghỉ phép #" + maDon);
         } else {
             don.setTrangThai(DonXinNghiPhep.TrangThai.TU_CHOI);
-        repository.updateTrangThai(maDon, HRMConstants.TRANG_THAI_TU_CHOI, maNguoiDuyet, now, ghiChu);
+            int tuChoiRows = repository.updateTrangThai(maDon, HRMConstants.TRANG_THAI_TU_CHOI, maNguoiDuyet, now, ghiChu);
+            if (tuChoiRows <= 0) {
+                return KetQua.error("Không thể từ chối đơn xin nghỉ phép. Vui lòng thử lại.");
+            }
             return KetQua.success(don, "Đã từ chối đơn xin nghỉ phép #" + maDon);
         }
     }
@@ -161,7 +173,10 @@ public class NghiPhepBUS {
             return KetQua.error("Bạn không có quyền hủy đơn này.");
         }
         don.setTrangThai(DonXinNghiPhep.TrangThai.HUY);
-        repository.updateTrangThai(maDon, HRMConstants.TRANG_THAI_HUY, maNVHuy, null, null);
+        int huyRows = repository.updateTrangThai(maDon, HRMConstants.TRANG_THAI_HUY, maNVHuy, null, null);
+        if (huyRows <= 0) {
+            return KetQua.error("Không thể hủy đơn xin nghỉ phép. Vui lòng thử lại.");
+        }
         return KetQua.success(don, "Đã hủy đơn xin nghỉ phép #" + maDon);
     }
 
@@ -222,7 +237,10 @@ public class NghiPhepBUS {
                 chamCong.setTrangThai(trangThaiChamCong);
                 chamCong.setPhuongThucChamCong(ChamCong.PhuongThuc.THU_CONG);
                 chamCong.setGhiChu(ghiChu);
-                chamCongRepo.saveChamCong(chamCong);
+                int saved = chamCongRepo.saveChamCong(chamCong);
+                if (saved <= 0) {
+                    System.err.println("Canh bao: Khong the tao ban ghi cham cong nghi phep cho NV " + don.getMaNV() + " ngay " + date);
+                }
             }
             date = date.plusDays(1);
         }

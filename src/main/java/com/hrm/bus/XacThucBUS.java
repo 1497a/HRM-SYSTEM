@@ -223,7 +223,10 @@ public class XacThucBUS {
         }
         enforceAdminProtection(existing, user);
         try {
-            taiKhoanRepo.update(user);
+            int rows = taiKhoanRepo.update(user);
+            if (rows <= 0) {
+                return KetQua.error("Không thể cập nhật tài khoản. Vui lòng thử lại.");
+            }
             // Cập nhật vai trò (lưu trực tiếp trong cột maVaiTro)
             updatePrimaryRole(user);
             return KetQua.success(null, "Cập nhật tài khoản thành công.");
@@ -291,7 +294,10 @@ public class XacThucBUS {
             return KetQua.error("Thông tin vai trò không hợp lệ.");
         }
         try {
-            taiKhoanRepo.updateRole(role);
+            int rows = taiKhoanRepo.updateRole(role);
+            if (rows <= 0) {
+                return KetQua.error("Không thể cập nhật vai trò. Vui lòng thử lại.");
+            }
             return KetQua.success(null, "Cập nhật vai trò thành công.");
         } catch (Exception e) {
             System.err.println("Lỗi updateRole: " + e.getMessage());
@@ -365,7 +371,10 @@ public class XacThucBUS {
         if (tk == null) {
             return KetQua.error("Không tìm thấy tài khoản cho NV " + maNV);
         }
-        taiKhoanRepo.updateRole(tk.getId(), maVaiTro);
+        int rows = taiKhoanRepo.updateRole(tk.getId(), maVaiTro);
+        if (rows <= 0) {
+            return KetQua.error("Không thể cập nhật vai trò cho tài khoản. Vui lòng thử lại.");
+        }
         return KetQua.success(null, "Cập nhật vai trò thành công.");
     }
 
@@ -393,7 +402,10 @@ public class XacThucBUS {
             return KetQua.error("Không thể thay đổi vai trò của tài khoản admin.");
         }
         try {
-            taiKhoanRepo.updateRole(maTaiKhoan, maVaiTro);
+            int rows = taiKhoanRepo.updateRole(maTaiKhoan, maVaiTro);
+            if (rows <= 0) {
+                return KetQua.error("Không thể gán vai trò. Vui lòng thử lại.");
+            }
             return KetQua.success(null, "Gán vai trò thành công.");
         } catch (Exception e) {
             return KetQua.error("Không thể gán vai trò: " + e.getMessage());
@@ -451,7 +463,10 @@ public class XacThucBUS {
         if (user.getVaiTro() == null) {
             return;
         }
-        taiKhoanRepo.updateRole(user.getId(), user.getVaiTro().getId());
+        int rows = taiKhoanRepo.updateRole(user.getId(), user.getVaiTro().getId());
+        if (rows <= 0) {
+            System.err.println("Canh bao: Khong the cap nhat vai tro cho tai khoan " + user.getId());
+        }
     }
 
     private TaiKhoan findExistingUser(TaiKhoan user) {

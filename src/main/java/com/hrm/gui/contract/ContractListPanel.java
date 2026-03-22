@@ -24,12 +24,13 @@ import javax.swing.JLabel;
 import javax.swing.JList;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
-import javax.swing.JTable;
+import javax.swing.JTextField;
+
 import javax.swing.ListSelectionModel;
 import javax.swing.RowFilter;
-import javax.swing.SwingConstants;
+
 import javax.swing.SwingUtilities;
-import javax.swing.table.DefaultTableCellRenderer;
+
 import javax.swing.table.DefaultTableModel;
 import javax.swing.table.TableRowSorter;
 import java.awt.BorderLayout;
@@ -54,13 +55,7 @@ import java.util.stream.Collectors;
 public class ContractListPanel extends JPanel {
 
     private static final int COL_MA_HOP_DONG = 0;
-    private static final int COL_SO_HOP_DONG = 1;
     private static final int COL_MA_NV = 2;
-    private static final int COL_LOAI_HOP_DONG = 3;
-    private static final int COL_LUONG_CO_SO = 4;
-    private static final int COL_NGAY_KY = 5;
-    private static final int COL_NGAY_HIEU_LUC = 6;
-    private static final int COL_NGAY_HET_HIEU_LUC = 7;
     private static final int COL_TRANG_THAI = 8;
     private static final String LABEL_HET_HIEU_LUC = "Hết hiệu lực";
     private static final Map<String, String> TRANG_THAI_OPTIONS = new LinkedHashMap<>();
@@ -86,6 +81,7 @@ public class ContractListPanel extends JPanel {
     private JComboBox<Object> cboNhanVien;
     private JButton btnTao;
     private JButton btnXemChiTiet;
+    private JTextField txtTimKiem;
     private List<HopDongLaoDong> danhSachHienThi = new ArrayList<>();
 
     public ContractListPanel() {
@@ -104,14 +100,12 @@ public class ContractListPanel extends JPanel {
         JPanel panel = new JPanel(new BorderLayout(8, 8));
         panel.setOpaque(false);
 
-        JLabel lblTitle = new JLabel("QUẢN LÝ HỢP ĐỒNG LAO ĐỘNG");
-        lblTitle.setFont(new Font("Segoe UI", Font.BOLD, 20));
-        lblTitle.setForeground(UIColors.PRIMARY_PURPLE);
-        lblTitle.setBorder(BorderFactory.createEmptyBorder(0, 0, 8, 0));
-        panel.add(lblTitle, BorderLayout.NORTH);
-
         JPanel filterPanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 8, 4));
         filterPanel.setOpaque(false);
+
+        txtTimKiem = UIHelper.createSearchField("Tìm theo mã HĐ, số HĐ, mã NV...");
+        filterPanel.add(new JLabel("Tìm kiếm:"));
+        filterPanel.add(txtTimKiem);
 
         JLabel lblTrangThai = new JLabel("Trạng thái:");
         lblTrangThai.setFont(UIFonts.TEXT_NORMAL);
@@ -146,8 +140,7 @@ public class ContractListPanel extends JPanel {
 
         cboNhanVien.setRenderer(new DefaultListCellRenderer() {
             @Override
-            public Component getListCellRendererComponent(JList<?> list, Object value,
-                                                          int index, boolean isSelected, boolean cellHasFocus) {
+            public Component getListCellRendererComponent(JList<?> list, Object value,                        int index, boolean isSelected, boolean cellHasFocus) {
                 super.getListCellRendererComponent(list, value, index, isSelected, cellHasFocus);
                 if (value instanceof NhanVien) {
                     NhanVien nv = (NhanVien) value;
@@ -173,7 +166,7 @@ public class ContractListPanel extends JPanel {
         tableModel = PurpleTable.createNonEditableModel(COL_NAMES);
         table = new PurpleTable(tableModel);
         table.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
-        table.setDefaultRenderer(Object.class, new StatusColorRenderer());
+        table.getColumnModel().getColumn(COL_TRANG_THAI).setCellRenderer(new com.hrm.gui.components.StatusCellRenderer());
 
         int[] widths = {60, 120, 70, 130, 120, 100, 100, 120, 110};
         for (int i = 0; i < widths.length; i++) {
@@ -211,6 +204,9 @@ public class ContractListPanel extends JPanel {
         btnXemChiTiet.addActionListener(e -> showDetailDialog());
         cboTrangThai.addActionListener(e -> applyFilter());
         cboNhanVien.addActionListener(e -> applyFilter());
+        txtTimKiem.addKeyListener(new java.awt.event.KeyAdapter() {
+            @Override public void keyReleased(java.awt.event.KeyEvent e) { applyFilter(); }
+        });
         table.getSelectionModel().addListSelectionListener(e -> {
             if (!e.getValueIsAdjusting()) {
                 updateDetailButtonState();
@@ -281,6 +277,7 @@ public class ContractListPanel extends JPanel {
             tempMaNV = ((NhanVien) selectedNhanVien).getMaNhanVien();
         }
         final String filterMaNV = tempMaNV;
+        final String keyword = UIHelper.normalizeSearch(txtTimKiem != null ? txtTimKiem.getText() : "");
 
         RowFilter<DefaultTableModel, Object> rf = new RowFilter<>() {
             @Override
@@ -298,6 +295,16 @@ public class ContractListPanel extends JPanel {
                         return false;
                     }
                 }
+
+                if (!keyword.isEmpty()) {
+                    String maHD = UIHelper.normalizeSearch(entry.getValue(COL_MA_HOP_DONG) != null ? entry.getValue(COL_MA_HOP_DONG).toString() : "");
+                    String soHD = UIHelper.normalizeSearch(entry.getValue(1) != null ? entry.getValue(1).toString() : "");
+                    String maNV = UIHelper.normalizeSearch(entry.getValue(COL_MA_NV) != null ? entry.getValue(COL_MA_NV).toString() : "");
+                    if (!maHD.contains(keyword) && !soHD.contains(keyword) && !maNV.contains(keyword)) {
+                        return false;
+                    }
+                }
+
                 return true;
             }
         };
@@ -383,40 +390,4 @@ public class ContractListPanel extends JPanel {
         btnXemChiTiet.setEnabled(table != null && table.getSelectedRow() != -1);
     }
 
-    private class StatusColorRenderer extends DefaultTableCellRenderer {
-        @Override
-        public Component getTableCellRendererComponent(JTable t, Object value,
-                                                       boolean isSelected, boolean hasFocus, int row, int col) {
-            Component c = super.getTableCellRendererComponent(t, value, isSelected, hasFocus, row, col);
-            setHorizontalAlignment(SwingConstants.CENTER);
-            setBorder(BorderFactory.createEmptyBorder(0, 8, 0, 8));
-            setToolTipText(null);
-
-            if (!isSelected) {
-                c.setBackground(row % 2 == 0 ? Color.WHITE : UIColors.TABLE_ROW_ALT);
-                c.setForeground(UIColors.TEXT_DARK);
-                if (col == COL_TRANG_THAI && value != null) {
-                    String val = value.toString();
-                    if ("Chờ duyệt".equals(val)) {
-                        c.setForeground(UIColors.WARNING_ORANGE);
-                        ((JLabel) c).setFont(UIFonts.BOLD_SMALL);
-                        setToolTipText("Hợp đồng đang chờ phê duyệt");
-                    } else if ("Hiệu lực".equals(val)) {
-                        c.setForeground(UIColors.SUCCESS_GREEN);
-                        ((JLabel) c).setFont(UIFonts.BOLD_SMALL);
-                        setToolTipText("Hợp đồng đang có hiệu lực");
-                    } else if (LABEL_HET_HIEU_LUC.equals(val) || "Hết hạn".equals(val)) {
-                        c.setForeground(UIColors.WARNING_ORANGE);
-                        ((JLabel) c).setFont(UIFonts.BOLD_SMALL);
-                        setToolTipText("Hợp đồng đã hết thời hạn");
-                    } else if ("Thanh lý".equals(val)) {
-                        c.setForeground(UIColors.DANGER_RED);
-                        ((JLabel) c).setFont(UIFonts.BOLD_SMALL);
-                        setToolTipText("Hợp đồng đã được thanh lý");
-                    }
-                }
-            }
-            return c;
-        }
-    }
 }

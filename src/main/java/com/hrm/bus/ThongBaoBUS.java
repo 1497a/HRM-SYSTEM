@@ -50,7 +50,10 @@ public class ThongBaoBUS {
         if (maTaiKhoanNhan <= 0) {
             return KetQua.error("Người nhận thông báo không hợp lệ.");
         }
-        thongBaoRepo.insert(buildThongBao(maTaiKhoanGui, maTaiKhoanNhan, tieuDe, noiDung, loai));
+        int id = thongBaoRepo.insert(buildThongBao(maTaiKhoanGui, maTaiKhoanNhan, tieuDe, noiDung, loai));
+        if (id <= 0) {
+            return KetQua.error("Không thể gửi thông báo. Vui lòng thử lại.");
+        }
         return KetQua.success(null, "Đã gửi thông báo thành công.");
     }
 
@@ -65,7 +68,10 @@ public class ThongBaoBUS {
         if (maTaiKhoanNhan == null) {
             return KetQua.error("Không tìm thấy tài khoản cho nhân viên " + maNVNhan + ".");
         }
-        thongBaoRepo.insert(buildThongBao(nguoiGui, maTaiKhoanNhan, tieuDe, noiDung, loai));
+        int id = thongBaoRepo.insert(buildThongBao(nguoiGui, maTaiKhoanNhan, tieuDe, noiDung, loai));
+        if (id <= 0) {
+            return KetQua.error("Không thể gửi thông báo. Vui lòng thử lại.");
+        }
         return KetQua.success(null, "Đã gửi thông báo thành công.");
     }
 
@@ -163,7 +169,10 @@ public class ThongBaoBUS {
         for (int maTK : maTaiKhoanList) {
             batch.add(buildThongBao(nguoiGui, maTK, tieuDe, noiDung, loai));
         }
-        thongBaoRepo.insertBulk(batch);
+        int rows = thongBaoRepo.insertBulk(batch);
+        if (rows <= 0) {
+            return KetQua.error("Không thể gửi thông báo hàng loạt. Vui lòng thử lại.");
+        }
         return KetQua.success(null, "Đã gửi thông báo thành công.");
     }
 

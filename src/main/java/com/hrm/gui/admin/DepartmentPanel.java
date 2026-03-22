@@ -66,6 +66,7 @@ public class DepartmentPanel extends JPanel {
         table.getColumnModel().getColumn(1).setPreferredWidth(180);
         table.getColumnModel().getColumn(2).setPreferredWidth(160);
         table.getColumnModel().getColumn(3).setPreferredWidth(100);
+        table.getColumnModel().getColumn(3).setCellRenderer(new com.hrm.gui.components.StatusCellRenderer());
         sorter = new TableRowSorter<>(tableModel);
         table.setRowSorter(sorter);
         add(new JScrollPane(table), BorderLayout.CENTER);

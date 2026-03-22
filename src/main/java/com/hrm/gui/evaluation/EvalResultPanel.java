@@ -9,6 +9,7 @@ import com.hrm.model.TaiKhoan;
 import com.hrm.util.PermissionCodes;
 import com.hrm.util.SessionContext;
 import com.hrm.util.UIColors;
+import com.hrm.util.UIHelper;
 
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
@@ -36,6 +37,8 @@ public class EvalResultPanel extends JPanel {
     private JTextArea txtComment;
     private JComboBox<Object> cboNhanVien;
     private JComboBox<Object> cboKyDanhGia;
+    private JTextField txtTimKiem;
+    private String filterKeyword = "";
     private List<DanhGiaHieuSuat> cachedSubmissions;
     private static final DateTimeFormatter DT_FORMAT = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm");
     public EvalResultPanel() {
@@ -164,10 +167,19 @@ public class EvalResultPanel extends JPanel {
             cboNhanVien.addActionListener(e -> loadData());
         }
         cboKyDanhGia.addActionListener(e -> loadData());
+        txtTimKiem = UIHelper.createSearchField("Tìm theo tên nhân viên, kỳ đánh giá...");
+        txtTimKiem.addKeyListener(new java.awt.event.KeyAdapter() {
+            @Override public void keyReleased(java.awt.event.KeyEvent e) {
+                filterKeyword = UIHelper.normalizeSearch(txtTimKiem.getText());
+                loadData();
+            }
+        });
     }
 
     private void setupLayout() {
         JPanel topPanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 10, 5));
+        topPanel.add(new JLabel("Tìm kiếm:"));
+        topPanel.add(txtTimKiem);
         if (isManager) {
             topPanel.add(new JLabel("Nhân viên:"));
             topPanel.add(cboNhanVien);
@@ -212,6 +224,11 @@ public class EvalResultPanel extends JPanel {
         for (DanhGiaHieuSuat sub : cachedSubmissions) {
             if (filterMaNV != null && !filterMaNV.equals(sub.getMaNV())) continue;
             if (filterKyId > 0 && sub.getMaDot() != filterKyId) continue;
+            if (!filterKeyword.isEmpty()) {
+                String tenNV  = UIHelper.normalizeSearch(sub.getTenNhanVien() != null ? sub.getTenNhanVien() : "");
+                String tenDot = UIHelper.normalizeSearch(sub.getTenDot() != null ? sub.getTenDot() : "");
+                if (!tenNV.contains(filterKeyword) && !tenDot.contains(filterKeyword)) continue;
+            }
             submissionModel.addRow(new Object[]{
                     sub.getId(),
                     sub.getTenDot() != null ? sub.getTenDot() : ("#" + sub.getMaDot()),

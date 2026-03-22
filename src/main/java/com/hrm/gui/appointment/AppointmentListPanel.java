@@ -18,23 +18,19 @@ import javax.swing.JComboBox;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
-import javax.swing.JTable;
 import javax.swing.JTextField;
 import javax.swing.ListSelectionModel;
 import javax.swing.RowFilter;
 import javax.swing.RowSorter;
 import javax.swing.SortOrder;
-import javax.swing.SwingConstants;
 import javax.swing.SwingUtilities;
 import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
-import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.table.DefaultTableModel;
 import javax.swing.table.TableRowSorter;
 
 import java.awt.BorderLayout;
 import java.awt.Color;
-import java.awt.Component;
 import java.awt.Dimension;
 import java.awt.FlowLayout;
 import java.awt.Frame;
@@ -154,7 +150,7 @@ public class AppointmentListPanel extends JPanel {
         };
         table = new PurpleTable(tableModel);
         table.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
-        table.setDefaultRenderer(Object.class, new StatusColorRenderer());
+        table.getColumnModel().getColumn(COL_TRANG_THAI).setCellRenderer(new com.hrm.gui.components.StatusCellRenderer());
         int[] widths = {70, 80, 180, 160, 160, 110, 100, 110};
         for (int i = 0; i < widths.length; i++) {
             table.getColumnModel().getColumn(i).setPreferredWidth(widths[i]);
@@ -242,7 +238,7 @@ public class AppointmentListPanel extends JPanel {
                 bn.getTenChucVu() != null ? bn.getTenChucVu() : bn.getMaChucVu(),
                 HRMConstants.display(bn.getLoaiBoNhiem()),
                 bn.getTuNgay() != null ? bn.getTuNgay().format(dtf) : "",
-                bn.getTrangThai()
+                HRMConstants.display(bn.getTrangThai())
             });
         }
         applyFilter();
@@ -322,38 +318,6 @@ public class AppointmentListPanel extends JPanel {
             }
         }
         return null;
-    }
-
-    private class StatusColorRenderer extends DefaultTableCellRenderer {
-        @Override
-        public Component getTableCellRendererComponent(
-            JTable t, Object value, boolean isSelected, boolean hasFocus, int row, int col
-        ) {
-            Component c = super.getTableCellRendererComponent(t, value, isSelected, hasFocus, row, col);
-            setHorizontalAlignment(SwingConstants.CENTER);
-            setBorder(BorderFactory.createEmptyBorder(0, 8, 0, 8));
-            if (col == COL_TRANG_THAI && value != null) {
-                String raw = value.toString();
-                ((JLabel) c).setText(HRMConstants.display(raw));
-                ((JLabel) c).setFont(UIFonts.BOLD_SMALL);
-            }
-            if (!isSelected) {
-                c.setBackground(row % 2 == 0 ? Color.WHITE : UIColors.TABLE_ROW_ALT);
-                c.setForeground(UIColors.TEXT_DARK);
-                if (col == COL_TRANG_THAI && value != null) {
-                    String raw = value.toString();
-                    if (HRMConstants.TRANG_THAI_HIEU_LUC.equals(raw)) {
-                        c.setForeground(UIColors.SUCCESS_GREEN);
-                    } else if (HRMConstants.TRANG_THAI_CHO_DUYET.equals(raw)) {
-                        c.setForeground(UIColors.WARNING_ORANGE);
-                    } else if (HRMConstants.TRANG_THAI_TU_CHOI.equals(raw)
-                            || HRMConstants.TRANG_THAI_HET_HIEU_LUC.equals(raw)) {
-                        c.setForeground(UIColors.DANGER_RED);
-                    }
-                }
-            }
-            return c;
-        }
     }
 
     private String normalize(String value) {

@@ -66,6 +66,7 @@ public class PositionPanel extends JPanel {
         table.getColumnModel().getColumn(2).setPreferredWidth(70);
         table.getColumnModel().getColumn(3).setPreferredWidth(110);
         table.getColumnModel().getColumn(4).setPreferredWidth(90);
+        table.getColumnModel().getColumn(4).setCellRenderer(new com.hrm.gui.components.StatusCellRenderer());
         sorter = new TableRowSorter<>(tableModel);
         table.setRowSorter(sorter);
         JScrollPane scroll = new JScrollPane(table);

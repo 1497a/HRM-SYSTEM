@@ -72,7 +72,10 @@ public class HopDongBUS {
             hd.setNguoiTao(creator.getTenDangNhap());
         }
         try {
-            hopDongRepo.insert(hd);
+            int id = hopDongRepo.insert(hd);
+            if (id <= 0) {
+                return KetQua.error("Không thể tạo hợp đồng thử việc. Vui lòng thử lại.");
+            }
             return KetQua.success(hd, "Tạo hợp đồng thử việc thành công (chờ phê duyệt).");
         } catch (Exception e) {
             return KetQua.error("Lỗi tạo hợp đồng tự động: " + e.getMessage());
@@ -121,7 +124,10 @@ public class HopDongBUS {
             hd.setNguoiTao(currentUser.getTenDangNhap());
         }
         try {
-            hopDongRepo.insert(hd);
+            int id = hopDongRepo.insert(hd);
+            if (id <= 0) {
+                return KetQua.error("Không thể tạo hợp đồng. Vui lòng thử lại.");
+            }
             return KetQua.success(hd, "Tạo hợp đồng thành công. Hợp đồng đang chờ phê duyệt.");
         } catch (Exception e) {
             return KetQua.error("Lỗi tạo hợp đồng: " + e.getMessage());
@@ -154,7 +160,10 @@ public class HopDongBUS {
         if (nv != null) {
             nv.setLoaiHopDong(hd.getLoaiHopDong());
             try {
-                nvRepo.update(nv);
+                int nvRows = nvRepo.update(nv);
+                if (nvRows <= 0) {
+                    System.err.println("Canh bao: Khong the cap nhat loai hop dong cho NV " + hd.getMaNV());
+                }
             } catch (Exception e) {
                 System.err.println("Cảnh báo: Không thể cập nhật loại hợp đồng cho NV " + hd.getMaNV() + ": " + e.getMessage());
             }

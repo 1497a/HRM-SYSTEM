@@ -86,7 +86,10 @@ public class BoNhiemBUS {
         // Thi?t l?p tr?ng th�i ch? duy?t
         bn.setTrangThai(HRMConstants.TRANG_THAI_CHO_DUYET);
         try {
-            boNhiemRepo.insert(bn);
+            int id = boNhiemRepo.insert(bn);
+            if (id <= 0) {
+                return KetQua.error("Không thể tạo bổ nhiệm. Vui lòng thử lại.");
+            }
             return KetQua.success(bn, "Tạo bổ nhiệm thành công. Đang chờ phê duyệt.");
         } catch (Exception e) {
             return KetQua.error("Lỗi khi tạo bổ nhiệm: " + e.getMessage());
@@ -107,7 +110,10 @@ public class BoNhiemBUS {
         bn.setTrangThai(HRMConstants.TRANG_THAI_CHO_DUYET);
         bn.setLyDo("Tự động bổ nhiệm sau khi phê duyệt hợp đồng thử việc #" + maHopDong);
         try {
-            boNhiemRepo.insert(bn);
+            int id = boNhiemRepo.insert(bn);
+            if (id <= 0) {
+                return KetQua.error("Không thể tạo bổ nhiệm tự động. Vui lòng thử lại.");
+            }
             return KetQua.success(null, "Bổ nhiệm đã được tạo tự động.");
         } catch (Exception e) {
             return KetQua.error("Lỗi tạo bổ nhiệm tự động: " + e.getMessage());
@@ -148,7 +154,10 @@ public class BoNhiemBUS {
             return KetQua.error("Lỗi phê duyệt bổ nhiệm: " + e.getMessage());
         }
         try {
-            boNhiemRepo.updateNguoiDuyet(maBoNhiem, nguoiDuyetId);
+            int updRows = boNhiemRepo.updateNguoiDuyet(maBoNhiem, nguoiDuyetId);
+            if (updRows <= 0) {
+                System.err.println("Canh bao: Khong the cap nhat nguoi duyet cho bo nhiem " + maBoNhiem);
+            }
         } catch (Exception e) {
             System.err.println("Cảnh báo: Không thể cập nhật người duyệt cho bổ nhiệm " + maBoNhiem + ": " + e.getMessage());
         }
@@ -182,7 +191,10 @@ public class BoNhiemBUS {
             if (rows <= 0) {
                 return KetQua.error("Không thể từ chối bổ nhiệm. Vui lòng thử lại.");
             }
-            boNhiemRepo.updateLyDoTuChoi(maBoNhiem, lyDo.trim());
+            int lyDoRows = boNhiemRepo.updateLyDoTuChoi(maBoNhiem, lyDo.trim());
+            if (lyDoRows <= 0) {
+                System.err.println("Canh bao: Khong the luu ly do tu choi cho bo nhiem " + maBoNhiem);
+            }
         } catch (Exception e) {
             return KetQua.error("Lỗi từ chối bổ nhiệm: " + e.getMessage());
         }
@@ -251,7 +263,10 @@ public class BoNhiemBUS {
             // Cascade: chuyển cấp dưới lên cấp trên kế tiếp (grandparent)
             java.util.List<String> subordinates = boNhiemRepo.findActiveSubordinateNVIds(bn.getMaNV());
             if (!subordinates.isEmpty()) {
-                boNhiemRepo.updateManagerForNVList(subordinates, bn.getMaQuanLy());
+                int updRows = boNhiemRepo.updateManagerForNVList(subordinates, bn.getMaQuanLy());
+                if (updRows <= 0) {
+                    System.err.println("Canh bao: Khong the cap nhat quan ly cho cap duoi cua bo nhiem " + maBoNhiem);
+                }
             }
             return KetQua.success(null, "Đã kết thúc bổ nhiệm #" + maBoNhiem + " từ ngày " + denNgay);
         } catch (Exception e) {

@@ -31,6 +31,7 @@ public class RoleManagementPanel extends JPanel {
     private JButton btnCreate;
     private JButton btnEdit;
     private JButton btnDelete;
+    private JTextField txtTimKiem;
     public RoleManagementPanel() {
         this.authService = XacThucBUS.getInstance();
         this.sessionContext = SessionContext.getInstance();
@@ -89,6 +90,8 @@ public class RoleManagementPanel extends JPanel {
         table.setRowSorter(sorter);
         sorter.setComparator(1, UIHelper.vietnameseNameComparator());
         sorter.setSortKeys(List.of(new RowSorter.SortKey(1, SortOrder.ASCENDING)));
+        txtTimKiem = UIHelper.createSearchField("Tìm theo mã hoặc tên vai trò...");
+        UIHelper.attachTextSearch(txtTimKiem, sorter, 0, 1);
     }
 
     private void setupLayout() {
@@ -117,6 +120,11 @@ public class RoleManagementPanel extends JPanel {
         if (sessionContext.hasPermission(PermissionCodes.ROLE_DELETE)) {
             buttonPanel.add(btnDelete);
         }
+        JPanel searchPanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 8, 4));
+        searchPanel.setOpaque(false);
+        searchPanel.add(new JLabel("Tìm kiếm:"));
+        searchPanel.add(txtTimKiem);
+        topPanel.add(searchPanel, BorderLayout.WEST);
         topPanel.add(buttonPanel, BorderLayout.EAST);
         // Center - table
         JScrollPane scrollPane = new JScrollPane(table);

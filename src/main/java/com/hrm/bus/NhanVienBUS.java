@@ -127,7 +127,10 @@ public class NhanVienBUS {
         String phoneErr = ValidationUtils.validatePhone(ttcn.getDienThoai());
         if (phoneErr != null) return KetQua.error(phoneErr);
         try {
-            ttcnRepo.update(ttcn);
+            int rows = ttcnRepo.update(ttcn);
+            if (rows <= 0) {
+                return KetQua.error("Không thể cập nhật thông tin cá nhân. Vui lòng thử lại.");
+            }
             return KetQua.success(ttcn, "Cập nhật thông tin cá nhân thành công.");
         } catch (Exception e) {
             return KetQua.error("Lỗi cập nhật thông tin cá nhân: " + e.getMessage());
@@ -151,10 +154,16 @@ public class NhanVienBUS {
             return KetQua.error(transitionValidation.getMessage());
         }
         nv.setTrangThai(trangThaiMoi);
-        nvRepo.update(nv);
+        int rows = nvRepo.update(nv);
+        if (rows <= 0) {
+            return KetQua.error("Không thể cập nhật trạng thái nhân viên. Vui lòng thử lại.");
+        }
         if (HRMConstants.TRANG_THAI_NGHI_VIEC.equals(trangThaiMoi)) {
             boNhiemRepo.endAllActiveBoNhiemForNV(maNV, LocalDate.now());
-            taiKhoanRepo.deactivateByMaNV(maNV);
+            int deactivated = taiKhoanRepo.deactivateByMaNV(maNV);
+            if (deactivated <= 0) {
+                System.err.println("Canh bao: Khong the vo hieu hoa tai khoan cho NV " + maNV + " khi nghi viec.");
+            }
         }
         return KetQua.success(nv, "Cập nhật trạng thái nhân viên thành công.");
     }

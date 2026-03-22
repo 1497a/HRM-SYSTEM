@@ -51,12 +51,17 @@ public class AttendancePanel extends JPanel {
     private JComboBox<String> cboThang, cboNam, cboMaNVFilter, cboTrangThaiFilter;
     private JPanel statsPanel;
     private List<ChamCong> dsChamCongTongHop = new ArrayList<>();
+    // Tab 1 -- search
+    private JTextField txtTimKiemCC;
     // Tab 2
     private PurpleTable tableCaLam; private DefaultTableModel modelCaLam;
+    private JTextField txtTimKiemCaLam; private TableRowSorter<DefaultTableModel> sorterCaLam;
     // Tab 3
     private PurpleTable tableDonOT; private DefaultTableModel modelOT;
+    private JTextField txtTimKiemOT; private TableRowSorter<DefaultTableModel> sorterOT;
     // Tab 5
     private PurpleTable tablePC; private DefaultTableModel modelPC;
+    private JTextField txtTimKiemPC; private TableRowSorter<DefaultTableModel> sorterPC;
     // Tab -- Cham cong ca nhan
     private JLabel lblCaNhanStatus;
     private JButton btnCheckInCN, btnCheckOutCN;
@@ -159,7 +164,7 @@ public class AttendancePanel extends JPanel {
         p.add(tb,BorderLayout.NORTH);
         String[]cols={"Mã NV","Họ tên","Ngày","Ca làm","Giờ vào","Giờ ra","Số giờ","OT","Trạng thái"};
         modelCC=mdl(cols); tableChamCong=tbl(modelCC);
-        tableChamCong.getColumnModel().getColumn(8).setCellRenderer(new StatusR());
+        tableChamCong.getColumnModel().getColumn(8).setCellRenderer(new com.hrm.gui.components.StatusCellRenderer());
         for (int i : new int[]{2, 3, 4, 5, 6, 7}) tableChamCong.getColumnModel().getColumn(i).setCellRenderer(CENTER_R);
         p.add(new JScrollPane(tableChamCong),BorderLayout.CENTER);
         statsPanel=new JPanel(new FlowLayout(FlowLayout.LEFT,30,10));
@@ -558,15 +563,22 @@ public class AttendancePanel extends JPanel {
         JButton bT=btn("+ Thêm ca mới",UIColors.SUCCESS_GREEN); bT.addActionListener(e->dlgCaLam(null));
         JButton bS=btn("Sửa",UIColors.PRIMARY_PURPLE); bS.addActionListener(e->{
             int row=tableCaLam.getSelectedRow(); if(row<0){DialogUtil.showInfo(this,"Chọn ca làm việc.");return;}
-            String maCa = (String) modelCaLam.getValueAt(row,0);
+            int mRow=tableCaLam.convertRowIndexToModel(row);
+            String maCa = (String) modelCaLam.getValueAt(mRow,0);
             CaLam ca = svc.getAllCaLam().stream().filter(c -> c.getId().equals(maCa)).findFirst().orElse(null);
             if(ca!=null)dlgCaLam(ca);});
         JButton bX=btn("Xóa",UIColors.DANGER_RED); bX.addActionListener(e->xoaCaLam());
         bp.add(bT); bp.add(bS); bp.add(bX); hdr.add(bp,BorderLayout.EAST); p.add(hdr,BorderLayout.NORTH);
         String[]cols={"Mã ca","Tên ca","Giờ bắt đầu","Giờ kết thúc","Số giờ chuẩn","Cho phép OT","Trạng thái"};
         modelCaLam=mdl(cols); tableCaLam=tbl(modelCaLam);
-        tableCaLam.getColumnModel().getColumn(6).setCellRenderer(new StatusR());
+        tableCaLam.getColumnModel().getColumn(6).setCellRenderer(new com.hrm.gui.components.StatusCellRenderer());
         for (int i : new int[]{2, 3, 4, 5}) tableCaLam.getColumnModel().getColumn(i).setCellRenderer(CENTER_R);
+        sorterCaLam = new TableRowSorter<>(modelCaLam); tableCaLam.setRowSorter(sorterCaLam);
+        txtTimKiemCaLam = UIHelper.createSearchField("Tìm theo mã ca, tên ca...");
+        UIHelper.attachTextSearch(txtTimKiemCaLam, sorterCaLam, 0, 1);
+        JPanel searchCaLam = new JPanel(new FlowLayout(FlowLayout.LEFT,8,2)); searchCaLam.setOpaque(false);
+        searchCaLam.add(new JLabel("Tìm kiếm:")); searchCaLam.add(txtTimKiemCaLam);
+        hdr.add(searchCaLam, BorderLayout.CENTER);
         loadCaLam(); p.add(new JScrollPane(tableCaLam),BorderLayout.CENTER); return p;
     }
 
@@ -614,8 +626,9 @@ public class AttendancePanel extends JPanel {
     private void xoaCaLam() {
         int row=tableCaLam.getSelectedRow();
         if(row<0){DialogUtil.showInfo(this,"Vui lòng chọn ca làm.");return;}
-        String ma=(String)modelCaLam.getValueAt(row,0),ten=(String)modelCaLam.getValueAt(row,1);
-        if(((String)modelCaLam.getValueAt(row,6)).contains("Ngung")){DialogUtil.showInfo(this,"Ca làm đã ngừng.");return;}
+        int mRow=tableCaLam.convertRowIndexToModel(row);
+        String ma=(String)modelCaLam.getValueAt(mRow,0),ten=(String)modelCaLam.getValueAt(mRow,1);
+        if(((String)modelCaLam.getValueAt(mRow,6)).contains("Ngung")){DialogUtil.showInfo(this,"Ca làm đã ngừng.");return;}
         if(DialogUtil.showYesNo(this,"Xác nhận ngừng '"+ten+"'?","Xác nhận")){
             KetQua<?> res = svc.xoaCaLam(ma);
             if (res.isSuccess()) { DialogUtil.showSuccess(this, res.getMessage()); loadCaLam(); }
@@ -635,10 +648,14 @@ public class AttendancePanel extends JPanel {
         JButton bTC=btn("Từ chối",UIColors.DANGER_RED); bTC.addActionListener(e->tuChoiOT());
         JButton bHS=btn("Chỉnh hệ số",UIColors.PRIMARY_PURPLE); bHS.addActionListener(e->chinhHeSo());
         JButton bR=new JButton("Làm mới"); bR.setFocusPainted(false); bR.addActionListener(e->loadOT());
+        txtTimKiemOT = UIHelper.createSearchField("Tìm theo mã NV, lý do...");
+        JPanel searchOT = new JPanel(new FlowLayout(FlowLayout.LEFT,8,2)); searchOT.setOpaque(false);
+        searchOT.add(new JLabel("Tìm kiếm:")); searchOT.add(txtTimKiemOT);
+        hdr.add(searchOT, BorderLayout.CENTER);
         bp.add(bD); bp.add(bTC); bp.add(bHS); bp.add(bR); hdr.add(bp,BorderLayout.EAST); p.add(hdr,BorderLayout.NORTH);
         String[]cols={"Mã DK","Mã NV","Ngày","Số giờ","Hệ số OT","Lý do","Trạng thái","Người duyệt"};
         modelOT=mdl(cols); tableDonOT=tbl(modelOT);
-        tableDonOT.getColumnModel().getColumn(6).setCellRenderer(new StatusR());
+        tableDonOT.getColumnModel().getColumn(6).setCellRenderer(new com.hrm.gui.components.StatusCellRenderer());
         tableDonOT.getColumnModel().getColumn(2).setCellRenderer(CENTER_R);
         tableDonOT.getColumnModel().getColumn(3).setCellRenderer(CENTER_R);
         tableDonOT.getColumnModel().getColumn(4).setCellRenderer(new DefaultTableCellRenderer(){
@@ -647,6 +664,8 @@ public class AttendancePanel extends JPanel {
                 setFont(new Font("Segoe UI",Font.BOLD,13)); String str=v!=null?v.toString():"";
                 setForeground(str.contains("2.0")||str.contains("3.0")?UIColors.DANGER_RED:UIColors.PRIMARY_PURPLE);
                 return this;}});
+        sorterOT = new TableRowSorter<>(modelOT); tableDonOT.setRowSorter(sorterOT);
+        UIHelper.attachTextSearch(txtTimKiemOT, sorterOT, 1, 5);
         loadOT(); p.add(new JScrollPane(tableDonOT),BorderLayout.CENTER);
         JPanel info=new JPanel(new FlowLayout(FlowLayout.LEFT,10,5)); info.setOpaque(false);
         info.setBorder(new EmptyBorder(5,0,0,0));
@@ -680,8 +699,9 @@ public class AttendancePanel extends JPanel {
         int row=tableDonOT.getSelectedRow();
         if(row<0){DialogUtil.showInfo(this,"Chọn đơn."); return;}
         if(!canApproveOT){DialogUtil.showWarn(this,"Bạn không có quyền duyệt đơn OT."); return;}
-        int maDK=(int)modelOT.getValueAt(row,0);
-        String tt=(String)modelOT.getValueAt(row,6);
+        int mRow=tableDonOT.convertRowIndexToModel(row);
+        int maDK=(int)modelOT.getValueAt(mRow,0);
+        String tt=(String)modelOT.getValueAt(mRow,6);
         if (!DangKyLamThem.TrangThai.CHO_DUYET.getDisplayName().equals(tt)) {
             DialogUtil.showInfo(this, "Đơn đã xử lý."); return;
         }
@@ -699,7 +719,8 @@ public class AttendancePanel extends JPanel {
         int row=tableDonOT.getSelectedRow();
         if(row<0){DialogUtil.showInfo(this,"Chọn đơn."); return;}
         if(!canApproveOT){DialogUtil.showWarn(this,"Bạn không có quyền duyệt đơn OT."); return;}
-        int maDK=(int)modelOT.getValueAt(row,0); String tt=(String)modelOT.getValueAt(row,6);
+        int mRow=tableDonOT.convertRowIndexToModel(row);
+        int maDK=(int)modelOT.getValueAt(mRow,0); String tt=(String)modelOT.getValueAt(mRow,6);
         if (!DangKyLamThem.TrangThai.CHO_DUYET.getDisplayName().equals(tt)) {
             DialogUtil.showInfo(this, "Đơn đã xử lý."); return;
         }
@@ -718,7 +739,7 @@ public class AttendancePanel extends JPanel {
         int row=tableDonOT.getSelectedRow();
         if(row<0){DialogUtil.showInfo(this,"Chọn đơn."); return;}
         if(!canApproveOT){DialogUtil.showWarn(this,"Bạn không có quyền chỉnh hệ số OT."); return;}
-        int maDK=(int)modelOT.getValueAt(row,0);
+        int maDK=(int)modelOT.getValueAt(tableDonOT.convertRowIndexToModel(row),0);
         String input=JOptionPane.showInputDialog(this,"Nhập hệ số mới (vd: 1.5):","Chỉnh hệ số",JOptionPane.QUESTION_MESSAGE);
         if(input==null||input.trim().isEmpty())return;
         try {
@@ -740,13 +761,17 @@ public class AttendancePanel extends JPanel {
         JLabel l = new JLabel("Cấu hình phụ cấp & khấu trừ");
         l.setFont(com.hrm.util.UIFonts.HEADER_SUB); l.setForeground(UIColors.TEXT_DARK);
         hdr.add(l, BorderLayout.WEST);
+        txtTimKiemPC = UIHelper.createSearchField("Tìm theo tên khoản, loại...");
+        JPanel searchPC = new JPanel(new FlowLayout(FlowLayout.LEFT,8,2)); searchPC.setOpaque(false);
+        searchPC.add(new JLabel("Tìm kiếm:")); searchPC.add(txtTimKiemPC);
+        hdr.add(searchPC, BorderLayout.CENTER);
         JPanel bp = new JPanel(new FlowLayout(FlowLayout.RIGHT, 10, 0)); bp.setOpaque(false);
         JButton bThem = btn("+ Thêm khoản mới", UIColors.SUCCESS_GREEN); bThem.addActionListener(e -> dlgPhuCap(null));
         JButton bSua  = btn("Sửa", UIColors.PRIMARY_PURPLE);
         bSua.addActionListener(e -> {
             int row = tablePC.getSelectedRow();
             if (row < 0) { DialogUtil.showInfo(this, "Chọn khoản để sửa."); return; }
-            int maPC = (int) modelPC.getValueAt(row, 0);
+            int maPC = (int) modelPC.getValueAt(tablePC.convertRowIndexToModel(row), 0);
             CauHinhPhuCap pc = svc.getCauHinhPCById(maPC);
             if (pc != null) dlgPhuCap(pc);
         });
@@ -770,7 +795,9 @@ public class AttendancePanel extends JPanel {
                 setFont(com.hrm.util.UIFonts.BOLD_NORMAL); return this;
             }
         });
-        tablePC.getColumnModel().getColumn(6).setCellRenderer(new StatusR());
+        tablePC.getColumnModel().getColumn(6).setCellRenderer(new com.hrm.gui.components.StatusCellRenderer());
+        sorterPC = new TableRowSorter<>(modelPC); tablePC.setRowSorter(sorterPC);
+        UIHelper.attachTextSearch(txtTimKiemPC, sorterPC, 1, 2);
         loadPhuCap(); p.add(new JScrollPane(tablePC), BorderLayout.CENTER);
         JPanel info = new JPanel(new FlowLayout(FlowLayout.LEFT, 15, 5)); info.setOpaque(false);
         info.setBorder(new EmptyBorder(5, 0, 0, 0));
@@ -848,9 +875,10 @@ public class AttendancePanel extends JPanel {
     private void xoaPhuCap() {
         int row = tablePC.getSelectedRow();
         if (row < 0) { DialogUtil.showInfo(this, "Chọn khoản để xóa."); return; }
-        int maPC = (int) modelPC.getValueAt(row, 0);
-        String ten = (String) modelPC.getValueAt(row, 2);
-        String tt  = (String) modelPC.getValueAt(row, 6);
+        int mRow = tablePC.convertRowIndexToModel(row);
+        int maPC = (int) modelPC.getValueAt(mRow, 0);
+        String ten = (String) modelPC.getValueAt(mRow, 2);
+        String tt  = (String) modelPC.getValueAt(mRow, 6);
         if (tt.contains("Ngung")) { DialogUtil.showInfo(this, "Khoản này đã ngừng."); return; }
         if (DialogUtil.showYesNoWarning(this, "Ngừng khoản '" + ten + "'?\n(Sẽ không áp dụng khi tính lương)", "Xác nhận")) {
             KetQua<Void> res = svc.xoaCauHinhPC(maPC);
@@ -950,7 +978,7 @@ public class AttendancePanel extends JPanel {
         histPanelCN.add(histToolbar, BorderLayout.NORTH);
         String[] colsLS = {"Ngày", "Ca làm", "Giờ vào", "Giờ ra", "Số giờ", "OT", "Trạng thái"};
         modelLichSuCaNhan = mdl(colsLS); tableLichSuCaNhan = tbl(modelLichSuCaNhan);
-        tableLichSuCaNhan.getColumnModel().getColumn(6).setCellRenderer(new StatusR());
+        tableLichSuCaNhan.getColumnModel().getColumn(6).setCellRenderer(new com.hrm.gui.components.StatusCellRenderer());
         for (int i : new int[]{0, 1, 2, 3, 4}) tableLichSuCaNhan.getColumnModel().getColumn(i).setCellRenderer(CENTER_R);
         tableLichSuCaNhan.getColumnModel().getColumn(5).setCellRenderer(
             new DefaultTableCellRenderer() {
@@ -1131,7 +1159,7 @@ public class AttendancePanel extends JPanel {
         p.add(tb, BorderLayout.NORTH);
         String[] cols = {"Mã NV", "Họ tên", "Ngày", "Ca làm", "Giờ vào", "Giờ ra", "Số giờ", "OT", "Trạng thái"};
         modelCC = mdl(cols); tableChamCong = tbl(modelCC);
-        tableChamCong.getColumnModel().getColumn(8).setCellRenderer(new StatusR());
+        tableChamCong.getColumnModel().getColumn(8).setCellRenderer(new com.hrm.gui.components.StatusCellRenderer());
         for (int i : new int[]{2, 3, 4, 5, 6, 7}) tableChamCong.getColumnModel().getColumn(i).setCellRenderer(CENTER_R);
         p.add(new JScrollPane(tableChamCong), BorderLayout.CENTER);
         statsPanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 30, 10));
@@ -1199,7 +1227,7 @@ public class AttendancePanel extends JPanel {
         // Bang don OT
         String[] cols = {"Mã đơn", "Ngày", "Giờ OT", "Số giờ", "Lý do", "Trạng thái"};
         modelDonOTCaNhan = mdl(cols); tableDonOTCaNhan = tbl(modelDonOTCaNhan);
-        tableDonOTCaNhan.getColumnModel().getColumn(5).setCellRenderer(new StatusR());
+        tableDonOTCaNhan.getColumnModel().getColumn(5).setCellRenderer(new com.hrm.gui.components.StatusCellRenderer());
         for (int i : new int[]{1, 2, 3}) tableDonOTCaNhan.getColumnModel().getColumn(i).setCellRenderer(CENTER_R);
         JButton btnHuyDon = btn("Hủy đơn", UIColors.DANGER_RED);
         JButton btnLamMoi = new JButton("Làm mới"); btnLamMoi.setFocusPainted(false);
@@ -1229,7 +1257,10 @@ public class AttendancePanel extends JPanel {
             int row = tableDonOTCaNhan.getSelectedRow();
             if (row < 0) { DialogUtil.showInfo(this, "Chọn đơn cần hủy."); return; }
             String tt = (String) modelDonOTCaNhan.getValueAt(row, 5);
-            if (!tt.contains("Cho")) { DialogUtil.showInfo(this, "Chỉ hủy đơn chờ duyệt."); return; }
+            if (!DangKyLamThem.TrangThai.CHO_DUYET.getDisplayName().equals(tt)) {
+                DialogUtil.showInfo(this, "Chỉ hủy đơn chờ duyệt.");
+                return;
+            }
             int maDK = (int) modelDonOTCaNhan.getValueAt(row, 0);
             KetQua<Void> res = svc.xoaDonLamThem(maDK, maNVCaNhan);
             if (res.isSuccess()) DialogUtil.showSuccess(this, res.getMessage()); else DialogUtil.showError(this, res.getMessage()); loadDonOTCaNhan();
@@ -1264,6 +1295,12 @@ public class AttendancePanel extends JPanel {
     //  HELPERS
     // ===============================================
     private void initTongHopFilters(JPanel toolbar) {
+        txtTimKiemCC = UIHelper.createSearchField("Tìm theo mã NV, họ tên...");
+        txtTimKiemCC.addKeyListener(new java.awt.event.KeyAdapter() {
+            @Override public void keyReleased(java.awt.event.KeyEvent e) { applyCCRowFilter(); }
+        });
+        toolbar.add(new JLabel("Tìm kiếm:"));
+        toolbar.add(txtTimKiemCC);
         toolbar.add(new JLabel("Mã NV:"));
         cboMaNVFilter = new JComboBox<>();
         cboMaNVFilter.addActionListener(e -> applyCCRowFilter());
@@ -1312,9 +1349,21 @@ public class AttendancePanel extends JPanel {
             sorter = new TableRowSorter<>(modelCC);
             tableChamCong.setRowSorter(sorter);
         }
+        final String keyword = UIHelper.normalizeSearch(txtTimKiemCC != null ? txtTimKiemCC.getText() : "");
         String maNV = cboMaNVFilter != null ? (String) cboMaNVFilter.getSelectedItem() : null;
         String trangThai = cboTrangThaiFilter != null ? (String) cboTrangThaiFilter.getSelectedItem() : null;
         List<RowFilter<Object, Object>> filters = new ArrayList<>();
+        if (!keyword.isEmpty()) {
+            filters.add(new RowFilter<>() {
+                @Override public boolean include(Entry<? extends Object, ? extends Object> entry) {
+                    for (int col : new int[]{0, 1}) {
+                        Object val = entry.getValue(col);
+                        if (val != null && UIHelper.normalizeSearch(val.toString()).contains(keyword)) return true;
+                    }
+                    return false;
+                }
+            });
+        }
         if (maNV != null && !"Tất cả".equals(maNV)) {
             filters.add(RowFilter.regexFilter("^" + java.util.regex.Pattern.quote(maNV) + "$", 0));
         }
@@ -1404,18 +1453,5 @@ public class AttendancePanel extends JPanel {
             super.getTableCellRendererComponent(t, v, s, f, r, c); setForeground(com.hrm.util.UIColors.TEXT_DARK); return this;
         }
     };
-    private static class StatusR extends DefaultTableCellRenderer {
-        @Override public Component getTableCellRendererComponent(JTable t, Object v, boolean s, boolean f, int r, int c) {
-            super.getTableCellRendererComponent(t, v, s, f, r, c);
-            String str = v != null ? v.toString() : "";
-            if (str.contains("muộn") || str.contains("sớm") || str.contains("chối")) setForeground(UIColors.DANGER_RED);
-            else if (str.contains("Chờ") || str.contains("Chưa")) setForeground(new Color(200, 150, 0));
-            else if (str.contains("Đúng") || str.contains("duyệt") || str.contains("Hoạt") || str.contains("tính"))
-                setForeground(UIColors.SUCCESS_GREEN);
-            else if (str.contains("Vắng") || str.contains("Ngừng")) setForeground(Color.GRAY);
-            else setForeground(UIColors.TEXT_DARK);
-            setHorizontalAlignment(CENTER); return this;
-        }
-    }
 
 }

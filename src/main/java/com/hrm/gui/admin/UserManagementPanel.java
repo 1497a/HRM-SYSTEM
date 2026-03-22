@@ -13,7 +13,6 @@ import com.hrm.util.UIHelper;
 
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
-import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.table.DefaultTableModel;
 import javax.swing.table.TableRowSorter;
 import java.awt.*;
@@ -71,25 +70,7 @@ public class UserManagementPanel extends JPanel {
         table.getColumnModel().getColumn(4).setPreferredWidth(150);
         table.getColumnModel().getColumn(5).setPreferredWidth(80);
         // Status cell renderer
-        table.getColumnModel().getColumn(5).setCellRenderer(new DefaultTableCellRenderer() {
-            @Override
-            public Component getTableCellRendererComponent(JTable table, Object value,
-                    boolean isSelected, boolean hasFocus, int row, int column) {
-                Component c = super.getTableCellRendererComponent(table, value, isSelected, hasFocus, row, column);
-                if (!isSelected) {
-                    String status = (String) value;
-                    if ("Hoạt động".equals(status)) {
-                        c.setBackground(UIColors.BG_SUCCESS);
-                    } else if ("Bị khóa".equals(status)) {
-                        c.setBackground(UIColors.BG_DANGER);
-                    } else {
-                        c.setBackground(UIColors.BG_WARNING);
-                    }
-                }
-                setHorizontalAlignment(SwingConstants.CENTER);
-                return c;
-            }
-        });
+        table.getColumnModel().getColumn(5).setCellRenderer(new com.hrm.gui.components.StatusCellRenderer());
         // Sorter – sort by name (col 2) using Vietnamese locale
         sorter = new TableRowSorter<>(tableModel);
         table.setRowSorter(sorter);

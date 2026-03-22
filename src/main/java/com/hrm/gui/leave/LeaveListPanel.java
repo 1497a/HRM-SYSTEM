@@ -14,7 +14,7 @@ import com.hrm.util.UIHelper;
 
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
-import javax.swing.table.DefaultTableCellRenderer;
+
 import javax.swing.table.DefaultTableModel;
 import javax.swing.table.TableRowSorter;
 
@@ -39,6 +39,7 @@ public class LeaveListPanel extends JPanel {
     private JComboBox<Object> cboNhanVien;
     private JButton btnCreate;
     private JButton btnApprove;
+    private JTextField txtTimKiem;
     private JPanel balancePanel;
     private static final DateTimeFormatter DATE_FORMAT = DateTimeFormatter.ofPattern("dd/MM/yyyy");
     public LeaveListPanel() {
@@ -111,26 +112,7 @@ public class LeaveListPanel extends JPanel {
         table.getColumnModel().getColumn(7).setPreferredWidth(120);
         table.getColumnModel().getColumn(8).setPreferredWidth(140);
         // Status cell renderer
-        table.getColumnModel().getColumn(7).setCellRenderer(new DefaultTableCellRenderer() {
-            @Override
-            public Component getTableCellRendererComponent(JTable table, Object value,
-                    boolean isSelected, boolean hasFocus, int row, int column) {
-                Component c = super.getTableCellRendererComponent(table, value, isSelected, hasFocus, row, column);
-                if (!isSelected) {
-                    String status = (String) value;
-                    if (com.hrm.model.DonXinNghiPhep.TrangThai.DA_DUYET.getTenHienThi().equals(status)) {
-                        c.setBackground(UIColors.BG_SUCCESS);
-                    } else if (com.hrm.model.DonXinNghiPhep.TrangThai.TU_CHOI.getTenHienThi().equals(status)) {
-                        c.setBackground(UIColors.BG_DANGER);
-                    } else if (com.hrm.model.DonXinNghiPhep.TrangThai.CHO_DUYET.getTenHienThi().equals(status)) {
-                        c.setBackground(UIColors.BG_WARNING);
-                    } else {
-                        c.setBackground(Color.WHITE);
-                    }
-                }
-                return c;
-            }
-        });
+        table.getColumnModel().getColumn(7).setCellRenderer(new com.hrm.gui.components.StatusCellRenderer());
         // Sorter – sort by employee name (col 1) using Vietnamese locale
         sorter = new TableRowSorter<>(tableModel);
         table.setRowSorter(sorter);
@@ -145,6 +127,10 @@ public class LeaveListPanel extends JPanel {
         sorter.setComparator(1, UIHelper.vietnameseNameComparator());
         // Mặc định sort theo ID tăng dần
         sorter.setSortKeys(List.of(new RowSorter.SortKey(0, SortOrder.ASCENDING)));
+        txtTimKiem = UIHelper.createSearchField("Tìm theo tên nhân viên, lý do nghỉ...");
+        txtTimKiem.addKeyListener(new java.awt.event.KeyAdapter() {
+            @Override public void keyReleased(java.awt.event.KeyEvent e) { applyFilter(); }
+        });
         // Balance Panel
         balancePanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 20, 5));
         balancePanel.setBorder(BorderFactory.createTitledBorder("Số ngày phép còn lại"));
@@ -164,6 +150,8 @@ public class LeaveListPanel extends JPanel {
             filterPanel.add(new JLabel("Nhân viên:"));
             filterPanel.add(cboNhanVien);
         }
+        filterPanel.add(new JLabel("Tìm kiếm:"));
+        filterPanel.add(txtTimKiem);
         filterPanel.add(new JLabel("Trạng thái:"));
         filterPanel.add(cboStatus);
         topPanel.add(filterPanel, BorderLayout.CENTER);
@@ -216,8 +204,28 @@ public class LeaveListPanel extends JPanel {
     }
 
     private void applyFilter() {
+        final String keyword = UIHelper.normalizeSearch(txtTimKiem != null ? txtTimKiem.getText() : "");
         String s = (String) cboStatus.getSelectedItem();
-        sorter.setRowFilter("Tất cả".equals(s) ? null : RowFilter.regexFilter("^" + s + "$", 7));
+        boolean hasStatus = s != null && !"Tất cả".equals(s);
+        if (!hasStatus && keyword.isEmpty()) {
+            sorter.setRowFilter(null);
+            return;
+        }
+        java.util.List<RowFilter<DefaultTableModel, Object>> filters = new java.util.ArrayList<>();
+        if (!keyword.isEmpty()) {
+            filters.add(new RowFilter<DefaultTableModel, Object>() {
+                @Override
+                public boolean include(Entry<? extends DefaultTableModel, ? extends Object> entry) {
+                    String tenNV = UIHelper.normalizeSearch(entry.getValue(1) != null ? entry.getValue(1).toString() : "");
+                    String lyDo  = UIHelper.normalizeSearch(entry.getValue(6) != null ? entry.getValue(6).toString() : "");
+                    return tenNV.contains(keyword) || lyDo.contains(keyword);
+                }
+            });
+        }
+        if (hasStatus) {
+            filters.add(RowFilter.regexFilter("^" + java.util.regex.Pattern.quote(s) + "$", 7));
+        }
+        sorter.setRowFilter(filters.size() == 1 ? filters.get(0) : RowFilter.andFilter(filters));
     }
 
     private void updateBalanceDisplay(String empId) {

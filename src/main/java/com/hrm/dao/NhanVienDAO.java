@@ -287,7 +287,7 @@ public class NhanVienDAO {
             ps.setString(4, nv.getMaNhanVien());
             return ps.executeUpdate();
         } catch (SQLException e) {
-            throw new RuntimeException("Loi cap nhat nhan vien " + nv.getMaNhanVien() + ": " + e.getMessage(), e);
+            throw new RuntimeException("Lỗi cập nhật nhân viên " + nv.getMaNhanVien() + ": " + e.getMessage(), e);
         }
     }
 

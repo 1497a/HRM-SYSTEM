@@ -66,7 +66,10 @@ public class ChucVuBUS {
                 HRMConstants.TRANG_THAI_HOAT_DONG
         );
         position.setMaVaiTro(ValidationUtils.isBlank(maVaiTro) ? null : maVaiTro.trim());
-        positionRepo.save(position);
+        int rows = positionRepo.save(position);
+        if (rows <= 0) {
+            return KetQua.error("Không thể thêm chức vụ. Vui lòng thử lại.");
+        }
         return KetQua.success(null, "Thêm chức vụ thành công.");
     }
 
@@ -91,7 +94,10 @@ public class ChucVuBUS {
         position.setPhuCapChucVu(phuCapMoi);
         position.setMoTa(moTaMoi);
         position.setMaVaiTro(ValidationUtils.isBlank(maVaiTroMoi) ? null : maVaiTroMoi.trim());
-        positionRepo.update(position);
+        int rows = positionRepo.update(position);
+        if (rows <= 0) {
+            return KetQua.error("Không thể cập nhật chức vụ. Vui lòng thử lại.");
+        }
         return KetQua.success(null, "Cập nhật chức vụ thành công.");
     }
 
@@ -104,7 +110,10 @@ public class ChucVuBUS {
                 && !currentUser.coQuyen(PermissionCodes.ROLE_UPDATE)) {
             return KetQua.error("Bạn không có quyền cấu hình mapping vai trò.");
         }
-        positionRepo.updateMaVaiTro(maChucVu, ValidationUtils.isBlank(maVaiTro) ? null : maVaiTro.trim());
+        int rows = positionRepo.updateMaVaiTro(maChucVu, ValidationUtils.isBlank(maVaiTro) ? null : maVaiTro.trim());
+        if (rows <= 0) {
+            return KetQua.error("Không thể cập nhật mapping vai trò. Vui lòng thử lại.");
+        }
         return KetQua.success(null, "Cập nhật mapping vai trò thành công.");
     }
 
@@ -121,7 +130,10 @@ public class ChucVuBUS {
             return KetQua.error("Không thể ngừng hoạt động chức vụ vì vẫn còn nhân viên đang giữ chức vụ này.");
         }
         position.setTrangThai(HRMConstants.TRANG_THAI_NGUNG_HOAT_DONG);
-        positionRepo.update(position);
+        int rows = positionRepo.update(position);
+        if (rows <= 0) {
+            return KetQua.error("Không thể ngừng hoạt động chức vụ. Vui lòng thử lại.");
+        }
         return KetQua.success(null, "Đã ngừng hoạt động chức vụ.");
     }
 
@@ -135,7 +147,10 @@ public class ChucVuBUS {
             return KetQua.error("Không tìm thấy chức vụ.");
         }
         position.setTrangThai(HRMConstants.TRANG_THAI_HOAT_DONG);
-        positionRepo.update(position);
+        int rows = positionRepo.update(position);
+        if (rows <= 0) {
+            return KetQua.error("Không thể kích hoạt chức vụ. Vui lòng thử lại.");
+        }
         return KetQua.success(null, "Đã kích hoạt lại chức vụ.");
     }
 

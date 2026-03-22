@@ -1,12 +1,18 @@
 package com.hrm.util;
 
 import javax.swing.*;
+import javax.swing.table.DefaultTableModel;
 import javax.swing.table.TableRowSorter;
 import javax.swing.RowFilter;
 import java.awt.*;
 import java.awt.Font;
+import java.awt.event.KeyAdapter;
+import java.awt.event.KeyEvent;
 import java.text.Collator;
+import java.text.Normalizer;
+import java.util.ArrayList;
 import java.util.Comparator;
+import java.util.List;
 import java.util.Locale;
 import java.util.regex.Pattern;
 
@@ -155,5 +161,125 @@ public class UIHelper {
                     "(?i)" + Pattern.quote(selected), columnIndex));
             }
         });
+    }
+
+    // ── Search helpers ─────────────────────────────────────────────────────────
+
+    /**
+     * Strips Vietnamese diacritics and lowercases the text for accent-insensitive search.
+     * "Nguyễn" and "nguyen" both normalize to "nguyen".
+     */
+    public static String normalizeSearch(String value) {
+        if (value == null) return "";
+        String normalized = Normalizer.normalize(value, Normalizer.Form.NFD)
+                .replaceAll("\\p{M}+", "")
+                .replace("đ", "d")
+                .replace("Đ", "D");
+        return normalized.trim().toLowerCase();
+    }
+
+    /**
+     * Creates a JTextField(18) with a placeholder hint text.
+     */
+    public static JTextField createSearchField(String placeholder) {
+        JTextField field = new JTextField(18);
+        field.putClientProperty("JTextField.placeholderText", placeholder);
+        return field;
+    }
+
+    /**
+     * Attaches a real-time text search to a TableRowSorter.
+     * On each key release the keyword and each cell value are normalized
+     * (diacritics stripped, lowercased) before comparison so both accented
+     * and unaccented input work.
+     *
+     * @param field      the search JTextField
+     * @param sorter     the TableRowSorter to filter
+     * @param searchCols column indices to search across (OR logic)
+     */
+    public static void attachTextSearch(JTextField field,
+                                        TableRowSorter<DefaultTableModel> sorter,
+                                        int... searchCols) {
+        field.addKeyListener(new KeyAdapter() {
+            @Override
+            public void keyReleased(KeyEvent e) {
+                final String keyword = normalizeSearch(field.getText());
+                if (keyword.isEmpty()) {
+                    sorter.setRowFilter(null);
+                    return;
+                }
+                sorter.setRowFilter(new RowFilter<DefaultTableModel, Integer>() {
+                    @Override
+                    public boolean include(Entry<? extends DefaultTableModel,
+                                           ? extends Integer> entry) {
+                        for (int col : searchCols) {
+                            Object val = entry.getValue(col);
+                            if (val != null && normalizeSearch(val.toString()).contains(keyword)) {
+                                return true;
+                            }
+                        }
+                        return false;
+                    }
+                });
+            }
+        });
+    }
+
+    /**
+     * Attaches combined text-search + status-combo filter to a TableRowSorter.
+     * Replaces {@link #attachStatusFilter}; handles the combo ActionListener internally.
+     * Both filters are combined with AND logic.
+     *
+     * @param searchField search JTextField
+     * @param statusCombo status JComboBox (first item = "Tất cả" clears filter)
+     * @param sorter      the TableRowSorter to filter
+     * @param statusCol   column index for exact status match
+     * @param searchCols  column indices to search with normalize (OR across columns)
+     */
+    public static void attachSearchAndStatusFilter(JTextField searchField,
+                                                   JComboBox<String> statusCombo,
+                                                   TableRowSorter<DefaultTableModel> sorter,
+                                                   int statusCol,
+                                                   int[] searchCols) {
+        Runnable applyFilter = () -> {
+            final String keyword = normalizeSearch(searchField.getText());
+            String status = (String) statusCombo.getSelectedItem();
+            boolean hasKeyword = !keyword.isEmpty();
+            boolean hasStatus = status != null && !HRMConstants.ALL.equals(status);
+
+            if (!hasKeyword && !hasStatus) {
+                sorter.setRowFilter(null);
+                return;
+            }
+            List<RowFilter<DefaultTableModel, Object>> filters = new ArrayList<>();
+            if (hasKeyword) {
+                filters.add(new RowFilter<DefaultTableModel, Object>() {
+                    @Override
+                    public boolean include(Entry<? extends DefaultTableModel,
+                                           ? extends Object> entry) {
+                        for (int col : searchCols) {
+                            Object val = entry.getValue(col);
+                            if (val != null && normalizeSearch(val.toString()).contains(keyword)) {
+                                return true;
+                            }
+                        }
+                        return false;
+                    }
+                });
+            }
+            if (hasStatus) {
+                filters.add(RowFilter.regexFilter(
+                        "(?i)" + Pattern.quote(status), statusCol));
+            }
+            sorter.setRowFilter(filters.size() == 1
+                    ? filters.get(0)
+                    : RowFilter.andFilter(filters));
+        };
+
+        searchField.addKeyListener(new KeyAdapter() {
+            @Override
+            public void keyReleased(KeyEvent e) { applyFilter.run(); }
+        });
+        statusCombo.addActionListener(e -> applyFilter.run());
     }
 }

@@ -61,7 +61,10 @@ public class LuongBUS {
                 bangLuong.setNgayBatDau(ngayBD);
                 bangLuong.setNgayKetThuc(ngayKT);
                 bangLuong.setTrangThai(BangLuong.TrangThai.DA_TINH);
-                bangLuongRepo.insertBangLuong(bangLuong);
+                int id = bangLuongRepo.insertBangLuong(bangLuong);
+                if (id <= 0) {
+                    return KetQua.error("Không thể tạo bảng lương. Vui lòng thử lại.");
+                }
             }
             for (NhanVien nv : nvRepo.findDangLamViec()) {
                 tinhLuongChoNhanVien(bangLuong.getMaBL(), thang, nam, nv, false);
@@ -80,7 +83,10 @@ public class LuongBUS {
                     "Chỉ có thể duyệt bảng lương ở trạng thái 'Đã tính'.");
             if (!validation.isSuccess()) return validation;
             int userId = getCurrentUserId();
-            bangLuongRepo.approveBangLuong(maBangLuong, userId);
+            int rows = bangLuongRepo.approveBangLuong(maBangLuong, userId);
+            if (rows <= 0) {
+                return KetQua.error("Không thể duyệt bảng lương. Vui lòng thử lại.");
+            }
             return KetQua.success(null, "Đã duyệt bảng lương #" + maBangLuong);
         } catch (Exception e) {
             return KetQua.error("Lỗi khi duyệt bảng lương: " + e.getMessage());
@@ -94,7 +100,10 @@ public class LuongBUS {
                     bl, maBangLuong, BangLuong.TrangThai.DA_DUYET, "Cần duyệt bảng lương trước khi khóa.");
             if (!validation.isSuccess()) return validation;
             int userId = getCurrentUserId();
-            bangLuongRepo.lockBangLuong(maBangLuong, userId);
+            int rows = bangLuongRepo.lockBangLuong(maBangLuong, userId);
+            if (rows <= 0) {
+                return KetQua.error("Không thể khóa bảng lương. Vui lòng thử lại.");
+            }
             return KetQua.success(null, "Đã khóa bảng lương #" + maBangLuong);
         } catch (Exception e) {
             return KetQua.error("Lỗi khi khóa bảng lương: " + e.getMessage());
@@ -108,7 +117,7 @@ public class LuongBUS {
                     bl, maBangLuong, BangLuong.TrangThai.DA_TINH,
                     "Chỉ được tính lại khi bảng lương đang ở trạng thái 'Đã tính'.");
             if (!validation.isSuccess()) return validation;
-            bangLuongRepo.deleteChiTietByBangLuong(maBangLuong);
+            bangLuongRepo.deleteChiTietByBangLuong(maBangLuong); // returns affected rows; 0 is OK if no details yet
             tinhLaiChiTietChoTatCaNhanVien(maBangLuong, bl);
             return KetQua.success(null, "Đã tính lại toàn bộ bảng lương #" + maBangLuong);
         } catch (Exception e) {
@@ -130,7 +139,7 @@ public class LuongBUS {
             if (target == null) {
                 return KetQua.error("Không tìm thấy nhân viên đang làm việc: " + maNV);
             }
-            bangLuongRepo.deleteChiTietByBangLuongAndNV(maBangLuong, maNV);
+            bangLuongRepo.deleteChiTietByBangLuongAndNV(maBangLuong, maNV); // returns affected rows; 0 is OK if no existing detail
             tinhLuongChoNhanVien(maBangLuong, bl.getThang(), bl.getNam(), target, true);
             return KetQua.success(null, "Đã tính lại lương cho nhân viên " + maNV);
         } catch (Exception e) {

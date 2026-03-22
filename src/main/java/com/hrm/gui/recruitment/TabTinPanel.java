@@ -33,6 +33,7 @@ class TabTinPanel extends JPanel {
     private DefaultTableModel model;
     private JButton btnDangTin;
     private JButton btnDongTin;
+    private JTextField txtTimKiem;
     TabTinPanel(TuyenDungBUS service) {
         this.service = service;
         setLayout(new BorderLayout(8, 8));
@@ -48,9 +49,12 @@ class TabTinPanel extends JPanel {
         btnLamMoi.addActionListener(e -> load());
         JComboBox<String> cboTrangThai = new JComboBox<>(
                 new String[]{"Tất cả", "Đang tuyển", "Tạm dừng", "Đã đóng"});
+        txtTimKiem = UIHelper.createSearchField("Tìm theo tiêu đề, phòng ban...");
         toolbar.add(btnDangTin);
         toolbar.add(btnDongTin);
         toolbar.add(btnLamMoi);
+        toolbar.add(new JLabel("Tìm kiếm:"));
+        toolbar.add(txtTimKiem);
         toolbar.add(new JLabel("Trạng thái:"));
         toolbar.add(cboTrangThai);
         String[] cols = {"Mã tin", "Tiêu đề", "Phòng ban", "Chức vụ", "Hạn nộp", "Cần tuyển", "Số đơn", "Trạng thái"};
@@ -66,7 +70,7 @@ class TabTinPanel extends JPanel {
         };
         tbl = TabUtils.buildTable(model);
         TabUtils.applyColWidths(tbl, new int[]{60, 220, 160, 140, 110, 80, 70, 110});
-        tbl.getColumnModel().getColumn(7).setCellRenderer(new RecruitmentStatusRenderer());
+        tbl.getColumnModel().getColumn(7).setCellRenderer(new com.hrm.gui.components.StatusCellRenderer());
         TableRowSorter<DefaultTableModel> sorter = new TableRowSorter<>(model);
         tbl.setRowSorter(sorter);
         sorter.setComparator(0, Comparator.comparingInt(a -> (Integer) a));
@@ -74,7 +78,7 @@ class TabTinPanel extends JPanel {
         sorter.setComparator(6, Comparator.comparingInt(a -> (Integer) a));
         sorter.setComparator(4, TabUtils.dateComparator());
         sorter.setSortKeys(List.of(new SortKey(0, ASCENDING)));
-        UIHelper.attachStatusFilter(sorter, cboTrangThai, 7);
+        UIHelper.attachSearchAndStatusFilter(txtTimKiem, cboTrangThai, sorter, 7, new int[]{1, 2, 3});
         JScrollPane scroll = new JScrollPane(tbl);
         scroll.setBorder(BorderFactory.createLineBorder(Color.LIGHT_GRAY));
         JLabel lblHint = new JLabel("Quản lý tin tuyển dụng. Nhấp đúp để xem chi tiết.");

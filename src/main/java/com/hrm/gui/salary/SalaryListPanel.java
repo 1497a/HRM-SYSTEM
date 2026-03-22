@@ -16,7 +16,6 @@ import com.hrm.util.UIHelper;
 
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
-import javax.swing.border.TitledBorder;
 import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.table.DefaultTableModel;
 
@@ -47,9 +46,16 @@ public class SalaryListPanel extends JPanel {
     private DefaultTableModel modelChiTiet;
     private JButton btnTinhLaiNhanVien;
     private JTabbedPane tabbedPane;
+    private JLabel lblBangLuongInfo;
+    private JLabel lblChiTietTitle;
+    private JButton btnXemChiTiet;
     private List<BangLuong> danhSachBL = new ArrayList<>();
     private List<ChiTietLuong> currentChiTietList = new ArrayList<>();
     private int selectedMaBL = -1;
+    private JTextField txtTimKiemBL;
+    private JTextField txtTimKiemCD;
+    private javax.swing.table.TableRowSorter<DefaultTableModel> sorterBL;
+    private javax.swing.table.TableRowSorter<DefaultTableModel> sorterCD;
     private static final DateTimeFormatter DATE_TIME_FORMAT = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm");
     private static final NumberFormat MONEY_FORMAT = NumberFormat.getNumberInstance(new Locale("vi", "VN"));
     public SalaryListPanel() {
@@ -96,59 +102,102 @@ public class SalaryListPanel extends JPanel {
         JPanel panel = new JPanel(new BorderLayout(8, 8));
         panel.setBackground(Color.WHITE);
         panel.setBorder(new EmptyBorder(12, 12, 12, 12));
+
+        // Hint label
+        JLabel lblHint = new JLabel("Chọn kỳ bảng lương. Double-click hoặc nhấn 'Xem chi tiết nhân viên' để chuyển sang tab chi tiết.");
+        lblHint.setFont(new Font("Segoe UI", Font.ITALIC, 12));
+        lblHint.setForeground(UIColors.TEXT_DARK);
+
+        // Toolbar
         JPanel toolbar = new JPanel(new FlowLayout(FlowLayout.LEFT, 8, 4));
         toolbar.setOpaque(false);
         btnTinhLuong = UIHelper.createSuccessButton("Tính lương tháng mới");
         btnTinhLaiBangLuong = UIHelper.createPrimaryButton("Tính lại kỳ lương");
         btnDuyetBangLuong = UIHelper.createWarningButton("Duyệt bảng lương");
         btnKhoaBangLuong = UIHelper.createDangerButton("Khóa bảng lương");
+        btnXemChiTiet = UIHelper.createDefaultButton("Xem chi tiết nhân viên →");
+        JButton btnLamMoi1 = UIHelper.createDefaultButton("Làm mới");
         btnTinhLuong.addActionListener(e -> tinhLuongThangMoi());
         btnTinhLaiBangLuong.addActionListener(e -> tinhLaiBangLuong());
         btnDuyetBangLuong.addActionListener(e -> duyetBangLuong());
         btnKhoaBangLuong.addActionListener(e -> khoaBangLuong());
+        btnXemChiTiet.addActionListener(e -> tabbedPane.setSelectedIndex(1));
+        btnLamMoi1.addActionListener(e -> loadBangLuong());
+        txtTimKiemBL = UIHelper.createSearchField("Tìm theo kỳ lương, tên bảng lương...");
+        toolbar.add(new JLabel("Tìm kiếm:"));
+        toolbar.add(txtTimKiemBL);
         toolbar.add(btnTinhLuong);
         toolbar.add(btnTinhLaiBangLuong);
         toolbar.add(btnDuyetBangLuong);
         toolbar.add(btnKhoaBangLuong);
-        String[] cols = {"Mã BL", "Tháng", "Năm", "Tên bảng lương", "Ngày tạo", "Trạng thái"};
-        modelBangLuong = new DefaultTableModel(cols, 0) {
-            @Override
-            public boolean isCellEditable(int row, int col) {
-                return false;
-            }
+        toolbar.add(btnXemChiTiet);
+        toolbar.add(btnLamMoi1);
+
+        // North wrapper: hint + toolbar
+        JPanel northWrapper = new JPanel(new BorderLayout(0, 4));
+        northWrapper.setOpaque(false);
+        northWrapper.add(lblHint, BorderLayout.NORTH);
+        northWrapper.add(toolbar, BorderLayout.CENTER);
+
+        // Table — 6 cột
+        modelBangLuong = new DefaultTableModel(
+                new Object[]{"Mã BL", "Kỳ lương", "Tên bảng lương", "Ngày tạo", "Người tạo", "Trạng thái"}, 0) {
+            @Override public boolean isCellEditable(int row, int col) { return false; }
         };
-        modelBangLuong.setColumnIdentifiers(new Object[]{"Mã BL", "Tháng", "Năm", "Tên bảng lương", "Ngày tạo",
-                "Người tạo", "Ngày duyệt", "Người duyệt", "Ngày khóa", "Người khóa", "Trạng thái"});
         tblBangLuong = new JTable(modelBangLuong);
         tblBangLuong.setRowHeight(28);
         tblBangLuong.setFillsViewportHeight(true);
-        tblBangLuong.setFont(com.hrm.util.UIFonts.TEXT_NORMAL);
-        tblBangLuong.getTableHeader().setFont(com.hrm.util.UIFonts.BOLD_NORMAL);
+        tblBangLuong.setFont(UIFonts.TEXT_NORMAL);
+        tblBangLuong.getTableHeader().setFont(UIFonts.BOLD_NORMAL);
         tblBangLuong.getTableHeader().setBackground(UIColors.PRIMARY_PURPLE);
         tblBangLuong.getTableHeader().setForeground(UIColors.TEXT_DARK);
         tblBangLuong.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
         tblBangLuong.setSelectionBackground(UIColors.LIGHT_PURPLE);
         tblBangLuong.setSelectionForeground(UIColors.TEXT_DARK);
-        int[] widths = {60, 70, 70, 230, 145, 150, 145, 150, 145, 150, 120};
+        int[] widths = {60, 90, 280, 145, 160, 120};
         for (int i = 0; i < widths.length; i++) {
             tblBangLuong.getColumnModel().getColumn(i).setPreferredWidth(widths[i]);
         }
-        tblBangLuong.getColumnModel().getColumn(10).setCellRenderer(new SalaryStatusRenderer());
+        tblBangLuong.getColumnModel().getColumn(5).setCellRenderer(new com.hrm.gui.components.StatusCellRenderer());
+        sorterBL = new javax.swing.table.TableRowSorter<>(modelBangLuong);
+        tblBangLuong.setRowSorter(sorterBL);
+        UIHelper.attachTextSearch(txtTimKiemBL, sorterBL, 1, 2);
         tblBangLuong.getSelectionModel().addListSelectionListener(e -> {
             if (!e.getValueIsAdjusting()) {
-                int row = tblBangLuong.getSelectedRow();
+                int viewRow = tblBangLuong.getSelectedRow();
+                int row = viewRow >= 0 ? tblBangLuong.convertRowIndexToModel(viewRow) : -1;
                 if (row >= 0) {
                     selectedMaBL = (int) modelBangLuong.getValueAt(row, 0);
                     loadChiTiet(selectedMaBL);
                     updateActionButtonsForSelection();
+                    updateBangLuongInfo();
+                } else {
+                    selectedMaBL = -1;
+                    updateBangLuongInfo();
+                }
+            }
+        });
+        tblBangLuong.addMouseListener(new java.awt.event.MouseAdapter() {
+            @Override
+            public void mouseClicked(java.awt.event.MouseEvent e) {
+                if (e.getClickCount() == 2 && tblBangLuong.getSelectedRow() >= 0) {
                     tabbedPane.setSelectedIndex(1);
                 }
             }
         });
+
         JScrollPane scroll = new JScrollPane(tblBangLuong);
-        scroll.setBorder(new TitledBorder("Danh sách kỳ bảng lương"));
-        panel.add(toolbar, BorderLayout.NORTH);
+        scroll.setBorder(BorderFactory.createLineBorder(Color.LIGHT_GRAY));
+
+        // Info label (SOUTH) — audit info
+        lblBangLuongInfo = new JLabel("Chọn một bảng lương để xem thông tin duyệt/khóa.");
+        lblBangLuongInfo.setFont(new Font("Segoe UI", Font.ITALIC, 12));
+        lblBangLuongInfo.setForeground(Color.GRAY);
+        lblBangLuongInfo.setBorder(new EmptyBorder(4, 2, 2, 2));
+
+        panel.add(northWrapper, BorderLayout.NORTH);
         panel.add(scroll, BorderLayout.CENTER);
+        panel.add(lblBangLuongInfo, BorderLayout.SOUTH);
         return panel;
     }
 
@@ -156,18 +205,42 @@ public class SalaryListPanel extends JPanel {
         JPanel panel = new JPanel(new BorderLayout(8, 8));
         panel.setBackground(Color.WHITE);
         panel.setBorder(new EmptyBorder(12, 12, 12, 12));
+
+        // Hint label
+        JLabel lblHint = new JLabel("Double-click vào nhân viên để xem phiếu lương chi tiết.");
+        lblHint.setFont(new Font("Segoe UI", Font.ITALIC, 12));
+        lblHint.setForeground(UIColors.TEXT_DARK);
+
+        // Toolbar
         JPanel toolbar = new JPanel(new FlowLayout(FlowLayout.LEFT, 8, 4));
         toolbar.setOpaque(false);
+        lblChiTietTitle = new JLabel("Chọn một bảng lương ở tab trước.");
+        lblChiTietTitle.setFont(UIFonts.BOLD_NORMAL);
+        lblChiTietTitle.setForeground(UIColors.PRIMARY_PURPLE);
         btnTinhLaiNhanVien = UIHelper.createPrimaryButton("Tính lại nhân viên");
+        JButton btnLamMoi2 = UIHelper.createDefaultButton("Làm mới");
         btnTinhLaiNhanVien.addActionListener(e -> tinhLaiNhanVien());
+        btnLamMoi2.addActionListener(e -> { if (selectedMaBL >= 0) loadChiTiet(selectedMaBL); });
+        txtTimKiemCD = UIHelper.createSearchField("Tìm theo mã NV, họ tên...");
+        toolbar.add(new JLabel("Tìm kiếm:"));
+        toolbar.add(txtTimKiemCD);
+        toolbar.add(Box.createHorizontalStrut(8));
+        toolbar.add(lblChiTietTitle);
+        toolbar.add(Box.createHorizontalStrut(16));
         toolbar.add(btnTinhLaiNhanVien);
-        panel.add(toolbar, BorderLayout.NORTH);
-        panel.add(buildChiTietTablePanel("Chi tiết lương nhân viên (double-click để xem chi tiết)"),
-                BorderLayout.CENTER);
+        toolbar.add(btnLamMoi2);
+
+        JPanel northWrapper = new JPanel(new BorderLayout(0, 4));
+        northWrapper.setOpaque(false);
+        northWrapper.add(lblHint, BorderLayout.NORTH);
+        northWrapper.add(toolbar, BorderLayout.CENTER);
+
+        panel.add(northWrapper, BorderLayout.NORTH);
+        panel.add(buildChiTietTablePanel(), BorderLayout.CENTER);
         return panel;
     }
 
-    private JScrollPane buildChiTietTablePanel(String title) {
+    private JScrollPane buildChiTietTablePanel() {
         String[] cols = {"Mã NV", "Họ tên", "Lương cơ bản", "Lương chức vụ",
                 "Tiền OT", "Tổng thu nhập", "Khấu trừ", "Thực lãnh", "Số ngày công"};
         modelChiTiet = new DefaultTableModel(cols, 0) {
@@ -211,8 +284,11 @@ public class SalaryListPanel extends JPanel {
                 }
             }
         });
+        sorterCD = new javax.swing.table.TableRowSorter<>(modelChiTiet);
+        tblChiTiet.setRowSorter(sorterCD);
+        UIHelper.attachTextSearch(txtTimKiemCD, sorterCD, 0, 1);
         JScrollPane scroll = new JScrollPane(tblChiTiet);
-        scroll.setBorder(new TitledBorder(title));
+        scroll.setBorder(BorderFactory.createLineBorder(Color.LIGHT_GRAY));
         return scroll;
     }
 
@@ -234,15 +310,10 @@ public class SalaryListPanel extends JPanel {
         for (BangLuong bl : danhSachBL) {
             modelBangLuong.addRow(new Object[]{
                     bl.getMaBL(),
-                    bl.getThang(),
-                    bl.getNam(),
+                    bl.getThang() + "/" + bl.getNam(),
                     buildBangLuongName(bl),
                     formatDateTime(bl.getNgayTao()),
                     safeText(bl.getNguoiTao()),
-                    formatDateTime(bl.getNgayDuyet()),
-                    safeText(bl.getNguoiDuyet()),
-                    formatDateTime(bl.getNgayKhoa()),
-                    safeText(bl.getNguoiKhoa()),
                     formatTrangThai(bl)
             });
         }
@@ -254,6 +325,10 @@ public class SalaryListPanel extends JPanel {
             currentChiTietList = applyScopeFilter(salaryService.getChiTiet(maBL));
             fillChiTietTable(currentChiTietList);
             updateActionButtonsForSelection();
+            BangLuong bl = getSelectedBangLuong();
+            if (bl != null && lblChiTietTitle != null) {
+                lblChiTietTitle.setText("Chi tiết lương: Bảng lương tháng " + bl.getThang() + "/" + bl.getNam());
+            }
         } catch (Exception ex) {
             DialogUtil.showError(this, "Lỗi tải chi tiết lương: " + ex.getMessage());
         }
@@ -367,7 +442,12 @@ public class SalaryListPanel extends JPanel {
             DialogUtil.showWarn(this, "Chỉ được tính lại nhân viên khi bảng lương ở trạng thái Đã tính.");
             return;
         }
-        int row = tblChiTiet.getSelectedRow();
+        int viewRow = tblChiTiet.getSelectedRow();
+        if (viewRow < 0) {
+            DialogUtil.showWarn(this, "Vui lòng chọn nhân viên cần tính lại.");
+            return;
+        }
+        int row = tblChiTiet.convertRowIndexToModel(viewRow);
         if (row < 0 || row >= currentChiTietList.size()) {
             DialogUtil.showWarn(this, "Vui lòng chọn nhân viên cần tính lại.");
             return;
@@ -394,13 +474,14 @@ public class SalaryListPanel extends JPanel {
     }
 
     private void duyetBangLuong() {
-        int row = tblBangLuong.getSelectedRow();
-        if (row < 0) {
+        int viewRow = tblBangLuong.getSelectedRow();
+        if (viewRow < 0) {
             DialogUtil.showWarn(this, "Vui lòng chọn bảng lương cần duyệt.");
             return;
         }
+        int row = tblBangLuong.convertRowIndexToModel(viewRow);
         int maBL = (int) modelBangLuong.getValueAt(row, 0);
-        String tenBL = (String) modelBangLuong.getValueAt(row, 3);
+        String tenBL = (String) modelBangLuong.getValueAt(row, 2);
         if (!DialogUtil.showYesNo(this, "Duyệt bảng lương: " + tenBL + "?", "Xác nhận duyệt")) {
             return;
         }
@@ -419,13 +500,14 @@ public class SalaryListPanel extends JPanel {
     }
 
     private void khoaBangLuong() {
-        int row = tblBangLuong.getSelectedRow();
-        if (row < 0) {
+        int viewRow = tblBangLuong.getSelectedRow();
+        if (viewRow < 0) {
             DialogUtil.showWarn(this, "Vui lòng chọn bảng lương cần khóa.");
             return;
         }
+        int row = tblBangLuong.convertRowIndexToModel(viewRow);
         int maBL = (int) modelBangLuong.getValueAt(row, 0);
-        String tenBL = (String) modelBangLuong.getValueAt(row, 3);
+        String tenBL = (String) modelBangLuong.getValueAt(row, 2);
         if (!DialogUtil.showYesNoWarning(this,
                 "Khóa bảng lương: " + tenBL + "?\nHành động này không thể hoàn tác.",
                 "Xác nhận khóa")) {
@@ -446,7 +528,9 @@ public class SalaryListPanel extends JPanel {
     }
 
     private void showChiTietDialog() {
-        int row = tblChiTiet.getSelectedRow();
+        int viewRow = tblChiTiet.getSelectedRow();
+        if (viewRow < 0) return;
+        int row = tblChiTiet.convertRowIndexToModel(viewRow);
         if (row < 0 || row >= currentChiTietList.size()) {
             return;
         }
@@ -486,10 +570,24 @@ public class SalaryListPanel extends JPanel {
         }
     }
 
+    private void updateBangLuongInfo() {
+        if (lblBangLuongInfo == null) return;
+        BangLuong bl = getSelectedBangLuong();
+        if (bl == null) {
+            lblBangLuongInfo.setText("Chọn một bảng lương để xem thông tin duyệt/khóa.");
+            return;
+        }
+        lblBangLuongInfo.setText(String.format(
+                "Người duyệt: %s  |  Ngày duyệt: %s  |  Người khóa: %s  |  Ngày khóa: %s",
+                safeText(bl.getNguoiDuyet()), formatDateTime(bl.getNgayDuyet()),
+                safeText(bl.getNguoiKhoa()), formatDateTime(bl.getNgayKhoa())));
+    }
+
     private void restoreBangLuongSelection(int maBL) {
         for (int i = 0; i < modelBangLuong.getRowCount(); i++) {
             if (((int) modelBangLuong.getValueAt(i, 0)) == maBL) {
-                tblBangLuong.setRowSelectionInterval(i, i);
+                int viewRow = tblBangLuong.convertRowIndexToView(i);
+                if (viewRow >= 0) tblBangLuong.setRowSelectionInterval(viewRow, viewRow);
                 return;
             }
         }
@@ -498,7 +596,8 @@ public class SalaryListPanel extends JPanel {
     private void restoreChiTietSelection(String maNV) {
         for (int i = 0; i < currentChiTietList.size(); i++) {
             if (maNV.equals(currentChiTietList.get(i).getMaNV())) {
-                tblChiTiet.setRowSelectionInterval(i, i);
+                int viewRow = tblChiTiet.convertRowIndexToView(i);
+                if (viewRow >= 0) tblChiTiet.setRowSelectionInterval(viewRow, viewRow);
                 updateActionButtonsForSelection();
                 return;
             }
@@ -508,10 +607,6 @@ public class SalaryListPanel extends JPanel {
 
     private String buildBangLuongName(BangLuong bl) {
         return "Bảng lương tháng " + bl.getThang() + "/" + bl.getNam();
-    }
-
-    private String buildBangLuongLabel(BangLuong bl) {
-        return buildBangLuongName(bl) + " - " + formatTrangThai(bl);
     }
 
     private String formatTrangThai(BangLuong bl) {
