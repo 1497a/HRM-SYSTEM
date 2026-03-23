@@ -9,7 +9,6 @@ import com.hrm.model.VaiTro;
 import com.hrm.util.UIHelper;
 
 import javax.swing.*;
-import javax.swing.border.EmptyBorder;
 import javax.swing.border.TitledBorder;
 import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.table.DefaultTableModel;

@@ -115,8 +115,6 @@ public class AppointmentListPanel extends JPanel {
         txtTimKiem = new JTextField(20);
         txtTimKiem.setFont(UIFonts.TEXT_NORMAL);
         txtTimKiem.setPreferredSize(new Dimension(200, 32));
-        txtTimKiem.setToolTipText("Co the tim theo ma NV, ho ten nhan vien hoac phong ban");
-        txtTimKiem.setToolTipText("Có thể tìm theo mã NV, tên nhân viên hoặc phòng ban");
         filterPanel.add(lblTrangThai);
         filterPanel.add(cboTrangThai);
         filterPanel.add(Box.createHorizontalStrut(16));
@@ -125,7 +123,7 @@ public class AppointmentListPanel extends JPanel {
         filterPanel.add(Box.createHorizontalStrut(16));
         filterPanel.add(lblTimKiem);
         filterPanel.add(txtTimKiem);
-        JLabel lblHint = new JLabel("Co the tim theo ma NV, ho ten nhan vien hoac phong ban.");
+        JLabel lblHint = new JLabel("Có thể tìm theo mã NV, tên nhân viên hoặc phòng ban");
         lblHint.setFont(UIFonts.TEXT_NORMAL);
         lblHint.setForeground(Color.GRAY);
         lblHint.setBorder(BorderFactory.createEmptyBorder(0, 8, 0, 0));

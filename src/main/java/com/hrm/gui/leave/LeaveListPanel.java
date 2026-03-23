@@ -140,7 +140,7 @@ public class LeaveListPanel extends JPanel {
         // Top panel: hint + filters + balance
         JPanel topPanel = new JPanel(new BorderLayout(10, 4));
         topPanel.setBorder(new EmptyBorder(0, 0, 10, 0));
-        JLabel lblHint = new JLabel("Nhấp đúp vào đơn để xem chi tiết. Chọn đơn rồi nhấn 'Xử lý đơn' để duyệt/từ chối.");
+        JLabel lblHint = new JLabel("Chọn đơn rồi nhấn 'Xử lý đơn' để duyệt/từ chối.");
         lblHint.setFont(new Font("Segoe UI", Font.ITALIC, 12));
         lblHint.setForeground(UIColors.TEXT_DARK);
         topPanel.add(lblHint, BorderLayout.NORTH);

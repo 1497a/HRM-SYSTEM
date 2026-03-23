@@ -101,7 +101,7 @@ public class UserManagementPanel extends JPanel {
         // Top panel - hint + search/filters
         JPanel topPanel = new JPanel(new BorderLayout(10, 4));
         topPanel.setOpaque(false);
-        JLabel lblHint = new JLabel("Tìm theo: Tên đăng nhập / Họ tên. Nhấp đúp vào dòng để sửa.");
+        JLabel lblHint = new JLabel("Tìm theo: Tên đăng nhập / Họ tên");
         lblHint.setFont(new Font("Segoe UI", Font.ITALIC, 12));
         lblHint.setForeground(UIColors.TEXT_DARK);
         topPanel.add(lblHint, BorderLayout.NORTH);

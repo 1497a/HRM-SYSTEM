@@ -510,19 +510,19 @@ INSERT INTO VAITRO_QUYEN (maVaiTro, maQuyen, phamVi) VALUES
 -- NV006, NV008, NV012 giữ TRUONG_PHONG (base — IT, KD, MKT)
 INSERT INTO TAIKHOAN (tenDangNhap, matKhau, maNV, maVaiTro, email, hoatDong) VALUES
 ('admin',           '123', 'admin', 'ADMIN',           'admin@abctech.vn',          TRUE),
-('hung.nguyen',     '123', 'NV001', 'TONG_GIAM_DOC',   'hung.nguyen@abctech.vn',    TRUE),
-('huong.nguyen',    '123', 'NV002', 'TRUONG_PHONG_NS', 'huong.nguyen@abctech.vn',   TRUE),
-('lananh.dang',     '123', 'NV003', 'NHAN_SU',         'lananh.dang@abctech.vn',    TRUE),
-('ngoc.hoang',      '123', 'NV004', 'TRUONG_PHONG_KT', 'ngoc.hoang@abctech.vn',     TRUE),
-('thanhTam.ly',     '123', 'NV005', 'KE_TOAN',         'thanhTam.ly@abctech.vn',    TRUE),
-('anh.tuan',        '123', 'NV006', 'TRUONG_PHONG',    'anh.tuan@abctech.vn',       TRUE),
-('hoang.le',        '123', 'NV007', 'NHAN_VIEN',       'hoang.le@abctech.vn',       TRUE),
-('son.dinh',        '123', 'NV008', 'TRUONG_PHONG',    'son.dinh@abctech.vn',       TRUE),
-('khoa.nguyen',     '123', 'NV009', 'QUAN_LY',         'khoa.nguyen@abctech.vn',    TRUE),
-('tri.hoang',       '123', 'NV010', 'NHAN_VIEN',       'tri.hoang@abctech.vn',      TRUE),
-('camtu.vo',        '123', 'NV011', 'NHAN_VIEN',       'camtu.vo@abctech.vn',       TRUE),
-('phuonglinh.le',   '123', 'NV012', 'TRUONG_PHONG',    'phuonglinh.le@abctech.vn',  TRUE),
-('khang.pham',      '123', 'NV013', 'NHAN_VIEN',       'khang.pham@abctech.vn',     TRUE);
+('NV001',     '123', 'NV001', 'TONG_GIAM_DOC',   'hung.nguyen@abctech.vn',    TRUE),
+('NV002',    '123', 'NV002', 'TRUONG_PHONG_NS', 'huong.nguyen@abctech.vn',   TRUE),
+('NV003',     '123', 'NV003', 'NHAN_SU',         'lananh.dang@abctech.vn',    TRUE),
+('NV004',      '123', 'NV004', 'TRUONG_PHONG_KT', 'ngoc.hoang@abctech.vn',     TRUE),
+('NV005',     '123', 'NV005', 'KE_TOAN',         'thanhTam.ly@abctech.vn',    TRUE),
+('NV006',        '123', 'NV006', 'TRUONG_PHONG',    'anh.tuan@abctech.vn',       TRUE),
+('NV007',        '123', 'NV007', 'NHAN_VIEN',       'hoang.le@abctech.vn',       TRUE),
+('NV008',        '123', 'NV008', 'TRUONG_PHONG',    'son.dinh@abctech.vn',       TRUE),
+('NV009',     '123', 'NV009', 'QUAN_LY',         'khoa.nguyen@abctech.vn',    TRUE),
+('NV010',       '123', 'NV010', 'NHAN_VIEN',       'tri.hoang@abctech.vn',      TRUE),
+('NV011',        '123', 'NV011', 'NHAN_VIEN',       'camtu.vo@abctech.vn',       TRUE),
+('NV012',   '123', 'NV012', 'TRUONG_PHONG',    'phuonglinh.le@abctech.vn',  TRUE),
+('NV013',      '123', 'NV013', 'NHAN_VIEN',       'khang.pham@abctech.vn',     TRUE);
 
 -- =====================================================
 -- 7. HỢP ĐỒNG LAO ĐỘNG

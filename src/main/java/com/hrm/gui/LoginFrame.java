@@ -140,12 +140,6 @@ public class LoginFrame extends JFrame {
         lblError.setMaximumSize(new Dimension(280, 30));
         btnLogin.setAlignmentX(Component.LEFT_ALIGNMENT);
         btnLogin.setMaximumSize(BUTTON_SIZE);
-        JLabel lblDemo = new JLabel("<html><div style='text-align:center;'><b>Tài khoản:</b> admin / 123</div></html>");
-        lblDemo.setFont(new Font("Segoe UI", Font.PLAIN, 11));
-        lblDemo.setForeground(Color.GRAY);
-        lblDemo.setAlignmentX(Component.LEFT_ALIGNMENT);
-        lblDemo.setHorizontalAlignment(SwingConstants.CENTER);
-        lblDemo.setMaximumSize(new Dimension(280, 120));
         formPanel.add(lblTitle);
         formPanel.add(Box.createVerticalStrut(40));
         formPanel.add(lblUsername);
@@ -162,7 +156,6 @@ public class LoginFrame extends JFrame {
         formPanel.add(Box.createVerticalStrut(15));
         formPanel.add(btnLogin);
         formPanel.add(Box.createVerticalStrut(30));
-        formPanel.add(lblDemo);
         return formPanel;
     }
 
