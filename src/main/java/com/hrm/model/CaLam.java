@@ -102,6 +102,18 @@ public class CaLam {
     }
 
     @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof CaLam)) return false;
+        return java.util.Objects.equals(id, ((CaLam) o).id);
+    }
+
+    @Override
+    public int hashCode() {
+        return java.util.Objects.hashCode(id);
+    }
+
+    @Override
     public String toString() {
         return tenCaLam + " (" + gioBatDau + " - " + gioKetThuc + ")";
     }

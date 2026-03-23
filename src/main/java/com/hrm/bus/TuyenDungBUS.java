@@ -32,6 +32,7 @@ public class TuyenDungBUS {
     static final String ACTION_RECRUITMENT_CANDIDATE_CREATE = PermissionCodes.RECRUITMENT_CANDIDATE_CREATE;
     static final String ACTION_RECRUITMENT_CANDIDATE_REVIEW = PermissionCodes.RECRUITMENT_CANDIDATE_REVIEW;
     static final String ACTION_RECRUITMENT_CANDIDATE_CONVERT = PermissionCodes.RECRUITMENT_CANDIDATE_CONVERT;
+    static final String ACTION_RECRUITMENT_CANDIDATE_EDIT = PermissionCodes.RECRUITMENT_CANDIDATE_EDIT;
     private static TuyenDungBUS instance;
     private final TuyenDungDAO recruitmentRepo = TuyenDungDAO.getInstance();
     private TuyenDungBUS() {
@@ -255,6 +256,57 @@ public class TuyenDungBUS {
             return KetQua.success(uv, "Tiếp nhận ứng viên thành công.");
         } catch (Exception e) {
             return KetQua.error("Lỗi tiếp nhận ứng viên: " + e.getMessage());
+        }
+    }
+
+    public KetQua<UngVien> capNhatThongTinUV(UngVien uv) {
+        KetQua<Void> permission = requirePermission(
+                ACTION_RECRUITMENT_CANDIDATE_EDIT,
+                "Bạn không có quyền chỉnh sửa thông tin ứng viên."
+        );
+        if (!permission.isSuccess()) {
+            return KetQua.error(permission.getMessage());
+        }
+        UngVien existing = recruitmentRepo.findByIdInScope(uv.getMaUngVien(),
+                getScopeForAction(ACTION_RECRUITMENT_CANDIDATE_EDIT), getCurrentMaNV());
+        if (existing == null) {
+            return KetQua.error("Không tìm thấy ứng viên #" + uv.getMaUngVien());
+        }
+        if (daChuyenThanhNhanVien(existing)) {
+            return KetQua.error("Không thể sửa ứng viên đã chuyển thành nhân viên.");
+        }
+        if (ValidationUtils.isBlank(uv.getHoTen())) {
+            return KetQua.error("Họ tên không được để trống.");
+        }
+        if (ValidationUtils.isBlank(uv.getEmail())) {
+            return KetQua.error("Email không được để trống.");
+        }
+        String emailErr = ValidationUtils.validateEmail(uv.getEmail());
+        if (emailErr != null) return KetQua.error(emailErr);
+        if (ValidationUtils.isBlank(uv.getDienThoai())) {
+            return KetQua.error("Số điện thoại không được để trống.");
+        }
+        String phoneErr = ValidationUtils.validatePhone(uv.getDienThoai());
+        if (phoneErr != null) return KetQua.error(phoneErr);
+        if (uv.getNgaySinh() == null) {
+            return KetQua.error("Ngày sinh không được để trống.");
+        }
+        String birthErr = ValidationUtils.validateBirthDate(uv.getNgaySinh());
+        if (birthErr != null) return KetQua.error(birthErr);
+        if (ValidationUtils.isBlank(uv.getDiaChi())) {
+            return KetQua.error("Địa chỉ không được để trống.");
+        }
+        if (ValidationUtils.isBlank(uv.getNguonUngTuyen())) {
+            return KetQua.error("Nguồn ứng tuyển không được để trống.");
+        }
+        try {
+            int rows = recruitmentRepo.updateUngVienInfo(uv);
+            if (rows <= 0) {
+                return KetQua.error("Không thể cập nhật thông tin ứng viên.");
+            }
+            return KetQua.success(uv, "Cập nhật thông tin ứng viên thành công.");
+        } catch (Exception e) {
+            return KetQua.error("Lỗi cập nhật: " + e.getMessage());
         }
     }
 

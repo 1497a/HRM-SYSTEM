@@ -34,8 +34,6 @@ class TabUngVienPanel extends JPanel {
         setLayout(new BorderLayout(8, 8));
         setBackground(Color.WHITE);
         setBorder(new EmptyBorder(12, 12, 12, 12));
-        JPanel toolbar = new JPanel(new FlowLayout(FlowLayout.LEFT, 8, 4));
-        toolbar.setOpaque(false);
         btnTaoUV = UIHelper.createPrimaryButton("+ Tạo ứng viên");
         JButton btnXemChiTiet = UIHelper.createDefaultButton("Xem chi tiết");
         JButton btnLamMoi = UIHelper.createDefaultButton("Làm mới");
@@ -46,13 +44,17 @@ class TabUngVienPanel extends JPanel {
                 "Tất cả", "Mới", "Đang phỏng vấn", "Trúng tuyển", "Từ chối", "Đã chuyển thành nhân viên"
         });
         txtTimKiem = UIHelper.createSearchField("Tìm theo họ tên, email, vị trí...");
-        toolbar.add(btnTaoUV);
-        toolbar.add(btnXemChiTiet);
-        toolbar.add(btnLamMoi);
+        JPanel toolbar = new JPanel(new FlowLayout(FlowLayout.LEFT, 8, 4));
+        toolbar.setOpaque(false);
         toolbar.add(new JLabel("Tìm kiếm:"));
         toolbar.add(txtTimKiem);
         toolbar.add(new JLabel("Trạng thái:"));
         toolbar.add(cboTrangThai);
+        JPanel btnPanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 8, 4));
+        btnPanel.setOpaque(false);
+        btnPanel.add(btnTaoUV);
+        btnPanel.add(btnXemChiTiet);
+        btnPanel.add(btnLamMoi);
         String[] cols = {"Mã UV", "Họ tên", "Email", "Điện thoại", "Vị trí", "Ngày nộp", "Trạng thái"};
         model = new DefaultTableModel(cols, 0) {
             @Override
@@ -91,10 +93,11 @@ class TabUngVienPanel extends JPanel {
         lblHint.setForeground(UIColors.TEXT_DARK);
         JPanel northPanel = new JPanel(new BorderLayout(0, 4));
         northPanel.setOpaque(false);
-        northPanel.add(lblHint, BorderLayout.NORTH);
-        northPanel.add(toolbar, BorderLayout.CENTER);
+        northPanel.add(toolbar, BorderLayout.NORTH);
+        northPanel.add(lblHint, BorderLayout.SOUTH);
         add(northPanel, BorderLayout.NORTH);
         add(scroll, BorderLayout.CENTER);
+        add(btnPanel, BorderLayout.SOUTH);
         btnTaoUV.setVisible(SessionContext.getInstance().hasPermission(PermissionCodes.RECRUITMENT_CANDIDATE_CREATE));
         load();
     }

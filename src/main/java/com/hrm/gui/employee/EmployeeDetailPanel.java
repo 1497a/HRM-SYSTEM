@@ -11,8 +11,9 @@ import com.hrm.bus.NhanVienBUS;
 import com.hrm.util.DialogUtil;
 import com.hrm.util.HRMConstants;
 import com.hrm.util.SessionContext;
-import com.hrm.util.UIFonts;
 import com.hrm.util.UIColors;
+import com.hrm.util.UIFonts;
+import com.hrm.util.UIHelper;
 
 import javax.swing.*;
 import java.awt.*;
@@ -117,19 +118,14 @@ public class EmployeeDetailPanel extends JDialog {
         footer.setBorder(BorderFactory.createMatteBorder(1, 0, 0, 0, Color.LIGHT_GRAY));
         JPanel right = new JPanel(new FlowLayout(FlowLayout.RIGHT, 8, 10));
         right.setOpaque(false);
-        btnSuaThongTin = new JButton("Sửa thông tin");
-        styleButton(btnSuaThongTin, UIColors.PRIMARY_PURPLE);
+        btnSuaThongTin = UIHelper.createPrimaryButton("Sửa thông tin");
         btnSuaThongTin.setPreferredSize(new Dimension(130, 34));
         btnSuaThongTin.addActionListener(e -> onSuaThongTin());
-        btnDoiTrangThai = new JButton("Đổi trạng thái");
-        styleButton(btnDoiTrangThai, UIColors.WARNING_ORANGE);
+        btnDoiTrangThai = UIHelper.createWarningButton("Đổi trạng thái");
         btnDoiTrangThai.setPreferredSize(new Dimension(145, 34));
         btnDoiTrangThai.addActionListener(e -> onDoiTrangThai());
-        JButton btnClose = new JButton("Đóng");
-        btnClose.setFont(com.hrm.util.UIFonts.BOLD_NORMAL);
-        btnClose.setFocusPainted(false);
+        JButton btnClose = UIHelper.createDefaultButton("Đóng");
         btnClose.setPreferredSize(new Dimension(90, 34));
-        btnClose.setCursor(new Cursor(Cursor.HAND_CURSOR));
         btnClose.addActionListener(e -> dispose());
         SessionContext sc = SessionContext.getInstance();
         boolean canUpdate = nvService.canEditEmployeeProfile(maNV);
@@ -243,14 +239,5 @@ public class EmployeeDetailPanel extends JDialog {
         badge.setBorder(BorderFactory.createEmptyBorder(4, 10, 4, 10));
         return badge;
     }
-
-    private void styleButton(JButton btn, Color bg) {
-        btn.setFont(com.hrm.util.UIFonts.BOLD_NORMAL);
-        btn.setBackground(bg);
-        btn.setForeground(Color.WHITE);
-        btn.setFocusPainted(false);
-        btn.setBorderPainted(false);
-        btn.setOpaque(true);
-        btn.setCursor(new Cursor(Cursor.HAND_CURSOR));
-    }
 }
+

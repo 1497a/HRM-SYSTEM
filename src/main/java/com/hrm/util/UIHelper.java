@@ -182,8 +182,10 @@ public class UIHelper {
      * Creates a JTextField(18) with a placeholder hint text.
      */
     public static JTextField createSearchField(String placeholder) {
-        JTextField field = new JTextField(18);
+        JTextField field = new JTextField(20);
         field.putClientProperty("JTextField.placeholderText", placeholder);
+        field.setFont(UIFonts.TEXT_NORMAL);
+        field.setPreferredSize(new java.awt.Dimension(220, 32));
         return field;
     }
 

@@ -140,21 +140,21 @@ public class LeaveListPanel extends JPanel {
         // Top panel: hint + filters + balance
         JPanel topPanel = new JPanel(new BorderLayout(10, 4));
         topPanel.setBorder(new EmptyBorder(0, 0, 10, 0));
-        JLabel lblHint = new JLabel("Chọn đơn rồi nhấn 'Xử lý đơn' để duyệt/từ chối.");
+        JLabel lblHint = new JLabel("Tìm theo tên nhân viên hoặc lý do nghỉ.");
         lblHint.setFont(new Font("Segoe UI", Font.ITALIC, 12));
         lblHint.setForeground(UIColors.TEXT_DARK);
-        topPanel.add(lblHint, BorderLayout.NORTH);
         JPanel filterPanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 10, 4));
         filterPanel.setOpaque(false);
+        filterPanel.add(new JLabel("Tìm kiếm:"));
+        filterPanel.add(txtTimKiem);
         if (isManager) {
             filterPanel.add(new JLabel("Nhân viên:"));
             filterPanel.add(cboNhanVien);
         }
-        filterPanel.add(new JLabel("Tìm kiếm:"));
-        filterPanel.add(txtTimKiem);
         filterPanel.add(new JLabel("Trạng thái:"));
         filterPanel.add(cboStatus);
         topPanel.add(filterPanel, BorderLayout.CENTER);
+        topPanel.add(lblHint, BorderLayout.NORTH);
         topPanel.add(balancePanel, BorderLayout.SOUTH);
         // Center panel - table
         JScrollPane scrollPane = new JScrollPane(table);

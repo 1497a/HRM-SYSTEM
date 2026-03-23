@@ -39,8 +39,6 @@ class TabTinPanel extends JPanel {
         setLayout(new BorderLayout(8, 8));
         setBackground(Color.WHITE);
         setBorder(new EmptyBorder(12, 12, 12, 12));
-        JPanel toolbar = new JPanel(new FlowLayout(FlowLayout.LEFT, 8, 4));
-        toolbar.setOpaque(false);
         btnDangTin = UIHelper.createSuccessButton("Đăng tin");
         btnDongTin = UIHelper.createDangerButton("Đóng tin");
         JButton btnLamMoi = UIHelper.createDefaultButton("Làm mới");
@@ -50,13 +48,17 @@ class TabTinPanel extends JPanel {
         JComboBox<String> cboTrangThai = new JComboBox<>(
                 new String[]{"Tất cả", "Đang tuyển", "Tạm dừng", "Đã đóng"});
         txtTimKiem = UIHelper.createSearchField("Tìm theo tiêu đề, phòng ban...");
-        toolbar.add(btnDangTin);
-        toolbar.add(btnDongTin);
-        toolbar.add(btnLamMoi);
+        JPanel toolbar = new JPanel(new FlowLayout(FlowLayout.LEFT, 8, 4));
+        toolbar.setOpaque(false);
         toolbar.add(new JLabel("Tìm kiếm:"));
         toolbar.add(txtTimKiem);
         toolbar.add(new JLabel("Trạng thái:"));
         toolbar.add(cboTrangThai);
+        JPanel btnPanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 8, 4));
+        btnPanel.setOpaque(false);
+        btnPanel.add(btnDangTin);
+        btnPanel.add(btnDongTin);
+        btnPanel.add(btnLamMoi);
         String[] cols = {"Mã tin", "Tiêu đề", "Phòng ban", "Chức vụ", "Hạn nộp", "Cần tuyển", "Số đơn", "Trạng thái"};
         model = new DefaultTableModel(cols, 0) {
             @Override
@@ -81,15 +83,16 @@ class TabTinPanel extends JPanel {
         UIHelper.attachSearchAndStatusFilter(txtTimKiem, cboTrangThai, sorter, 7, new int[]{1, 2, 3});
         JScrollPane scroll = new JScrollPane(tbl);
         scroll.setBorder(BorderFactory.createLineBorder(Color.LIGHT_GRAY));
-        JLabel lblHint = new JLabel("Quản lý tin tuyển dụng. Nhấp đúp để xem chi tiết.");
+        JLabel lblHint = new JLabel("Tìm theo: Tiêu đề / Phòng ban / Chức vụ");
         lblHint.setFont(new Font("Segoe UI", Font.ITALIC, 12));
         lblHint.setForeground(UIColors.TEXT_DARK);
         JPanel northPanel = new JPanel(new BorderLayout(0, 4));
         northPanel.setOpaque(false);
-        northPanel.add(lblHint, BorderLayout.NORTH);
-        northPanel.add(toolbar, BorderLayout.CENTER);
+        northPanel.add(toolbar, BorderLayout.NORTH);
+        northPanel.add(lblHint, BorderLayout.SOUTH);
         add(northPanel, BorderLayout.NORTH);
         add(scroll, BorderLayout.CENTER);
+        add(btnPanel, BorderLayout.SOUTH);
         boolean canManage = SessionContext.getInstance().hasPermission(PermissionCodes.RECRUITMENT_MANAGE);
         btnDangTin.setVisible(canManage);
         btnDongTin.setVisible(canManage);

@@ -8,6 +8,8 @@ import com.hrm.util.HRMConstants;
 import com.hrm.util.UIFonts;
 import com.hrm.util.PermissionCodes;
 import com.hrm.util.SessionContext;
+import com.hrm.gui.components.PurpleTable;
+import com.hrm.util.UIColors;
 import com.hrm.util.UIHelper;
 
 import javax.swing.*;
@@ -23,7 +25,7 @@ public class DepartmentPanel extends JPanel {
     private static final String STATUS_ACTIVE = "Hoạt động";
     private static final String STATUS_INACTIVE = "Ngừng hoạt động";
     private final PhongBanBUS service = new PhongBanBUS();
-    private JTable table;
+    private PurpleTable table;
     private DefaultTableModel tableModel;
     private TableRowSorter<DefaultTableModel> sorter;
     private JTextField txtSearch;
@@ -31,37 +33,34 @@ public class DepartmentPanel extends JPanel {
     private JButton btnThem;
     public DepartmentPanel() {
         setLayout(new BorderLayout());
+        setBackground(Color.WHITE);
         setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
         JPanel topPanel = new JPanel(new BorderLayout());
-        JLabel title = new JLabel("QUẢN LÝ PHÒNG BAN");
-        title.setFont(new Font("Arial", Font.BOLD, 16));
-        title.setBorder(BorderFactory.createEmptyBorder(0, 0, 10, 0));
-        topPanel.add(title, BorderLayout.NORTH);
         JLabel lblHint = new JLabel("Tìm theo: Mã / Tên phòng ban / Trạng thái");
-        lblHint.setFont(new Font("Arial", Font.ITALIC, 11));
+        lblHint.setFont(new Font("Segoe UI", Font.ITALIC, 12));
+        lblHint.setForeground(UIColors.TEXT_DARK);
         topPanel.add(lblHint, BorderLayout.SOUTH);
         JPanel searchFilterPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
         JLabel lblSearch = new JLabel("Tìm kiếm:");
+        lblSearch.setFont(UIFonts.TEXT_NORMAL);
+        lblSearch.setForeground(UIColors.TEXT_DARK);
         txtSearch = new JTextField(20);
+        txtSearch.setFont(UIFonts.TEXT_NORMAL);
         txtSearch.setToolTipText("Nhập mã hoặc tên phòng ban để tìm kiếm");
         JLabel lblFilter = new JLabel("    Trạng thái:");
+        lblFilter.setFont(UIFonts.TEXT_NORMAL);
+        lblFilter.setForeground(UIColors.TEXT_DARK);
         cboFilter = new JComboBox<>(new String[]{STATUS_ALL, STATUS_ACTIVE, STATUS_INACTIVE});
         searchFilterPanel.add(lblSearch);
         searchFilterPanel.add(txtSearch);
         searchFilterPanel.add(lblFilter);
         searchFilterPanel.add(cboFilter);
-        topPanel.add(searchFilterPanel, BorderLayout.CENTER);
+        topPanel.add(searchFilterPanel, BorderLayout.NORTH);
         add(topPanel, BorderLayout.NORTH);
-        tableModel = new DefaultTableModel(
-                new Object[]{"Mã PB", "Tên phòng ban", "Phòng ban cha", "Trạng thái"}, 0) {
-            @Override
-            public boolean isCellEditable(int row, int col) {
-                return false;
-            }
-        };
-        table = new JTable(tableModel);
+        tableModel = PurpleTable.createNonEditableModel(
+                new Object[]{"Mã PB", "Tên phòng ban", "Phòng ban cha", "Trạng thái"});
+        table = new PurpleTable(tableModel);
         table.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
-        table.setRowHeight(24);
         table.getColumnModel().getColumn(0).setPreferredWidth(70);
         table.getColumnModel().getColumn(1).setPreferredWidth(180);
         table.getColumnModel().getColumn(2).setPreferredWidth(160);
@@ -69,11 +68,13 @@ public class DepartmentPanel extends JPanel {
         table.getColumnModel().getColumn(3).setCellRenderer(new com.hrm.gui.components.StatusCellRenderer());
         sorter = new TableRowSorter<>(tableModel);
         table.setRowSorter(sorter);
-        add(new JScrollPane(table), BorderLayout.CENTER);
+        JScrollPane scroll = new JScrollPane(table);
+        scroll.setBorder(BorderFactory.createLineBorder(Color.LIGHT_GRAY));
+        add(scroll, BorderLayout.CENTER);
         btnThem = UIHelper.createPrimaryButton("+ Thêm");
         JPanel btnPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
         btnPanel.add(btnThem);
-        JButton btnLamMoi = new JButton("Làm mới");
+        JButton btnLamMoi = UIHelper.createDefaultButton("Làm mới");
         btnLamMoi.addActionListener(e -> refreshTable());
         btnPanel.add(btnLamMoi);
         add(btnPanel, BorderLayout.SOUTH);

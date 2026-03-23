@@ -154,14 +154,21 @@ public class AttendancePanel extends JPanel {
     private JPanel tabTongHop() {
         JPanel p=panel();
         JPanel tb=new JPanel(new FlowLayout(FlowLayout.LEFT,10,5)); tb.setOpaque(false);
+        initTongHopFilters(tb);
+        tb.add(Box.createHorizontalStrut(12));
         tb.add(new JLabel("Tháng:")); cboThang=combMonth(); tb.add(cboThang);
         tb.add(new JLabel("Năm:")); cboNam=combYear(); tb.add(cboNam);
         JButton bL=btn("Lọc dữ liệu",UIColors.PRIMARY_PURPLE); bL.addActionListener(e->loadCC()); tb.add(bL);
         tb.add(Box.createHorizontalStrut(20));
         JButton bT=btn("+ Thêm thủ công",UIColors.SUCCESS_GREEN); bT.addActionListener(e->dlgThemCC()); tb.add(bT);
         JButton bS=btn("Xem chi tiết",UIColors.PRIMARY_PURPLE); bS.addActionListener(e->dlgChiTietCC()); tb.add(bS);
-        initTongHopFilters(tb);
-        p.add(tb,BorderLayout.NORTH);
+        JLabel lblHint = new JLabel("Tìm theo mã nhân viên hoặc họ tên.");
+        lblHint.setFont(new Font("Segoe UI", Font.ITALIC, 12));
+        lblHint.setForeground(UIColors.TEXT_DARK);
+        JPanel north = new JPanel(new BorderLayout(0, 2)); north.setOpaque(false);
+        north.add(tb, BorderLayout.CENTER);
+        north.add(lblHint, BorderLayout.SOUTH);
+        p.add(north,BorderLayout.NORTH);
         String[]cols={"Mã NV","Họ tên","Ngày","Ca làm","Giờ vào","Giờ ra","Số giờ","OT","Trạng thái"};
         modelCC=mdl(cols); tableChamCong=tbl(modelCC);
         tableChamCong.getColumnModel().getColumn(8).setCellRenderer(new com.hrm.gui.components.StatusCellRenderer());
@@ -559,6 +566,7 @@ public class AttendancePanel extends JPanel {
         JPanel p=panel(); JPanel hdr=new JPanel(new BorderLayout()); hdr.setOpaque(false);
         JLabel l=new JLabel("Danh sách ca làm việc"); l.setFont(new Font("Segoe UI",Font.BOLD,16)); l.setForeground(UIColors.TEXT_DARK);
         hdr.add(l,BorderLayout.WEST);
+        l.setVisible(false);
         JPanel bp=new JPanel(new FlowLayout(FlowLayout.RIGHT,10,0)); bp.setOpaque(false);
         JButton bT=btn("+ Thêm ca mới",UIColors.SUCCESS_GREEN); bT.addActionListener(e->dlgCaLam(null));
         JButton bS=btn("Sửa",UIColors.PRIMARY_PURPLE); bS.addActionListener(e->{
@@ -761,6 +769,7 @@ public class AttendancePanel extends JPanel {
         JLabel l = new JLabel("Cấu hình phụ cấp & khấu trừ");
         l.setFont(com.hrm.util.UIFonts.HEADER_SUB); l.setForeground(UIColors.TEXT_DARK);
         hdr.add(l, BorderLayout.WEST);
+        l.setVisible(false);
         txtTimKiemPC = UIHelper.createSearchField("Tìm theo tên khoản, loại...");
         JPanel searchPC = new JPanel(new FlowLayout(FlowLayout.LEFT,8,2)); searchPC.setOpaque(false);
         searchPC.add(new JLabel("Tìm kiếm:")); searchPC.add(txtTimKiemPC);
@@ -1175,6 +1184,7 @@ public class AttendancePanel extends JPanel {
         JPanel p = panel();
         JLabel title = new JLabel("Đăng ký làm thêm giờ (OT)");
         title.setFont(com.hrm.util.UIFonts.HEADER_SUB); title.setForeground(UIColors.TEXT_DARK);
+        title.setVisible(false);
         JPanel formPanel = new JPanel(new GridBagLayout());
         formPanel.setBackground(com.hrm.util.UIColors.LIGHT_PURPLE);
         formPanel.setBorder(BorderFactory.createCompoundBorder(

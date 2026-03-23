@@ -10,6 +10,7 @@ import com.hrm.util.HRMConstants;
 import com.hrm.util.PermissionCodes;
 import com.hrm.util.SessionContext;
 import com.hrm.gui.components.PurpleTable;
+import com.hrm.util.UIColors;
 import com.hrm.util.UIHelper;
 import com.hrm.util.UIFonts;
 
@@ -17,6 +18,7 @@ import javax.swing.*;
 import javax.swing.table.DefaultTableModel;
 import javax.swing.table.TableRowSorter;
 import java.awt.*;
+import java.awt.Color;
 import java.text.NumberFormat;
 import java.util.List;
 import java.util.Locale;
@@ -36,14 +38,12 @@ public class PositionPanel extends JPanel {
     private JButton btnThem;
     public PositionPanel() {
         setLayout(new BorderLayout());
+        setBackground(Color.WHITE);
         setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
         JPanel topPanel = new JPanel(new BorderLayout());
-        JLabel title = new JLabel("QUẢN LÝ CHỨC VỤ");
-        title.setFont(new Font("Arial", Font.BOLD, 16));
-        title.setBorder(BorderFactory.createEmptyBorder(0, 0, 10, 0));
-        topPanel.add(title, BorderLayout.NORTH);
         JLabel lblHint = new JLabel("Tìm theo: Mã / Tên chức vụ / Trạng thái");
-        lblHint.setFont(new Font("Arial", Font.ITALIC, 11));
+        lblHint.setFont(new Font("Segoe UI", Font.ITALIC, 12));
+        lblHint.setForeground(UIColors.TEXT_DARK);
         topPanel.add(lblHint, BorderLayout.SOUTH);
         JPanel searchFilterPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
         JLabel lblSearch = new JLabel("Tìm kiếm:");
@@ -55,7 +55,7 @@ public class PositionPanel extends JPanel {
         searchFilterPanel.add(txtSearch);
         searchFilterPanel.add(lblFilter);
         searchFilterPanel.add(cboFilter);
-        topPanel.add(searchFilterPanel, BorderLayout.CENTER);
+        topPanel.add(searchFilterPanel, BorderLayout.NORTH);
         add(topPanel, BorderLayout.NORTH);
         tableModel = PurpleTable.createNonEditableModel(
                 new Object[]{"Mã CV", "Tên chức vụ", "Cấp bậc", "Phụ cấp (VND)", "Trạng thái"});

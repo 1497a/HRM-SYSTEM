@@ -8,6 +8,7 @@ import com.hrm.model.NhanVien;
 import com.hrm.model.TaiKhoan;
 import com.hrm.util.PermissionCodes;
 import com.hrm.util.SessionContext;
+import com.hrm.gui.components.PurpleTable;
 import com.hrm.util.UIColors;
 import com.hrm.util.UIHelper;
 
@@ -30,14 +31,15 @@ public class EvalResultPanel extends JPanel {
     private final boolean isManager;
     private final String myMaNV;
     private final int presetCycleId;
-    private JTable submissionTable;
+    private PurpleTable submissionTable;
     private DefaultTableModel submissionModel;
-    private JTable detailTable;
+    private PurpleTable detailTable;
     private DefaultTableModel detailModel;
     private JTextArea txtComment;
     private JComboBox<Object> cboNhanVien;
     private JComboBox<Object> cboKyDanhGia;
     private JTextField txtTimKiem;
+    private JComboBox<String> cboXepLoai;
     private String filterKeyword = "";
     private List<DanhGiaHieuSuat> cachedSubmissions;
     private static final DateTimeFormatter DT_FORMAT = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm");
@@ -60,6 +62,7 @@ public class EvalResultPanel extends JPanel {
 
     private void initComponents() {
         setLayout(new BorderLayout(10, 10));
+        setBackground(Color.WHITE);
         setBorder(new EmptyBorder(15, 15, 15, 15));
         cboNhanVien = new JComboBox<>();
         if (isManager) {
@@ -119,8 +122,7 @@ public class EvalResultPanel extends JPanel {
         submissionModel = new DefaultTableModel(subColumns, 0) {
             @Override public boolean isCellEditable(int row, int column) { return false; }
         };
-        submissionTable = new JTable(submissionModel);
-        submissionTable.setRowHeight(28);
+        submissionTable = new PurpleTable(submissionModel);
         submissionTable.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
         submissionTable.getSelectionModel().addListSelectionListener(e -> showDetail());
         submissionTable.getColumnModel().getColumn(5).setCellRenderer(new DefaultTableCellRenderer() {
@@ -156,8 +158,7 @@ public class EvalResultPanel extends JPanel {
         detailModel = new DefaultTableModel(detailColumns, 0) {
             @Override public boolean isCellEditable(int row, int column) { return false; }
         };
-        detailTable = new JTable(detailModel);
-        detailTable.setRowHeight(25);
+        detailTable = new PurpleTable(detailModel);
         txtComment = new JTextArea(3, 40);
         txtComment.setEditable(false);
         txtComment.setLineWrap(true);
@@ -167,6 +168,8 @@ public class EvalResultPanel extends JPanel {
             cboNhanVien.addActionListener(e -> loadData());
         }
         cboKyDanhGia.addActionListener(e -> loadData());
+        cboXepLoai = new JComboBox<>(new String[]{"Tất cả xếp loại", "Xuất sắc", "Tốt", "Khá", "Trung bình", "Yếu"});
+        cboXepLoai.addActionListener(e -> loadData());
         txtTimKiem = UIHelper.createSearchField("Tìm theo tên nhân viên, kỳ đánh giá...");
         txtTimKiem.addKeyListener(new java.awt.event.KeyAdapter() {
             @Override public void keyReleased(java.awt.event.KeyEvent e) {
@@ -186,13 +189,12 @@ public class EvalResultPanel extends JPanel {
         }
         topPanel.add(new JLabel("Kỳ đánh giá:"));
         topPanel.add(cboKyDanhGia);
-        JButton btnLamMoi = new JButton("Làm mới");
-        btnLamMoi.addActionListener(e -> loadData());
-        topPanel.add(btnLamMoi);
+        topPanel.add(new JLabel("Xếp loại:"));
+        topPanel.add(cboXepLoai);
         JSplitPane splitPane = new JSplitPane(JSplitPane.VERTICAL_SPLIT);
         splitPane.setDividerLocation(250);
         JScrollPane subScroll = new JScrollPane(submissionTable);
-        subScroll.setBorder(new TitledBorder("Danh sách đánh giá"));
+        subScroll.setBorder(BorderFactory.createLineBorder(Color.LIGHT_GRAY));
         splitPane.setTopComponent(subScroll);
         JPanel detailPanel = new JPanel(new BorderLayout(10, 10));
         detailPanel.setBorder(new TitledBorder("Chi tiết đánh giá (chọn hàng để xem)"));
@@ -203,8 +205,19 @@ public class EvalResultPanel extends JPanel {
         detailPanel.add(detailScroll, BorderLayout.CENTER);
         detailPanel.add(commentPanel, BorderLayout.SOUTH);
         splitPane.setBottomComponent(detailPanel);
-        add(topPanel, BorderLayout.NORTH);
+        JButton btnLamMoi = UIHelper.createDefaultButton("Làm mới");
+        btnLamMoi.addActionListener(e -> loadData());
+        JPanel southPanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 8, 4));
+        southPanel.add(btnLamMoi);
+        JLabel lblHint = new JLabel("Tìm theo: Tên nhân viên / Kỳ đánh giá");
+        lblHint.setFont(new Font("Segoe UI", Font.ITALIC, 12));
+        lblHint.setForeground(com.hrm.util.UIColors.TEXT_DARK);
+        JPanel northPanel = new JPanel(new BorderLayout(0, 2));
+        northPanel.add(topPanel, BorderLayout.NORTH);
+        northPanel.add(lblHint, BorderLayout.SOUTH);
+        add(northPanel, BorderLayout.NORTH);
         add(splitPane, BorderLayout.CENTER);
+        add(southPanel, BorderLayout.SOUTH);
     }
 
     private void loadData() {
@@ -224,6 +237,11 @@ public class EvalResultPanel extends JPanel {
         for (DanhGiaHieuSuat sub : cachedSubmissions) {
             if (filterMaNV != null && !filterMaNV.equals(sub.getMaNV())) continue;
             if (filterKyId > 0 && sub.getMaDot() != filterKyId) continue;
+            String filterXepLoai = (String) cboXepLoai.getSelectedItem();
+            if (filterXepLoai != null && !"Tất cả xếp loại".equals(filterXepLoai)) {
+                String xepLoai = sub.getXepLoai() != null ? sub.getXepLoai().getTenHienThi() : "";
+                if (!filterXepLoai.equals(xepLoai)) continue;
+            }
             if (!filterKeyword.isEmpty()) {
                 String tenNV  = UIHelper.normalizeSearch(sub.getTenNhanVien() != null ? sub.getTenNhanVien() : "");
                 String tenDot = UIHelper.normalizeSearch(sub.getTenDot() != null ? sub.getTenDot() : "");

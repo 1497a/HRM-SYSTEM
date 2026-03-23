@@ -158,7 +158,11 @@ public class ContractListPanel extends JPanel {
         }
         filterPanel.add(lblTrangThai);
         filterPanel.add(cboTrangThai);
-        panel.add(filterPanel, BorderLayout.CENTER);
+        JLabel lblHint = new JLabel("Tìm theo: Mã HĐ / Số HĐ / Mã NV");
+        lblHint.setFont(new Font("Segoe UI", Font.ITALIC, 12));
+        lblHint.setForeground(UIColors.TEXT_DARK);
+        panel.add(filterPanel, BorderLayout.NORTH);
+        panel.add(lblHint, BorderLayout.SOUTH);
         return panel;
     }
 

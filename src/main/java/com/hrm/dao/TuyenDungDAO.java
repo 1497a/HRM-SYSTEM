@@ -393,6 +393,32 @@ public class TuyenDungDAO {
     }
 
     /**
+     * Cập nhật thông tin cá nhân ứng viên (không thay đổi trangThai, maNV, maTin).
+     */
+    public int updateUngVienInfo(UngVien uv) {
+        String sql = "UPDATE UNGVIEN SET hoTen=?, email=?, dienThoai=?, ngaySinh=?, gioiTinh=?, "
+                + "diaChi=?, trinhDoHocVan=?, kinhNghiem=?, nguonUngTuyen=?, nhanXet=? "
+                + "WHERE maUngVien=?";
+        try (Connection conn = DatabaseConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setString(1, uv.getHoTen());
+            ps.setString(2, uv.getEmail());
+            ps.setString(3, uv.getDienThoai());
+            ps.setDate(4, uv.getNgaySinh() != null ? Date.valueOf(uv.getNgaySinh()) : null);
+            ps.setString(5, uv.getGioiTinh());
+            ps.setString(6, uv.getDiaChi());
+            ps.setString(7, uv.getTrinhDoHocVan());
+            ps.setString(8, uv.getKinhNghiem());
+            ps.setString(9, uv.getNguonUngTuyen());
+            ps.setString(10, uv.getNhanXet());
+            ps.setInt(11, uv.getMaUngVien());
+            return ps.executeUpdate();
+        } catch (SQLException e) {
+            throw new RuntimeException("Loi updateUngVienInfo: " + e.getMessage(), e);
+        }
+    }
+
+    /**
      * Lấy tất cả ứng viên với tenTin transient.
      */
     public List<UngVien> findAllUngVien() {

@@ -40,6 +40,7 @@ public class EvalCycleListPanel extends JPanel {
     private JButton btnViewDetail;
     private TableRowSorter<DefaultTableModel> sorter;
     private JTextField txtTimKiem;
+    private JComboBox<String> cboTrangThai;
     private static final DateTimeFormatter DATE_FORMAT = DateTimeFormatter.ofPattern("dd/MM/yyyy");
     private static final String STATUS_CHUA = "Chưa bắt đầu";
     private static final String STATUS_DANG = "Đang diễn ra";
@@ -67,7 +68,8 @@ public class EvalCycleListPanel extends JPanel {
         sorter.setComparator(0, java.util.Comparator.comparingInt(a -> (Integer) a));
         sorter.setSortKeys(java.util.List.of(new javax.swing.RowSorter.SortKey(0, javax.swing.SortOrder.ASCENDING)));
         txtTimKiem = UIHelper.createSearchField("Tìm theo tên đợt, kỳ, năm...");
-        UIHelper.attachTextSearch(txtTimKiem, sorter, 1, 2, 3);
+        cboTrangThai = new JComboBox<>(new String[]{"Tất cả", STATUS_CHUA, STATUS_DANG, STATUS_DA_KET});
+        UIHelper.attachSearchAndStatusFilter(txtTimKiem, cboTrangThai, sorter, 6, new int[]{1, 2, 3});
         cycleTable.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
         cycleTable.getSelectionModel().addListSelectionListener(e -> onCycleSelected());
         cycleTable.getColumnModel().getColumn(0).setPreferredWidth(40);
@@ -104,25 +106,40 @@ public class EvalCycleListPanel extends JPanel {
     }
 
     private void setupLayout() {
-        JPanel topPanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 8, 5));
-        topPanel.setOpaque(false);
-        topPanel.add(new JLabel("Tìm kiếm:"));
-        topPanel.add(txtTimKiem);
-        if (isAdmin) {
-            topPanel.add(btnTaoDot);
-            topPanel.add(btnOpenCycle);
-            topPanel.add(btnCloseCycle);
-            topPanel.add(btnConfigCriteria);
-        }
-        if (isManager) topPanel.add(btnEvaluate);
-        topPanel.add(btnViewDetail);
-        JButton btnLamMoi = UIHelper.createDefaultButton("Làm mới");
-        btnLamMoi.addActionListener(e -> loadData());
-        topPanel.add(btnLamMoi);
+        // NORTH: hint + search
+        JLabel lblHint = new JLabel("Tìm theo: Tên đợt đánh giá / Kỳ / Năm");
+        lblHint.setFont(new Font("Segoe UI", Font.ITALIC, 12));
+        lblHint.setForeground(UIColors.TEXT_DARK);
+        JPanel searchPanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 8, 5));
+        searchPanel.setOpaque(false);
+        searchPanel.add(new JLabel("Tìm kiếm:"));
+        searchPanel.add(txtTimKiem);
+        searchPanel.add(new JLabel("Trạng thái:"));
+        searchPanel.add(cboTrangThai);
+        JPanel northPanel = new JPanel(new BorderLayout(0, 2));
+        northPanel.setOpaque(false);
+        northPanel.add(searchPanel, BorderLayout.NORTH);
+        northPanel.add(lblHint, BorderLayout.SOUTH);
+        // CENTER: table
         JScrollPane cycleScroll = new JScrollPane(cycleTable);
         cycleScroll.setBorder(BorderFactory.createLineBorder(Color.LIGHT_GRAY));
-        add(topPanel, BorderLayout.NORTH);
+        // SOUTH: action buttons
+        JPanel btnPanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 8, 4));
+        btnPanel.setOpaque(false);
+        if (isAdmin) {
+            btnPanel.add(btnTaoDot);
+            btnPanel.add(btnOpenCycle);
+            btnPanel.add(btnCloseCycle);
+            btnPanel.add(btnConfigCriteria);
+        }
+        if (isManager) btnPanel.add(btnEvaluate);
+        btnPanel.add(btnViewDetail);
+        JButton btnLamMoi = UIHelper.createDefaultButton("Làm mới");
+        btnLamMoi.addActionListener(e -> loadData());
+        btnPanel.add(btnLamMoi);
+        add(northPanel, BorderLayout.NORTH);
         add(cycleScroll, BorderLayout.CENTER);
+        add(btnPanel, BorderLayout.SOUTH);
     }
 
     private void loadData() {

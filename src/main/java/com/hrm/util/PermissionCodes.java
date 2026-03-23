@@ -12,6 +12,9 @@ public final class PermissionCodes {
     public static final String EMPLOYEE_CREATE        = "EMPLOYEE_CREATE";
     public static final String EMPLOYEE_UPDATE        = "EMPLOYEE_UPDATE";
     public static final String EMPLOYEE_STATUS_UPDATE = "EMPLOYEE_STATUS_UPDATE";
+    public static final String EMPLOYEE_IMPORT        = "EMPLOYEE_IMPORT";
+    public static final String EMPLOYEE_EXPORT        = "EMPLOYEE_EXPORT";
+    public static final String EMPLOYEE_PRINT         = "EMPLOYEE_PRINT";
     // To chuc
     public static final String DEPARTMENT_VIEW        = "DEPARTMENT_VIEW";
     public static final String DEPARTMENT_MANAGE      = "DEPARTMENT_MANAGE";
@@ -53,6 +56,7 @@ public final class PermissionCodes {
     public static final String RECRUITMENT_CANDIDATE_CREATE  = "RECRUITMENT_CANDIDATE_CREATE";
     public static final String RECRUITMENT_CANDIDATE_REVIEW  = "RECRUITMENT_CANDIDATE_REVIEW";
     public static final String RECRUITMENT_CANDIDATE_CONVERT = "RECRUITMENT_CANDIDATE_CONVERT";
+    public static final String RECRUITMENT_CANDIDATE_EDIT    = "RECRUITMENT_CANDIDATE_EDIT";
     // Bao cao & thong bao
     public static final String REPORT_VIEW            = "REPORT_VIEW";
     public static final String NOTIFICATION_SEND      = "NOTIFICATION_SEND";

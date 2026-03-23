@@ -90,11 +90,6 @@ class TabSendNotificationPanel extends JPanel {
         gbc.gridy = 0;
         gbc.gridwidth = 2;
         form.add(lblTitle, gbc);
-        JLabel lblScope = new JLabel("Phạm vi gửi: " + getScopeDisplayName());
-        lblScope.setFont(com.hrm.util.UIFonts.TEXT_NORMAL);
-        lblScope.setForeground(UIColors.TEXT_DARK);
-        gbc.gridy = 1;
-        form.add(lblScope, gbc);
         gbc.gridwidth = 1;
         gbc.gridy = 2;
         gbc.gridx = 0;

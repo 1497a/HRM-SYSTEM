@@ -104,7 +104,7 @@ public class UserManagementPanel extends JPanel {
         JLabel lblHint = new JLabel("Tìm theo: Tên đăng nhập / Họ tên");
         lblHint.setFont(new Font("Segoe UI", Font.ITALIC, 12));
         lblHint.setForeground(UIColors.TEXT_DARK);
-        topPanel.add(lblHint, BorderLayout.NORTH);
+        topPanel.add(lblHint, BorderLayout.SOUTH);
         JPanel searchPanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 10, 4));
         searchPanel.setOpaque(false);
         searchPanel.add(new JLabel("Tìm kiếm:"));
@@ -113,7 +113,7 @@ public class UserManagementPanel extends JPanel {
         searchPanel.add(cboTrangThai);
         searchPanel.add(new JLabel("Vai trò:"));
         searchPanel.add(cboVaiTro);
-        topPanel.add(searchPanel, BorderLayout.CENTER);
+        topPanel.add(searchPanel, BorderLayout.NORTH);
         // Center - table
         JScrollPane scrollPane = new JScrollPane(table);
         scrollPane.setBorder(BorderFactory.createLineBorder(Color.LIGHT_GRAY));

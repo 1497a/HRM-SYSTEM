@@ -255,6 +255,7 @@ public class AppointmentFormDialog extends BaseFormDialog {
         gbc.gridwidth = 2;
         gbc.insets = new Insets(0, 8, 12, 8);
         formPanel.add(lblTitle, gbc);
+        lblTitle.setVisible(false);
         gbc.gridwidth = 1;
         gbc.insets = new Insets(6, 8, 6, 8);
         // Nhân viên
@@ -353,7 +354,7 @@ public class AppointmentFormDialog extends BaseFormDialog {
         // Chọn phòng ban
         for (int i = 0; i < cboPhongBan.getItemCount(); i++) {
             PhongBan dept = cboPhongBan.getItemAt(i);
-            if (dept.getId() == bn.getMaPhongBan()) {
+            if (dept.getId() != null && dept.getId().equals(bn.getMaPhongBan())) {
                 cboPhongBan.setSelectedIndex(i);
                 break;
             }

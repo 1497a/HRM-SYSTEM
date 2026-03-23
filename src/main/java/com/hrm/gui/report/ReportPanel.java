@@ -5,6 +5,7 @@ import com.hrm.bus.LuongBUS;
 import com.hrm.bus.NghiPhepBUS;
 import com.hrm.bus.NhanVienBUS;
 import com.hrm.bus.XacThucBUS;
+import com.hrm.gui.components.PurpleTable;
 import com.hrm.gui.components.RoundedPanel;
 import com.hrm.model.BangLuong;
 import com.hrm.model.ChiTietLuong;
@@ -237,18 +238,8 @@ public class ReportPanel extends JPanel {
                 .collect(Collectors.toList());
     }
 
-    private JTable buildStyledTable(DefaultTableModel model) {
-        JTable table = new JTable(model);
-        table.setRowHeight(28);
-        table.setFont(com.hrm.util.UIFonts.TEXT_NORMAL);
-        table.getTableHeader().setFont(com.hrm.util.UIFonts.BOLD_NORMAL);
-        table.getTableHeader().setBackground(UIColors.PRIMARY_PURPLE);
-        table.getTableHeader().setForeground(UIColors.TEXT_DARK);
-        table.getTableHeader().setOpaque(true);
-        table.setSelectionBackground(UIColors.LIGHT_PURPLE);
-        table.setSelectionForeground(UIColors.TEXT_DARK);
-        table.setGridColor(Color.LIGHT_GRAY);
-        return table;
+    private PurpleTable buildStyledTable(DefaultTableModel model) {
+        return new PurpleTable(model);
     }
 
     private String mapLeaveTypeCode(String code) {

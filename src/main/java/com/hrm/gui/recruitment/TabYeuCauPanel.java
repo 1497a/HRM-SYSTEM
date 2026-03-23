@@ -42,8 +42,6 @@ class TabYeuCauPanel extends JPanel {
         setLayout(new BorderLayout(8, 8));
         setBackground(Color.WHITE);
         setBorder(new EmptyBorder(12, 12, 12, 12));
-        JPanel toolbar = new JPanel(new FlowLayout(FlowLayout.LEFT, 8, 4));
-        toolbar.setOpaque(false);
         btnTao = UIHelper.createPrimaryButton("Tạo yêu cầu");
         btnPheDuyet = UIHelper.createSuccessButton("Phê duyệt");
         btnTuChoi = UIHelper.createDangerButton("Từ chối");
@@ -55,14 +53,18 @@ class TabYeuCauPanel extends JPanel {
         JButton btnLamMoi = UIHelper.createDefaultButton("Làm mới");
         btnLamMoi.addActionListener(e -> load());
         txtTimKiem = UIHelper.createSearchField("Tìm theo vị trí, phòng ban...");
-        toolbar.add(btnTao);
-        toolbar.add(btnPheDuyet);
-        toolbar.add(btnTuChoi);
+        JPanel toolbar = new JPanel(new FlowLayout(FlowLayout.LEFT, 8, 4));
+        toolbar.setOpaque(false);
         toolbar.add(new JLabel("Tìm kiếm:"));
         toolbar.add(txtTimKiem);
         toolbar.add(new JLabel("Trạng thái:"));
         toolbar.add(cboTrangThai);
-        toolbar.add(btnLamMoi);
+        JPanel btnPanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 8, 4));
+        btnPanel.setOpaque(false);
+        btnPanel.add(btnTao);
+        btnPanel.add(btnPheDuyet);
+        btnPanel.add(btnTuChoi);
+        btnPanel.add(btnLamMoi);
         String[] cols = {"Mã YC", "Vị trí", "Phòng ban", "Số lượng", "Hạn tuyển dụng", "Trạng thái"};
         model = new DefaultTableModel(cols, 0) {
             @Override
@@ -86,8 +88,16 @@ class TabYeuCauPanel extends JPanel {
         UIHelper.attachSearchAndStatusFilter(txtTimKiem, cboTrangThai, sorter, 5, new int[]{1, 2});
         JScrollPane scroll = new JScrollPane(tbl);
         scroll.setBorder(BorderFactory.createLineBorder(Color.LIGHT_GRAY));
-        add(toolbar, BorderLayout.NORTH);
+        JLabel lblHint = new JLabel("Tìm theo: Vị trí / Phòng ban");
+        lblHint.setFont(new Font("Segoe UI", Font.ITALIC, 12));
+        lblHint.setForeground(UIColors.TEXT_DARK);
+        JPanel northPanel = new JPanel(new BorderLayout(0, 4));
+        northPanel.setOpaque(false);
+        northPanel.add(toolbar, BorderLayout.NORTH);
+        northPanel.add(lblHint, BorderLayout.SOUTH);
+        add(northPanel, BorderLayout.NORTH);
         add(scroll, BorderLayout.CENTER);
+        add(btnPanel, BorderLayout.SOUTH);
         setupPermissions();
         load();
     }

@@ -126,8 +126,14 @@ class HopThoaiChiTietUngVien extends JDialog {
     private JPanel buildButtons() {
         JPanel panel = new JPanel(new FlowLayout(FlowLayout.RIGHT, 8, 4));
         panel.setBackground(Color.WHITE);
-        boolean canReview = SessionContext.getInstance().hasPermission(PermissionCodes.RECRUITMENT_CANDIDATE_REVIEW);
+        boolean canEdit    = SessionContext.getInstance().hasPermission(PermissionCodes.RECRUITMENT_CANDIDATE_EDIT);
+        boolean canReview  = SessionContext.getInstance().hasPermission(PermissionCodes.RECRUITMENT_CANDIDATE_REVIEW);
         boolean canConvert = SessionContext.getInstance().hasPermission(PermissionCodes.RECRUITMENT_CANDIDATE_CONVERT);
+        if (ungVien != null && canEdit) {
+            JButton btnSua = UIHelper.createDefaultButton("Sửa thông tin");
+            btnSua.addActionListener(e -> suaThongTin());
+            panel.add(btnSua);
+        }
         if (ungVien != null && (canReview || canConvert)) {
             JButton btnChuyenTT = UIHelper.createPrimaryButton("Chuyển trạng thái");
             JButton btnChuyenNV = UIHelper.createSuccessButton("Chuyển thành NV");
@@ -140,6 +146,33 @@ class HopThoaiChiTietUngVien extends JDialog {
         btnDong.addActionListener(e -> dispose());
         panel.add(btnDong);
         return panel;
+    }
+
+    private void suaThongTin() {
+        HopThoaiTaoUngVien dialog = new HopThoaiTaoUngVien(this, service, ungVien);
+        dialog.setVisible(true);
+        if (dialog.isThanhCong()) {
+            ungVien = service.getUngVienById(ungVien.getMaUngVien());
+            refreshInfo();
+            daThayDoi = true;
+        }
+    }
+
+    private void refreshInfo() {
+        JPanel main = (JPanel) getContentPane();
+        // CENTER là component đầu tiên trong BorderLayout
+        for (Component c : main.getComponents()) {
+            if (c != null) {
+                Object constraint = ((BorderLayout) main.getLayout()).getConstraints(c);
+                if (BorderLayout.CENTER.equals(constraint)) {
+                    main.remove(c);
+                    break;
+                }
+            }
+        }
+        main.add(buildInfo(), BorderLayout.CENTER);
+        main.revalidate();
+        main.repaint();
     }
 
     private void chuyenTrangThai() {

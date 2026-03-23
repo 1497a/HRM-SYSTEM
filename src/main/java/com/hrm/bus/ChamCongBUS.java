@@ -181,6 +181,28 @@ public class ChamCongBUS {
     }
 
     /**
+     * Check-in thủ công với ca làm được chọn và cờ OT.
+     */
+    public KetQua<ChamCong> checkIn(String maNV, String maCaLam, boolean laOT) {
+        KetQua<Void> permission = validateCheckInOutPermission(ACTION_ATTENDANCE_CHECKIN, maNV);
+        if (!permission.isSuccess()) return KetQua.error(permission.getMessage());
+        if (ValidationUtils.isBlank(maNV)) return KetQua.error("Mã nhân viên không hợp lệ.");
+        if (repository.findChamCongByNVAndNgay(maNV, LocalDate.now()) != null)
+            return KetQua.error("Bạn đã check-in hôm nay rồi.");
+        if (laOT && !coOTDaDuyetHomNay(maNV))
+            return KetQua.error("Bạn chưa có đơn OT được duyệt cho hôm nay. Không thể đánh dấu ca OT.");
+        CaLam caLam = repository.findCaLamById(maCaLam);
+        if (caLam == null) return KetQua.error("Ca làm không hợp lệ.");
+        ChamCong cc = taoBanGhiCheckIn(maNV, LocalDate.now(), caLam, LocalDateTime.now(),
+                ChamCong.PhuongThuc.THU_CONG, laOT);
+        int id = repository.saveChamCong(cc);
+        if (id <= 0) return KetQua.error("Không thể lưu chấm công check-in. Vui lòng thử lại.");
+        String otTag = laOT ? " [CA OT]" : "";
+        return KetQua.success(cc, "Check-in thành công" + otTag + " — Ca: "
+            + caLam.getTenCaLam() + " (" + caLam.getGioBatDau() + " - " + caLam.getGioKetThuc() + ")");
+    }
+
+    /**
      * Check-out: tính soGioLam, gioLamThem nếu có OT đã duyệt.
      */
     public KetQua<ChamCong> checkOut(String maNV) {
@@ -392,6 +414,11 @@ public class ChamCongBUS {
         return processOTRequest(maDK, nguoiDuyetId, true, heSoOT);
     }
 
+    /** Lấy đơn OT theo ID. */
+    public DangKyLamThem getDonLamThemById(int maDK) {
+        return repository.findById(maDK);
+    }
+
     /** Get all OT requests (all statuses). */
     public List<DangKyLamThem> getDonLamThemTatCa() {
         return repository.findAllDangKyLamThem();
@@ -541,6 +568,23 @@ public class ChamCongBUS {
         if (diff > 720)  diff -= 1440;
         if (diff < -720) diff += 1440;
         return Math.abs(diff);
+    }
+
+    /** Trả về ca làm gợi ý theo giờ hiện tại (dùng để pre-select dropdown check-in). */
+    public CaLam getCaLamGoiY() {
+        LocalTime now = LocalTime.now();
+        List<CaLam> ds = repository.findActiveCaLam();
+        CaLam caGoiY = ds.stream()
+            .filter(ca -> trongCuaSoCheckIn(ca, now))
+            .min(java.util.Comparator.comparingLong(ca -> khoangCachDenGioBatDau(ca, now)))
+            .orElse(null);
+        if (caGoiY == null) {
+            caGoiY = ds.stream()
+                .filter(ca -> khoangCachDenGioBatDau(ca, now) <= 120)
+                .min(java.util.Comparator.comparingLong(ca -> khoangCachDenGioBatDau(ca, now)))
+                .orElse(null);
+        }
+        return caGoiY;
     }
 
     /** Kiểm tra nhân viên có đơn OT được duyệt cho hôm nay không. */
@@ -796,9 +840,12 @@ public class ChamCongBUS {
         if (grantedScope == DataScope.ALL) return requiredScope != DataScope.NONE;
         if (grantedScope == requiredScope) return true;
         if (grantedScope == DataScope.DEPT) {
-            return requiredScope == DataScope.TEAM || requiredScope == DataScope.SELF;
+            return requiredScope == DataScope.DEPT
+                    || requiredScope == DataScope.TEAM
+                    || requiredScope == DataScope.SELF;
         }
-        return grantedScope == DataScope.TEAM && requiredScope == DataScope.SELF;
+        return grantedScope == DataScope.TEAM
+                && (requiredScope == DataScope.TEAM || requiredScope == DataScope.SELF);
     }
 
     private com.hrm.model.DataScope getScopeForAction(String action) {

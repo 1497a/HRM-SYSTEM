@@ -6,12 +6,12 @@ import com.hrm.bus.KetQua;
 import com.hrm.util.DialogUtil;
 import com.hrm.util.PermissionCodes;
 import com.hrm.util.SessionContext;
+import com.hrm.gui.components.PurpleTable;
 import com.hrm.util.UIColors;
 import com.hrm.util.UIHelper;
 
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
-import javax.swing.border.TitledBorder;
 import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.table.DefaultTableModel;
 import javax.swing.table.TableRowSorter;
@@ -25,7 +25,7 @@ import java.util.List;
 public class RoleManagementPanel extends JPanel {
     private final XacThucBUS authService;
     private final SessionContext sessionContext;
-    private JTable table;
+    private PurpleTable table;
     private DefaultTableModel tableModel;
     private TableRowSorter<DefaultTableModel> sorter;
     private JButton btnCreate;
@@ -53,14 +53,8 @@ public class RoleManagementPanel extends JPanel {
         btnDelete.addActionListener(e -> deleteRole());
         // Table
         String[] columns = {"Mã vai trò", "Tên vai trò", "Mô tả", "Số quyền", "Hệ thống"};
-        tableModel = new DefaultTableModel(columns, 0) {
-            @Override
-            public boolean isCellEditable(int row, int column) {
-                return false;
-            }
-        };
-        table = new JTable(tableModel);
-        table.setRowHeight(30);
+        tableModel = PurpleTable.createNonEditableModel(columns);
+        table = new PurpleTable(tableModel);
         table.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
         table.getColumnModel().getColumn(0).setPreferredWidth(100);
         table.getColumnModel().getColumn(1).setPreferredWidth(150);
@@ -95,12 +89,25 @@ public class RoleManagementPanel extends JPanel {
     }
 
     private void setupLayout() {
-        // Top panel - buttons
-        JPanel topPanel = new JPanel(new BorderLayout(10, 10));
-        topPanel.setOpaque(false);
-        JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT, 10, 0));
+        // NORTH: hint + search
+        JLabel lblHint = new JLabel("Tìm theo: Mã vai trò / Tên vai trò");
+        lblHint.setFont(new Font("Segoe UI", Font.ITALIC, 12));
+        lblHint.setForeground(UIColors.TEXT_DARK);
+        JPanel searchPanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 8, 4));
+        searchPanel.setOpaque(false);
+        searchPanel.add(new JLabel("Tìm kiếm:"));
+        searchPanel.add(txtTimKiem);
+        JPanel northPanel = new JPanel(new BorderLayout(0, 2));
+        northPanel.setOpaque(false);
+        northPanel.add(searchPanel, BorderLayout.NORTH);
+        northPanel.add(lblHint, BorderLayout.SOUTH);
+        // CENTER: table
+        JScrollPane scrollPane = new JScrollPane(table);
+        scrollPane.setBorder(BorderFactory.createLineBorder(Color.LIGHT_GRAY));
+        // SOUTH: action buttons + info note
+        JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 8, 4));
         buttonPanel.setOpaque(false);
-        JButton btnLamMoi = new JButton("Làm mới");
+        JButton btnLamMoi = UIHelper.createDefaultButton("Làm mới");
         btnLamMoi.addActionListener(e -> loadData());
         buttonPanel.add(btnLamMoi);
         if (sessionContext.hasPermission(PermissionCodes.ROLE_UPDATE)) {
@@ -111,31 +118,19 @@ public class RoleManagementPanel extends JPanel {
             });
             buttonPanel.add(btnMapping);
         }
-        if (sessionContext.hasPermission(PermissionCodes.ROLE_CREATE)) {
-            buttonPanel.add(btnCreate);
-        }
-        if (sessionContext.hasPermission(PermissionCodes.ROLE_UPDATE)) {
-            buttonPanel.add(btnEdit);
-        }
-        if (sessionContext.hasPermission(PermissionCodes.ROLE_DELETE)) {
-            buttonPanel.add(btnDelete);
-        }
-        JPanel searchPanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 8, 4));
-        searchPanel.setOpaque(false);
-        searchPanel.add(new JLabel("Tìm kiếm:"));
-        searchPanel.add(txtTimKiem);
-        topPanel.add(searchPanel, BorderLayout.WEST);
-        topPanel.add(buttonPanel, BorderLayout.EAST);
-        // Center - table
-        JScrollPane scrollPane = new JScrollPane(table);
-        scrollPane.setBorder(new TitledBorder("Danh sách vai trò"));
-        // Info panel
+        if (sessionContext.hasPermission(PermissionCodes.ROLE_CREATE)) buttonPanel.add(btnCreate);
+        if (sessionContext.hasPermission(PermissionCodes.ROLE_UPDATE)) buttonPanel.add(btnEdit);
+        if (sessionContext.hasPermission(PermissionCodes.ROLE_DELETE)) buttonPanel.add(btnDelete);
         JPanel infoPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
         infoPanel.setOpaque(false);
         infoPanel.add(new JLabel("Lưu ý: Vai trò hệ thống (ADMIN) không thể xóa."));
-        add(topPanel, BorderLayout.NORTH);
+        JPanel southPanel = new JPanel(new BorderLayout());
+        southPanel.setOpaque(false);
+        southPanel.add(buttonPanel, BorderLayout.NORTH);
+        southPanel.add(infoPanel, BorderLayout.SOUTH);
+        add(northPanel, BorderLayout.NORTH);
         add(scrollPane, BorderLayout.CENTER);
-        add(infoPanel, BorderLayout.SOUTH);
+        add(southPanel, BorderLayout.SOUTH);
     }
 
     private void loadData() {

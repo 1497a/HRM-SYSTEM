@@ -6,13 +6,13 @@ import com.hrm.model.TaiKhoan;
 import com.hrm.model.ThongBao;
 import com.hrm.util.DialogUtil;
 import com.hrm.util.HRMConstants;
+import com.hrm.gui.components.PurpleTable;
 import com.hrm.util.UIColors;
 import com.hrm.util.UIFonts;
 import com.hrm.util.UIHelper;
 
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
-import javax.swing.border.TitledBorder;
 import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.table.DefaultTableModel;
 import javax.swing.table.TableRowSorter;
@@ -32,7 +32,7 @@ class TabMyNotificationsPanel extends JPanel {
     private static final DateTimeFormatter DATE_FORMAT = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm");
     private final ThongBaoBUS service;
     private final TaiKhoan currentUser;
-    private JTable tblThongBao;
+    private PurpleTable tblThongBao;
     private DefaultTableModel modelThongBao;
     private TableRowSorter<DefaultTableModel> sorterTB;
     private JTextField txtTimKiem;
@@ -44,8 +44,6 @@ class TabMyNotificationsPanel extends JPanel {
         setLayout(new BorderLayout(8, 8));
         setBackground(Color.WHITE);
         setBorder(new EmptyBorder(12, 12, 12, 12));
-        JPanel toolbar = new JPanel(new FlowLayout(FlowLayout.LEFT, 8, 4));
-        toolbar.setOpaque(false);
         JButton btnDanhDauDaDoc = UIHelper.createPrimaryButton("Đánh dấu đã đọc");
         JButton btnDanhDauTatCa = UIHelper.createDefaultButton("Đánh dấu tất cả đã đọc");
         JButton btnLamMoi = UIHelper.createDefaultButton("Làm mới");
@@ -54,29 +52,26 @@ class TabMyNotificationsPanel extends JPanel {
         btnLamMoi.addActionListener(e -> loadThongBao());
         txtTimKiem = UIHelper.createSearchField("Tìm theo tiêu đề, loại thông báo...");
         cboTrangThaiFilter = new JComboBox<>(new String[]{"Tất cả", "Chưa đọc", "Đã đọc"});
+        JPanel toolbar = new JPanel(new FlowLayout(FlowLayout.LEFT, 8, 4));
+        toolbar.setOpaque(false);
         toolbar.add(new JLabel("Tìm kiếm:"));
         toolbar.add(txtTimKiem);
         toolbar.add(new JLabel("Trạng thái:"));
         toolbar.add(cboTrangThaiFilter);
-        toolbar.add(btnDanhDauDaDoc);
-        toolbar.add(btnDanhDauTatCa);
-        toolbar.add(btnLamMoi);
+        JPanel btnPanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 8, 4));
+        btnPanel.setOpaque(false);
+        btnPanel.add(btnDanhDauDaDoc);
+        btnPanel.add(btnDanhDauTatCa);
+        btnPanel.add(btnLamMoi);
         String[] cols = {"Mã", "Tiêu đề", "Loại", "Ngày tạo", "Trạng thái"};
         modelThongBao = new DefaultTableModel(cols, 0) {
             @Override public boolean isCellEditable(int row, int col) { return false; }
         };
-        tblThongBao = new JTable(modelThongBao);
+        tblThongBao = new PurpleTable(modelThongBao);
         sorterTB = new TableRowSorter<>(modelThongBao);
         tblThongBao.setRowSorter(sorterTB);
         UIHelper.attachSearchAndStatusFilter(txtTimKiem, cboTrangThaiFilter, sorterTB, 4, new int[]{1, 2});
-        tblThongBao.setRowHeight(28);
-        tblThongBao.setFont(com.hrm.util.UIFonts.TEXT_NORMAL);
-        tblThongBao.getTableHeader().setFont(com.hrm.util.UIFonts.BOLD_NORMAL);
-        tblThongBao.getTableHeader().setBackground(UIColors.PRIMARY_PURPLE);
-        tblThongBao.getTableHeader().setForeground(UIColors.TEXT_DARK);
         tblThongBao.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
-        tblThongBao.setSelectionBackground(UIColors.LIGHT_PURPLE);
-        tblThongBao.setSelectionForeground(UIColors.TEXT_DARK);
         tblThongBao.getColumnModel().getColumn(0).setMinWidth(0);
         tblThongBao.getColumnModel().getColumn(0).setMaxWidth(0);
         tblThongBao.getColumnModel().getColumn(0).setWidth(0);
@@ -122,9 +117,17 @@ class TabMyNotificationsPanel extends JPanel {
             }
         });
         JScrollPane scroll = new JScrollPane(tblThongBao);
-        scroll.setBorder(new TitledBorder("Danh sách thông báo"));
-        add(toolbar, BorderLayout.NORTH);
+        scroll.setBorder(BorderFactory.createLineBorder(Color.LIGHT_GRAY));
+        JLabel lblHint = new JLabel("Tìm theo: Tiêu đề / Loại thông báo");
+        lblHint.setFont(new Font("Segoe UI", Font.ITALIC, 12));
+        lblHint.setForeground(UIColors.TEXT_DARK);
+        JPanel northPanel = new JPanel(new BorderLayout(0, 4));
+        northPanel.setOpaque(false);
+        northPanel.add(toolbar, BorderLayout.NORTH);
+        northPanel.add(lblHint, BorderLayout.SOUTH);
+        add(northPanel, BorderLayout.NORTH);
         add(scroll, BorderLayout.CENTER);
+        add(btnPanel, BorderLayout.SOUTH);
         loadThongBao();
     }
 
