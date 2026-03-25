@@ -59,6 +59,7 @@ public class LeaveListPanel extends JPanel {
     private void initComponents() {
         setLayout(new BorderLayout(10, 10));
         setBorder(new EmptyBorder(15, 15, 15, 15));
+        setBackground(Color.WHITE);
         // Status combo
         cboStatus = new JComboBox<>(new String[]{"Tất cả",
                 DonXinNghiPhep.TrangThai.CHO_DUYET.getTenHienThi(),
@@ -94,7 +95,7 @@ public class LeaveListPanel extends JPanel {
         btnCreate = UIHelper.createSuccessButton("Tạo đơn mới");
         btnCreate.addActionListener(e -> createRequest());
         btnApprove = UIHelper.createPrimaryButton("Xử lý đơn");
-        btnApprove.setEnabled(canApprove);
+        btnApprove.setEnabled(false);
         btnApprove.addActionListener(e -> approveRequest());
         // Table
         String[] columns = {"ID", "Nhân viên", "Loại phép", "Từ ngày", "Đến ngày",
@@ -127,18 +128,25 @@ public class LeaveListPanel extends JPanel {
         sorter.setComparator(1, UIHelper.vietnameseNameComparator());
         // Mặc định sort theo ID tăng dần
         sorter.setSortKeys(List.of(new RowSorter.SortKey(0, SortOrder.ASCENDING)));
+        table.getSelectionModel().addListSelectionListener(e -> {
+            if (!e.getValueIsAdjusting()) {
+                updateApproveButtonState();
+            }
+        });
         txtTimKiem = UIHelper.createSearchField("Tìm theo tên nhân viên, lý do nghỉ...");
         txtTimKiem.addKeyListener(new java.awt.event.KeyAdapter() {
             @Override public void keyReleased(java.awt.event.KeyEvent e) { applyFilter(); }
         });
         // Balance Panel
         balancePanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 20, 5));
+        balancePanel.setOpaque(false);
         balancePanel.setBorder(BorderFactory.createTitledBorder("Số ngày phép còn lại"));
     }
 
     private void setupLayout() {
         // Top panel: hint + filters + balance
         JPanel topPanel = new JPanel(new BorderLayout(10, 4));
+        topPanel.setOpaque(false);
         topPanel.setBorder(new EmptyBorder(0, 0, 10, 0));
         JLabel lblHint = new JLabel("Tìm theo tên nhân viên hoặc lý do nghỉ.");
         lblHint.setFont(new Font("Segoe UI", Font.ITALIC, 12));
@@ -193,6 +201,8 @@ public class LeaveListPanel extends JPanel {
             });
         }
         applyFilter();
+        table.clearSelection();
+        updateApproveButtonState();
         String targetEmpId = filterMaNV != null ? filterMaNV : empId;
         if (targetEmpId != null) {
             updateBalanceDisplay(targetEmpId);
@@ -209,6 +219,8 @@ public class LeaveListPanel extends JPanel {
         boolean hasStatus = s != null && !"Tất cả".equals(s);
         if (!hasStatus && keyword.isEmpty()) {
             sorter.setRowFilter(null);
+            table.clearSelection();
+            updateApproveButtonState();
             return;
         }
         java.util.List<RowFilter<DefaultTableModel, Object>> filters = new java.util.ArrayList<>();
@@ -226,6 +238,12 @@ public class LeaveListPanel extends JPanel {
             filters.add(RowFilter.regexFilter("^" + java.util.regex.Pattern.quote(s) + "$", 7));
         }
         sorter.setRowFilter(filters.size() == 1 ? filters.get(0) : RowFilter.andFilter(filters));
+        table.clearSelection();
+        updateApproveButtonState();
+    }
+
+    private void updateApproveButtonState() {
+        btnApprove.setEnabled(canApprove && table.getSelectedRow() >= 0);
     }
 
     private void updateBalanceDisplay(String empId) {

@@ -462,14 +462,18 @@ public class TaiKhoanDAO {
                             if (permission == null || permission.getId() == null || permission.getId().trim().isEmpty()) {
                                 continue;
                             }
-                            DataScope scope = permission.getPhamVi();
-                            if (scope == null || scope == DataScope.NONE) {
-                                continue;
-                            }
-                                ps.setString(1, maVaiTro.trim());
-                                ps.setString(2, permission.getId().trim());
+                            ps.setString(1, maVaiTro.trim());
+                            ps.setString(2, permission.getId().trim());
+                            if (permission.isCoPhamVi()) {
+                                DataScope scope = permission.getPhamVi();
+                                if (scope == null || scope == DataScope.NONE) {
+                                    continue;
+                                }
                                 ps.setString(3, scope.name());
-                                ps.addBatch();
+                            } else {
+                                ps.setNull(3, Types.VARCHAR);
+                            }
+                            ps.addBatch();
                         }
                         int[] counts = ps.executeBatch();
                         for (int ct : counts) total += (ct >= 0 ? ct : 0);

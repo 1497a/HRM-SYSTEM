@@ -95,7 +95,32 @@ public class UIHelper {
     public static JButton createDefaultButton(String text) {
         JButton btn = new JButton(text);
         btn.setFont(new Font("Segoe UI", Font.PLAIN, 12));
+        btn.setBackground(Color.WHITE);
+        btn.setForeground(UIColors.TEXT_DARK);
+        btn.setFocusPainted(false);
+        btn.setOpaque(true);
+        btn.setContentAreaFilled(true);
         btn.setCursor(new Cursor(Cursor.HAND_CURSOR));
+        btn.setBorder(BorderFactory.createCompoundBorder(
+                BorderFactory.createLineBorder(new Color(214, 219, 229)),
+                BorderFactory.createEmptyBorder(8, 15, 8, 15)));
+        final Color originalBg = Color.WHITE;
+        final Color hoverBg = new Color(245, 247, 250);
+        btn.addMouseListener(new java.awt.event.MouseAdapter() {
+            @Override
+            public void mouseEntered(java.awt.event.MouseEvent e) {
+                if (btn.isEnabled()) {
+                    btn.setBackground(hoverBg);
+                }
+            }
+
+            @Override
+            public void mouseExited(java.awt.event.MouseEvent e) {
+                if (btn.isEnabled()) {
+                    btn.setBackground(originalBg);
+                }
+            }
+        });
         return btn;
     }
 

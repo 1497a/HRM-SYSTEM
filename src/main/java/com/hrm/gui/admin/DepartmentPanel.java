@@ -36,11 +36,13 @@ public class DepartmentPanel extends JPanel {
         setBackground(Color.WHITE);
         setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
         JPanel topPanel = new JPanel(new BorderLayout());
+        topPanel.setOpaque(false);
         JLabel lblHint = new JLabel("Tìm theo: Mã / Tên phòng ban / Trạng thái");
         lblHint.setFont(new Font("Segoe UI", Font.ITALIC, 12));
         lblHint.setForeground(UIColors.TEXT_DARK);
         topPanel.add(lblHint, BorderLayout.SOUTH);
         JPanel searchFilterPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
+        searchFilterPanel.setOpaque(false);
         JLabel lblSearch = new JLabel("Tìm kiếm:");
         lblSearch.setFont(UIFonts.TEXT_NORMAL);
         lblSearch.setForeground(UIColors.TEXT_DARK);
@@ -73,6 +75,7 @@ public class DepartmentPanel extends JPanel {
         add(scroll, BorderLayout.CENTER);
         btnThem = UIHelper.createPrimaryButton("+ Thêm");
         JPanel btnPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
+        btnPanel.setOpaque(false);
         btnPanel.add(btnThem);
         JButton btnLamMoi = UIHelper.createDefaultButton("Làm mới");
         btnLamMoi.addActionListener(e -> refreshTable());

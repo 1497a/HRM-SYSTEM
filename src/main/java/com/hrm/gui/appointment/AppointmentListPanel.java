@@ -1,7 +1,6 @@
 package com.hrm.gui.appointment;
 
 import com.hrm.bus.BoNhiemBUS;
-import com.hrm.gui.components.PurpleButton;
 import com.hrm.gui.components.PurpleTable;
 import com.hrm.model.BoNhiem;
 import com.hrm.util.HRMConstants;
@@ -73,8 +72,8 @@ public class AppointmentListPanel extends JPanel {
     private JComboBox<String> cboTrangThai;
     private JComboBox<String> cboLoai;
     private JTextField txtTimKiem;
-    private PurpleButton btnTao;
-    private PurpleButton btnXemChiTiet;
+    private JButton btnTao;
+    private JButton btnXemChiTiet;
     private List<BoNhiem> danhSachHienThi = new ArrayList<>();
     public AppointmentListPanel() {
         setLayout(new BorderLayout(0, 8));
@@ -173,12 +172,12 @@ public class AppointmentListPanel extends JPanel {
     private JPanel buildSouthPanel() {
         JPanel panel = new JPanel(new FlowLayout(FlowLayout.LEFT, 8, 6));
         panel.setOpaque(false);
-        btnTao = new PurpleButton("+ Tạo bổ nhiệm");
+        btnTao = UIHelper.createSuccessButton("+ Tạo bổ nhiệm");
         panel.add(btnTao);
-        btnXemChiTiet = new PurpleButton("Xem chi tiết");
+        btnXemChiTiet = UIHelper.createPrimaryButton("Xem chi tiết");
         btnXemChiTiet.setEnabled(false);
         panel.add(btnXemChiTiet);
-        JButton btnLamMoi = new JButton("Làm mới");
+        JButton btnLamMoi = UIHelper.createDefaultButton("Làm mới");
         btnLamMoi.addActionListener(e -> loadData());
         panel.add(btnLamMoi);
         return panel;

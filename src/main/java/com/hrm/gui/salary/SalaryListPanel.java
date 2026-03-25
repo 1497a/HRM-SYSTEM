@@ -103,7 +103,8 @@ public class SalaryListPanel extends JPanel {
         btnTinhLaiBangLuong = UIHelper.createPrimaryButton("Tính lại kỳ lương");
         btnDuyetBangLuong = UIHelper.createWarningButton("Duyệt bảng lương");
         btnKhoaBangLuong = UIHelper.createDangerButton("Khóa bảng lương");
-        btnXemChiTiet = UIHelper.createDefaultButton("Xem chi tiết nhân viên →");
+        btnXemChiTiet = UIHelper.createPrimaryButton("Xem chi tiết nhân viên");
+        btnXemChiTiet.setEnabled(false);
         JButton btnLamMoi1 = UIHelper.createDefaultButton("Làm mới");
         btnTinhLuong.addActionListener(e -> tinhLuongThangMoi());
         btnTinhLaiBangLuong.addActionListener(e -> tinhLaiBangLuong());
@@ -534,6 +535,9 @@ public class SalaryListPanel extends JPanel {
                 && bangLuong.getTrangThai() == BangLuong.TrangThai.DA_TINH;
         if (btnTinhLaiBangLuong != null) {
             btnTinhLaiBangLuong.setEnabled(canRecalculateBangLuong);
+        }
+        if (btnXemChiTiet != null) {
+            btnXemChiTiet.setEnabled(bangLuong != null);
         }
         if (btnTinhLaiNhanVien != null) {
             boolean hasSelectedRow = tblChiTiet != null && tblChiTiet.getSelectedRow() >= 0;

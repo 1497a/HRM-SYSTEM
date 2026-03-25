@@ -56,6 +56,7 @@ public class UserManagementPanel extends JPanel {
 
         btnEdit = UIHelper.createPrimaryButton("Sửa");
         btnEdit.addActionListener(e -> editUser());
+        btnEdit.setEnabled(false);
 
         String[] columns = {"ID", "Tên đăng nhập", "Họ tên", "Email", "Vai trò", "Trạng thái"};
         tableModel = PurpleTable.createNonEditableModel(columns);
@@ -79,6 +80,11 @@ public class UserManagementPanel extends JPanel {
         sorter.setComparator(0, Comparator.comparingInt(a -> (Integer) a));
         sorter.setComparator(2, UIHelper.vietnameseNameComparator());
         sorter.setSortKeys(List.of(new RowSorter.SortKey(0, SortOrder.ASCENDING)));
+        table.getSelectionModel().addListSelectionListener(e -> {
+            if (!e.getValueIsAdjusting()) {
+                updateEditButtonState();
+            }
+        });
 
         cboTrangThai = new JComboBox<>(new String[]{"Tất cả", "Hoạt động", "Bị khóa"});
         cboTrangThai.addActionListener(e -> applyFilter());
@@ -145,6 +151,8 @@ public class UserManagementPanel extends JPanel {
             };
             tableModel.addRow(row);
         }
+        table.clearSelection();
+        updateEditButtonState();
     }
 
     private void searchUsers() {
@@ -188,6 +196,12 @@ public class UserManagementPanel extends JPanel {
         } else {
             sorter.setRowFilter(RowFilter.andFilter(active));
         }
+        table.clearSelection();
+        updateEditButtonState();
+    }
+
+    private void updateEditButtonState() {
+        btnEdit.setEnabled(table.getSelectedRow() >= 0);
     }
 
     private void createUser() {

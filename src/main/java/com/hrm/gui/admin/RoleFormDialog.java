@@ -257,16 +257,20 @@ public class RoleFormDialog extends BaseFormDialog {
         txtDescription.setText(editingRole.getMoTa() != null ? editingRole.getMoTa() : "");
 
         Map<String, DataScope> scopeByPermission = new HashMap<>();
+        Map<String, Boolean> grantedByPermission = new HashMap<>();
         for (Quyen permission : editingRole.getQuyens()) {
+            grantedByPermission.put(permission.getId(), true);
             scopeByPermission.put(permission.getId(),
                     permission.getPhamVi() != null ? permission.getPhamVi() : DataScope.NONE);
         }
 
         for (int row = 0; row < permissionTableModel.getRowCount(); row++) {
             String permissionCode = String.valueOf(permissionTableModel.getValueAt(row, 0));
+            boolean needsScope = rowCoPhamVi.getOrDefault(row, true);
+            boolean granted = grantedByPermission.getOrDefault(permissionCode, false);
             DataScope scope = scopeByPermission.getOrDefault(permissionCode, DataScope.NONE);
-            if (!rowCoPhamVi.getOrDefault(row, true) && scope != DataScope.NONE) {
-                scope = DataScope.ALL;
+            if (!needsScope) {
+                scope = granted ? DataScope.ALL : DataScope.NONE;
             }
             permissionTableModel.setValueAt(scope, row, 4);
         }
@@ -306,7 +310,10 @@ public class RoleFormDialog extends BaseFormDialog {
 
             Quyen permission = new Quyen(source.getId(), source.getTenQuyen(), source.getNhomQuyen());
             permission.setMoTa(source.getMoTa());
-            permission.setPhamVi(scope);
+            permission.setCoPhamVi(source.isCoPhamVi());
+            if (source.isCoPhamVi()) {
+                permission.setPhamVi(scope);
+            }
             selectedPermissions.add(permission);
         }
 

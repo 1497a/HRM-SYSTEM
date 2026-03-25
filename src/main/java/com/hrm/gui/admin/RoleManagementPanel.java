@@ -49,6 +49,7 @@ public class RoleManagementPanel extends JPanel {
 
         btnEdit = UIHelper.createPrimaryButton("Sửa");
         btnEdit.addActionListener(e -> editRole());
+        btnEdit.setEnabled(false);
 
         String[] columns = {"Mã vai trò", "Tên vai trò", "Mô tả", "Số quyền", "Hệ thống"};
         tableModel = PurpleTable.createNonEditableModel(columns);
@@ -78,6 +79,11 @@ public class RoleManagementPanel extends JPanel {
         table.setRowSorter(sorter);
         sorter.setComparator(1, UIHelper.vietnameseNameComparator());
         sorter.setSortKeys(List.of(new RowSorter.SortKey(1, SortOrder.ASCENDING)));
+        table.getSelectionModel().addListSelectionListener(e -> {
+            if (!e.getValueIsAdjusting()) {
+                updateEditButtonState();
+            }
+        });
 
         txtTimKiem = UIHelper.createSearchField("Tìm theo mã hoặc tên vai trò...");
         UIHelper.attachTextSearch(txtTimKiem, sorter, 0, 1);
@@ -151,6 +157,12 @@ public class RoleManagementPanel extends JPanel {
             };
             tableModel.addRow(row);
         }
+        table.clearSelection();
+        updateEditButtonState();
+    }
+
+    private void updateEditButtonState() {
+        btnEdit.setEnabled(table.getSelectedRow() >= 0);
     }
 
     private void createRole() {

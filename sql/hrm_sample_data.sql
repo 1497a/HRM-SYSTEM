@@ -177,6 +177,9 @@ INSERT INTO QUYEN (maQuyen, tenQuyen, nhomQuyen, moTa) VALUES
 ('EMPLOYEE_CREATE',     'Tạo nhân viên',                                  'Nhân viên',  'Tạo hồ sơ nhân viên mới vào hệ thống'),
 ('EMPLOYEE_UPDATE',     'Sửa thông tin nhân viên',                        'Nhân viên',  'Sửa thông tin cá nhân và liên hệ của nhân viên'),
 ('EMPLOYEE_STATUS_UPDATE', 'Đổi trạng thái nhân viên',                   'Nhân viên',  'Đổi trạng thái làm việc của nhân viên'),
+('EMPLOYEE_IMPORT',       'Nhập nhân viên từ Excel',                        'Nhân viên',  'Import danh sách nhân viên hàng loạt từ file Excel'),
+('EMPLOYEE_EXPORT',       'Xuất danh sách nhân viên ra Excel',              'Nhân viên',  'Xuất danh sách nhân viên ra file Excel'),
+('EMPLOYEE_PRINT',        'In danh sách nhân viên',                         'Nhân viên',  'In danh sách nhân viên ra giấy'),
 -- To chuc
 ('DEPARTMENT_VIEW',     'Xem phòng ban',                                  'Tổ chức',    'Xem danh sách và thông tin phòng ban'),
 ('DEPARTMENT_MANAGE',   'Thêm, sửa và vô hiệu hóa phòng ban',            'Tổ chức',    'Toàn quyền cơ cấu phòng ban: thêm mới, sửa tên/phân cấp, vô hiệu hóa'),
@@ -240,7 +243,7 @@ UPDATE QUYEN SET coPhamVi = FALSE WHERE maQuyen IN (
     -- (1) Luon SELF
     'ATTENDANCE_CHECKIN', 'OVERTIME_REQUEST', 'LEAVE_CREATE',
     -- (2) Nhan vien
-    'EMPLOYEE_CREATE', 'EMPLOYEE_STATUS_UPDATE',
+    'EMPLOYEE_CREATE', 'EMPLOYEE_STATUS_UPDATE', 'EMPLOYEE_IMPORT', 'EMPLOYEE_EXPORT', 'EMPLOYEE_PRINT',
     -- (2) To chuc
     'DEPARTMENT_MANAGE', 'POSITION_MANAGE','POSITION_VIEW','DEPARTMENT_VIEW',
     -- (2) Bo nhiem
@@ -266,7 +269,7 @@ UPDATE QUYEN SET coPhamVi = FALSE WHERE maQuyen IN (
 
 -- ADMIN: toàn quyền — không thay đổi
 INSERT IGNORE INTO VAITRO_QUYEN (maVaiTro, maQuyen, phamVi)
-SELECT 'ADMIN', maQuyen, 'ALL' FROM QUYEN;
+SELECT 'ADMIN', maQuyen, CASE WHEN coPhamVi THEN 'ALL' ELSE NULL END FROM QUYEN;
 
 -- -----------------------------------------------
 -- NHAN_VIEN: chỉ xem/thao tác dữ liệu bản thân
@@ -304,7 +307,7 @@ INSERT INTO VAITRO_QUYEN (maVaiTro, maQuyen, phamVi) VALUES
 ('QUAN_LY', 'EVAL_VIEW',             'TEAM'),
 ('QUAN_LY', 'EVAL_REVIEW',           'TEAM'),
 ('QUAN_LY', 'RECRUITMENT_REQUEST',   'TEAM'),
-('QUAN_LY', 'CHANGE_PASSWORD',       'ALL');
+('QUAN_LY', 'CHANGE_PASSWORD',       NULL);
 
 -- -----------------------------------------------
 -- TRUONG_PHONG (IT, KD, MKT — base thuần): quản lý cấp phòng
@@ -328,53 +331,56 @@ INSERT INTO VAITRO_QUYEN (maVaiTro, maQuyen, phamVi) VALUES
 ('TRUONG_PHONG', 'RECRUITMENT_CANDIDATE_REVIEW', 'DEPT'),
 ('TRUONG_PHONG', 'NOTIFICATION_SEND',     'DEPT'),
 ('TRUONG_PHONG', 'REPORT_VIEW',           'DEPT'),
-('TRUONG_PHONG', 'DEPARTMENT_VIEW',       'DEPT'),
-('TRUONG_PHONG', 'POSITION_VIEW',         'DEPT'),
-('TRUONG_PHONG', 'CHANGE_PASSWORD',       'ALL');
+('TRUONG_PHONG', 'DEPARTMENT_VIEW',       NULL),
+('TRUONG_PHONG', 'POSITION_VIEW',         NULL),
+('TRUONG_PHONG', 'CHANGE_PASSWORD',       NULL);
 
 -- -----------------------------------------------
 -- TRUONG_PHONG_NS: base TRUONG_PHONG + toàn quyền HR
 -- Có thêm: EMPLOYEE_CREATE/EMPLOYEE_STATUS_UPDATE, APPOINTMENT_CREATE/APPROVE,
 --          CONTRACT_CREATE/MANAGE, LEAVE_MANAGE, EVAL_MANAGE,
 --          RECRUITMENT_MANAGE, REPORT_VIEW, NOTIFICATION_SEND=ALL
--- phamVi cho mọi CREATE/MANAGE=ALL vì NS xử lý dữ liệu toàn công ty
+-- Các quyền có scope giữ ALL; quyền nhị phân lưu NULL ở phamVi
 -- -----------------------------------------------
 INSERT INTO VAITRO_QUYEN (maVaiTro, maQuyen, phamVi) VALUES
 ('TRUONG_PHONG_NS', 'EMPLOYEE_VIEW',         'ALL'),
-('TRUONG_PHONG_NS', 'EMPLOYEE_CREATE',       'ALL'),
+('TRUONG_PHONG_NS', 'EMPLOYEE_CREATE',       NULL),
 ('TRUONG_PHONG_NS', 'EMPLOYEE_UPDATE',       'ALL'),
-('TRUONG_PHONG_NS', 'EMPLOYEE_STATUS_UPDATE','ALL'),
+('TRUONG_PHONG_NS', 'EMPLOYEE_STATUS_UPDATE',NULL),
+('TRUONG_PHONG_NS', 'EMPLOYEE_IMPORT',       NULL),
+('TRUONG_PHONG_NS', 'EMPLOYEE_EXPORT',       NULL),
+('TRUONG_PHONG_NS', 'EMPLOYEE_PRINT',        NULL),
 ('TRUONG_PHONG_NS', 'APPOINTMENT_VIEW',      'ALL'),
-('TRUONG_PHONG_NS', 'APPOINTMENT_CREATE',    'ALL'),
+('TRUONG_PHONG_NS', 'APPOINTMENT_CREATE',    NULL),
 ('TRUONG_PHONG_NS', 'APPOINTMENT_APPROVE',   'ALL'),
 ('TRUONG_PHONG_NS', 'ATTENDANCE_VIEW',       'ALL'),
 ('TRUONG_PHONG_NS', 'ATTENDANCE_CHECKIN',    'SELF'),
-('TRUONG_PHONG_NS', 'ATTENDANCE_MANAGE',     'ALL'),
+('TRUONG_PHONG_NS', 'ATTENDANCE_MANAGE',     NULL),
 ('TRUONG_PHONG_NS', 'OVERTIME_REQUEST',      'SELF'),
 ('TRUONG_PHONG_NS', 'OVERTIME_APPROVE',      'ALL'),
 ('TRUONG_PHONG_NS', 'CONTRACT_VIEW',         'ALL'),
-('TRUONG_PHONG_NS', 'CONTRACT_CREATE',       'ALL'),
-('TRUONG_PHONG_NS', 'CONTRACT_APPROVE',      'ALL'),
-('TRUONG_PHONG_NS', 'CONTRACT_MANAGE',       'ALL'),
+('TRUONG_PHONG_NS', 'CONTRACT_CREATE',       NULL),
+('TRUONG_PHONG_NS', 'CONTRACT_APPROVE',      NULL),
+('TRUONG_PHONG_NS', 'CONTRACT_MANAGE',       NULL),
 ('TRUONG_PHONG_NS', 'PAYROLL_VIEW',          'ALL'),
 ('TRUONG_PHONG_NS', 'LEAVE_VIEW',            'ALL'),
 ('TRUONG_PHONG_NS', 'LEAVE_CREATE',          'SELF'),
 ('TRUONG_PHONG_NS', 'LEAVE_APPROVE',         'ALL'),
-('TRUONG_PHONG_NS', 'LEAVE_MANAGE',          'ALL'),
+('TRUONG_PHONG_NS', 'LEAVE_MANAGE',          NULL),
 ('TRUONG_PHONG_NS', 'EVAL_VIEW',             'ALL'),
-('TRUONG_PHONG_NS', 'EVAL_MANAGE',           'ALL'),
+('TRUONG_PHONG_NS', 'EVAL_MANAGE',           NULL),
 ('TRUONG_PHONG_NS', 'EVAL_REVIEW',           'ALL'),
 ('TRUONG_PHONG_NS', 'RECRUITMENT_VIEW',      'ALL'),
 ('TRUONG_PHONG_NS', 'RECRUITMENT_REQUEST',   'DEPT'),
-('TRUONG_PHONG_NS', 'RECRUITMENT_MANAGE',    'ALL'),
-('TRUONG_PHONG_NS', 'RECRUITMENT_CANDIDATE_CREATE',  'ALL'),
+('TRUONG_PHONG_NS', 'RECRUITMENT_MANAGE',    NULL),
+('TRUONG_PHONG_NS', 'RECRUITMENT_CANDIDATE_CREATE',  NULL),
 ('TRUONG_PHONG_NS', 'RECRUITMENT_CANDIDATE_REVIEW',  'ALL'),
-('TRUONG_PHONG_NS', 'RECRUITMENT_CANDIDATE_CONVERT', 'ALL'),
+('TRUONG_PHONG_NS', 'RECRUITMENT_CANDIDATE_CONVERT', NULL),
 ('TRUONG_PHONG_NS', 'REPORT_VIEW',           'ALL'),
 ('TRUONG_PHONG_NS', 'NOTIFICATION_SEND',     'ALL'),
-('TRUONG_PHONG_NS', 'DEPARTMENT_VIEW',       'ALL'),
-('TRUONG_PHONG_NS', 'POSITION_VIEW',         'ALL'),
-('TRUONG_PHONG_NS', 'CHANGE_PASSWORD',       'ALL');
+('TRUONG_PHONG_NS', 'DEPARTMENT_VIEW',       NULL),
+('TRUONG_PHONG_NS', 'POSITION_VIEW',         NULL),
+('TRUONG_PHONG_NS', 'CHANGE_PASSWORD',       NULL);
 
 -- -----------------------------------------------
 -- TRUONG_PHONG_KT: base TRUONG_PHONG + quyền tài chính
@@ -386,12 +392,12 @@ INSERT INTO VAITRO_QUYEN (maVaiTro, maQuyen, phamVi) VALUES
 ('TRUONG_PHONG_KT', 'APPOINTMENT_VIEW',      'DEPT'),
 ('TRUONG_PHONG_KT', 'ATTENDANCE_VIEW',       'ALL'),
 ('TRUONG_PHONG_KT', 'ATTENDANCE_CHECKIN',    'SELF'),
-('TRUONG_PHONG_KT', 'ALLOWANCE_MANAGE',      'ALL'),
+('TRUONG_PHONG_KT', 'ALLOWANCE_MANAGE',      NULL),
 ('TRUONG_PHONG_KT', 'OVERTIME_REQUEST',      'SELF'),
 ('TRUONG_PHONG_KT', 'OVERTIME_APPROVE',      'DEPT'),
 ('TRUONG_PHONG_KT', 'CONTRACT_VIEW',         'ALL'),
 ('TRUONG_PHONG_KT', 'PAYROLL_VIEW',          'ALL'),
-('TRUONG_PHONG_KT', 'PAYROLL_CALCULATE',     'ALL'),
+('TRUONG_PHONG_KT', 'PAYROLL_CALCULATE',     NULL),
 ('TRUONG_PHONG_KT', 'LEAVE_VIEW',            'DEPT'),
 ('TRUONG_PHONG_KT', 'LEAVE_CREATE',          'SELF'),
 ('TRUONG_PHONG_KT', 'LEAVE_APPROVE',         'DEPT'),
@@ -401,8 +407,8 @@ INSERT INTO VAITRO_QUYEN (maVaiTro, maQuyen, phamVi) VALUES
 ('TRUONG_PHONG_KT', 'RECRUITMENT_REQUEST',   'DEPT'),
 ('TRUONG_PHONG_KT', 'REPORT_VIEW',           'ALL'),
 ('TRUONG_PHONG_KT', 'NOTIFICATION_SEND',     'DEPT'),
-('TRUONG_PHONG_KT', 'PAYROLL_LOCK',          'ALL'),
-('TRUONG_PHONG_KT', 'CHANGE_PASSWORD',       'ALL');
+('TRUONG_PHONG_KT', 'PAYROLL_LOCK',          NULL),
+('TRUONG_PHONG_KT', 'CHANGE_PASSWORD',       NULL);
 
 -- -----------------------------------------------
 -- TONG_GIAM_DOC: toàn quyền nghiệp vụ
@@ -410,81 +416,87 @@ INSERT INTO VAITRO_QUYEN (maVaiTro, maQuyen, phamVi) VALUES
 -- -----------------------------------------------
 INSERT INTO VAITRO_QUYEN (maVaiTro, maQuyen, phamVi) VALUES
 ('TONG_GIAM_DOC', 'EMPLOYEE_VIEW',         'ALL'),
-('TONG_GIAM_DOC', 'EMPLOYEE_CREATE',       'ALL'),
+('TONG_GIAM_DOC', 'EMPLOYEE_CREATE',       NULL),
 ('TONG_GIAM_DOC', 'EMPLOYEE_UPDATE',       'ALL'),
-('TONG_GIAM_DOC', 'EMPLOYEE_STATUS_UPDATE','ALL'),
-('TONG_GIAM_DOC', 'DEPARTMENT_VIEW',       'ALL'),
-('TONG_GIAM_DOC', 'DEPARTMENT_MANAGE',     'ALL'),
-('TONG_GIAM_DOC', 'POSITION_VIEW',         'ALL'),
-('TONG_GIAM_DOC', 'POSITION_MANAGE',       'ALL'),
+('TONG_GIAM_DOC', 'EMPLOYEE_STATUS_UPDATE',NULL),
+('TONG_GIAM_DOC', 'EMPLOYEE_IMPORT',       NULL),
+('TONG_GIAM_DOC', 'EMPLOYEE_EXPORT',       NULL),
+('TONG_GIAM_DOC', 'EMPLOYEE_PRINT',        NULL),
+('TONG_GIAM_DOC', 'DEPARTMENT_VIEW',       NULL),
+('TONG_GIAM_DOC', 'DEPARTMENT_MANAGE',     NULL),
+('TONG_GIAM_DOC', 'POSITION_VIEW',         NULL),
+('TONG_GIAM_DOC', 'POSITION_MANAGE',       NULL),
 ('TONG_GIAM_DOC', 'APPOINTMENT_VIEW',      'ALL'),
-('TONG_GIAM_DOC', 'APPOINTMENT_CREATE',    'ALL'),
+('TONG_GIAM_DOC', 'APPOINTMENT_CREATE',    NULL),
 ('TONG_GIAM_DOC', 'APPOINTMENT_APPROVE',   'ALL'),
 ('TONG_GIAM_DOC', 'ATTENDANCE_VIEW',       'ALL'),
 ('TONG_GIAM_DOC', 'ATTENDANCE_CHECKIN',    'SELF'),
-('TONG_GIAM_DOC', 'ATTENDANCE_MANAGE',     'ALL'),
-('TONG_GIAM_DOC', 'ALLOWANCE_MANAGE',      'ALL'),
+('TONG_GIAM_DOC', 'ATTENDANCE_MANAGE',     NULL),
+('TONG_GIAM_DOC', 'ALLOWANCE_MANAGE',      NULL),
 ('TONG_GIAM_DOC', 'OVERTIME_REQUEST',      'SELF'),
 ('TONG_GIAM_DOC', 'OVERTIME_APPROVE',      'ALL'),
 ('TONG_GIAM_DOC', 'CONTRACT_VIEW',         'ALL'),
-('TONG_GIAM_DOC', 'CONTRACT_CREATE',       'ALL'),
-('TONG_GIAM_DOC', 'CONTRACT_APPROVE',      'ALL'),
-('TONG_GIAM_DOC', 'CONTRACT_MANAGE',       'ALL'),
+('TONG_GIAM_DOC', 'CONTRACT_CREATE',       NULL),
+('TONG_GIAM_DOC', 'CONTRACT_APPROVE',      NULL),
+('TONG_GIAM_DOC', 'CONTRACT_MANAGE',       NULL),
 ('TONG_GIAM_DOC', 'PAYROLL_VIEW',          'ALL'),
-('TONG_GIAM_DOC', 'PAYROLL_CALCULATE',     'ALL'),
+('TONG_GIAM_DOC', 'PAYROLL_CALCULATE',     NULL),
 ('TONG_GIAM_DOC', 'LEAVE_VIEW',            'ALL'),
 ('TONG_GIAM_DOC', 'LEAVE_CREATE',          'SELF'), 
 ('TONG_GIAM_DOC', 'LEAVE_APPROVE',         'ALL'),
-('TONG_GIAM_DOC', 'LEAVE_MANAGE',          'ALL'),
+('TONG_GIAM_DOC', 'LEAVE_MANAGE',          NULL),
 ('TONG_GIAM_DOC', 'EVAL_VIEW',             'ALL'),
-('TONG_GIAM_DOC', 'EVAL_MANAGE',           'ALL'),
+('TONG_GIAM_DOC', 'EVAL_MANAGE',           NULL),
 ('TONG_GIAM_DOC', 'EVAL_REVIEW',           'ALL'),
 ('TONG_GIAM_DOC', 'RECRUITMENT_VIEW',      'ALL'),
 ('TONG_GIAM_DOC', 'RECRUITMENT_REQUEST',   'DEPT'),
-('TONG_GIAM_DOC', 'RECRUITMENT_MANAGE',    'ALL'),
-('TONG_GIAM_DOC', 'RECRUITMENT_CANDIDATE_CREATE',  'ALL'),
+('TONG_GIAM_DOC', 'RECRUITMENT_MANAGE',    NULL),
+('TONG_GIAM_DOC', 'RECRUITMENT_CANDIDATE_CREATE',  NULL),
 ('TONG_GIAM_DOC', 'RECRUITMENT_CANDIDATE_REVIEW',  'ALL'),
-('TONG_GIAM_DOC', 'RECRUITMENT_CANDIDATE_CONVERT', 'ALL'),
+('TONG_GIAM_DOC', 'RECRUITMENT_CANDIDATE_CONVERT', NULL),
 ('TONG_GIAM_DOC', 'REPORT_VIEW',           'ALL'),
 ('TONG_GIAM_DOC', 'NOTIFICATION_SEND',     'ALL'),
-('TONG_GIAM_DOC', 'CHANGE_PASSWORD',       'ALL'),
-('TONG_GIAM_DOC', 'USER_VIEW',             'ALL'),
-('TONG_GIAM_DOC', 'ROLE_VIEW',             'ALL'),
-('TONG_GIAM_DOC', 'PAYROLL_LOCK',          'ALL');
+('TONG_GIAM_DOC', 'CHANGE_PASSWORD',       NULL),
+('TONG_GIAM_DOC', 'USER_VIEW',             NULL),
+('TONG_GIAM_DOC', 'ROLE_VIEW',             NULL),
+('TONG_GIAM_DOC', 'PAYROLL_LOCK',          NULL);
 
 -- -----------------------------------------------
 -- NHAN_SU: nghiệp vụ HR chuyên sâu
 -- -----------------------------------------------
 INSERT INTO VAITRO_QUYEN (maVaiTro, maQuyen, phamVi) VALUES
 ('NHAN_SU', 'EMPLOYEE_VIEW',         'ALL'),
-('NHAN_SU', 'EMPLOYEE_CREATE',       'ALL'),
+('NHAN_SU', 'EMPLOYEE_CREATE',       NULL),
 ('NHAN_SU', 'EMPLOYEE_UPDATE',       'ALL'),
+('NHAN_SU', 'EMPLOYEE_IMPORT',       NULL),
+('NHAN_SU', 'EMPLOYEE_EXPORT',       NULL),
+('NHAN_SU', 'EMPLOYEE_PRINT',        NULL),
 ('NHAN_SU', 'APPOINTMENT_VIEW',      'ALL'),
-('NHAN_SU', 'APPOINTMENT_CREATE',    'ALL'),
+('NHAN_SU', 'APPOINTMENT_CREATE',    NULL),
 ('NHAN_SU', 'ATTENDANCE_VIEW',       'ALL'),
 ('NHAN_SU', 'ATTENDANCE_CHECKIN',    'SELF'),
-('NHAN_SU', 'ATTENDANCE_MANAGE',     'ALL'),
+('NHAN_SU', 'ATTENDANCE_MANAGE',     NULL),
 ('NHAN_SU', 'OVERTIME_REQUEST',      'SELF'),
 ('NHAN_SU', 'OVERTIME_APPROVE',      'ALL'),
 ('NHAN_SU', 'CONTRACT_VIEW',         'ALL'),
-('NHAN_SU', 'CONTRACT_CREATE',       'ALL'),
-('NHAN_SU', 'CONTRACT_MANAGE',       'ALL'),
+('NHAN_SU', 'CONTRACT_CREATE',       NULL),
+('NHAN_SU', 'CONTRACT_MANAGE',       NULL),
 ('NHAN_SU', 'PAYROLL_VIEW',          'ALL'),
 ('NHAN_SU', 'LEAVE_VIEW',            'ALL'),
 ('NHAN_SU', 'LEAVE_CREATE',          'SELF'),
-('NHAN_SU', 'LEAVE_MANAGE',          'ALL'),
+('NHAN_SU', 'LEAVE_MANAGE',          NULL),
 ('NHAN_SU', 'EVAL_VIEW',             'ALL'),
 ('NHAN_SU', 'RECRUITMENT_VIEW',      'ALL'),
 ('NHAN_SU', 'RECRUITMENT_REQUEST',   'DEPT'),
-('NHAN_SU', 'RECRUITMENT_MANAGE',    'ALL'),
-('NHAN_SU', 'RECRUITMENT_CANDIDATE_CREATE',  'ALL'),
+('NHAN_SU', 'RECRUITMENT_MANAGE',    NULL),
+('NHAN_SU', 'RECRUITMENT_CANDIDATE_CREATE',  NULL),
 ('NHAN_SU', 'RECRUITMENT_CANDIDATE_REVIEW',  'ALL'),
-('NHAN_SU', 'RECRUITMENT_CANDIDATE_CONVERT', 'ALL'),
+('NHAN_SU', 'RECRUITMENT_CANDIDATE_CONVERT', NULL),
 ('NHAN_SU', 'REPORT_VIEW',           'ALL'),
 ('NHAN_SU', 'NOTIFICATION_SEND',     'ALL'),
-('NHAN_SU', 'DEPARTMENT_VIEW',       'ALL'),
-('NHAN_SU', 'POSITION_VIEW',         'ALL'),
-('NHAN_SU', 'CHANGE_PASSWORD',       'ALL');
+('NHAN_SU', 'DEPARTMENT_VIEW',       NULL),
+('NHAN_SU', 'POSITION_VIEW',         NULL),
+('NHAN_SU', 'CHANGE_PASSWORD',       NULL);
 
 -- -----------------------------------------------
 -- KE_TOAN: tài chính, lương, hạch toán
@@ -493,16 +505,16 @@ INSERT INTO VAITRO_QUYEN (maVaiTro, maQuyen, phamVi) VALUES
 ('KE_TOAN', 'EMPLOYEE_VIEW',     'ALL'),
 ('KE_TOAN', 'ATTENDANCE_VIEW',   'ALL'),
 ('KE_TOAN', 'ATTENDANCE_CHECKIN','SELF'),
-('KE_TOAN', 'ALLOWANCE_MANAGE', 'ALL'),
+('KE_TOAN', 'ALLOWANCE_MANAGE', NULL),
 ('KE_TOAN', 'CONTRACT_VIEW',     'ALL'),
 ('KE_TOAN', 'OVERTIME_REQUEST',  'SELF'),
 ('KE_TOAN', 'PAYROLL_VIEW',      'ALL'),
-('KE_TOAN', 'PAYROLL_CALCULATE', 'ALL'),
+('KE_TOAN', 'PAYROLL_CALCULATE', NULL),
 ('KE_TOAN', 'LEAVE_VIEW',        'ALL'),
 ('KE_TOAN', 'LEAVE_CREATE',      'SELF'), 
 ('KE_TOAN', 'REPORT_VIEW',       'ALL'),
 ('KE_TOAN', 'EVAL_VIEW',         'ALL'),
-('KE_TOAN', 'CHANGE_PASSWORD',   'ALL');
+('KE_TOAN', 'CHANGE_PASSWORD',   NULL);
 
 -- =====================================================
 -- 6. TÀI KHOẢN
