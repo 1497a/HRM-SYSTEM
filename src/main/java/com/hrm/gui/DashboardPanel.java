@@ -205,10 +205,10 @@ class DashboardPanel extends JPanel {
         try {
             String luongText = "Chưa có";
             if (maNV != null) {
-                List<BangLuong> payrolls = LuongBUS.getInstance().getAll();
+                List<BangLuong> payrolls = LuongBUS.getInstance().getAllByScope(maNV);
                 for (int i = payrolls.size() - 1; i >= 0; i--) {
                     com.hrm.model.ChiTietLuong detail = LuongBUS.getInstance()
-                            .getChiTietCaNhan(payrolls.get(i).getMaBL(), maNV);
+                            .getChiTietCaNhanInScope(payrolls.get(i).getMaBL(), maNV, maNV);
                     if (detail != null) {
                         luongText = NumberFormat.getNumberInstance(new Locale("vi", "VN"))
                                 .format((long) detail.getLuongThucNhan()) + " đ";

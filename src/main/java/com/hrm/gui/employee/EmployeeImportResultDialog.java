@@ -14,38 +14,40 @@ import java.awt.*;
 public class EmployeeImportResultDialog extends JDialog {
 
     public EmployeeImportResultDialog(Frame owner, ImportResult result) {
-        super(owner, "Ket qua nhap du lieu", true);
+        super(owner, "Kết quả nhập dữ liệu", true);
         setLayout(new BorderLayout(0, 8));
         getRootPane().setBorder(BorderFactory.createEmptyBorder(16, 16, 16, 16));
         getContentPane().setBackground(Color.WHITE);
 
         add(buildSummary(result), BorderLayout.NORTH);
         if (!result.errors.isEmpty()) {
-            add(buildErrorPanel(result), BorderLayout.CENTER);
+            add(buildDetailPanel(result), BorderLayout.CENTER);
         }
         add(buildButtons(), BorderLayout.SOUTH);
 
         pack();
-        setMinimumSize(new Dimension(460, 220));
+        setMinimumSize(new Dimension(460, 240));
         setResizable(true);
         setLocationRelativeTo(owner);
     }
 
     private JPanel buildSummary(ImportResult r) {
-        JPanel panel = new JPanel(new GridLayout(4, 1, 0, 4));
+        JPanel panel = new JPanel(new GridLayout(5, 1, 0, 4));
         panel.setOpaque(false);
 
-        panel.add(label("Tong so dong xu ly : " + r.total(), Font.PLAIN, UIColors.TEXT_DARK));
-        panel.add(label("Them moi thanh cong: " + r.added,
-                         Font.BOLD, r.added > 0 ? UIColors.SUCCESS_GREEN : UIColors.TEXT_DARK));
-        panel.add(label("Cap nhat thanh cong: " + r.updated,
-                         Font.BOLD, r.updated > 0 ? UIColors.PRIMARY_PURPLE : UIColors.TEXT_DARK));
-        panel.add(label("Loi / bo qua      : " + r.failed,
-                         Font.BOLD, r.failed > 0 ? UIColors.DANGER_RED : UIColors.TEXT_DARK));
+        panel.add(label("Tổng số dòng xử lý: " + r.total(), Font.PLAIN, UIColors.TEXT_DARK));
+        panel.add(label("Thêm mới thành công: " + r.added,
+                Font.BOLD, r.added > 0 ? UIColors.SUCCESS_GREEN : UIColors.TEXT_DARK));
+        panel.add(label("Cập nhật thành công: " + r.updated,
+                Font.BOLD, r.updated > 0 ? UIColors.PRIMARY_PURPLE : UIColors.TEXT_DARK));
+        panel.add(label("Bỏ qua: " + r.skipped,
+                Font.BOLD, r.skipped > 0 ? UIColors.WARNING_ORANGE : UIColors.TEXT_DARK));
+        panel.add(label("Lỗi: " + r.failed,
+                Font.BOLD, r.failed > 0 ? UIColors.DANGER_RED : UIColors.TEXT_DARK));
         return panel;
     }
 
-    private JScrollPane buildErrorPanel(ImportResult r) {
+    private JScrollPane buildDetailPanel(ImportResult r) {
         JTextArea area = new JTextArea();
         area.setEditable(false);
         area.setFont(UIFonts.TEXT_NORMAL);
@@ -59,15 +61,15 @@ public class EmployeeImportResultDialog extends JDialog {
         area.setCaretPosition(0);
 
         JScrollPane scroll = new JScrollPane(area);
-        scroll.setBorder(BorderFactory.createTitledBorder("Chi tiet loi"));
-        scroll.setPreferredSize(new Dimension(440, 160));
+        scroll.setBorder(BorderFactory.createTitledBorder("Chi tiết"));
+        scroll.setPreferredSize(new Dimension(440, 180));
         return scroll;
     }
 
     private JPanel buildButtons() {
         JPanel p = new JPanel(new FlowLayout(FlowLayout.RIGHT, 0, 4));
         p.setOpaque(false);
-        JButton btnClose = UIHelper.createPrimaryButton("Dong");
+        JButton btnClose = UIHelper.createPrimaryButton("Đóng");
         btnClose.addActionListener(e -> dispose());
         p.add(btnClose);
         return p;

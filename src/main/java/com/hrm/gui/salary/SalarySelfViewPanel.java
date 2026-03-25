@@ -77,15 +77,9 @@ class SalarySelfViewPanel extends JPanel {
 
     private void loadBangLuong() {
         try {
-            List<BangLuong> allBL = salaryService.getAll();
-            List<BangLuong> kyLuongCaNhan = new ArrayList<>();
-            if (maNVHienTai != null) {
-                for (BangLuong bl : allBL) {
-                    if (salaryService.getChiTietCaNhan(bl.getMaBL(), maNVHienTai) != null) {
-                        kyLuongCaNhan.add(bl);
-                    }
-                }
-            }
+            List<BangLuong> kyLuongCaNhan = maNVHienTai != null
+                    ? salaryService.getAllByScope(maNVHienTai)
+                    : new ArrayList<>();
             kyLuongCaNhan.sort(Comparator.comparingInt(BangLuong::getNam).reversed()
                     .thenComparing(Comparator.comparingInt(BangLuong::getThang).reversed()));
             DefaultComboBoxModel<BangLuong> comboModel = new DefaultComboBoxModel<>();
@@ -111,7 +105,9 @@ class SalarySelfViewPanel extends JPanel {
 
     private void loadChiTietCaNhan(int maBL) {
         try {
-            ChiTietLuong ct = maNVHienTai != null ? salaryService.getChiTietCaNhan(maBL, maNVHienTai) : null;
+            ChiTietLuong ct = maNVHienTai != null
+                    ? salaryService.getChiTietCaNhanInScope(maBL, maNVHienTai, maNVHienTai)
+                    : null;
             currentChiTietList = new ArrayList<>();
             if (ct != null) currentChiTietList.add(ct);
             fillChiTietTable(currentChiTietList);
@@ -159,7 +155,7 @@ class SalarySelfViewPanel extends JPanel {
                 formatMoney(ct.getTongLuong()),
                 formatMoney(ct.getTongKhauTru()),
                 formatMoney(ct.getLuongThucNhan()),
-                ct.getSoNgayCong(),
+                String.format("%.1f", ct.getSoNgayCong()),
                 formatHours(ct.getTongGioOT()),
                 ct.getGhiChu() != null ? ct.getGhiChu() : ""
             });

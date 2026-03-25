@@ -31,11 +31,10 @@ public final class EmployeeImportExportService {
 
     /** Tiêu đề cột khi xuất / mẫu nhập. */
     public static final String[] EXPORT_HEADERS = {
-        "Ma NV", "Ho ten", "Ngay sinh", "Gioi tinh", "CCCD",
-        "Dien thoai", "Email", "Dia chi", "Que quan",
-        "Trinh do hoc van", "Kinh nghiem",
-        "Ngay vao lam", "Phong ban", "Chuc vu",
-        "Loai HĐ", "Trang thai", "Ghi chu"
+        "Mã NV", "Họ tên", "Ngày sinh", "Giới tính", "CCCD",
+        "Điện thoại", "Email", "Địa chỉ", "Quê quán",
+        "Trình độ học vấn", "Kinh nghiệm",
+        "Ngày vào làm", "Trạng thái", "Ghi chú"
     };
 
     private EmployeeImportExportService() {}
@@ -64,19 +63,16 @@ public final class EmployeeImportExportService {
         return new String[]{
             safe(nv.getMaNhanVien()),
             ttcn != null ? safe(ttcn.getHoTen())       : safe(nv.getHoTen()),
-            ttcn != null && ttcn.getNgaySinh() != null  ? ttcn.getNgaySinh().format(DATE_FMT) : "",
-            ttcn != null ? HRMConstants.display(ttcn.getGioiTinh())  : "",
-            ttcn != null ? safe(ttcn.getCccd())          : "",
-            ttcn != null ? safe(ttcn.getDienThoai())     : "",
-            ttcn != null ? safe(ttcn.getEmail())         : "",
-            ttcn != null ? safe(ttcn.getDiaChi())        : "",
-            ttcn != null ? safe(ttcn.getQueQuan())       : "",
+            ttcn != null && ttcn.getNgaySinh() != null ? ttcn.getNgaySinh().format(DATE_FMT) : "",
+            ttcn != null ? HRMConstants.display(ttcn.getGioiTinh()) : "",
+            ttcn != null ? safe(ttcn.getCccd()) : "",
+            ttcn != null ? safe(ttcn.getDienThoai()) : "",
+            ttcn != null ? safe(ttcn.getEmail()) : "",
+            ttcn != null ? safe(ttcn.getDiaChi()) : "",
+            ttcn != null ? safe(ttcn.getQueQuan()) : "",
             ttcn != null ? safe(ttcn.getTrinhDoHocVan()) : "",
-            ttcn != null ? safe(ttcn.getKinhNghiem())    : "",
+            ttcn != null ? safe(ttcn.getKinhNghiem()) : "",
             nv.getNgayVaoLam() != null ? nv.getNgayVaoLam().format(DATE_FMT) : "",
-            safe(nv.getTenPhongBanHienTai()),
-            safe(nv.getTenChucVuHienTai()),
-            HRMConstants.display(nv.getLoaiHopDong()),
             HRMConstants.display(nv.getTrangThai()),
             safe(nv.getGhiChu())
         };
@@ -96,11 +92,11 @@ public final class EmployeeImportExportService {
     public static ImportResult importFromExcel(File file) throws IOException {
         List<String[]> rows = SimpleXlsx.read(file);
         if (rows.isEmpty()) {
-            return new ImportResult(0, 0, 0, List.of());
+            return new ImportResult(0, 0, 0, 0, List.of());
         }
         // Skip header row (index 0)
         NhanVienBUS nvBUS = NhanVienBUS.getInstance();
-        int added = 0, updated = 0, failed = 0;
+        int added = 0, updated = 0, skipped = 0, failed = 0;
         List<String> errors = new ArrayList<>();
 
         for (int i = 1; i < rows.size(); i++) {
@@ -112,7 +108,7 @@ public final class EmployeeImportExportService {
 
             String maNV = col(row, 0).trim();
             if (maNV.isEmpty()) {
-                errors.add("Dong " + lineNum + ": Ma NV khong duoc de trong.");
+                errors.add("Dòng " + lineNum + ": Mã NV không được để trống.");
                 failed++;
                 continue;
             }
@@ -135,11 +131,9 @@ public final class EmployeeImportExportService {
             NhanVien nv = new NhanVien();
             nv.setMaNhanVien(maNV);
             nv.setNgayVaoLam(parseDate(col(row, 11)));
-            // col 12 = Phong ban (read-only, ignored)
-            // col 13 = Chuc vu  (read-only, ignored)
-            nv.setLoaiHopDong(parseLoaiHD(col(row, 14)));
-            nv.setTrangThai(parseTrangThai(col(row, 15)));
-            nv.setGhiChu(col(row, 16).trim());
+            nv.setLoaiHopDong(null);
+            nv.setTrangThai(parseTrangThai(col(row, 12)));
+            nv.setGhiChu(col(row, 13).trim());
 
             // Check existence
             NhanVien existing = nvBUS.getByMaNhanVien(maNV);
@@ -150,21 +144,29 @@ public final class EmployeeImportExportService {
                 if (kq.isSuccess()) {
                     added++;
                 } else {
-                    errors.add("Dong " + lineNum + " (" + maNV + "): " + kq.getMessage());
+                    errors.add("Dòng " + lineNum + " (" + maNV + "): " + kq.getMessage());
                     failed++;
                 }
             } else {
+                // Chỉ cập nhật thông tin cá nhân cho nhân viên đã tồn tại.
+                ThongTinCaNhan current = nvBUS.getThongTinCaNhan(maNV);
+                if (sameThongTinCaNhan(current, ttcn)) {
+                    skipped++;
+                    errors.add("Dòng " + lineNum + " (" + maNV + "): Bỏ qua vì không có thay đổi.");
+                    continue;
+                }
+
                 // Cập nhật ThongTinCaNhan
                 KetQua<ThongTinCaNhan> kq = nvBUS.capNhatThongTinCaNhan(ttcn);
                 if (kq.isSuccess()) {
                     updated++;
                 } else {
-                    errors.add("Dong " + lineNum + " (" + maNV + "): " + kq.getMessage());
+                    errors.add("Dòng " + lineNum + " (" + maNV + "): " + kq.getMessage());
                     failed++;
                 }
             }
         }
-        return new ImportResult(added, updated, failed, errors);
+        return new ImportResult(added, updated, skipped, failed, errors);
     }
 
     // =========================================================
@@ -174,22 +176,22 @@ public final class EmployeeImportExportService {
     /**
      * In danh sách nhân viên.
      *
-     * @param parent     parent component (để căn giữa dialog)
-     * @param list       danh sách sau filter
+     * @param parent parent component (để căn giữa dialog)
+     * @param list danh sách sau filter
      * @param filterInfo chuỗi mô tả điều kiện lọc (có thể rỗng)
-     * @param toPdf      true → cố gắng chọn máy in PDF; false → máy in mặc định
+     * @param toPdf true -> cố gắng chọn máy in PDF; false -> máy in mặc định
      */
     public static void printList(Component parent, List<NhanVien> list,
-                                  String filterInfo, boolean toPdf) {
+                                 String filterInfo, boolean toPdf) {
         if (list == null || list.isEmpty()) {
             JOptionPane.showMessageDialog(parent,
-                "Khong co du lieu de in.",
-                "Thong bao", JOptionPane.INFORMATION_MESSAGE);
+                "Không có dữ liệu để in.",
+                "Thông báo", JOptionPane.INFORMATION_MESSAGE);
             return;
         }
 
         PrinterJob pj = PrinterJob.getPrinterJob();
-        pj.setJobName("Danh sach nhan vien");
+        pj.setJobName("Danh sách nhân viên");
 
         if (toPdf) {
             trySelectPdfPrinter(pj);
@@ -206,8 +208,8 @@ public final class EmployeeImportExportService {
                 pj.print();
             } catch (PrinterException ex) {
                 JOptionPane.showMessageDialog(parent,
-                    "Loi in: " + ex.getMessage(),
-                    "Loi", JOptionPane.ERROR_MESSAGE);
+                    "Lỗi in: " + ex.getMessage(),
+                    "Lỗi", JOptionPane.ERROR_MESSAGE);
             }
         }
     }
@@ -250,41 +252,48 @@ public final class EmployeeImportExportService {
     private static String parseGioiTinh(String s) {
         if (s == null) return HRMConstants.GIOI_TINH_NAM;
         switch (s.trim().toLowerCase()) {
-            case "nu": case "n\u1eef": return HRMConstants.GIOI_TINH_NU;
-            case "khac": case "kh\u00e1c": return HRMConstants.GIOI_TINH_KHAC;
+            case "nu": case "nữ": return HRMConstants.GIOI_TINH_NU;
+            case "khac": case "khác": return HRMConstants.GIOI_TINH_KHAC;
             default: return HRMConstants.GIOI_TINH_NAM;
         }
-    }
-
-    private static String parseLoaiHD(String s) {
-        if (s == null || s.trim().isEmpty()) return HRMConstants.LOAI_HOP_DONG_THU_VIEC;
-        String v = s.trim();
-        if (v.equalsIgnoreCase("thu_viec")
-                || v.equals("Thu vi\u1ec7c") || v.equalsIgnoreCase("thu viec"))
-            return HRMConstants.LOAI_HOP_DONG_THU_VIEC;
-        if (v.equalsIgnoreCase("xac_dinh_thoi_han")
-                || v.contains("X\u00e1c \u0111\u1ecbnh") || v.equalsIgnoreCase("xac dinh"))
-            return HRMConstants.LOAI_HOP_DONG_XAC_DINH;
-        if (v.equalsIgnoreCase("khong_xac_dinh")
-                || v.contains("Kh\u00f4ng x\u00e1c \u0111\u1ecbnh") || v.equalsIgnoreCase("khong xac dinh"))
-            return HRMConstants.LOAI_HOP_DONG_KHONG_XAC_DINH;
-        return HRMConstants.LOAI_HOP_DONG_THU_VIEC;
     }
 
     private static String parseTrangThai(String s) {
         if (s == null || s.trim().isEmpty()) return HRMConstants.TRANG_THAI_DANG_LAM_VIEC;
         String v = s.trim();
         if (v.equalsIgnoreCase("tam_nghi")
-                || v.contains("T\u1ea1m ngh\u1ec9") || v.equalsIgnoreCase("tam nghi"))
+                || v.contains("Tạm nghỉ") || v.equalsIgnoreCase("tam nghi"))
             return HRMConstants.TRANG_THAI_TAM_NGHI;
         if (v.equalsIgnoreCase("nghi_viec")
-                || v.contains("Ngh\u1ec9 vi\u1ec7c") || v.equalsIgnoreCase("nghi viec"))
+                || v.contains("Nghỉ việc") || v.equalsIgnoreCase("nghi viec"))
             return HRMConstants.TRANG_THAI_NGHI_VIEC;
         return HRMConstants.TRANG_THAI_DANG_LAM_VIEC;
     }
 
     private static String safe(String s) {
         return s != null ? s : "";
+    }
+
+    private static boolean sameThongTinCaNhan(ThongTinCaNhan a, ThongTinCaNhan b) {
+        if (a == null || b == null) return false;
+        return same(a.getHoTen(), b.getHoTen())
+            && same(a.getNgaySinh(), b.getNgaySinh())
+            && same(a.getGioiTinh(), b.getGioiTinh())
+            && same(a.getCccd(), b.getCccd())
+            && same(a.getDienThoai(), b.getDienThoai())
+            && same(a.getEmail(), b.getEmail())
+            && same(a.getDiaChi(), b.getDiaChi())
+            && same(a.getQueQuan(), b.getQueQuan())
+            && same(a.getTrinhDoHocVan(), b.getTrinhDoHocVan())
+            && same(a.getKinhNghiem(), b.getKinhNghiem());
+    }
+
+    private static boolean same(String a, String b) {
+        return safe(a).trim().equals(safe(b).trim());
+    }
+
+    private static boolean same(LocalDate a, LocalDate b) {
+        return a == null ? b == null : a.equals(b);
     }
 
     // =========================================================
@@ -294,17 +303,19 @@ public final class EmployeeImportExportService {
     public static final class ImportResult {
         public final int added;
         public final int updated;
+        public final int skipped;
         public final int failed;
         public final List<String> errors;
 
-        public ImportResult(int added, int updated, int failed, List<String> errors) {
-            this.added   = added;
+        public ImportResult(int added, int updated, int skipped, int failed, List<String> errors) {
+            this.added = added;
             this.updated = updated;
-            this.failed  = failed;
-            this.errors  = errors;
+            this.skipped = skipped;
+            this.failed = failed;
+            this.errors = errors;
         }
 
-        public int total() { return added + updated + failed; }
+        public int total() { return added + updated + skipped + failed; }
     }
 
     // =========================================================
@@ -312,12 +323,12 @@ public final class EmployeeImportExportService {
     // =========================================================
 
     private static final class EmployeePrintable implements Printable {
-        private static final String[] COLS    = {"STT","Ma NV","Ho ten","Phong ban","Chuc vu","Ngay vao lam","Loai HD","Trang thai"};
-        private static final int[]    WEIGHTS = {25,   55,     120,    110,        100,      75,             95,       80};
+        private static final String[] COLS = {"STT", "Mã NV", "Họ tên", "Phòng ban", "Chức vụ", "Ngày vào làm", "Loại HĐ", "Trạng thái"};
+        private static final int[] WEIGHTS = {25, 55, 120, 110, 100, 75, 95, 80};
         private static final int COL_H = 18, ROW_H = 15, FOOTER_H = 14;
-        private static final Font F_TITLE  = new Font("SansSerif", Font.BOLD,   14);
-        private static final Font F_COL    = new Font("SansSerif", Font.BOLD,   9);
-        private static final Font F_DATA   = new Font("SansSerif", Font.PLAIN,  9);
+        private static final Font F_TITLE = new Font("SansSerif", Font.BOLD, 14);
+        private static final Font F_COL = new Font("SansSerif", Font.BOLD, 9);
+        private static final Font F_DATA = new Font("SansSerif", Font.PLAIN, 9);
         private static final Font F_FOOTER = new Font("SansSerif", Font.ITALIC, 8);
 
         private final List<NhanVien> list;
@@ -358,7 +369,7 @@ public final class EmployeeImportExportService {
             int pw = (int) pf.getImageableWidth();
             int ph = (int) pf.getImageableHeight();
 
-            // --- Compute column widths proportional to page width ---
+            // Compute column widths proportional to page width.
             int totalW = 0;
             for (int w : WEIGHTS) totalW += w;
             int[] cw = new int[WEIGHTS.length];
@@ -366,30 +377,30 @@ public final class EmployeeImportExportService {
 
             int y = 0;
 
-            // --- Header block (first page only) ---
+            // Header block (first page only).
             if (pageIndex == 0) {
                 g.setFont(F_TITLE);
-                String title = "DANH SACH NHAN VIEN";
+                String title = "DANH SÁCH NHÂN VIÊN";
                 int tw = g.getFontMetrics().stringWidth(title);
                 g.drawString(title, (pw - tw) / 2, y + 16);
                 y += 20;
 
                 g.setFont(F_DATA);
-                String dt = "Ngay xuat: " + LocalDateTime.now().format(DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm"));
+                String dt = "Ngày xuất: " + LocalDateTime.now().format(DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm"));
                 g.drawString(dt, 0, y + 12);
                 y += 14;
 
                 if (!filterInfo.isEmpty()) {
-                    g.drawString("Loc: " + filterInfo, 0, y + 12);
+                    g.drawString("Lọc: " + filterInfo, 0, y + 12);
                     y += 14;
                 }
-                g.drawString("Tong so: " + list.size() + " nhan vien", 0, y + 12);
+                g.drawString("Tổng số: " + list.size() + " nhân viên", 0, y + 12);
                 y += 14 + 4;
             } else {
                 y = 4;
             }
 
-            // --- Column header ---
+            // Column header.
             g.setColor(new Color(70, 40, 120));
             g.fillRect(0, y, pw, COL_H);
             g.setColor(Color.WHITE);
@@ -402,12 +413,12 @@ public final class EmployeeImportExportService {
             }
             y += COL_H;
 
-            // --- Data rows ---
+            // Data rows.
             g.setFont(F_DATA);
             FontMetrics dfm = g.getFontMetrics();
             int rpp = rowsPerPage(pf);
             int startRow = pageIndex * rpp;
-            int endRow   = Math.min(startRow + rpp, list.size());
+            int endRow = Math.min(startRow + rpp, list.size());
 
             for (int i = startRow; i < endRow; i++) {
                 NhanVien nv = list.get(i);
@@ -436,7 +447,7 @@ public final class EmployeeImportExportService {
                 y += ROW_H;
             }
 
-            // --- Footer ---
+            // Footer.
             g.setFont(F_FOOTER);
             g.setColor(Color.GRAY);
             String footer = "Trang " + (pageIndex + 1) + "/" + pageCount(pf);

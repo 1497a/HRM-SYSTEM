@@ -59,6 +59,7 @@ public final class PermissionCodes {
     public static final String RECRUITMENT_CANDIDATE_EDIT    = "RECRUITMENT_CANDIDATE_EDIT";
     // Bao cao & thong bao
     public static final String REPORT_VIEW            = "REPORT_VIEW";
+    public static final String REPORT_EXPORT          = "REPORT_EXPORT";
     public static final String NOTIFICATION_SEND      = "NOTIFICATION_SEND";
     // Tai khoan & vai tro
     public static final String USER_VIEW              = "USER_VIEW";

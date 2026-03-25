@@ -1,24 +1,22 @@
 package com.hrm.gui.admin;
 
-import com.hrm.model.NhanVien;
-import com.hrm.model.ThongTinCaNhan;
-import com.hrm.model.VaiTro;
-import com.hrm.model.TaiKhoan;
+import com.hrm.bus.KetQua;
 import com.hrm.bus.NhanVienBUS;
 import com.hrm.bus.XacThucBUS;
-import com.hrm.bus.KetQua;
 import com.hrm.gui.components.BaseFormDialog;
+import com.hrm.model.NhanVien;
+import com.hrm.model.TaiKhoan;
+import com.hrm.model.ThongTinCaNhan;
+import com.hrm.model.VaiTro;
 import com.hrm.util.HRMConstants;
+import com.hrm.util.PermissionCodes;
 import com.hrm.util.SessionContext;
 import com.hrm.util.UIHelper;
 import com.hrm.util.ValidationUtils;
 
 import javax.swing.*;
-import javax.swing.border.EmptyBorder;
 import javax.swing.border.TitledBorder;
-
 import java.awt.*;
-import java.awt.Font;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
 
@@ -33,11 +31,11 @@ public class UserFormDialog extends BaseFormDialog {
     private final NhanVienBUS nhanVienService;
     private final TaiKhoan editingUser;
     private final TaiKhoan currentUser;
+    private final SessionContext sessionContext;
     private boolean successful = false;
-    // Create mode
+    private boolean deleted = false;
     private JComboBox<NhanVien> cboNhanVien;
     private JLabel lblDefaultPassword;
-    // Edit mode
     private JTextField txtUsername;
     private JTextField txtMaNV;
     private JTextField txtFullName;
@@ -45,16 +43,17 @@ public class UserFormDialog extends BaseFormDialog {
     private JPasswordField txtPassword;
     private JPanel rolesPanel;
     private ButtonGroup roleGroup;
-    // Status (edit mode) - radio buttons, mutually exclusive
     private JRadioButton rdoHoatDong;
     private JRadioButton rdoBiKhoa;
     private ButtonGroup statusGroup;
+
     public UserFormDialog(Frame parent, TaiKhoan user) {
         super(parent, user == null ? "Tạo tài khoản mới" : "Sửa tài khoản", true);
         this.authService = XacThucBUS.getInstance();
         this.nhanVienService = NhanVienBUS.getInstance();
         this.editingUser = user;
         this.currentUser = SessionContext.getInstance().getCurrentUser();
+        this.sessionContext = SessionContext.getInstance();
         initComponents();
         setupLayout();
         if (user != null) {
@@ -67,7 +66,6 @@ public class UserFormDialog extends BaseFormDialog {
     private void initComponents() {
         txtPassword = new JPasswordField(20);
         if (editingUser == null) {
-            // CREATE mode
             List<NhanVien> dsNV = nhanVienService.getDangLamViec();
             cboNhanVien = new JComboBox<>();
             for (NhanVien nv : dsNV) {
@@ -85,29 +83,31 @@ public class UserFormDialog extends BaseFormDialog {
                 }
                 return label;
             });
-            // When employee changes, auto-fill default password from DOB
             lblDefaultPassword = new JLabel("Mật khẩu mặc định: (chưa chọn nhân viên)");
             lblDefaultPassword.setFont(new Font("Segoe UI", Font.ITALIC, 12));
             lblDefaultPassword.setForeground(new Color(100, 100, 200));
             cboNhanVien.addActionListener(e -> updateDefaultPassword());
             updateDefaultPassword();
         } else {
-            // EDIT mode
             txtUsername = new JTextField(20);
             txtUsername.setEditable(false);
+            applyReadOnlyStyle(txtUsername);
             txtMaNV = new JTextField(10);
             txtMaNV.setEditable(false);
-            txtMaNV.setBackground(Color.WHITE);
+            applyReadOnlyStyle(txtMaNV);
             txtFullName = new JTextField(20);
+            txtFullName.setEditable(false);
+            applyReadOnlyStyle(txtFullName);
             txtEmail = new JTextField(20);
-            // Status: radio buttons (mutually exclusive)
+            txtEmail.setEditable(false);
+            applyReadOnlyStyle(txtEmail);
             rdoHoatDong = new JRadioButton("Hoạt động");
             rdoBiKhoa = new JRadioButton("Bị khóa");
             statusGroup = new ButtonGroup();
             statusGroup.add(rdoHoatDong);
             statusGroup.add(rdoBiKhoa);
         }
-        // Roles panel
+
         rolesPanel = new JPanel();
         rolesPanel.setLayout(new BoxLayout(rolesPanel, BoxLayout.Y_AXIS));
         roleGroup = new ButtonGroup();
@@ -140,7 +140,8 @@ public class UserFormDialog extends BaseFormDialog {
             if (ttcn != null && ttcn.getNgaySinh() != null) {
                 dob = ttcn.getNgaySinh().format(DateTimeFormatter.ofPattern("ddMMyyyy"));
             }
-        } catch (Exception ignored) {}
+        } catch (Exception ignored) {
+        }
         if (!dob.isEmpty()) {
             txtPassword.setText(dob);
             lblDefaultPassword.setText("Mật khẩu mặc định: " + dob + " (ngày sinh)");
@@ -156,89 +157,134 @@ public class UserFormDialog extends BaseFormDialog {
         JPanel formPanel = new JPanel(new GridBagLayout());
         GridBagConstraints gbc = UIHelper.gbc(0, 0);
         int row = 0;
+
         if (editingUser == null) {
-            gbc.gridx = 0; gbc.gridy = row; gbc.anchor = GridBagConstraints.NORTHWEST;
+            gbc.gridx = 0;
+            gbc.gridy = row;
+            gbc.anchor = GridBagConstraints.NORTHWEST;
             formPanel.add(new JLabel("Nhân viên:"), gbc);
-            gbc.gridx = 1; gbc.fill = GridBagConstraints.HORIZONTAL; gbc.weightx = 1;
+
+            gbc.gridx = 1;
+            gbc.fill = GridBagConstraints.HORIZONTAL;
+            gbc.weightx = 1;
             cboNhanVien.setPreferredSize(new Dimension(280, 28));
             formPanel.add(cboNhanVien, gbc);
             row++;
-            gbc.gridx = 1; gbc.gridy = row; gbc.fill = GridBagConstraints.HORIZONTAL;
+
+            gbc.gridx = 1;
+            gbc.gridy = row;
+            gbc.fill = GridBagConstraints.HORIZONTAL;
             formPanel.add(lblDefaultPassword, gbc);
             row++;
-            gbc.gridx = 0; gbc.gridy = row; gbc.fill = GridBagConstraints.NONE; gbc.weightx = 0;
+
+            gbc.gridx = 0;
+            gbc.gridy = row;
+            gbc.fill = GridBagConstraints.NONE;
+            gbc.weightx = 0;
             gbc.anchor = GridBagConstraints.WEST;
             formPanel.add(new JLabel("Mật khẩu:"), gbc);
-            gbc.gridx = 1; gbc.fill = GridBagConstraints.HORIZONTAL;
+
+            gbc.gridx = 1;
+            gbc.fill = GridBagConstraints.HORIZONTAL;
             formPanel.add(txtPassword, gbc);
             row++;
-            gbc.gridx = 1; gbc.gridy = row;
+
+            gbc.gridx = 1;
+            gbc.gridy = row;
             JLabel hint = new JLabel("(Có thể thay đổi mật khẩu mặc định trước khi lưu)");
             hint.setFont(new Font("Segoe UI", Font.ITALIC, 11));
             hint.setForeground(Color.GRAY);
             formPanel.add(hint, gbc);
             row++;
         } else {
-            gbc.gridx = 0; gbc.gridy = row;
+            gbc.gridx = 0;
+            gbc.gridy = row;
             formPanel.add(new JLabel("Tên đăng nhập:"), gbc);
-            gbc.gridx = 1; gbc.fill = GridBagConstraints.HORIZONTAL; gbc.weightx = 1;
+
+            gbc.gridx = 1;
+            gbc.fill = GridBagConstraints.HORIZONTAL;
+            gbc.weightx = 1;
             formPanel.add(txtUsername, gbc);
             row++;
-            gbc.gridx = 0; gbc.gridy = row; gbc.fill = GridBagConstraints.NONE; gbc.weightx = 0;
+
+            gbc.gridx = 0;
+            gbc.gridy = row;
+            gbc.fill = GridBagConstraints.NONE;
+            gbc.weightx = 0;
             formPanel.add(new JLabel("Mã nhân viên:"), gbc);
-            gbc.gridx = 1; gbc.fill = GridBagConstraints.HORIZONTAL;
+
+            gbc.gridx = 1;
+            gbc.fill = GridBagConstraints.HORIZONTAL;
             formPanel.add(txtMaNV, gbc);
             row++;
-            gbc.gridx = 0; gbc.gridy = row; gbc.fill = GridBagConstraints.NONE; gbc.weightx = 0;
-            formPanel.add(new JLabel("Mat khau moi:"), gbc);
-            gbc.gridx = 1; gbc.fill = GridBagConstraints.HORIZONTAL;
-            formPanel.add(txtPassword, gbc);
-            row++;
-            gbc.gridx = 1; gbc.gridy = row;
-            JLabel pwHint = new JLabel("(Để trống nếu không muốn thay đổi mật khẩu)");
-            pwHint.setFont(new Font("Segoe UI", Font.ITALIC, 11));
-            pwHint.setForeground(Color.GRAY);
-            formPanel.add(pwHint, gbc);
-            row++;
-            gbc.gridx = 0; gbc.gridy = row; gbc.fill = GridBagConstraints.NONE; gbc.weightx = 0;
+
+            gbc.gridx = 0;
+            gbc.gridy = row;
+            gbc.fill = GridBagConstraints.NONE;
+            gbc.weightx = 0;
             formPanel.add(new JLabel("Họ tên:"), gbc);
-            gbc.gridx = 1; gbc.fill = GridBagConstraints.HORIZONTAL;
+
+            gbc.gridx = 1;
+            gbc.fill = GridBagConstraints.HORIZONTAL;
             formPanel.add(txtFullName, gbc);
             row++;
-            gbc.gridx = 0; gbc.gridy = row; gbc.fill = GridBagConstraints.NONE; gbc.weightx = 0;
+
+            gbc.gridx = 0;
+            gbc.gridy = row;
+            gbc.fill = GridBagConstraints.NONE;
+            gbc.weightx = 0;
             formPanel.add(new JLabel("Email:"), gbc);
-            gbc.gridx = 1; gbc.fill = GridBagConstraints.HORIZONTAL;
+
+            gbc.gridx = 1;
+            gbc.fill = GridBagConstraints.HORIZONTAL;
             formPanel.add(txtEmail, gbc);
             row++;
         }
-        // Roles
-        gbc.gridx = 0; gbc.gridy = row; gbc.fill = GridBagConstraints.NONE; gbc.weightx = 0;
+
+        gbc.gridx = 0;
+        gbc.gridy = row;
+        gbc.fill = GridBagConstraints.NONE;
+        gbc.weightx = 0;
         gbc.anchor = GridBagConstraints.NORTHWEST;
         formPanel.add(new JLabel("Vai trò:"), gbc);
-        gbc.gridx = 1; gbc.fill = GridBagConstraints.HORIZONTAL;
+
+        gbc.gridx = 1;
+        gbc.fill = GridBagConstraints.HORIZONTAL;
         JScrollPane rolesScroll = new JScrollPane(rolesPanel);
         rolesScroll.setPreferredSize(new Dimension(250, 110));
         rolesScroll.setBorder(new TitledBorder(""));
         formPanel.add(rolesScroll, gbc);
         row++;
-        // Status (edit mode only)
+
         if (editingUser != null) {
-            gbc.gridx = 0; gbc.gridy = row; gbc.fill = GridBagConstraints.NONE; gbc.weightx = 0;
+            gbc.gridx = 0;
+            gbc.gridy = row;
+            gbc.fill = GridBagConstraints.NONE;
+            gbc.weightx = 0;
             gbc.anchor = GridBagConstraints.WEST;
             formPanel.add(new JLabel("Trạng thái:"), gbc);
+
             gbc.gridx = 1;
             JPanel statusPanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 10, 0));
             statusPanel.add(rdoHoatDong);
             statusPanel.add(rdoBiKhoa);
             formPanel.add(statusPanel, gbc);
         }
+
         JPanel buttonPanel = createButtonPanel();
+        if (editingUser != null && sessionContext.hasPermission(PermissionCodes.USER_DELETE)) {
+            JButton btnDelete = UIHelper.createDangerButton("Xóa");
+            btnDelete.addActionListener(e -> deleteUser());
+            buttonPanel.add(btnDelete);
+        }
+
         JButton btnSave = UIHelper.createSuccessButton("Lưu");
         btnSave.addActionListener(e -> save());
         JButton btnCancel = UIHelper.createDefaultButton("Hủy");
         btnCancel.addActionListener(e -> dispose());
         buttonPanel.add(btnSave);
         buttonPanel.add(btnCancel);
+
         mainPanel.add(formPanel, BorderLayout.CENTER);
         mainPanel.add(buttonPanel, BorderLayout.SOUTH);
         setContentPane(mainPanel);
@@ -317,7 +363,9 @@ public class UserFormDialog extends BaseFormDialog {
             try {
                 ThongTinCaNhan ttcn = nhanVienService.getThongTinCaNhan(selectedNV.getMaNhanVien());
                 if (ttcn != null) email = ttcn.getEmail();
-            } catch (Exception ex) { /* ignore */ }
+            } catch (Exception ex) {
+                // ignore
+            }
             KetQua<Integer> result = authService.createUser(username, password, selectedNV.getMaNhanVien(), selectedRoleCode, email);
             if (!result.isSuccess()) {
                 showError(result.getMessage());
@@ -327,21 +375,6 @@ public class UserFormDialog extends BaseFormDialog {
             showInfo("Đã tạo tài khoản thành công!\nTên đăng nhập: " + username + "\nMật khẩu: " + password);
             dispose();
         } else {
-            String fullName = txtFullName.getText().trim();
-            String email = txtEmail.getText().trim();
-            if (fullName.isEmpty()) {
-                showError("Vui lòng nhập họ tên");
-                txtFullName.requestFocus();
-                return;
-            }
-            String emailErr = ValidationUtils.validateEmail(email);
-            if (emailErr != null) {
-                showError(emailErr);
-                txtEmail.requestFocus();
-                return;
-            }
-            editingUser.setHoTen(fullName);
-            editingUser.setEmail(email);
             if (!isEditingProtectedAdminAccount()) {
                 boolean biKhoa = rdoBiKhoa.isSelected();
                 editingUser.setHoatDong(!biKhoa);
@@ -359,13 +392,28 @@ public class UserFormDialog extends BaseFormDialog {
                 showError(result.getMessage());
                 return;
             }
-            if (!password.isEmpty()) {
-                authService.resetPassword(editingUser.getId(), password);
-            }
             showInfo("Đã cập nhật tài khoản thành công!");
             successful = true;
             dispose();
         }
+    }
+
+    private void deleteUser() {
+        if (editingUser == null) {
+            return;
+        }
+        if (!showYesNoWarning("Bạn có chắc muốn xóa tài khoản '" + editingUser.getTenDangNhap() + "'?", "Xác nhận xóa")) {
+            return;
+        }
+        KetQua<Void> result = authService.deleteUser(editingUser.getId());
+        if (!result.isSuccess()) {
+            showError(result.getMessage());
+            return;
+        }
+        deleted = true;
+        successful = false;
+        showInfo("Đã xóa tài khoản thành công!");
+        dispose();
     }
 
     private boolean isEditingProtectedAdminAccount() {
@@ -376,6 +424,19 @@ public class UserFormDialog extends BaseFormDialog {
                 && HRMConstants.ROLE_ADMIN.equalsIgnoreCase(currentUser.getVaiTro().getId());
     }
 
-    public boolean isSuccessful() { return successful; }
+    public boolean isSuccessful() {
+        return successful;
+    }
 
+    public boolean isDeleted() {
+        return deleted;
+    }
+
+    private void applyReadOnlyStyle(JTextField field) {
+        field.setBackground(new Color(245, 245, 245));
+        field.setCaretColor(field.getForeground());
+        field.setFocusable(false);
+        field.setRequestFocusEnabled(false);
+        field.setCursor(Cursor.getDefaultCursor());
+    }
 }

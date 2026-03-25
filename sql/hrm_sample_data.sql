@@ -550,7 +550,8 @@ INSERT INTO HOPDONGLAODONG (soHopDong, maNV, loaiHopDong, luongCoSo, ngayKy, nga
 ('HD2018-IT-008',  'NV008', 'khong_xac_dinh', 35000000, '2018-01-10', '2018-01-15', NULL,         'hieu_luc', 'Hop dong TP IT'),
 ('HD2019-IT-009',  'NV009', 'khong_xac_dinh', 28000000, '2019-07-28', '2019-08-01', NULL,         'hieu_luc', 'Hop dong Truong nhom IT'),
 ('HD2022-IT-010',  'NV010', 'xac_dinh_thoi_han', 15000000, '2022-01-28', '2022-02-01', '2024-02-01', 'het_han', 'Hop dong lan 1 NV IT'),
-('HD2024-IT-010',  'NV010', 'xac_dinh_thoi_han', 18000000, '2024-01-28', '2024-02-01', '2026-02-01', 'hieu_luc', 'Hop dong lan 2 NV IT'),
+('HD2024-IT-010',  'NV010', 'xac_dinh_thoi_han', 18000000, '2024-01-28', '2024-02-01', '2026-02-01', 'het_han',  'Hop dong lan 2 NV IT'),
+('HD2026-IT-010',  'NV010', 'xac_dinh_thoi_han', 20000000, '2026-01-28', '2026-02-01', '2028-02-01', 'hieu_luc', 'Hop dong lan 3 NV IT'),
 ('HD2025-IT-011',  'NV011', 'thu_viec',           8500000, '2025-09-28', '2025-10-01', '2026-01-01', 'het_han',  'Hop dong thu viec IT'),
 ('HD2026-IT-011',  'NV011', 'xac_dinh_thoi_han', 9500000, '2025-12-28', '2026-01-01', '2028-01-01', 'hieu_luc', 'Hop dong xac dinh thoi han sau thu viec'),
 -- Phòng Marketing
@@ -775,6 +776,58 @@ INSERT INTO CHAMCONG (maNV, ngay, maCaLam, gioVao, gioRa, soGioLam, gioLamThem, 
 ('NV010','2026-02-25','HANH_CHINH','2026-02-25 08:00','2026-02-25 17:00',8.00,0.00,'dung_gio','van_tay',NULL),
 ('NV010','2026-02-26','HANH_CHINH','2026-02-26 08:00','2026-02-26 17:00',8.00,0.00,'dung_gio','van_tay',NULL),
 ('NV010','2026-02-27','HANH_CHINH','2026-02-27 08:00','2026-02-27 17:00',8.00,0.00,'dung_gio','van_tay',NULL);
+
+-- *** NV008 (TP IT) T2/2026 - demo đầy đủ các trạng thái ***
+-- Ky vong ngay cong: ~17.6 / 20 ngay
+-- dung_gio (×13)=13.0, di_muon:03(7.5/8=0.94)+09(7.0/8=0.88)=1.81,
+-- ve_som:05(7h=0.88)+17(5h=0.63)+23(2h=0.25)=1.75, cong_tac:13=1.0, vang_mat:11=0
+INSERT INTO CHAMCONG (maNV, ngay, maCaLam, gioVao, gioRa, soGioLam, gioLamThem, trangThai, phuongThucChamCong, ghiChu) VALUES
+('NV008','2026-02-02','HANH_CHINH','2026-02-02 08:00','2026-02-02 17:00',8.00,0.00,'dung_gio','the_tu',NULL),
+('NV008','2026-02-03','HANH_CHINH','2026-02-03 08:30','2026-02-03 17:00',7.50,0.00,'di_muon','the_tu','Di muon 30 phut, tru 0.5h'),
+('NV008','2026-02-04','HANH_CHINH','2026-02-04 08:00','2026-02-04 17:00',8.00,0.00,'dung_gio','the_tu',NULL),
+('NV008','2026-02-05','HANH_CHINH','2026-02-05 08:00','2026-02-05 15:00',7.00,0.00,'ve_som','the_tu','Ve som 2h, hop gia dinh'),
+('NV008','2026-02-06','HANH_CHINH','2026-02-06 08:00','2026-02-06 17:00',8.00,0.00,'dung_gio','the_tu',NULL),
+('NV008','2026-02-09','HANH_CHINH','2026-02-09 09:00','2026-02-09 17:00',7.00,0.00,'di_muon','the_tu','Di muon 1 gio, ket xe'),
+('NV008','2026-02-10','HANH_CHINH','2026-02-10 08:00','2026-02-10 17:00',8.00,0.00,'dung_gio','the_tu',NULL),
+('NV008','2026-02-11','HANH_CHINH',NULL,NULL,0.00,0.00,'vang_mat','thu_cong','Vang khong phep'),
+('NV008','2026-02-12','HANH_CHINH','2026-02-12 08:00','2026-02-12 17:00',8.00,0.00,'dung_gio','the_tu',NULL),
+('NV008','2026-02-13',NULL,NULL,NULL,0.00,0.00,'cong_tac','thu_cong','Cong tac Ha Noi 1 ngay'),
+('NV008','2026-02-16','HANH_CHINH','2026-02-16 08:00','2026-02-16 17:00',8.00,0.00,'dung_gio','the_tu',NULL),
+('NV008','2026-02-17','HANH_CHINH','2026-02-17 08:00','2026-02-17 13:00',5.00,0.00,'ve_som','the_tu','Ve som buoi chieu, benh nhe'),
+('NV008','2026-02-18','HANH_CHINH','2026-02-18 08:00','2026-02-18 17:00',8.00,0.00,'dung_gio','the_tu',NULL),
+('NV008','2026-02-19','HANH_CHINH','2026-02-19 08:00','2026-02-19 17:00',8.00,0.00,'dung_gio','the_tu',NULL),
+('NV008','2026-02-20','HANH_CHINH','2026-02-20 08:00','2026-02-20 17:00',8.00,0.00,'dung_gio','the_tu',NULL),
+('NV008','2026-02-23','HANH_CHINH','2026-02-23 08:00','2026-02-23 10:00',2.00,0.00,'ve_som','the_tu','Chi lam 2 tieng, viec khan cap ca nhan'),
+('NV008','2026-02-24','HANH_CHINH','2026-02-24 08:00','2026-02-24 17:00',8.00,0.00,'dung_gio','the_tu',NULL),
+('NV008','2026-02-25','HANH_CHINH','2026-02-25 08:00','2026-02-25 17:00',8.00,0.00,'dung_gio','the_tu',NULL),
+('NV008','2026-02-26','HANH_CHINH','2026-02-26 08:00','2026-02-26 17:00',8.00,0.00,'dung_gio','the_tu',NULL),
+('NV008','2026-02-27','HANH_CHINH','2026-02-27 08:00','2026-02-27 17:00',8.00,0.00,'dung_gio','the_tu',NULL);
+
+-- *** NV009 (Dev IT) T2/2026 - demo nghỉ phép + về sớm + đi muộn ***
+-- Ky vong ngay cong: ~17.3 / 20 ngay
+-- dung_gio(×12)=12.0, di_muon:04(7.67/8=0.96)=0.96,
+-- ve_som:06(6h=0.75)+19(3h=0.38)=1.13, nghi_phep:10+11=2.0, cong_tac:27=1.0, vang_mat:24=0
+INSERT INTO CHAMCONG (maNV, ngay, maCaLam, gioVao, gioRa, soGioLam, gioLamThem, trangThai, phuongThucChamCong, ghiChu) VALUES
+('NV009','2026-02-02','HANH_CHINH','2026-02-02 08:00','2026-02-02 17:00',8.00,0.00,'dung_gio','van_tay',NULL),
+('NV009','2026-02-03','HANH_CHINH','2026-02-03 08:00','2026-02-03 17:00',8.00,0.00,'dung_gio','van_tay',NULL),
+('NV009','2026-02-04','HANH_CHINH','2026-02-04 08:20','2026-02-04 17:00',7.67,0.00,'di_muon','van_tay','Di muon 20 phut'),
+('NV009','2026-02-05','HANH_CHINH','2026-02-05 08:00','2026-02-05 17:00',8.00,0.00,'dung_gio','van_tay',NULL),
+('NV009','2026-02-06','HANH_CHINH','2026-02-06 08:00','2026-02-06 14:00',6.00,0.00,'ve_som','van_tay','Ve som 3h, kham suc khoe dinh ky'),
+('NV009','2026-02-09','HANH_CHINH','2026-02-09 08:00','2026-02-09 17:00',8.00,0.00,'dung_gio','van_tay',NULL),
+('NV009','2026-02-10',NULL,NULL,NULL,0.00,0.00,'nghi_phep','thu_cong','Nghi phep nam 10-11/02'),
+('NV009','2026-02-11',NULL,NULL,NULL,0.00,0.00,'nghi_phep','thu_cong','Nghi phep nam 10-11/02'),
+('NV009','2026-02-12','HANH_CHINH','2026-02-12 08:00','2026-02-12 17:00',8.00,0.00,'dung_gio','van_tay',NULL),
+('NV009','2026-02-13','HANH_CHINH','2026-02-13 08:00','2026-02-13 17:00',8.00,0.00,'dung_gio','van_tay',NULL),
+('NV009','2026-02-16','HANH_CHINH','2026-02-16 08:00','2026-02-16 17:00',8.00,0.00,'dung_gio','van_tay',NULL),
+('NV009','2026-02-17','HANH_CHINH','2026-02-17 08:00','2026-02-17 17:00',8.00,0.00,'dung_gio','van_tay',NULL),
+('NV009','2026-02-18','HANH_CHINH','2026-02-18 08:00','2026-02-18 17:00',8.00,0.00,'dung_gio','van_tay',NULL),
+('NV009','2026-02-19','HANH_CHINH','2026-02-19 08:00','2026-02-19 11:00',3.00,0.00,'ve_som','van_tay','Chi lam buoi sang 3h, viec rieng'),
+('NV009','2026-02-20','HANH_CHINH','2026-02-20 08:00','2026-02-20 17:00',8.00,0.00,'dung_gio','van_tay',NULL),
+('NV009','2026-02-23','HANH_CHINH','2026-02-23 08:00','2026-02-23 17:00',8.00,0.00,'dung_gio','van_tay',NULL),
+('NV009','2026-02-24','HANH_CHINH',NULL,NULL,0.00,0.00,'vang_mat','thu_cong','Vang mat khong ly do'),
+('NV009','2026-02-25','HANH_CHINH','2026-02-25 08:00','2026-02-25 17:00',8.00,0.00,'dung_gio','van_tay',NULL),
+('NV009','2026-02-26','HANH_CHINH','2026-02-26 08:00','2026-02-26 17:00',8.00,0.00,'dung_gio','van_tay',NULL),
+('NV009','2026-02-27',NULL,NULL,NULL,0.00,0.00,'cong_tac','thu_cong','Cong tac Da Nang hop khach hang');
 
 -- =====================================================
 -- 10. ĐĂNG KÝ LÀM THÊM
@@ -1007,17 +1060,18 @@ INSERT INTO THONGBAO (tieuDe, noiDung, loaiThongBao, maTaiKhoanGui, maTaiKhoanNh
 -- =====================================================
 -- 17. CẤU HÌNH PHỤ CẤP
 -- =====================================================
-INSERT INTO CAUHINH_PHUCAP (loai, tenKhoan, kieuTinh, giaTri, nguon, hoatDong) VALUES
-('phu_cap', 'Phụ cấp ăn trưa',               'co_dinh',   750000, 'CongTy',   1),
-('phu_cap', 'Phụ cấp điện thoại',            'co_dinh',   500000, 'CongTy',   1),
-('phu_cap', 'Phụ cấp đi lại',                'co_dinh',   600000, 'CongTy',   1),
-('phu_cap', 'Phụ cấp thâm niên (3-5 năm)',   'co_dinh',   500000, 'CongTy',   1),
-('phu_cap', 'Phụ cấp thâm niên (5+ năm)',    'co_dinh',  1000000, 'CongTy',   1),
-('phu_cap', 'Thưởng hiệu quả hàng tháng',    'phan_tram',   5.00, 'CongTy',   1),
-('khau_tru','BHXH NLD (8%)',               'phan_tram',   8.00, 'LuatDinh', 1),
-('khau_tru','BHYT NLD (1.5%)',             'phan_tram',   1.50, 'LuatDinh', 1),
-('khau_tru','BHTN NLD (1%)',               'phan_tram',   1.00, 'LuatDinh', 1),
-('khau_tru','Thue TNCN',                   'phan_tram',   0.00, 'LuatDinh', 1);
+INSERT INTO CAUHINH_PHUCAP (loai, tenKhoan, kieuTinh, giaTri, nguon, hoatDong, xepLoaiApDung) VALUES
+('phu_cap', 'Phụ cấp ăn trưa',               'co_dinh',   750000, 'CongTy',   1, NULL),
+('phu_cap', 'Phụ cấp điện thoại',            'co_dinh',   500000, 'CongTy',   1, NULL),
+('phu_cap', 'Phụ cấp đi lại',                'co_dinh',   600000, 'CongTy',   1, NULL),
+('phu_cap', 'Thưởng hiệu suất - Xuất sắc',   'phan_tram',  10.00, 'DanhGia',  1, 'xuat_sac'),
+('phu_cap', 'Thưởng hiệu suất - Tốt',        'phan_tram',   7.00, 'DanhGia',  1, 'tot'),
+('phu_cap', 'Thưởng hiệu suất - Khá',        'phan_tram',   5.00, 'DanhGia',  1, 'kha'),
+('phu_cap', 'Thưởng hiệu suất - Trung bình', 'phan_tram',   2.00, 'DanhGia',  1, 'trung_binh'),
+('khau_tru','BHXH NLD (8%)',                  'phan_tram',   8.00, 'LuatDinh', 1, NULL),
+('khau_tru','BHYT NLD (1.5%)',                'phan_tram',   1.50, 'LuatDinh', 1, NULL),
+('khau_tru','BHTN NLD (1%)',                  'phan_tram',   1.00, 'LuatDinh', 1, NULL),
+('khau_tru','Thue TNCN',                      'phan_tram',   0.00, 'LuatDinh', 1, NULL);
 
 -- =====================================================
 -- 17.1. DỮ LIỆU MẪU CHỈNH SỬA CHẤM CÔNG

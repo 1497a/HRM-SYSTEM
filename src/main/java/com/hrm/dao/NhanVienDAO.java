@@ -292,6 +292,22 @@ public class NhanVienDAO {
     }
 
     // ============================
+    // updateTrangThai — chỉ cập nhật trạng thái và người thực hiện
+    // ============================
+    public int updateTrangThai(String maNV, String trangThai, String nguoiCapNhat) {
+        String sql = "UPDATE NHANVIEN SET trangThai=?, nguoiCapNhatTrangThai=? WHERE maNV=?";
+        try (Connection conn = DatabaseConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setString(1, trangThai);
+            ps.setString(2, nguoiCapNhat);
+            ps.setString(3, maNV);
+            return ps.executeUpdate();
+        } catch (SQLException e) {
+            throw new RuntimeException("Lỗi cập nhật trạng thái nhân viên " + maNV + ": " + e.getMessage(), e);
+        }
+    }
+
+    // ============================
     // existsByMaNhanVien
     // ============================
     public boolean existsByMaNhanVien(String maNhanVien) {

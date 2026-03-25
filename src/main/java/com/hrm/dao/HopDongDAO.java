@@ -116,6 +116,33 @@ public class HopDongDAO {
     }
 
     // ============================
+    // updateThanhLy
+    // ============================
+    public int updateThanhLy(int maHopDong, LocalDate ngayThanhLy, String lyDoThanhLy, String nguoiThanhLy) {
+        String sql = "UPDATE HOPDONGLAODONG "
+                + "SET trangThai=?, ngayThanhLy=?, lyDoThanhLy=?, nguoiThanhLy=?, "
+                + "ngayHetHieuLuc = CASE "
+                + "    WHEN ngayHetHieuLuc IS NULL OR ngayHetHieuLuc > ? THEN ? "
+                + "    ELSE ngayHetHieuLuc "
+                + "END "
+                + "WHERE maHopDong=?";
+        try (Connection conn = DatabaseConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            Date liquidationDate = ngayThanhLy != null ? Date.valueOf(ngayThanhLy) : null;
+            ps.setString(1, HRMConstants.TRANG_THAI_THANH_LY);
+            ps.setDate(2, liquidationDate);
+            ps.setString(3, lyDoThanhLy);
+            ps.setString(4, nguoiThanhLy);
+            ps.setDate(5, liquidationDate);
+            ps.setDate(6, liquidationDate);
+            ps.setInt(7, maHopDong);
+            return ps.executeUpdate();
+        } catch (SQLException e) {
+            throw new RuntimeException("Lỗi thanh lý hợp đồng: " + e.getMessage(), e);
+        }
+    }
+
+    // ============================
     // updateApproval — dùng khi phê duyệt hợp đồng
     // ============================
     public int updateApproval(int maHopDong, String trangThai, String nguoiDuyet, LocalDateTime ngayDuyet) {

@@ -1,14 +1,17 @@
 package com.hrm.dao;
 
+import com.hrm.model.DataScope;
 import com.hrm.model.BangLuong;
 import com.hrm.model.ChiTietLuong;
 import com.hrm.model.ThanhPhanLuong;
+import com.hrm.util.DaoHelper;
 import com.hrm.util.DatabaseConnection;
 import com.hrm.util.HRMConstants;
 import com.hrm.util.SessionContext;
 
 import java.sql.*;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 /**
@@ -127,6 +130,40 @@ public class BangLuongDAO {
         return result;
     }
 
+    public List<BangLuong> findAllByScope(DataScope scope, String currentMaNV) {
+        List<BangLuong> result = new ArrayList<>();
+        if (scope == null || scope == DataScope.NONE) {
+            return result;
+        }
+        if (scope == DataScope.ALL) {
+            return findAll();
+        }
+        try (Connection conn = DatabaseConnection.getConnection()) {
+            ScopeFilter filter = buildPayrollScopeFilter(scope, currentMaNV, conn);
+            if (filter == null) {
+                return result;
+            }
+            String sql = baseBangLuongSelect()
+                    + " WHERE bl.maBangLuong IN (SELECT DISTINCT cl.maBangLuong FROM CHITIETLUONG cl "
+                    + "LEFT JOIN BONHIEM b ON cl.maNV = b.maNV "
+                    + "AND b.trangThai = '" + HRMConstants.TRANG_THAI_HIEU_LUC + "' "
+                    + "AND b.loaiBoNhiem = '" + HRMConstants.LOAI_BO_NHIEM_CHINH + "' "
+                    + filter.whereClause + ")"
+                    + " ORDER BY bl.nam DESC, bl.thang DESC";
+            try (PreparedStatement ps = conn.prepareStatement(sql)) {
+                bindScopeParams(ps, filter.params);
+                try (ResultSet rs = ps.executeQuery()) {
+                    while (rs.next()) {
+                        result.add(mapBangLuong(rs));
+                    }
+                }
+            }
+        } catch (SQLException e) {
+            throw new RuntimeException("Lỗi tải danh sách bảng lương theo scope: " + e.getMessage(), e);
+        }
+        return result;
+    }
+
     public int lockBangLuong(int id, int nguoiKhoa) {
         String sql = "UPDATE BANGLUONG SET trangThai='" + HRMConstants.TRANG_THAI_DA_KHOA + "', ngayKhoa=NOW(), nguoiKhoa=? WHERE maBangLuong=?";
         try (Connection conn = DatabaseConnection.getConnection();
@@ -223,7 +260,7 @@ public class BangLuongDAO {
 
     public List<Object[]> getCauHinhPhuCapRaw() {
         String sql = "SELECT tenKhoan, kieuTinh, giaTri, nguon "
-                + "FROM CAUHINH_PHUCAP WHERE hoatDong=TRUE AND loai='phu_cap'";
+                + "FROM CAUHINH_PHUCAP WHERE hoatDong=TRUE AND loai='phu_cap' AND xepLoaiApDung IS NULL";
         List<Object[]> result = new ArrayList<>();
         try (Connection conn = DatabaseConnection.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql);
@@ -300,6 +337,46 @@ public class BangLuongDAO {
         return result;
     }
 
+    public List<ChiTietLuong> findByBangLuongByScope(int bangLuongId, DataScope scope, String currentMaNV) {
+        List<ChiTietLuong> result = new ArrayList<>();
+        if (scope == null || scope == DataScope.NONE) {
+            return result;
+        }
+        if (scope == DataScope.ALL) {
+            return findByBangLuong(bangLuongId);
+        }
+        try (Connection conn = DatabaseConnection.getConnection()) {
+            ScopeFilter filter = buildPayrollScopeFilter(scope, currentMaNV, conn);
+            if (filter == null) {
+                return result;
+            }
+            String sql = "SELECT cl.maChiTiet, cl.maBangLuong, cl.maNV, cl.luongCoSo, cl.tongLuongChucVu, "
+                    + "cl.luongLamThem, cl.tongThuNhap, cl.tongKhauTru, cl.luongThucLanh, cl.soNgayCong, "
+                    + "cl.soGioLamThem, cl.ghiChu, t.hoTen "
+                    + "FROM CHITIETLUONG cl "
+                    + "LEFT JOIN THONGTINCANHAN t ON cl.maNV = t.maNV "
+                    + "LEFT JOIN BONHIEM b ON cl.maNV = b.maNV "
+                    + "AND b.trangThai = '" + HRMConstants.TRANG_THAI_HIEU_LUC + "' "
+                    + "AND b.loaiBoNhiem = '" + HRMConstants.LOAI_BO_NHIEM_CHINH + "' "
+                    + "WHERE cl.maBangLuong=? " + filter.whereClause + " ORDER BY cl.maNV";
+            try (PreparedStatement ps = conn.prepareStatement(sql)) {
+                int index = 1;
+                ps.setInt(index++, bangLuongId);
+                bindScopeParams(ps, filter.params, index);
+                try (ResultSet rs = ps.executeQuery()) {
+                    while (rs.next()) {
+                        ChiTietLuong ctl = mapChiTietLuong(rs);
+                        ctl.setDanhSachThanhPhan(findByChiTiet(ctl.getMaChiTietLuong()));
+                        result.add(ctl);
+                    }
+                }
+            }
+        } catch (SQLException e) {
+            throw new RuntimeException("Lỗi tải chi tiết lương theo scope: " + e.getMessage(), e);
+        }
+        return result;
+    }
+
     public ChiTietLuong findByBangLuongAndNV(int bangLuongId, String nhanVienId) {
         String sql = "SELECT cl.maChiTiet, cl.maBangLuong, cl.maNV, cl.luongCoSo, cl.tongLuongChucVu, cl.luongLamThem, cl.tongThuNhap, cl.tongKhauTru, cl.luongThucLanh, cl.soNgayCong, cl.soGioLamThem, cl.ghiChu, t.hoTen FROM CHITIETLUONG cl "
                 + "LEFT JOIN THONGTINCANHAN t ON cl.maNV = t.maNV "
@@ -317,6 +394,47 @@ public class BangLuongDAO {
             }
         } catch (SQLException e) {
             throw new RuntimeException("Lỗi tải chi tiết lương NV: " + e.getMessage(), e);
+        }
+        return null;
+    }
+
+    public ChiTietLuong findByBangLuongAndNVByScope(int bangLuongId, String nhanVienId,
+                                                    DataScope scope, String currentMaNV) {
+        if (scope == null || scope == DataScope.NONE) {
+            return null;
+        }
+        if (scope == DataScope.ALL) {
+            return findByBangLuongAndNV(bangLuongId, nhanVienId);
+        }
+        try (Connection conn = DatabaseConnection.getConnection()) {
+            ScopeFilter filter = buildPayrollScopeFilter(scope, currentMaNV, conn);
+            if (filter == null) {
+                return null;
+            }
+            String sql = "SELECT cl.maChiTiet, cl.maBangLuong, cl.maNV, cl.luongCoSo, cl.tongLuongChucVu, "
+                    + "cl.luongLamThem, cl.tongThuNhap, cl.tongKhauTru, cl.luongThucLanh, cl.soNgayCong, "
+                    + "cl.soGioLamThem, cl.ghiChu, t.hoTen "
+                    + "FROM CHITIETLUONG cl "
+                    + "LEFT JOIN THONGTINCANHAN t ON cl.maNV = t.maNV "
+                    + "LEFT JOIN BONHIEM b ON cl.maNV = b.maNV "
+                    + "AND b.trangThai = '" + HRMConstants.TRANG_THAI_HIEU_LUC + "' "
+                    + "AND b.loaiBoNhiem = '" + HRMConstants.LOAI_BO_NHIEM_CHINH + "' "
+                    + "WHERE cl.maBangLuong=? AND cl.maNV=? " + filter.whereClause;
+            try (PreparedStatement ps = conn.prepareStatement(sql)) {
+                int index = 1;
+                ps.setInt(index++, bangLuongId);
+                ps.setString(index++, nhanVienId);
+                bindScopeParams(ps, filter.params, index);
+                try (ResultSet rs = ps.executeQuery()) {
+                    if (rs.next()) {
+                        ChiTietLuong ctl = mapChiTietLuong(rs);
+                        ctl.setDanhSachThanhPhan(findByChiTiet(ctl.getMaChiTietLuong()));
+                        return ctl;
+                    }
+                }
+            }
+        } catch (SQLException e) {
+            throw new RuntimeException("Lỗi tải chi tiết lương NV theo scope: " + e.getMessage(), e);
         }
         return null;
     }
@@ -374,7 +492,7 @@ public class BangLuongDAO {
         ctl.setTongLuong(rs.getDouble("tongThuNhap"));
         ctl.setTongKhauTru(rs.getDouble("tongKhauTru"));
         ctl.setLuongThucNhan(rs.getDouble("luongThucLanh"));
-        ctl.setSoNgayCong(rs.getInt("soNgayCong"));
+        ctl.setSoNgayCong(rs.getDouble("soNgayCong"));
         ctl.setTongGioOT(rs.getDouble("soGioLamThem"));
         ctl.setGhiChu(rs.getString("ghiChu"));
         // transient
@@ -448,6 +566,54 @@ public class BangLuongDAO {
         return ThanhPhanLuong.Loai.PHU_CAP;
     }
 
+    private ScopeFilter buildPayrollScopeFilter(DataScope scope, String currentMaNV, Connection conn) throws SQLException {
+        if (scope == null || scope == DataScope.NONE) {
+            return null;
+        }
+        if (scope == DataScope.ALL) {
+            return new ScopeFilter("", Collections.emptyList());
+        }
+        if (scope == DataScope.SELF) {
+            return new ScopeFilter("AND cl.maNV = ?", Collections.singletonList(currentMaNV));
+        }
+        if (scope == DataScope.TEAM) {
+            List<String> params = new ArrayList<>();
+            params.add(currentMaNV);
+            params.add(currentMaNV);
+            return new ScopeFilter("AND (b.maQuanLy = ? OR cl.maNV = ?)", params);
+        }
+        if (scope == DataScope.DEPT) {
+            java.util.Set<String> deptIds = DaoHelper.getDeptSubtree(currentMaNV, conn);
+            if (deptIds.isEmpty()) {
+                return null;
+            }
+            String placeholders = String.join(",", Collections.nCopies(deptIds.size(), "?"));
+            return new ScopeFilter("AND b.maPhongBan IN (" + placeholders + ")", new ArrayList<>(deptIds));
+        }
+        return null;
+    }
+
+    private void bindScopeParams(PreparedStatement ps, List<String> params) throws SQLException {
+        bindScopeParams(ps, params, 1);
+    }
+
+    private void bindScopeParams(PreparedStatement ps, List<String> params, int startIndex) throws SQLException {
+        int index = startIndex;
+        for (String param : params) {
+            ps.setString(index++, param);
+        }
+    }
+
+    private static class ScopeFilter {
+        private final String whereClause;
+        private final List<String> params;
+
+        private ScopeFilter(String whereClause, List<String> params) {
+            this.whereClause = whereClause;
+            this.params = params;
+        }
+    }
+
     // =====================================================================
     // Helpers for salary calculation
     // =====================================================================
@@ -509,23 +675,29 @@ public class BangLuongDAO {
         return total;
     }
 
-    /** Đếm số ngày công thực tế từ CHAMCONG trong tháng/năm. */
-    public int getSoNgayCong(String nhanVienId, int thang, int nam) {
-        String sql = "SELECT COUNT(*) FROM CHAMCONG "
-                + "WHERE maNV=? AND MONTH(ngay)=? AND YEAR(ngay)=? "
-                + "AND trangThai IN ('dung_gio','di_muon','ve_som','nghi_phep','cong_tac')";
+    /** Tính số ngày công thực tế từ CHAMCONG trong tháng/năm theo giờ làm thực tế.
+     *  nghi_phep/cong_tac luôn = 1 ngày; còn lại = soGioLam / soGioChuan (ca làm, fallback 8h). */
+    public double getSoNgayCong(String nhanVienId, int thang, int nam) {
+        String sql = "SELECT COALESCE(SUM("
+                + "CASE WHEN c.trangThai IN ('nghi_phep','cong_tac') THEN 1.0 "
+                + "ELSE c.soGioLam / COALESCE(cl.soGioChuan, 8.0) END"
+                + "), 0) "
+                + "FROM CHAMCONG c "
+                + "LEFT JOIN CALAM cl ON c.maCaLam = cl.maCaLam "
+                + "WHERE c.maNV=? AND MONTH(c.ngay)=? AND YEAR(c.ngay)=? "
+                + "AND c.trangThai IN ('dung_gio','di_muon','ve_som','nghi_phep','cong_tac')";
         try (Connection conn = DatabaseConnection.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setString(1, nhanVienId);
             ps.setInt(2, thang);
             ps.setInt(3, nam);
             try (ResultSet rs = ps.executeQuery()) {
-                if (rs.next()) return rs.getInt(1);
+                if (rs.next()) return rs.getDouble(1);
             }
         } catch (SQLException e) {
             // Default 0 on query error so caller can apply fallback policy.
         }
-        return 0;
+        return 0.0;
     }
 
     /** Tổng số bản ghi chấm công trong tháng để phân biệt chưa có dữ liệu với vắng mặt toàn bộ. */
@@ -545,8 +717,9 @@ public class BangLuongDAO {
         return 0;
     }
 
-    /** Tổng tiền OT = giờ OT quy đổi * đơn giá giờ công chuẩn. */
-    public double getTienOT(String nhanVienId, int thang, int nam, double luongCoBan) {
+    /** Tổng tiền OT = giờ OT quy đổi * đơn giá giờ công chuẩn.
+     *  @param ngayLamViecTrongThang số ngày làm việc thực tế của tháng (T2=20, T1=21, ...) */
+    public double getTienOT(String nhanVienId, int thang, int nam, double luongCoBan, int ngayLamViecTrongThang) {
         String sql = "SELECT COALESCE(SUM(soGio * heSoOT), 0) FROM DANGKY_LAMTHEM "
                 + "WHERE maNV=? AND MONTH(ngay)=? AND YEAR(ngay)=? AND trangThai='" + HRMConstants.TRANG_THAI_DA_DUYET + "'";
         try (Connection conn = DatabaseConnection.getConnection();
@@ -557,7 +730,7 @@ public class BangLuongDAO {
             try (ResultSet rs = ps.executeQuery()) {
                 if (rs.next()) {
                     double tongGioOTQuyDoi = rs.getDouble(1);
-                    return tongGioOTQuyDoi * (luongCoBan / 26.0 / 8.0);
+                    return tongGioOTQuyDoi * (luongCoBan / ngayLamViecTrongThang / 8.0);
                 }
             }
         } catch (SQLException e) {
@@ -582,6 +755,40 @@ public class BangLuongDAO {
             // Default 0 on query error.
         }
         return 0.0;
+    }
+
+    /** % thưởng hiệu suất ứng với xepLoai, lấy từ CAUHINH_PHUCAP. Trả về 0 nếu không tìm thấy. */
+    public double getThuongHieuSuatRate(String xepLoai) {
+        if (xepLoai == null) return 0.0;
+        String sql = "SELECT giaTri FROM CAUHINH_PHUCAP "
+                + "WHERE xepLoaiApDung=? AND hoatDong=TRUE AND loai='phu_cap' LIMIT 1";
+        try (Connection conn = DatabaseConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setString(1, xepLoai);
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) return rs.getDouble("giaTri");
+            }
+        } catch (SQLException e) {
+            // Return 0 on error
+        }
+        return 0.0;
+    }
+
+    /** Xếp loại đánh giá hiệu suất đã xác nhận gần nhất của nhân viên. */
+    public String getXepLoaiMoiNhat(String maNV) {
+        String sql = "SELECT xepLoai FROM DANHGIAHIEUSUAT "
+                + "WHERE maNV=? AND trangThai='da_xac_nhan' "
+                + "ORDER BY ngayDanhGia DESC LIMIT 1";
+        try (Connection conn = DatabaseConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setString(1, maNV);
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) return rs.getString("xepLoai");
+            }
+        } catch (SQLException e) {
+            // Return null if no evaluation found
+        }
+        return null;
     }
 
     /** Tổng giờ OT thô (để lưu vào soGioLamThem và hiển thị chi tiết). */

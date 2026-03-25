@@ -74,7 +74,7 @@ class TabBoNhiemPanel extends JPanel {
 
     private void loadHistory(DefaultTableModel model, BoNhiemBUS service, String maNV) {
         try {
-            List<BoNhiem> list = service.getByMaNV(maNV);
+            List<BoNhiem> list = service.getByMaNVInScope(maNV);
             if (list == null) return;
             for (BoNhiem bn : list) {
                 String tenPB = bn.getTenPhongBan() != null ? bn.getTenPhongBan() : safe(bn.getMaChucVu());

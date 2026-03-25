@@ -43,7 +43,7 @@ public class ChiTietLuong {
     private double tongLuong;         // = luongCoBan + tongLuongChucVu + tienOT
     private double luongThucNhan;     // = tongLuong - tongKhauTru
     // Thông tin chấm công
-    private int soNgayCong;
+    private double soNgayCong;
     private double tongGioLam;
     private double tongGioOT;
     private String ghiChu;
@@ -101,8 +101,8 @@ public class ChiTietLuong {
     public double getLuongThucNhan() { return luongThucNhan; }
     public void setLuongThucNhan(double luongThucNhan) { this.luongThucNhan = luongThucNhan; }
 
-    public int getSoNgayCong() { return soNgayCong; }
-    public void setSoNgayCong(int soNgayCong) { this.soNgayCong = soNgayCong; }
+    public double getSoNgayCong() { return soNgayCong; }
+    public void setSoNgayCong(double soNgayCong) { this.soNgayCong = soNgayCong; }
 
     public double getTongGioLam() { return tongGioLam; }
     public void setTongGioLam(double tongGioLam) { this.tongGioLam = tongGioLam; }

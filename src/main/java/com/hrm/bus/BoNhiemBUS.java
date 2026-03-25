@@ -19,6 +19,7 @@ import com.hrm.util.ValidationUtils;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.Collections;
 import java.util.List;
 
 /**
@@ -156,7 +157,7 @@ public class BoNhiemBUS {
         try {
             int updRows = boNhiemRepo.updateNguoiDuyet(maBoNhiem, nguoiDuyetId);
             if (updRows <= 0) {
-                System.err.println("Canh bao: Khong the cap nhat nguoi duyet cho bo nhiem " + maBoNhiem);
+                System.err.println("Cảnh báo: Không thể cập nhật người duyệt cho bổ nhiệm " + maBoNhiem);
             }
         } catch (Exception e) {
             System.err.println("Cảnh báo: Không thể cập nhật người duyệt cho bổ nhiệm " + maBoNhiem + ": " + e.getMessage());
@@ -193,7 +194,7 @@ public class BoNhiemBUS {
             }
             int lyDoRows = boNhiemRepo.updateLyDoTuChoi(maBoNhiem, lyDo.trim());
             if (lyDoRows <= 0) {
-                System.err.println("Canh bao: Khong the luu ly do tu choi cho bo nhiem " + maBoNhiem);
+                System.err.println("Cảnh báo: Không thể lưu lý do từ chối cho bổ nhiệm " + maBoNhiem);
             }
         } catch (Exception e) {
             return KetQua.error("Lỗi từ chối bổ nhiệm: " + e.getMessage());
@@ -221,8 +222,50 @@ public class BoNhiemBUS {
         return boNhiemRepo.findByMaNV(maNV);
     }
 
+    public List<BoNhiem> getByMaNVInScope(String targetMaNV) {
+        return canViewEmployeeAppointments(targetMaNV)
+                ? boNhiemRepo.findByMaNV(targetMaNV)
+                : Collections.emptyList();
+    }
+
     public BoNhiem getBoNhiemChinhHieuLuc(String maNV) {  // Đổi tham số thành String
         return boNhiemRepo.findBoNhiemChinhHieuLuc(maNV);
+    }
+
+    public BoNhiem getBoNhiemChinhHieuLucInScope(String targetMaNV) {
+        return canViewEmployeeAppointments(targetMaNV)
+                ? boNhiemRepo.findBoNhiemChinhHieuLuc(targetMaNV)
+                : null;
+    }
+
+    public boolean canViewEmployeeAppointments(String targetMaNV) {
+        TaiKhoan currentUser = SessionContext.getInstance().getCurrentUser();
+        if (currentUser == null || ValidationUtils.isBlank(targetMaNV)) {
+            return false;
+        }
+        if (SessionContext.getInstance().isAdmin()) {
+            return true;
+        }
+        if (!currentUser.coQuyen(ACTION_APPOINTMENT_VIEW)) {
+            return false;
+        }
+        String currentMaNV = currentUser.getMaNV();
+        com.hrm.model.DataScope scope = XacThucBUS.getInstance().getScopeForAction(ACTION_APPOINTMENT_VIEW);
+        if (scope == com.hrm.model.DataScope.ALL) {
+            return true;
+        }
+        if (scope == com.hrm.model.DataScope.NONE || ValidationUtils.isBlank(currentMaNV)) {
+            return false;
+        }
+        if (scope == com.hrm.model.DataScope.SELF) {
+            return targetMaNV.equalsIgnoreCase(currentMaNV);
+        }
+        for (NhanVien nv : NhanVienBUS.getInstance().getAllByActionScope(ACTION_APPOINTMENT_VIEW, currentMaNV)) {
+            if (targetMaNV.equalsIgnoreCase(nv.getMaNhanVien())) {
+                return true;
+            }
+        }
+        return false;
     }
 
     // ============================
@@ -237,14 +280,14 @@ public class BoNhiemBUS {
             return KetQua.error("Không tìm thấy bổ nhiệm #" + maBoNhiem);
         }
         if (!HRMConstants.TRANG_THAI_HIEU_LUC.equals(bn.getTrangThai())) {
-            return KetQua.error("Ch? c� th? k?t th�c b? nhi?m dang hi?u l?c.");
+            return KetQua.error("Chỉ có thể kết thúc bổ nhiệm đang hiệu lực.");
         }
-        // Kh�ng cho t? k?t th�c b? nhi?m c?a ch�nh m�nh (nh?t qu�n v?i t?o/ph� duy?t)
+        // Không cho tự  kết thúc bổ nhiệm của chnh mnh (nhất qun với tạo/phê duyệt)
         if (SelfApprovalGuard.isSelfAction(getCurrentUserNhanVienId(), bn.getMaNV())
                 && !SelfApprovalGuard.currentUserCanBypassSelfRestriction()) {
-            return KetQua.error("B?n kh�ng th? t? k?t th�c b? nhi?m c?a ch�nh m�nh.");
+            return KetQua.error("Bạn không thể kết thúc bổ nhiệm của chính mình.");
         }
-        // B?o v? b? nhi?m CEO (capBac=1): ch? ADMIN m?i du?c k?t th�c
+        // Bảo vệ bổ nhiệm CEO (capBac=1): chỉ ADMIN mới được kết thúc, dù có phải bổ nhiệm của mình hay không
         ChucVu cv = chucVuRepo.findById(bn.getMaChucVu());
         if (cv != null && cv.getCapBac() == 1) {
             SessionContext ctx = SessionContext.getInstance();

@@ -12,6 +12,8 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 /**
  * Service cho Attendance (Ca làm, Chấm công, Đăng ký làm thêm).
@@ -222,13 +224,15 @@ public class ChamCongBUS {
         LocalDateTime gioRa = LocalDateTime.now();
         cc.setGioRa(gioRa);
         cc.setSoGioLam(cc.tinhSoGioLam());
+        CaLam caLam = repository.findCaLamById(cc.getMaCaLam());
+        // Xác định trạng thái: về sớm nếu ra trước giờ kết thúc ca
+        if (caLam != null && gioRa.toLocalTime().isBefore(caLam.getGioKetThuc())) {
+            cc.setTrangThai(ChamCong.TrangThai.VE_SOM);
+        }
         // Kiểm tra giờ làm thêm
         boolean hasOT = repository.hasDuyetForNVAndNgay(maNV, today);
-        if (hasOT) {
-            CaLam caLam = repository.findCaLamById(cc.getMaCaLam());
-            if (caLam != null && cc.getSoGioLam() > caLam.getSoGioChuan()) {
-                cc.setGioLamThem(Math.round((cc.getSoGioLam() - caLam.getSoGioChuan()) * 100.0) / 100.0);
-            }
+        if (hasOT && caLam != null && cc.getSoGioLam() > caLam.getSoGioChuan()) {
+            cc.setGioLamThem(Math.round((cc.getSoGioLam() - caLam.getSoGioChuan()) * 100.0) / 100.0);
         }
         int rows = repository.updateChamCong(cc);
         if (rows <= 0) {
@@ -859,6 +863,28 @@ public class ChamCongBUS {
             return currentUser.getMaNV();
         }
         return currentUser.getTenDangNhap();
+    }
+
+    // =====================================================================
+    // BÁO CÁO — dùng cho ReportPanel
+    // =====================================================================
+    /**
+     * Tổng hợp chấm công theo nhân viên trong một tháng, lọc theo scope báo cáo.
+     * Mỗi Object[] = { maNV, hoTen, phongBan, soNgayCong, tongGioLam, tongGioOT }
+     */
+    public List<Object[]> getMonthlySummaryForReport(int thang, int nam, String currentMaNV) {
+        DataScope scope = getScopeForAction(PermissionCodes.REPORT_VIEW);
+        Set<String> maNVSet = buildScopedMaNVSet(scope, currentMaNV);
+        return repository.findMonthlySummary(thang, nam, maNVSet);
+    }
+
+    private Set<String> buildScopedMaNVSet(DataScope scope, String currentMaNV) {
+        if (scope == DataScope.ALL) {
+            return null; // DAO sẽ lấy tất cả
+        }
+        List<NhanVien> nvList = NhanVienBUS.getInstance()
+                .getAllByActionScope(PermissionCodes.REPORT_VIEW, currentMaNV);
+        return nvList.stream().map(NhanVien::getMaNhanVien).collect(Collectors.toSet());
     }
 
 }

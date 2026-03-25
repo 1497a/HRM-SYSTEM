@@ -855,7 +855,7 @@ public class ChamCongDAO {
     // CAU_HINH_PHU_CAPS
     // =====================================================================
     public List<CauHinhPhuCap> findAllCauHinhPC() {
-        String sql = "SELECT maCauHinh, loai, tenKhoan, kieuTinh, giaTri, nguon, hoatDong "
+        String sql = "SELECT maCauHinh, loai, tenKhoan, kieuTinh, giaTri, nguon, hoatDong, xepLoaiApDung "
                 + "FROM CAUHINH_PHUCAP ORDER BY loai, tenKhoan";
         List<CauHinhPhuCap> result = new ArrayList<>();
         try (Connection conn = DatabaseConnection.getConnection();
@@ -871,7 +871,7 @@ public class ChamCongDAO {
     }
 
     public CauHinhPhuCap findCauHinhPCById(int id) {
-        String sql = "SELECT maCauHinh, loai, tenKhoan, kieuTinh, giaTri, nguon, hoatDong "
+        String sql = "SELECT maCauHinh, loai, tenKhoan, kieuTinh, giaTri, nguon, hoatDong, xepLoaiApDung "
                 + "FROM CAUHINH_PHUCAP WHERE maCauHinh=?";
         try (Connection conn = DatabaseConnection.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
@@ -947,6 +947,7 @@ public class ChamCongDAO {
         pc.setGiaTri(rs.getDouble("giaTri"));
         pc.setNguon(rs.getString("nguon"));
         pc.setHoatDong(rs.getBoolean("hoatDong"));
+        pc.setXepLoaiApDung(rs.getString("xepLoaiApDung"));
         return pc;
     }
 
@@ -1107,6 +1108,69 @@ public class ChamCongDAO {
     /** Alias cho findActiveCaLam() — tương thích với chamcongnew. */
     public List<com.hrm.model.CaLam> findCaLamHoatDong() {
         return findActiveCaLam();
+    }
+
+    // =====================================================================
+    // BÁO CÁO CHẤM CÔNG THÁNG (dùng cho ReportPanel)
+    // =====================================================================
+    /**
+     * Tổng hợp chấm công theo nhân viên cho một tháng/năm.
+     * Mỗi phần tử Object[] = { maNV, hoTen, phongBan, soNgayCong, tongGioLam, tongGioOT }
+     *
+     * @param maNVSet null hoặc rỗng = lấy tất cả (scope ALL); ngược lại lọc theo set.
+     */
+    public List<Object[]> findMonthlySummary(int thang, int nam, java.util.Set<String> maNVSet) {
+        List<Object[]> result = new ArrayList<>();
+        boolean filterByNV = maNVSet != null && !maNVSet.isEmpty();
+
+        StringBuilder sql = new StringBuilder(
+                "SELECT c.maNV, COALESCE(t.hoTen, c.maNV) AS hoTen, "
+                + "COALESCE(pb.tenPhongBan, '') AS phongBan, "
+                + "COUNT(DISTINCT DATE(c.ngay)) AS soNgayCong, "
+                + "COALESCE(SUM(c.soGioLam), 0) AS tongGioLam, "
+                + "COALESCE(SUM(c.gioLamThem), 0) AS tongGioOT "
+                + "FROM CHAMCONG c "
+                + "LEFT JOIN THONGTINCANHAN t ON c.maNV = t.maNV "
+                + "LEFT JOIN BONHIEM b ON c.maNV = b.maNV "
+                + "  AND b.trangThai = 'hieu_luc' AND b.loaiBoNhiem = 'chinh' "
+                + "LEFT JOIN PHONGBAN pb ON b.maPhongBan = pb.maPhongBan "
+                + "WHERE MONTH(c.ngay) = ? AND YEAR(c.ngay) = ?");
+
+        if (filterByNV) {
+            sql.append(" AND c.maNV IN (");
+            for (int i = 0; i < maNVSet.size(); i++) {
+                sql.append(i == 0 ? "?" : ",?");
+            }
+            sql.append(")");
+        }
+        sql.append(" GROUP BY c.maNV, hoTen, phongBan ORDER BY hoTen");
+
+        try (Connection conn = DatabaseConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql.toString())) {
+            ps.setInt(1, thang);
+            ps.setInt(2, nam);
+            if (filterByNV) {
+                int idx = 3;
+                for (String maNV : maNVSet) {
+                    ps.setString(idx++, maNV);
+                }
+            }
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    result.add(new Object[]{
+                            rs.getString("maNV"),
+                            rs.getString("hoTen"),
+                            rs.getString("phongBan"),
+                            rs.getInt("soNgayCong"),
+                            rs.getDouble("tongGioLam"),
+                            rs.getDouble("tongGioOT")
+                    });
+                }
+            }
+        } catch (SQLException e) {
+            throw new RuntimeException("Lỗi tổng hợp chấm công tháng: " + e.getMessage(), e);
+        }
+        return result;
     }
 
 }

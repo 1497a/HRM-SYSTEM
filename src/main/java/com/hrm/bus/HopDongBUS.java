@@ -199,7 +199,8 @@ public class HopDongBUS {
             return KetQua.error("Lỗi thanh lý hợp đồng: " + e.getMessage());
         }
         if (hd.getMaNV() != null) {
-            BoNhiemDAO.getInstance().endAllActiveBoNhiemForNV(hd.getMaNV(), LocalDate.now());
+            String nguoiThucHien = getCurrentUserNhanVienId();
+            BoNhiemDAO.getInstance().endAllActiveBoNhiemForNV(hd.getMaNV(), LocalDate.now(), nguoiThucHien);
         }
         return KetQua.success(null, "Thanh lý hợp đồng thành công. Đã kết thúc các bổ nhiệm hiệu lực.");
     }
@@ -225,6 +226,38 @@ public class HopDongBUS {
     public HopDongLaoDong getHieuLuc(String maNV) {
         hopDongRepo.expireHetHanContracts();
         return hopDongRepo.findHieuLuc(maNV);
+    }
+
+    public boolean canViewContractOf(String maNV) {
+        if (ValidationUtils.isBlank(maNV)) return false;
+        TaiKhoan currentUser = SessionContext.getInstance().getCurrentUser();
+        if (currentUser == null) return false;
+        if (SessionContext.getInstance().isAdmin()) return true;
+        if (!currentUser.coQuyen(PermissionCodes.CONTRACT_VIEW)
+                && !currentUser.coQuyen(ACTION_CONTRACT_MANAGE)) return false;
+        return isTargetWithinActionScope(ACTION_CONTRACT_MANAGE, currentUser.getMaNV(), maNV);
+    }
+
+    public HopDongLaoDong getHieuLucInScope(String maNV) {
+        if (!canViewContractOf(maNV)) return null;
+        return getHieuLuc(maNV);
+    }
+
+    public KetQua<Void> thanhLyHopDongDoNghiViec(String maNV, LocalDate ngayNghiViec,
+                                                   String lyDo, String nguoiThucHien) {
+        HopDongLaoDong hd = hopDongRepo.findHieuLuc(maNV);
+        if (hd == null) {
+            return KetQua.success(null, "Không có hợp đồng hiệu lực cần thanh lý.");
+        }
+        try {
+            int rows = hopDongRepo.updateTrangThai(hd.getMaHopDong(), HRMConstants.TRANG_THAI_THANH_LY);
+            if (rows <= 0) {
+                return KetQua.error("Không thể thanh lý hợp đồng khi nhân viên nghỉ việc.");
+            }
+            return KetQua.success(null, "Đã thanh lý hợp đồng hiệu lực khi nhân viên nghỉ việc.");
+        } catch (Exception e) {
+            return KetQua.error("Lỗi thanh lý hợp đồng: " + e.getMessage());
+        }
     }
 
     private KetQua<Void> validateContractPermission(String action, String targetMaNV) {

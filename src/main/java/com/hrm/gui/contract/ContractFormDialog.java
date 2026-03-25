@@ -312,12 +312,18 @@ public class ContractFormDialog extends BaseFormDialog {
         }
         txtGhiChu.setText(hd.getNoiDung() != null ? hd.getNoiDung() : "");
         // Audit fields
-        if (hd.getNguoiTao() != null || hd.getNguoiDuyet() != null) {
+        if (hd.getNguoiTao() != null || hd.getNguoiDuyet() != null
+                || hd.getNgayThanhLy() != null || hd.getLyDoThanhLy() != null) {
             pnlAudit.removeAll();
             DateTimeFormatter dtFmt = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm");
             addAuditRow("Người tạo:", hd.getNguoiTao() != null ? hd.getNguoiTao() : "(hệ thống)");
             addAuditRow("Người phê duyệt:", hd.getNguoiDuyet() != null ? hd.getNguoiDuyet() : "(chưa duyệt)");
             addAuditRow("Ngày phê duyệt:", hd.getNgayDuyet() != null ? hd.getNgayDuyet().format(dtFmt) : "—");
+            addAuditRow("Trang thái:", HRMConstants.display(hd.getTrangThai()));
+            addAuditRow("Ngày thanh lý:", hd.getNgayThanhLy() != null
+                    ? hd.getNgayThanhLy().format(DateTimeFormatter.ofPattern("dd/MM/yyyy")) : "-");
+            addAuditRow("Lý do thanh lý:", hd.getLyDoThanhLy() != null && !hd.getLyDoThanhLy().isBlank()
+                    ? hd.getLyDoThanhLy() : "-");
             pnlAudit.setVisible(true);
         }
     }
@@ -348,7 +354,7 @@ public class ContractFormDialog extends BaseFormDialog {
         String trangThai = hopDongHienThi.getTrangThai();
         btnPheDuyet.setVisible(sc.hasPermission(PermissionCodes.CONTRACT_APPROVE) && HRMConstants.TRANG_THAI_CHO_DUYET.equals(trangThai));
         btnThanhLy.setVisible(sc.hasPermission(PermissionCodes.CONTRACT_MANAGE)
-                && (HRMConstants.TRANG_THAI_HIEU_LUC.equals(trangThai) || HRMConstants.TRANG_THAI_HET_HIEU_LUC.equals(trangThai)));
+                && HRMConstants.TRANG_THAI_HIEU_LUC.equals(trangThai));
     }
 
     private void pheDuyetHopDong() {

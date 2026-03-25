@@ -41,7 +41,6 @@ public class EmployeeListPanel extends JPanel {
     private JButton btnChiTiet;
     private JButton btnNhapExcel;
     private JButton btnXuatExcel;
-    private JButton btnXuatPdf;
     private JButton btnIn;
     private List<NhanVien> danhSachHienThi = new ArrayList<>();
     private static final String[] COL_NAMES = {
@@ -148,11 +147,9 @@ public class EmployeeListPanel extends JPanel {
 
         btnNhapExcel = UIHelper.createWarningButton("Nhập Excel");
         btnXuatExcel = UIHelper.createDefaultButton("Xuất Excel");
-        btnXuatPdf   = UIHelper.createDefaultButton("Xuất PDF");
         btnIn        = UIHelper.createDefaultButton("In danh sách");
         panel.add(btnNhapExcel);
         panel.add(btnXuatExcel);
-        panel.add(btnXuatPdf);
         panel.add(btnIn);
         return panel;
     }
@@ -162,7 +159,6 @@ public class EmployeeListPanel extends JPanel {
         btnChiTiet.addActionListener(e -> showHoSoDialog());
         btnNhapExcel.addActionListener(e -> doImportExcel());
         btnXuatExcel.addActionListener(e -> doExportExcel());
-        btnXuatPdf.addActionListener(e -> doPrintList(true));
         btnIn.addActionListener(e -> doPrintList(false));
         txtSearch.addKeyListener(new java.awt.event.KeyAdapter() {
             @Override
@@ -193,7 +189,6 @@ public class EmployeeListPanel extends JPanel {
         btnThem.setVisible(isAdmin || sc.hasPermission(PermissionCodes.EMPLOYEE_CREATE));
         btnNhapExcel.setVisible(isAdmin || sc.hasPermission(PermissionCodes.EMPLOYEE_IMPORT));
         btnXuatExcel.setVisible(isAdmin || sc.hasPermission(PermissionCodes.EMPLOYEE_EXPORT));
-        btnXuatPdf.setVisible(isAdmin || sc.hasPermission(PermissionCodes.EMPLOYEE_PRINT));
         btnIn.setVisible(isAdmin || sc.hasPermission(PermissionCodes.EMPLOYEE_PRINT));
         updateActionButtons();
     }

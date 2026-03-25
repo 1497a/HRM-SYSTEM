@@ -45,9 +45,11 @@ CREATE TABLE NHANVIEN (
     loaiHopDong ENUM('thu_viec', 'xac_dinh_thoi_han', 'khong_xac_dinh') DEFAULT 'thu_viec',
     ngayVaoLam DATE NOT NULL,
     trangThai ENUM('dang_lam_viec', 'tam_nghi', 'nghi_viec') DEFAULT 'dang_lam_viec',
+    nguoiCapNhatTrangThai VARCHAR(20) NULL,
     ghiChu NVARCHAR(500),
     ngayTao DATETIME DEFAULT CURRENT_TIMESTAMP,
-    ngayCapNhat DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+    ngayCapNhat DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    FOREIGN KEY (nguoiCapNhatTrangThai) REFERENCES NHANVIEN(maNV) ON DELETE SET NULL
 ) ENGINE=InnoDB;
 
 CREATE TABLE THONGTINCANHAN (
@@ -481,6 +483,7 @@ CREATE TABLE CAUHINH_PHUCAP (
     giaTri DOUBLE NOT NULL DEFAULT 0,
     nguon VARCHAR(50) DEFAULT 'CongTy',
     hoatDong TINYINT(1) NOT NULL DEFAULT 1,
+    xepLoaiApDung VARCHAR(20) DEFAULT NULL COMMENT 'NULL = ap dung tat ca; non-null = chi ap cho NV co xep loai nay',
     ngayTao DATETIME DEFAULT CURRENT_TIMESTAMP
 ) ENGINE=InnoDB;
 

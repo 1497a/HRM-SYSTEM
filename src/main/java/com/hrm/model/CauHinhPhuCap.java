@@ -30,8 +30,9 @@ public class CauHinhPhuCap {
     private String tenKhoan;
     private KieuTinh kieuTinh;
     private double giaTri;              // So tien (neu co dinh) hoac % (neu phan tram)
-    private String nguon;               // CongTy, LuatDinh, ChucVu...
+    private String nguon;               // CongTy, LuatDinh, DanhGia...
     private boolean hoatDong;
+    private String xepLoaiApDung;       // null = ap dung cho moi NV; non-null = chi ap cho NV co xepLoai nay
     public CauHinhPhuCap() {
         this.hoatDong = true;
         this.kieuTinh = KieuTinh.CO_DINH;
@@ -88,6 +89,9 @@ public class CauHinhPhuCap {
 
     public boolean isHoatDong() { return hoatDong; }
     public void setHoatDong(boolean hoatDong) { this.hoatDong = hoatDong; }
+
+    public String getXepLoaiApDung() { return xepLoaiApDung; }
+    public void setXepLoaiApDung(String xepLoaiApDung) { this.xepLoaiApDung = xepLoaiApDung; }
 
     @Override
     public String toString() {

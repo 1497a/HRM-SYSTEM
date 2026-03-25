@@ -58,7 +58,7 @@ public class SalaryDetailDialog extends BaseFormDialog {
         // Title
         JLabel lblTitle = new JLabel("Thông tin lương nhân viên");
         lblTitle.setFont(com.hrm.util.UIFonts.HEADER_SUB);
-        lblTitle.setForeground(UIColors.PRIMARY_PURPLE);
+        lblTitle.setForeground(UIColors.TEXT_DARK);
         gbc.gridx = 0; gbc.gridy = 0; gbc.gridwidth = 4;
         panel.add(lblTitle, gbc);
         gbc.gridwidth = 1;
@@ -80,11 +80,22 @@ public class SalaryDetailDialog extends BaseFormDialog {
         panel.add(makeLabel("Lương chức vụ:"), gbc);
         gbc.gridx = 3;
         panel.add(makeValueMoney(chiTiet.getTongLuongChucVu()), gbc);
-        // Row 3: Tiền OT, Tổng thu nhập
+        // Row 3: Tiền OT, Thưởng hiệu suất
         gbc.gridy = 3; gbc.gridx = 0;
         panel.add(makeLabel("Tiền làm thêm (OT):"), gbc);
         gbc.gridx = 1;
         panel.add(makeValueMoney(chiTiet.getTienOT()), gbc);
+        gbc.gridx = 2;
+        panel.add(makeLabel("Thưởng hiệu suất:"), gbc);
+        gbc.gridx = 3;
+        double thuongHS = getThuongHieuSuat();
+        JLabel lblThuong = makeValueMoney(thuongHS);
+        lblThuong.setForeground(thuongHS > 0 ? UIColors.SUCCESS_GREEN : UIColors.TEXT_DARK);
+        panel.add(lblThuong, gbc);
+        // Row 4: Tổng thu nhập (right side only)
+        gbc.gridy = 4; gbc.gridx = 0; gbc.gridwidth = 2;
+        panel.add(makeLabel(""), gbc);
+        gbc.gridwidth = 1;
         gbc.gridx = 2;
         panel.add(makeLabel("Tổng thu nhập:"), gbc);
         gbc.gridx = 3;
@@ -92,8 +103,8 @@ public class SalaryDetailDialog extends BaseFormDialog {
         lblTongThu.setFont(UIFonts.BOLD_NORMAL);
         lblTongThu.setForeground(UIColors.INFO_TEAL);
         panel.add(lblTongThu, gbc);
-        // Row 4: Khấu trừ, Thực lãnh
-        gbc.gridy = 4; gbc.gridx = 0;
+        // Row 5: Khấu trừ, Thực lãnh
+        gbc.gridy = 5; gbc.gridx = 0;
         panel.add(makeLabel("Tổng khấu trừ:"), gbc);
         gbc.gridx = 1;
         JLabel lblKhauTru = makeValueMoney(chiTiet.getTongKhauTru());
@@ -106,20 +117,15 @@ public class SalaryDetailDialog extends BaseFormDialog {
         lblThucLanh.setFont(com.hrm.util.UIFonts.HEADER_SUB);
         lblThucLanh.setForeground(UIColors.SUCCESS_GREEN);
         panel.add(lblThucLanh, gbc);
-        // Row 5: Số ngày công
-        gbc.gridy = 5; gbc.gridx = 0;
+        // Row 6: Số ngày công
+        gbc.gridy = 6; gbc.gridx = 0;
         panel.add(makeLabel("Số ngày công:"), gbc);
         gbc.gridx = 1;
-        panel.add(makeValue(String.valueOf(chiTiet.getSoNgayCong())), gbc);
+        panel.add(makeValue(String.format("%.1f", chiTiet.getSoNgayCong())), gbc);
         gbc.gridx = 2;
         panel.add(makeLabel("Số giờ OT:"), gbc);
         gbc.gridx = 3;
         panel.add(makeValue(formatHours(chiTiet.getTongGioOT())), gbc);
-        gbc.gridy = 6; gbc.gridx = 0;
-        panel.add(makeLabel("Ghi chú:"), gbc);
-        gbc.gridx = 1; gbc.gridwidth = 3;
-        panel.add(makeValue(chiTiet.getGhiChu() != null ? chiTiet.getGhiChu() : ""), gbc);
-        gbc.gridwidth = 1;
         return panel;
     }
 
@@ -129,16 +135,15 @@ public class SalaryDetailDialog extends BaseFormDialog {
     private JPanel buildThanhPhanPanel() {
         JPanel panel = new JPanel(new BorderLayout());
         panel.setBackground(Color.WHITE);
-        String[] cols = {"Khoản", "Loại", "Số tiền"};
-        DefaultTableModel model = new DefaultTableModel(cols, 0) {
+        DefaultTableModel model = new DefaultTableModel(0, 0) {
             @Override
             public boolean isCellEditable(int row, int col) { return false; }
         };
-        model.setColumnIdentifiers(new Object[]{"Khoản", "Loại", "Số tiền", "Ghi chú"});
+        model.setColumnIdentifiers(new Object[]{"Khoản", "Loại", "Số tiền", "Nguồn"});
         List<ThanhPhanLuong> danhSach = chiTiet.getDanhSachThanhPhan();
         if (danhSach != null) {
             for (ThanhPhanLuong tp : danhSach) {
-                String loaiDisplay = tp.getLoai() != null ? tp.getLoai().toString() : "";
+                String loaiDisplay = tp.getLoai() != null ? tp.getLoai().getDisplayName() : "";
                 model.addRow(new Object[]{
                         tp.getTenKhoan(),
                         loaiDisplay,
@@ -152,7 +157,7 @@ public class SalaryDetailDialog extends BaseFormDialog {
         table.setFont(com.hrm.util.UIFonts.TEXT_NORMAL);
         table.getTableHeader().setFont(com.hrm.util.UIFonts.BOLD_NORMAL);
         table.getTableHeader().setBackground(UIColors.PRIMARY_PURPLE);
-        table.getTableHeader().setForeground(Color.WHITE);
+        table.getTableHeader().setForeground(Color.BLACK);
         table.setSelectionBackground(UIColors.LIGHT_PURPLE);
         // Column widths
         table.getColumnModel().getColumn(0).setPreferredWidth(250);
@@ -220,9 +225,20 @@ public class SalaryDetailDialog extends BaseFormDialog {
         return makeValue(formatMoney(amount));
     }
 
+    private double getThuongHieuSuat() {
+        if (chiTiet.getDanhSachThanhPhan() == null) return 0;
+        for (ThanhPhanLuong tp : chiTiet.getDanhSachThanhPhan()) {
+            if (tp.getNguon() != null && tp.getNguon().equals("DanhGia")) {
+                return tp.getSoTien();
+            }
+        }
+        return 0;
+    }
+
     private String formatMoney(double amount) {
         return MONEY_FORMAT.format((long) amount) + " đ";
     }
+
     private String formatHours(double hours) {
         if (hours == Math.rint(hours)) {
             return String.valueOf((long) hours);

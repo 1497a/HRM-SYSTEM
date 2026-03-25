@@ -42,7 +42,8 @@ class TabThongTinCaNhanPanel extends JPanel {
     private JComboBox<String> cboGioiTinh;
     private JComboBox<String> cboTinhTrangHonNhan;
     JComboBox<String> cboTrangThaiNhanVien;
-    TabThongTinCaNhanPanel(String maNV, NhanVien nhanVien, ThongTinCaNhan ttcn, HopDongLaoDong hopDong) {
+    TabThongTinCaNhanPanel(String maNV, NhanVien nhanVien, ThongTinCaNhan ttcn,
+                           HopDongLaoDong hopDong, boolean canViewContract) {
         this.maNV = maNV;
         this.ttcn = ttcn;
         setLayout(new BorderLayout());
@@ -117,7 +118,12 @@ class TabThongTinCaNhanPanel extends JPanel {
         content.add(buildSectionTitle("Hợp đồng lao động"));
         content.add(Box.createVerticalStrut(8));
         JPanel hdPanel = buildInfoGrid();
-        if (hopDong != null) {
+        if (!canViewContract) {
+            JLabel noPermission = new JLabel("  Bạn không có quyền xem hợp đồng của nhân viên này.");
+            noPermission.setFont(new Font("Segoe UI", Font.ITALIC, 13));
+            noPermission.setForeground(Color.GRAY);
+            hdPanel.add(noPermission, buildGbc(0, 0, 2));
+        } else if (hopDong != null) {
             addInfoRow(hdPanel, 0, "Số hợp đồng:", safe(hopDong.getSoHopDong()));
             addInfoRow(hdPanel, 1, "Loại hợp đồng:", HRMConstants.display(hopDong.getLoaiHopDong()));
             addInfoRow(hdPanel, 2, "Ngày ký:",

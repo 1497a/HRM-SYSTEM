@@ -27,7 +27,6 @@ import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
-import java.util.stream.Collectors;
 
 public class SalaryListPanel extends JPanel {
 
@@ -36,7 +35,6 @@ public class SalaryListPanel extends JPanel {
     private final boolean canCalculate;
     private final boolean canLock;
     private final String maNVHienTai;
-    private final java.util.Set<String> maNVTrongPhamVi; // null = ALL
     private PurpleTable tblBangLuong;
     private DefaultTableModel modelBangLuong;
     private JButton btnTinhLuong;
@@ -47,7 +45,6 @@ public class SalaryListPanel extends JPanel {
     private DefaultTableModel modelChiTiet;
     private JButton btnTinhLaiNhanVien;
     private JTabbedPane tabbedPane;
-    private JLabel lblBangLuongInfo;
     private JLabel lblChiTietTitle;
     private JButton btnXemChiTiet;
     private List<BangLuong> danhSachBL = new ArrayList<>();
@@ -67,14 +64,6 @@ public class SalaryListPanel extends JPanel {
         this.canCalculate = session.hasPermission(PermissionCodes.PAYROLL_CALCULATE);
         this.canLock      = session.hasPermission(PermissionCodes.PAYROLL_LOCK);
         this.maNVHienTai = currentUser != null ? currentUser.getMaNV() : null;
-        if ((currentScope == DataScope.DEPT || currentScope == DataScope.TEAM) && maNVHienTai != null) {
-            this.maNVTrongPhamVi = com.hrm.bus.NhanVienBUS.getInstance()
-                    .getAllByActionScope(PermissionCodes.PAYROLL_VIEW, maNVHienTai).stream()
-                    .map(com.hrm.model.NhanVien::getMaNhanVien)
-                    .collect(Collectors.toSet());
-        } else {
-            this.maNVTrongPhamVi = null;
-        }
         setLayout(new BorderLayout());
         setBackground(Color.WHITE);
         if (currentScope == DataScope.SELF) {
@@ -105,7 +94,7 @@ public class SalaryListPanel extends JPanel {
         panel.setBorder(new EmptyBorder(12, 12, 12, 12));
 
         // Hint label
-        JLabel lblHint = new JLabel("Tìm theo: Kỳ lương / Tên bảng lương  —  Double-click để xem chi tiết nhân viên.");
+        JLabel lblHint = new JLabel("Tìm theo: Kỳ lương / Tên bảng lương  —  Double-click để xem chi tiết bảng lương.");
         lblHint.setFont(new Font("Segoe UI", Font.ITALIC, 12));
         lblHint.setForeground(UIColors.TEXT_DARK);
 
@@ -167,10 +156,8 @@ public class SalaryListPanel extends JPanel {
                     selectedMaBL = (int) modelBangLuong.getValueAt(row, 0);
                     loadChiTiet(selectedMaBL);
                     updateActionButtonsForSelection();
-                    updateBangLuongInfo();
                 } else {
                     selectedMaBL = -1;
-                    updateBangLuongInfo();
                 }
             }
         });
@@ -178,7 +165,7 @@ public class SalaryListPanel extends JPanel {
             @Override
             public void mouseClicked(java.awt.event.MouseEvent e) {
                 if (e.getClickCount() == 2 && tblBangLuong.getSelectedRow() >= 0) {
-                    tabbedPane.setSelectedIndex(1);
+                    showBangLuongDetailDialog();
                 }
             }
         });
@@ -186,16 +173,9 @@ public class SalaryListPanel extends JPanel {
         JScrollPane scroll = new JScrollPane(tblBangLuong);
         scroll.setBorder(BorderFactory.createLineBorder(Color.LIGHT_GRAY));
 
-        // Info label (audit info)
-        lblBangLuongInfo = new JLabel("Chọn một bảng lương để xem thông tin duyệt/khóa.");
-        lblBangLuongInfo.setFont(new Font("Segoe UI", Font.ITALIC, 12));
-        lblBangLuongInfo.setForeground(Color.GRAY);
-        lblBangLuongInfo.setBorder(new EmptyBorder(4, 2, 2, 2));
-
         JPanel southWrapper = new JPanel(new BorderLayout());
         southWrapper.setOpaque(false);
         southWrapper.add(actionToolbar, BorderLayout.NORTH);
-        southWrapper.add(lblBangLuongInfo, BorderLayout.SOUTH);
 
         panel.add(northWrapper, BorderLayout.NORTH);
         panel.add(scroll, BorderLayout.CENTER);
@@ -257,10 +237,10 @@ public class SalaryListPanel extends JPanel {
             }
         };
         modelChiTiet.setColumnIdentifiers(new Object[]{"Mã NV", "Họ tên", "Lương cơ bản", "Lương chức vụ",
-                "Tiền OT", "Tổng thu nhập", "Khấu trừ", "Thực lãnh", "Số ngày công", "Số giờ OT", "Ghi chú"});
+                "Tiền OT", "Tổng thu nhập", "Khấu trừ", "Thực lãnh", "Số ngày công", "Số giờ OT"});
         tblChiTiet = new PurpleTable(modelChiTiet);
         tblChiTiet.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
-        int[] widths = {70, 150, 125, 125, 110, 125, 110, 125, 95, 95, 220};
+        int[] widths = {70, 150, 125, 125, 110, 125, 110, 125, 95, 95};
         for (int i = 0; i < widths.length; i++) {
             tblChiTiet.getColumnModel().getColumn(i).setPreferredWidth(widths[i]);
         }
@@ -294,7 +274,7 @@ public class SalaryListPanel extends JPanel {
     private void loadBangLuong() {
         try {
             int currentSelection = selectedMaBL;
-            danhSachBL = salaryService.getAll();
+            danhSachBL = salaryService.getAllByScope(maNVHienTai);
             loadBangLuongManagement();
             if (currentSelection >= 0) {
                 restoreBangLuongSelection(currentSelection);
@@ -321,7 +301,7 @@ public class SalaryListPanel extends JPanel {
 
     private void loadChiTiet(int maBL) {
         try {
-            currentChiTietList = applyScopeFilter(salaryService.getChiTiet(maBL));
+            currentChiTietList = salaryService.getChiTietByScope(maBL, maNVHienTai);
             fillChiTietTable(currentChiTietList);
             updateActionButtonsForSelection();
             BangLuong bl = getSelectedBangLuong();
@@ -331,21 +311,6 @@ public class SalaryListPanel extends JPanel {
         } catch (Exception ex) {
             DialogUtil.showError(this, "Lỗi tải chi tiết lương: " + ex.getMessage());
         }
-    }
-
-    private List<ChiTietLuong> applyScopeFilter(List<ChiTietLuong> list) {
-        if (list == null) {
-            return new ArrayList<>();
-        }
-        if (currentScope == DataScope.ALL || currentScope == DataScope.NONE) {
-            return new ArrayList<>(list);
-        }
-        if ((currentScope == DataScope.DEPT || currentScope == DataScope.TEAM) && maNVTrongPhamVi != null) {
-            return list.stream()
-                    .filter(ct -> maNVTrongPhamVi.contains(ct.getMaNV()))
-                    .collect(Collectors.toList());
-        }
-        return new ArrayList<>(list);
     }
 
     private void fillChiTietTable(List<ChiTietLuong> list) {
@@ -360,9 +325,8 @@ public class SalaryListPanel extends JPanel {
                     formatMoney(ct.getTongLuong()),
                     formatMoney(ct.getTongKhauTru()),
                     formatMoney(ct.getLuongThucNhan()),
-                    ct.getSoNgayCong(),
-                    formatHours(ct.getTongGioOT()),
-                    safeText(ct.getGhiChu())
+                    String.format("%.1f", ct.getSoNgayCong()),
+                    formatHours(ct.getTongGioOT())
             });
         }
     }
@@ -526,6 +490,14 @@ public class SalaryListPanel extends JPanel {
         }
     }
 
+    private void showBangLuongDetailDialog() {
+        BangLuong bl = getSelectedBangLuong();
+        if (bl == null) return;
+        BangLuongDetailDialog dialog = new BangLuongDetailDialog(
+                (Frame) SwingUtilities.getWindowAncestor(this), bl);
+        dialog.setVisible(true);
+    }
+
     private void showChiTietDialog() {
         int viewRow = tblChiTiet.getSelectedRow();
         if (viewRow < 0) return;
@@ -567,19 +539,6 @@ public class SalaryListPanel extends JPanel {
             boolean hasSelectedRow = tblChiTiet != null && tblChiTiet.getSelectedRow() >= 0;
             btnTinhLaiNhanVien.setEnabled(canRecalculateBangLuong && hasSelectedRow);
         }
-    }
-
-    private void updateBangLuongInfo() {
-        if (lblBangLuongInfo == null) return;
-        BangLuong bl = getSelectedBangLuong();
-        if (bl == null) {
-            lblBangLuongInfo.setText("Chọn một bảng lương để xem thông tin duyệt/khóa.");
-            return;
-        }
-        lblBangLuongInfo.setText(String.format(
-                "Người duyệt: %s  |  Ngày duyệt: %s  |  Người khóa: %s  |  Ngày khóa: %s",
-                safeText(bl.getNguoiDuyet()), formatDateTime(bl.getNgayDuyet()),
-                safeText(bl.getNguoiKhoa()), formatDateTime(bl.getNgayKhoa())));
     }
 
     private void restoreBangLuongSelection(int maBL) {

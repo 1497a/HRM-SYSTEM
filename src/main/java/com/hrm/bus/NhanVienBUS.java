@@ -32,6 +32,7 @@ public class NhanVienBUS {
     private final ThongTinCaNhanDAO ttcnRepo = ThongTinCaNhanDAO.getInstance();
     private final BoNhiemDAO boNhiemRepo = BoNhiemDAO.getInstance();
     private final TaiKhoanDAO taiKhoanRepo = TaiKhoanDAO.getInstance();
+    private final HopDongBUS hopDongBus = HopDongBUS.getInstance();
     private NhanVienBUS() {
     }
 
@@ -154,12 +155,25 @@ public class NhanVienBUS {
             return KetQua.error(transitionValidation.getMessage());
         }
         nv.setTrangThai(trangThaiMoi);
-        int rows = nvRepo.update(nv);
+        String nguoiThucHien = null;
+        TaiKhoan currentUser = SessionContext.getInstance().getCurrentUser();
+        if (currentUser != null) {
+            nguoiThucHien = currentUser.getMaNV();
+        }
+        int rows = nvRepo.updateTrangThai(maNV, trangThaiMoi, nguoiThucHien);
         if (rows <= 0) {
             return KetQua.error("Không thể cập nhật trạng thái nhân viên. Vui lòng thử lại.");
         }
         if (HRMConstants.TRANG_THAI_NGHI_VIEC.equals(trangThaiMoi)) {
-            boNhiemRepo.endAllActiveBoNhiemForNV(maNV, LocalDate.now());
+            boNhiemRepo.endAllActiveBoNhiemForNV(maNV, LocalDate.now(), nguoiThucHien);
+            KetQua<Void> contractResult = hopDongBus.thanhLyHopDongDoNghiViec(
+                    maNV,
+                    LocalDate.now(),
+                    "Nhan vien nghi viec",
+                    nguoiThucHien);
+            if (!contractResult.isSuccess()) {
+                System.err.println("Canh bao: " + contractResult.getMessage());
+            }
             int deactivated = taiKhoanRepo.deactivateByMaNV(maNV);
             if (deactivated <= 0) {
                 System.err.println("Canh bao: Khong the vo hieu hoa tai khoan cho NV " + maNV + " khi nghi viec.");

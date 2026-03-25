@@ -207,6 +207,13 @@ public class NghiPhepBUS {
         return repository.findAllByScope(scope, currentMaNV);
     }
 
+    /** Dùng cho ReportPanel — dùng scope REPORT_VIEW thay vì LEAVE_VIEW. */
+    public List<DonXinNghiPhep> getAllForReport(String currentMaNV) {
+        com.hrm.model.DataScope scope = XacThucBUS.getInstance()
+                .getScopeForAction(PermissionCodes.REPORT_VIEW);
+        return repository.findAllByScope(scope, currentMaNV);
+    }
+
     public List<LoaiPhep> getAllLeaveTypes() {
         return repository.findAllLoaiPhep();
     }

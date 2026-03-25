@@ -4,17 +4,20 @@ import com.hrm.dao.BangLuongDAO;
 import com.hrm.dao.NhanVienDAO;
 import com.hrm.model.BangLuong;
 import com.hrm.model.ChiTietLuong;
+import com.hrm.model.DataScope;
 import com.hrm.model.NhanVien;
 import com.hrm.model.ThanhPhanLuong;
+import com.hrm.util.PermissionCodes;
 import com.hrm.util.SessionContext;
 
+import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 
 public class LuongBUS {
 
-    private static final int NGAY_CONG_CHUAN = 26;
+    private static final int NGAY_CONG_CHUAN = 26; // unused: actual working days computed per month
     private static final double BHXH_RATE = 0.08;
     private static final double BHYT_RATE = 0.015;
     private static final double BHTN_RATE = 0.01;
@@ -34,6 +37,10 @@ public class LuongBUS {
 
     public List<BangLuong> getAll() {
         return bangLuongRepo.findAll();
+    }
+
+    public List<BangLuong> getAllByScope(String currentMaNV) {
+        return bangLuongRepo.findAllByScope(getPayrollViewScope(), currentMaNV);
     }
 
     public BangLuong getBangLuongTheoKy(int thang, int nam) {
@@ -153,6 +160,22 @@ public class LuongBUS {
         if (bangLuong != null) {
             boSungDuLieuChamCong(bangLuong, danhSach);
         }
+        for (ChiTietLuong ctl : danhSach) {
+            ctl.setDanhSachThanhPhan(bangLuongRepo.findByChiTiet(ctl.getMaChiTietLuong()));
+        }
+        return danhSach;
+    }
+
+    public List<ChiTietLuong> getChiTietByScope(int maBangLuong, String currentMaNV) {
+        BangLuong bangLuong = bangLuongRepo.findById(maBangLuong);
+        List<ChiTietLuong> danhSach = bangLuongRepo.findByBangLuongByScope(
+                maBangLuong, getPayrollViewScope(), currentMaNV);
+        if (bangLuong != null) {
+            boSungDuLieuChamCong(bangLuong, danhSach);
+        }
+        for (ChiTietLuong ctl : danhSach) {
+            ctl.setDanhSachThanhPhan(bangLuongRepo.findByChiTiet(ctl.getMaChiTietLuong()));
+        }
         return danhSach;
     }
 
@@ -161,6 +184,18 @@ public class LuongBUS {
         BangLuong bangLuong = bangLuongRepo.findById(maBangLuong);
         if (chiTiet != null && bangLuong != null) {
             chiTiet.setTongGioLam(bangLuongRepo.getTongGioLam(maNV, bangLuong.getThang(), bangLuong.getNam()));
+            chiTiet.setDanhSachThanhPhan(bangLuongRepo.findByChiTiet(chiTiet.getMaChiTietLuong()));
+        }
+        return chiTiet;
+    }
+
+    public ChiTietLuong getChiTietCaNhanInScope(int maBangLuong, String targetMaNV, String currentMaNV) {
+        ChiTietLuong chiTiet = bangLuongRepo.findByBangLuongAndNVByScope(
+                maBangLuong, targetMaNV, getPayrollViewScope(), currentMaNV);
+        BangLuong bangLuong = bangLuongRepo.findById(maBangLuong);
+        if (chiTiet != null && bangLuong != null) {
+            chiTiet.setTongGioLam(bangLuongRepo.getTongGioLam(targetMaNV, bangLuong.getThang(), bangLuong.getNam()));
+            chiTiet.setDanhSachThanhPhan(bangLuongRepo.findByChiTiet(chiTiet.getMaChiTietLuong()));
         }
         return chiTiet;
     }
@@ -181,6 +216,10 @@ public class LuongBUS {
     private int getCurrentUserId() {
         return SessionContext.getInstance().getCurrentUser() != null
                 ? SessionContext.getInstance().getCurrentUser().getId() : 0;
+    }
+
+    private DataScope getPayrollViewScope() {
+        return XacThucBUS.getInstance().getScopeForAction(PermissionCodes.PAYROLL_VIEW);
     }
 
     private KetQua<Void> validateBangLuongState(BangLuong bl, int maBangLuong,
@@ -212,15 +251,19 @@ public class LuongBUS {
         LocalDate ngayCuoiKy = ngayBatDauKy.withDayOfMonth(ngayBatDauKy.lengthOfMonth());
         double luongCoBan = bangLuongRepo.getLuongCoSoFromHopDong(maNV, ngayBatDauKy, ngayCuoiKy);
         double tongLuongChucVu = bangLuongRepo.getTongLuongChucVu(maNV, luongCoBan);
-        int soNgayCong = tinhSoNgayCong(maNV, thang, nam);
-        double tienTruNgayVang = soNgayCong < NGAY_CONG_CHUAN
-                ? luongCoBan / NGAY_CONG_CHUAN * (NGAY_CONG_CHUAN - soNgayCong)
+        double soNgayCong = tinhSoNgayCong(maNV, thang, nam);
+        int ngayCongThucTeTrongThang = demNgayLamViecTrongThang(ngayBatDauKy, ngayCuoiKy);
+        double tienTruNgayVang = soNgayCong < ngayCongThucTeTrongThang
+                ? luongCoBan / ngayCongThucTeTrongThang * (ngayCongThucTeTrongThang - soNgayCong)
                 : 0.0;
         double tongGioLam = bangLuongRepo.getTongGioLam(maNV, thang, nam);
         double tongGioOT = bangLuongRepo.getTongGioOT(maNV, thang, nam);
-        double tienOT = bangLuongRepo.getTienOT(maNV, thang, nam, luongCoBan);
+        double tienOT = bangLuongRepo.getTienOT(maNV, thang, nam, luongCoBan, ngayCongThucTeTrongThang);
         BonusSummary bonusSummary = tinhPhuCapTheoCauHinh(luongCoBan);
-        double tongThuNhap = luongCoBan + tongLuongChucVu + tienOT + bonusSummary.tongTien;
+        String xepLoai = bangLuongRepo.getXepLoaiMoiNhat(maNV);
+        double thuongRate = bangLuongRepo.getThuongHieuSuatRate(xepLoai);
+        double thuongHieuQua = Math.round(luongCoBan * thuongRate / 100.0);
+        double tongThuNhap = luongCoBan + tongLuongChucVu + tienOT + bonusSummary.tongTien + thuongHieuQua;
         double thueTNCN = tinhThueTNCN(tongThuNhap);
         KhauTruSummary khauTru = tinhKhauTruBatBuoc(luongCoBan, thueTNCN);
         double tongKhauTruThucTe = khauTru.tongKhauTru + tienTruNgayVang;
@@ -242,7 +285,13 @@ public class LuongBUS {
         for (ThanhPhanLuong bonus : bonusSummary.items) {
             ctl.themThanhPhan(bonus);
         }
-        themThanhPhanNgayVangNeuCo(ctl, soNgayCong, luongCoBan);
+        if (thuongHieuQua > 0) {
+            ctl.themThanhPhan(new ThanhPhanLuong(
+                    ThanhPhanLuong.Loai.PHU_CAP,
+                    "Thưởng hiệu suất - " + xepLoaiToVN(xepLoai) + " (" + (int) thuongRate + "%)",
+                    thuongHieuQua, "DanhGia"));
+        }
+        themThanhPhanNgayVangNeuCo(ctl, soNgayCong, luongCoBan, ngayCongThucTeTrongThang);
         themThanhPhanOtNeuCo(ctl, tienOT, tongGioOT);
         themThanhPhanKhauTruCoDinh(ctl, thueTNCN, khauTru);
         int maChiTiet = bangLuongRepo.insertChiTiet(ctl);
@@ -308,12 +357,24 @@ public class LuongBUS {
         return thue;
     }
 
-    private int tinhSoNgayCong(String maNV, int thang, int nam) {
+    private double tinhSoNgayCong(String maNV, int thang, int nam) {
         int tongBanGhiChamCong = bangLuongRepo.getTongBanGhiChamCong(maNV, thang, nam);
         if (tongBanGhiChamCong == 0) {
-            return 0;
+            return 0.0;
         }
         return bangLuongRepo.getSoNgayCong(maNV, thang, nam);
+    }
+
+    private String xepLoaiToVN(String xepLoai) {
+        if (xepLoai == null) return "";
+        return switch (xepLoai) {
+            case "xuat_sac"   -> "Xuất sắc";
+            case "tot"        -> "Tốt";
+            case "kha"        -> "Khá";
+            case "trung_binh" -> "Trung bình";
+            case "yeu"        -> "Yếu";
+            default           -> xepLoai;
+        };
     }
 
     private BonusSummary tinhPhuCapTheoCauHinh(double luongCoBan) {
@@ -339,17 +400,30 @@ public class LuongBUS {
         return new KhauTruSummary(bhxh, bhyt, bhtn, thueTncn + bhxh + bhyt + bhtn);
     }
 
-    private void themThanhPhanNgayVangNeuCo(ChiTietLuong ctl, int soNgayCong, double luongCoBan) {
-        if (soNgayCong >= NGAY_CONG_CHUAN) {
+    private void themThanhPhanNgayVangNeuCo(ChiTietLuong ctl, double soNgayCong, double luongCoBan, int ngayCongChuan) {
+        if (soNgayCong >= ngayCongChuan) {
             return;
         }
-        int soNgayVang = NGAY_CONG_CHUAN - soNgayCong;
-        double tienTru = luongCoBan / NGAY_CONG_CHUAN * soNgayVang;
+        double soNgayVang = ngayCongChuan - soNgayCong;
+        double tienTru = luongCoBan / ngayCongChuan * soNgayVang;
         ctl.themThanhPhan(new ThanhPhanLuong(
                 ThanhPhanLuong.Loai.KHAU_TRU,
-                "Trừ ngày vắng (" + soNgayVang + " ngày)",
+                "Trừ ngày vắng (" + String.format("%.1f", soNgayVang) + " ngày)",
                 tienTru,
                 "ChamCong"));
+    }
+
+    private int demNgayLamViecTrongThang(LocalDate ngayBatDau, LocalDate ngayCuoi) {
+        int count = 0;
+        LocalDate d = ngayBatDau;
+        while (!d.isAfter(ngayCuoi)) {
+            DayOfWeek dow = d.getDayOfWeek();
+            if (dow != DayOfWeek.SATURDAY && dow != DayOfWeek.SUNDAY) {
+                count++;
+            }
+            d = d.plusDays(1);
+        }
+        return count;
     }
 
     private void themThanhPhanOtNeuCo(ChiTietLuong ctl, double tienOT, double tongGioOT) {

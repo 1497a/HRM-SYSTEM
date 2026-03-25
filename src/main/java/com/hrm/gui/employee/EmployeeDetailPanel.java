@@ -33,6 +33,8 @@ public class EmployeeDetailPanel extends JDialog {
     private ThongTinCaNhan ttcn;
     private BoNhiem        boNhiemHienTai;
     private HopDongLaoDong hopDong;
+    private boolean canViewAppointmentData;
+    private boolean canViewContractData;
     private boolean dataChanged = false;
     private boolean personalEditMode = false;
     private boolean statusEditMode   = false;
@@ -55,8 +57,10 @@ public class EmployeeDetailPanel extends JDialog {
     private void loadData() {
         nhanVien       = nvService.getByMaNhanVien(maNV);
         ttcn           = nvService.getThongTinCaNhan(maNV);
-        boNhiemHienTai = boNhiemService.getBoNhiemChinhHieuLuc(maNV);
-        hopDong        = hopDongService.getHieuLuc(maNV);
+        canViewAppointmentData = boNhiemService.canViewEmployeeAppointments(maNV);
+        canViewContractData = hopDongService.canViewContractOf(maNV);
+        boNhiemHienTai = boNhiemService.getBoNhiemChinhHieuLucInScope(maNV);
+        hopDong        = hopDongService.getHieuLucInScope(maNV);
     }
 
     private void buildUI() {
@@ -67,12 +71,14 @@ public class EmployeeDetailPanel extends JDialog {
         JPanel root = new JPanel(new BorderLayout());
         root.setBackground(Color.WHITE);
         root.add(buildHeader(), BorderLayout.NORTH);
-        personalTab = new TabThongTinCaNhanPanel(maNV, nhanVien, ttcn, hopDong);
+        personalTab = new TabThongTinCaNhanPanel(maNV, nhanVien, ttcn, hopDong, canViewContractData);
         JTabbedPane tabs = new JTabbedPane(JTabbedPane.TOP);
         tabs.setFont(com.hrm.util.UIFonts.BOLD_NORMAL);
         tabs.setBackground(Color.WHITE);
         tabs.addTab("Thông tin cá nhân", personalTab);
-        tabs.addTab("Bổ nhiệm hiện tại", new TabBoNhiemPanel(boNhiemHienTai, boNhiemService, maNV));
+        if (canViewAppointmentData) {
+            tabs.addTab("Bổ nhiệm hiện tại", new TabBoNhiemPanel(boNhiemHienTai, boNhiemService, maNV));
+        }
         tabs.addChangeListener(e -> updateButtons(tabs));
         root.add(tabs, BorderLayout.CENTER);
         root.add(buildFooter(), BorderLayout.SOUTH);

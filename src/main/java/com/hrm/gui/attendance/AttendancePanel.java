@@ -26,6 +26,8 @@ import java.text.NumberFormat;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
 import java.util.ArrayList;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -65,7 +67,7 @@ public class AttendancePanel extends JPanel {
     // Tab -- Cham cong ca nhan
     private JLabel lblCaNhanStatus;
     private JButton btnCheckInCN, btnCheckOutCN;
-    private JComboBox<String> cboCaLamCaNhan;
+    private JComboBox<CaLam> cboCaLamCaNhan;
     private List<CaLam> dsCaLamCN;
     private DefaultTableModel modelLichSuCaNhan;
     private PurpleTable tableLichSuCaNhan;
@@ -674,6 +676,17 @@ public class AttendancePanel extends JPanel {
                 return this;}});
         sorterOT = new TableRowSorter<>(modelOT); tableDonOT.setRowSorter(sorterOT);
         UIHelper.attachTextSearch(txtTimKiemOT, sorterOT, 1, 5);
+        tableDonOT.addMouseListener(new MouseAdapter() {
+            @Override public void mouseClicked(MouseEvent e) {
+                if (e.getClickCount() == 2) {
+                    int row = tableDonOT.rowAtPoint(e.getPoint());
+                    if (row < 0) return;
+                    int maDK = (int) modelOT.getValueAt(tableDonOT.convertRowIndexToModel(row), 0);
+                    DangKyLamThem don = svc.getDonLamThemById(maDK);
+                    if (don != null) hienThiChiTietOT(don);
+                }
+            }
+        });
         loadOT(); p.add(new JScrollPane(tableDonOT),BorderLayout.CENTER);
         JPanel info=new JPanel(new FlowLayout(FlowLayout.LEFT,10,5)); info.setOpaque(false);
         info.setBorder(new EmptyBorder(5,0,0,0));
@@ -741,6 +754,72 @@ public class AttendancePanel extends JPanel {
 
     private String getMaNVNguoiDuyet() {
         return svc.getMaNVByTaiKhoan(currentUser.getId());
+    }
+
+    private void hienThiChiTietOT(DangKyLamThem don) {
+        java.awt.Window owner = SwingUtilities.getWindowAncestor(this);
+        JDialog dlg = new JDialog(owner, "Chi tiết đơn OT — #" + don.getMaDK(),
+                java.awt.Dialog.ModalityType.APPLICATION_MODAL);
+        dlg.setDefaultCloseOperation(JDialog.DISPOSE_ON_CLOSE);
+
+        JPanel content = new JPanel(new GridBagLayout());
+        content.setBorder(new EmptyBorder(18, 22, 10, 22));
+        content.setBackground(Color.WHITE);
+        GridBagConstraints gl = new GridBagConstraints();
+        gl.insets = new java.awt.Insets(5, 4, 5, 12); gl.anchor = GridBagConstraints.WEST;
+        GridBagConstraints gv = new GridBagConstraints();
+        gv.insets = new java.awt.Insets(5, 0, 5, 4);
+        gv.anchor = GridBagConstraints.WEST; gv.fill = GridBagConstraints.HORIZONTAL; gv.weightx = 1.0;
+
+        DateTimeFormatter fDate = DateTimeFormatter.ofPattern("dd/MM/yyyy");
+        DateTimeFormatter fDT   = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm");
+
+        Object[][] rows = {
+            {"Mã đăng ký:",      "#" + don.getMaDK()},
+            {"Mã nhân viên:",    don.getMaNV() != null ? don.getMaNV() : "-"},
+            {"Tên nhân viên:",   don.getTenNhanVien() != null ? don.getTenNhanVien() : "-"},
+            {"Ngày OT:",         don.getNgay() != null ? don.getNgay().format(fDate) : "-"},
+            {"Số giờ OT:",       String.format("%.1f giờ", don.getSoGio())},
+            {"Giờ bắt đầu OT:", don.getGioVaoOT() != null ? don.getGioVaoOT().toString() : "-"},
+            {"Giờ kết thúc OT:", don.getGioRaOT()  != null ? don.getGioRaOT().toString()  : "-"},
+            {"Hệ số OT:",        "x" + don.getHeSoOT()},
+            {"Lý do:",           don.getLyDo() != null ? don.getLyDo() : "-"},
+            {"Trạng thái:",      don.getTrangThai().getDisplayName()},
+            {"Người duyệt:",     don.getTenNguoiDuyet() != null ? don.getTenNguoiDuyet()
+                                 : (don.getNguoiDuyet() != null ? don.getNguoiDuyet() : "-")},
+            {"Nhận xét:",        don.getNhanXet() != null && !don.getNhanXet().isBlank() ? don.getNhanXet() : "-"},
+            {"Ngày tạo:",        don.getNgayTao()   != null ? don.getNgayTao().format(fDT)   : "-"},
+            {"Ngày duyệt:",      don.getNgayDuyet() != null ? don.getNgayDuyet().format(fDT) : "-"},
+        };
+
+        for (int i = 0; i < rows.length; i++) {
+            gl.gridx = 0; gl.gridy = i; gv.gridx = 1; gv.gridy = i;
+            JLabel lbl = new JLabel(rows[i][0].toString());
+            lbl.setFont(com.hrm.util.UIFonts.BOLD_NORMAL); lbl.setForeground(UIColors.TEXT_DARK);
+            JLabel val = new JLabel(rows[i][1].toString());
+            val.setFont(com.hrm.util.UIFonts.TEXT_NORMAL);
+            if (i == 9) { // Trạng thái
+                DangKyLamThem.TrangThai tt = don.getTrangThai();
+                val.setFont(com.hrm.util.UIFonts.BOLD_NORMAL);
+                val.setForeground(tt == DangKyLamThem.TrangThai.DA_DUYET ? UIColors.SUCCESS_GREEN
+                    : tt == DangKyLamThem.TrangThai.TU_CHOI ? UIColors.DANGER_RED : UIColors.PRIMARY_PURPLE);
+            }
+            content.add(lbl, gl); content.add(val, gv);
+        }
+
+        JButton btnDong = btn("Đóng", UIColors.PRIMARY_PURPLE);
+        btnDong.addActionListener(e -> dlg.dispose());
+        JPanel btnRow = new JPanel(new FlowLayout(FlowLayout.RIGHT, 0, 8));
+        btnRow.setOpaque(false); btnRow.add(btnDong);
+
+        JPanel wrapper = new JPanel(new BorderLayout());
+        wrapper.setBackground(Color.WHITE);
+        wrapper.add(content, BorderLayout.CENTER); wrapper.add(btnRow, BorderLayout.SOUTH);
+        dlg.setContentPane(wrapper);
+        dlg.pack();
+        dlg.setMinimumSize(new Dimension(420, dlg.getHeight()));
+        dlg.setLocationRelativeTo(this);
+        dlg.setVisible(true);
     }
 
     private void chinhHeSo() {
@@ -946,7 +1025,25 @@ public class AttendancePanel extends JPanel {
         // Trang thai cham cong + nut hanh dong
         lblCaNhanStatus = new JLabel("Chưa chấm công ngày hôm nay");
         lblCaNhanStatus.setFont(UIFonts.BOLD_NORMAL);
-        cboCaLamCaNhan = null; // khong dung nua — tu dong nhan dien ca
+        // Dropdown chọn ca làm
+        dsCaLamCN = svc.getActiveCaLam();
+        cboCaLamCaNhan = new JComboBox<>(dsCaLamCN.toArray(new CaLam[0]));
+        cboCaLamCaNhan.setRenderer(new DefaultListCellRenderer() {
+            @Override public Component getListCellRendererComponent(JList<?> list, Object value, int index, boolean isSelected, boolean cellHasFocus) {
+                super.getListCellRendererComponent(list, value, index, isSelected, cellHasFocus);
+                if (value instanceof CaLam ca)
+                    setText(ca.getTenCaLam() + "  (" + ca.getGioBatDau() + " - " + ca.getGioKetThuc() + ")");
+                return this;
+            }
+        });
+        cboCaLamCaNhan.setFont(com.hrm.util.UIFonts.TEXT_NORMAL);
+        cboCaLamCaNhan.setPreferredSize(new Dimension(270, 28));
+        CaLam caGoiY = svc.getCaLamGoiY();
+        if (caGoiY != null) cboCaLamCaNhan.setSelectedItem(caGoiY);
+        JLabel lblChonCa = new JLabel("Ca làm:");
+        lblChonCa.setFont(com.hrm.util.UIFonts.BOLD_NORMAL);
+        JLabel hintCaLam = new JLabel("(gợi ý theo giờ hiện tại)");
+        hintCaLam.setFont(new Font("Segoe UI", Font.ITALIC, 11)); hintCaLam.setForeground(Color.GRAY);
         btnCheckInCN  = btn("Check-in",  UIColors.SUCCESS_GREEN);
         btnCheckOutCN = btn("Check-out", UIColors.DANGER_RED);
         JCheckBox chkOT = new JCheckBox("Ca này là OT");
@@ -954,7 +1051,9 @@ public class AttendancePanel extends JPanel {
         chkOT.setForeground(UIColors.PRIMARY_PURPLE); chkOT.setEnabled(false);
         chkOT.setToolTipText("Chỉ có thể chọn khi bạn có đơn OT đã được duyệt cho hôm nay");
         btnCheckInCN.addActionListener(e -> {
-            KetQua<ChamCong> res = svc.checkInAuto(maNVCaNhan, chkOT.isSelected());
+            CaLam caChon = (CaLam) cboCaLamCaNhan.getSelectedItem();
+            if (caChon == null) { DialogUtil.showWarn(this, "Vui lòng chọn ca làm."); return; }
+            KetQua<ChamCong> res = svc.checkIn(maNVCaNhan, caChon.getId(), chkOT.isSelected());
             if (res.isSuccess()) DialogUtil.showSuccess(this, res.getMessage()); else DialogUtil.showError(this, res.getMessage());
             refreshCaNhan(chkOT); loadLichSuCaNhan();
         });
@@ -963,16 +1062,17 @@ public class AttendancePanel extends JPanel {
             if (res.isSuccess()) DialogUtil.showSuccess(this, res.getMessage()); else DialogUtil.showError(this, res.getMessage());
             refreshCaNhan(chkOT); loadLichSuCaNhan();
         });
-        JLabel hintCheckIn = new JLabel("(Hệ thống tự nhận diện ca làm theo giờ hiện tại)");
-        hintCheckIn.setFont(new Font("Segoe UI", Font.ITALIC, 11)); hintCheckIn.setForeground(Color.GRAY);
+        JPanel caLamRow = new JPanel(new FlowLayout(FlowLayout.LEFT, 10, 3)); caLamRow.setOpaque(false);
+        caLamRow.add(lblChonCa); caLamRow.add(cboCaLamCaNhan); caLamRow.add(hintCaLam);
         JPanel actionRow = new JPanel(new FlowLayout(FlowLayout.LEFT, 10, 5)); actionRow.setOpaque(false);
-        actionRow.add(btnCheckInCN); actionRow.add(btnCheckOutCN); actionRow.add(chkOT); actionRow.add(hintCheckIn);
+        actionRow.add(btnCheckInCN); actionRow.add(btnCheckOutCN); actionRow.add(chkOT);
         chamCongStatusPanelCN = new JPanel(new BorderLayout(5, 5));
         chamCongStatusPanelCN.setBackground(com.hrm.util.UIColors.LIGHT_PURPLE);
         chamCongStatusPanelCN.setBorder(BorderFactory.createCompoundBorder(
             BorderFactory.createLineBorder(UIColors.PRIMARY_PURPLE, 1),
             new EmptyBorder(10, 12, 10, 12)));
         chamCongStatusPanelCN.add(lblCaNhanStatus, BorderLayout.NORTH);
+        chamCongStatusPanelCN.add(caLamRow, BorderLayout.CENTER);
         chamCongStatusPanelCN.add(actionRow, BorderLayout.SOUTH);
         chamCongStatusPanelCN.setVisible(false);
         topPanel.add(chamCongStatusPanelCN);
@@ -1015,8 +1115,9 @@ public class AttendancePanel extends JPanel {
         if (!isViewingOwnAttendance()) {
             lblCaNhanStatus.setText("Chỉ có thể check-in/check-out cho chính bạn.");
             lblCaNhanStatus.setForeground(Color.GRAY);
-            if (btnCheckInCN  != null) btnCheckInCN.setVisible(false);
-            if (btnCheckOutCN != null) btnCheckOutCN.setVisible(false);
+            if (btnCheckInCN   != null) btnCheckInCN.setVisible(false);
+            if (btnCheckOutCN  != null) btnCheckOutCN.setVisible(false);
+            if (cboCaLamCaNhan != null) cboCaLamCaNhan.setVisible(false);
             if (chkOT != null) { chkOT.setVisible(false); chkOT.setEnabled(false); }
             return;
         }
@@ -1025,8 +1126,9 @@ public class AttendancePanel extends JPanel {
         if (cc == null) {
             lblCaNhanStatus.setText("Chưa chấm công ngày hôm nay");
             lblCaNhanStatus.setForeground(Color.GRAY);
-            if (btnCheckInCN  != null) btnCheckInCN.setVisible(true);
-            if (btnCheckOutCN != null) btnCheckOutCN.setVisible(false);
+            if (btnCheckInCN   != null) btnCheckInCN.setVisible(true);
+            if (btnCheckOutCN  != null) btnCheckOutCN.setVisible(false);
+            if (cboCaLamCaNhan != null) cboCaLamCaNhan.setVisible(true);
             if (chkOT != null) {
                 chkOT.setVisible(true); chkOT.setSelected(false);
                 boolean coOT = svc.coOTDaDuyetHomNay(maNVTimKiem);
@@ -1034,21 +1136,33 @@ public class AttendancePanel extends JPanel {
                 chkOT.setToolTipText(coOT ? "Tick vào đây nếu đây là ca OT của bạn"
                     : "Bạn chưa có đơn OT được duyệt cho hôm nay");
             }
+        } else if (cc.getGioVao() == null) {
+            String trangThai = cc.getTrangThai() != null ? cc.getTrangThai().getDisplayName() : "Đã có bản ghi";
+            lblCaNhanStatus.setText(trangThai + " hôm nay"
+                + (cc.getGhiChu() != null && !cc.getGhiChu().isBlank() ? " - " + cc.getGhiChu() : ""));
+            lblCaNhanStatus.setForeground(
+                cc.getTrangThai() == ChamCong.TrangThai.NGHI_PHEP ? UIColors.INFO_TEAL : Color.GRAY);
+            if (btnCheckInCN   != null) btnCheckInCN.setVisible(false);
+            if (btnCheckOutCN  != null) btnCheckOutCN.setVisible(false);
+            if (cboCaLamCaNhan != null) cboCaLamCaNhan.setVisible(false);
+            if (chkOT != null) { chkOT.setVisible(false); chkOT.setEnabled(false); }
         } else if (cc.getGioRa() == null) {
-        String tenCa = cc.getTenCaLam() != null ? cc.getTenCaLam() : cc.getMaCaLam();
+            String tenCa = cc.getTenCaLam() != null ? cc.getTenCaLam() : cc.getMaCaLam();
             String otTag = cc.isLaOT() ? "  [CA OT]" : "";
             lblCaNhanStatus.setText("Đã check-in lúc " + cc.getGioVao().format(fG) + "  -  Ca: " + tenCa + otTag);
             lblCaNhanStatus.setForeground(cc.isLaOT() ? UIColors.PRIMARY_PURPLE : UIColors.SUCCESS_GREEN);
-            if (btnCheckInCN  != null) btnCheckInCN.setVisible(false);
-            if (btnCheckOutCN != null) btnCheckOutCN.setVisible(true);
+            if (btnCheckInCN   != null) btnCheckInCN.setVisible(false);
+            if (btnCheckOutCN  != null) btnCheckOutCN.setVisible(true);
+            if (cboCaLamCaNhan != null) cboCaLamCaNhan.setVisible(false);
             if (chkOT != null) { chkOT.setVisible(false); chkOT.setEnabled(false); }
         } else {
             String otTag = cc.isLaOT() ? "  [CA OT]" : "";
             lblCaNhanStatus.setText("Đã check-out lúc " + cc.getGioRa().format(fG)
                 + "  -  Số giờ làm: " + String.format("%.1f", cc.getSoGioLam()) + otTag);
             lblCaNhanStatus.setForeground(UIColors.INFO_TEAL);
-            if (btnCheckInCN  != null) btnCheckInCN.setVisible(false);
-            if (btnCheckOutCN != null) btnCheckOutCN.setVisible(false);
+            if (btnCheckInCN   != null) btnCheckInCN.setVisible(false);
+            if (btnCheckOutCN  != null) btnCheckOutCN.setVisible(false);
+            if (cboCaLamCaNhan != null) cboCaLamCaNhan.setVisible(false);
             if (chkOT != null) { chkOT.setVisible(false); chkOT.setEnabled(false); }
         }
     }

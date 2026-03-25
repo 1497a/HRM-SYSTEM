@@ -433,13 +433,14 @@ public class BoNhiemDAO {
     /**
      * Kết thúc tất cả bổ nhiệm chính hiệu lực của một nhân viên (dùng khi nghỉ việc).
      */
-    public int endAllActiveBoNhiemForNV(String maNV, LocalDate denNgay) {
-        String sql = "UPDATE BONHIEM SET denNgay=?, trangThai='" + HRMConstants.TRANG_THAI_HET_HIEU_LUC + "' "
+    public int endAllActiveBoNhiemForNV(String maNV, LocalDate denNgay, String nguoiKetThuc) {
+        String sql = "UPDATE BONHIEM SET denNgay=?, nguoiKetThuc=?, trangThai='" + HRMConstants.TRANG_THAI_HET_HIEU_LUC + "' "
                 + "WHERE maNV=? AND trangThai='" + HRMConstants.TRANG_THAI_HIEU_LUC + "'";
         try (Connection conn = DatabaseConnection.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setDate(1, Date.valueOf(denNgay));
-            ps.setString(2, maNV);
+            ps.setString(2, nguoiKetThuc);
+            ps.setString(3, maNV);
             return ps.executeUpdate();
         } catch (SQLException e) {
             throw new RuntimeException("Lỗi kết thúc tất cả bổ nhiệm: " + e.getMessage(), e);
