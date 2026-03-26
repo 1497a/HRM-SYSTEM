@@ -147,6 +147,39 @@ public class XacThucBUS {
         return updatePassword(userId, newPass, "Đổi mật khẩu thành công.", "Không thể cập nhật mật khẩu. Vui lòng thử lại.");
     }
 
+    public KetQua<Void> changeUsername(int userId, String newUsername, String currentPassword) {
+        if (ValidationUtils.isBlank(currentPassword)) {
+            return KetQua.error("Mật khẩu hiện tại không được để trống.");
+        }
+        TaiKhoan user = taiKhoanRepo.findById(userId);
+        if (user == null) {
+            return KetQua.error("Không tìm thấy tài khoản.");
+        }
+        if (isBuiltInAdminAccount(user)) {
+            return KetQua.error("Không thể đổi tên đăng nhập của tài khoản admin hệ thống.");
+        }
+        if (!PasswordUtil.verifyPassword(currentPassword, user.getMatKhau())) {
+            return KetQua.error("Mật khẩu hiện tại không đúng.");
+        }
+        KetQua<String> usernameValidation = validateUsernameForUpdate(userId, newUsername, user.getTenDangNhap());
+        if (!usernameValidation.isSuccess()) {
+            return KetQua.error(usernameValidation.getMessage());
+        }
+
+        user.setTenDangNhap(usernameValidation.getData());
+        try {
+            int rows = taiKhoanRepo.update(user);
+            if (rows <= 0) {
+                return KetQua.error("Không thể cập nhật tên đăng nhập. Vui lòng thử lại.");
+            }
+            return KetQua.success(null, "Đổi tên đăng nhập thành công.");
+        } catch (Exception e) {
+            System.err.println("Lỗi changeUsername: " + e.getMessage());
+            e.printStackTrace();
+            return KetQua.error("Không thể cập nhật tên đăng nhập: " + e.getMessage());
+        }
+    }
+
     /**
      * Admin reset mật khẩu người dùng khác (không cần mật khẩu cũ).
      */
@@ -217,6 +250,14 @@ public class XacThucBUS {
         if (existing == null) {
             return KetQua.error("Không tìm thấy tài khoản.");
         }
+        KetQua<String> usernameValidation = validateUsernameForUpdate(
+                existing.getId(),
+                user != null ? user.getTenDangNhap() : null,
+                existing.getTenDangNhap());
+        if (!usernameValidation.isSuccess()) {
+            return KetQua.error(usernameValidation.getMessage());
+        }
+        user.setTenDangNhap(usernameValidation.getData());
         String emailErr = ValidationUtils.validateEmail(user != null ? user.getEmail() : null);
         if (emailErr != null) {
             return KetQua.error(emailErr);
@@ -229,6 +270,7 @@ public class XacThucBUS {
             }
             // Cập nhật vai trò (lưu trực tiếp trong cột maVaiTro)
             updatePrimaryRole(user);
+            refreshSessionUserIfNeeded(user.getId());
             return KetQua.success(null, "Cập nhật tài khoản thành công.");
         } catch (Exception e) {
             System.err.println("Lỗi updateUser: " + e.getMessage());
@@ -477,5 +519,30 @@ public class XacThucBUS {
     private boolean isProtectedAdminRoleChange(TaiKhoan target, String maVaiTro) {
         return !ROLE_ADMIN.equalsIgnoreCase(maVaiTro)
                 && (isBuiltInAdminAccount(target) || isCurrentAdminSelfUpdate(target));
+    }
+
+    private KetQua<String> validateUsernameForUpdate(int userId, String username, String currentUsername) {
+        if (ValidationUtils.isBlank(username)) {
+            return KetQua.error("Tên đăng nhập không được để trống.");
+        }
+        String trimmedUsername = username.trim();
+        if (trimmedUsername.equals(currentUsername)) {
+            return KetQua.success(trimmedUsername, "");
+        }
+        if (taiKhoanRepo.existsByUsernameExceptUserId(trimmedUsername, userId)) {
+            return KetQua.error("Tên đăng nhập '" + trimmedUsername + "' đã tồn tại.");
+        }
+        return KetQua.success(trimmedUsername, "");
+    }
+
+    private void refreshSessionUserIfNeeded(int userId) {
+        TaiKhoan current = SessionContext.getInstance().getCurrentUser();
+        if (current == null || current.getId() != userId) {
+            return;
+        }
+        TaiKhoan refreshed = taiKhoanRepo.findById(userId);
+        if (refreshed != null) {
+            SessionContext.getInstance().setCurrentUser(refreshed);
+        }
     }
 }

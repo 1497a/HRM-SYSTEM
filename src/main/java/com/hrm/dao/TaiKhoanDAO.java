@@ -136,18 +136,19 @@ public class TaiKhoanDAO {
     }
 
     /**
-     * Cập nhật thông tin tài khoản (hoatDong, biKhoa, email).
+     * Cập nhật thông tin tài khoản (tenDangNhap, hoatDong, biKhoa, email).
      * Vai trò được cập nhật riêng qua updateRole().
      */
     public int update(TaiKhoan user) {
-        String sql = "UPDATE TAIKHOAN SET hoatDong = ?, biKhoa = ?, email = ?, ngayCapNhat = NOW() "
+        String sql = "UPDATE TAIKHOAN SET tenDangNhap = ?, hoatDong = ?, biKhoa = ?, email = ?, ngayCapNhat = NOW() "
                    + "WHERE maTaiKhoan = ?";
         try (Connection conn = DatabaseConnection.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
-            ps.setBoolean(1, user.isHoatDong());
-            ps.setBoolean(2, user.isBiKhoa());
-            ps.setString(3, user.getEmail());
-            ps.setInt(4, user.getId());
+            ps.setString(1, user.getTenDangNhap() != null ? user.getTenDangNhap().trim() : null);
+            ps.setBoolean(2, user.isHoatDong());
+            ps.setBoolean(3, user.isBiKhoa());
+            ps.setString(4, user.getEmail());
+            ps.setInt(5, user.getId());
             return ps.executeUpdate();
         } catch (SQLException e) {
             throw new RuntimeException("Loi update tai khoan #" + user.getId() + ": " + e.getMessage(), e);
@@ -259,6 +260,23 @@ public class TaiKhoanDAO {
             }
         } catch (SQLException e) {
             System.err.println("Lỗi existsByUsername '" + username + "': " + e.getMessage());
+            e.printStackTrace();
+        }
+        return false;
+    }
+
+    public boolean existsByUsernameExceptUserId(String username, int userId) {
+        if (username == null || username.trim().isEmpty()) return false;
+        String sql = "SELECT 1 FROM TAIKHOAN WHERE tenDangNhap = ? AND maTaiKhoan <> ? LIMIT 1";
+        try (Connection conn = DatabaseConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setString(1, username.trim());
+            ps.setInt(2, userId);
+            try (ResultSet rs = ps.executeQuery()) {
+                return rs.next();
+            }
+        } catch (SQLException e) {
+            System.err.println("Lỗi existsByUsernameExceptUserId '" + username + "'/#" + userId + ": " + e.getMessage());
             e.printStackTrace();
         }
         return false;

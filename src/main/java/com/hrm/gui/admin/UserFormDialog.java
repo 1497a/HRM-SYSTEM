@@ -90,8 +90,6 @@ public class UserFormDialog extends BaseFormDialog {
             updateDefaultPassword();
         } else {
             txtUsername = new JTextField(20);
-            txtUsername.setEditable(false);
-            applyReadOnlyStyle(txtUsername);
             txtMaNV = new JTextField(10);
             txtMaNV.setEditable(false);
             applyReadOnlyStyle(txtMaNV);
@@ -321,6 +319,8 @@ public class UserFormDialog extends BaseFormDialog {
             }
         }
         if (isEditingProtectedAdminAccount()) {
+            txtUsername.setEditable(false);
+            applyReadOnlyStyle(txtUsername);
             if (rdoHoatDong != null) {
                 rdoHoatDong.setSelected(true);
                 rdoHoatDong.setEnabled(false);
@@ -375,6 +375,13 @@ public class UserFormDialog extends BaseFormDialog {
             showInfo("Đã tạo tài khoản thành công!\nTên đăng nhập: " + username + "\nMật khẩu: " + password);
             dispose();
         } else {
+            String username = txtUsername.getText();
+            if (username == null || username.trim().isEmpty()) {
+                showError("Vui lòng nhập tên đăng nhập");
+                txtUsername.requestFocus();
+                return;
+            }
+            editingUser.setTenDangNhap(username.trim());
             if (!isEditingProtectedAdminAccount()) {
                 boolean biKhoa = rdoBiKhoa.isSelected();
                 editingUser.setHoatDong(!biKhoa);

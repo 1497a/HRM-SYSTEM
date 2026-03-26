@@ -63,6 +63,16 @@ public class BoNhiemBUS {
         }
         KetQua<Void> validation = validateBoNhiemInput(bn);
         if (!validation.isSuccess()) return KetQua.error(validation.getMessage());
+        // Chặn bổ nhiệm (mọi loại) nếu chức vụ lãnh đạo (capBac <= 3) đã có người giữ
+        ChucVu cvCheck = chucVuRepo.findById(bn.getMaChucVu());
+        if (cvCheck != null && cvCheck.getCapBac() <= 3) {
+            String deptToCheck = (cvCheck.getCapBac() == 1) ? null : bn.getMaPhongBan();
+            if (boNhiemRepo.hasActiveChinhForChucVuInDept(deptToCheck, bn.getMaChucVu(), 0)) {
+                String tenCV = cvCheck.getTenChucVu() != null ? cvCheck.getTenChucVu() : bn.getMaChucVu();
+                String scope = (cvCheck.getCapBac() == 1) ? "trong công ty" : "trong phòng ban này";
+                return KetQua.error("Chức vụ " + tenCV + " đã có người đang giữ " + scope + ". Kết thúc bổ nhiệm cũ trước khi tạo mới.");
+            }
+        }
         // Kiểm tra xung đột nếu là bổ nhiệm chính
         if (isLoaiBoNhiemChinh(bn)) {
             boolean conflict = boNhiemRepo.hasConflictingChinhBoNhiem(
@@ -70,21 +80,10 @@ public class BoNhiemBUS {
             if (conflict) {
                 return KetQua.error(
                         "Nhân viên đã có bổ nhiệm chính hiệu lực trong khoảng thời gian này. "
-                        + "Hãy kết thúc bổ nhiệm cũ trước.");
-            }
-            // Ch?n t?o b? nhi?m m?i n?u ch?c v? l�nh d?o (c?p b?c <= 3: G�/TP/TT) d� c� ngu?i gi?
-            ChucVu cv = chucVuRepo.findById(bn.getMaChucVu());
-            if (cv != null && cv.getCapBac() <= 3) {
-                // Gi�m d?c (c?p b?c = 1): ki?m tra to�n c�ng ty, kh�ng gi?i h?n ph�ng ban
-                String deptToCheck = (cv.getCapBac() == 1) ? null : bn.getMaPhongBan();
-                if (boNhiemRepo.hasActiveChinhForChucVuInDept(deptToCheck, bn.getMaChucVu(), 0)) {
-                    String tenCV = cv.getTenChucVu() != null ? cv.getTenChucVu() : bn.getMaChucVu();
-                    String scope = (cv.getCapBac() == 1) ? "trong c�ng ty" : "trong ph�ng ban n�y";
-                    return KetQua.error("Ch?c v? " + tenCV + " d� c� ngu?i dang gi? " + scope + ". K?t th�c b? nhi?m cu tru?c khi t?o m?i.");
-                }
+                        + "Hãy kết thúc bổ nhiệm cũ trước khi tạo mới.");
             }
         }
-        // Thi?t l?p tr?ng th�i ch? duy?t
+        // thiết lập trạng thái ban đầu là chờ duyệt
         bn.setTrangThai(HRMConstants.TRANG_THAI_CHO_DUYET);
         try {
             int id = boNhiemRepo.insert(bn);
@@ -109,7 +108,16 @@ public class BoNhiemBUS {
         bn.setTyLeHuongLuong(100);
         bn.setTuNgay(tuNgay != null ? tuNgay : LocalDate.now());
         bn.setTrangThai(HRMConstants.TRANG_THAI_CHO_DUYET);
-        bn.setLyDo("Tự động bổ nhiệm sau khi phê duyệt hợp đồng thử việc #" + maHopDong);
+        bn.setLyDo("Tu dong bo nhiem sau khi phe duyet hop dong thu viec #" + maHopDong);
+        ChucVu cvHD = chucVuRepo.findById(bn.getMaChucVu());
+        if (cvHD != null && cvHD.getCapBac() <= 3) {
+            String deptToCheck = (cvHD.getCapBac() == 1) ? null : bn.getMaPhongBan();
+            if (boNhiemRepo.hasActiveChinhForChucVuInDept(deptToCheck, bn.getMaChucVu(), 0)) {
+                String tenCV = cvHD.getTenChucVu() != null ? cvHD.getTenChucVu() : bn.getMaChucVu();
+                String scope = (cvHD.getCapBac() == 1) ? "trong cong ty" : "trong phong ban nay";
+                return KetQua.error("Chuc vu " + tenCV + " da co nguoi dang giu " + scope + ". Ket thuc bo nhiem cu truoc khi tao moi.");
+            }
+        }
         try {
             int id = boNhiemRepo.insert(bn);
             if (id <= 0) {
@@ -137,6 +145,16 @@ public class BoNhiemBUS {
             return KetQua.error("Bạn không thể tự duyệt bổ nhiệm cho chính mình.");
         }
         LocalDateTime now = LocalDateTime.now();
+        // Chặn duyệt nếu chức vụ lãnh đạo (capBac <= 3) đã có người giữ
+        ChucVu cvDuyet = chucVuRepo.findById(bn.getMaChucVu());
+        if (cvDuyet != null && cvDuyet.getCapBac() <= 3) {
+            String deptToCheck = (cvDuyet.getCapBac() == 1) ? null : bn.getMaPhongBan();
+            if (boNhiemRepo.hasActiveChinhForChucVuInDept(deptToCheck, bn.getMaChucVu(), maBoNhiem)) {
+                String tenCV = cvDuyet.getTenChucVu() != null ? cvDuyet.getTenChucVu() : bn.getMaChucVu();
+                String scope = (cvDuyet.getCapBac() == 1) ? "trong cong ty" : "trong phong ban nay";
+                return KetQua.error("Chuc vu " + tenCV + " da co nguoi dang giu " + scope + ". Ket thuc bo nhiem cu truoc khi duyet.");
+            }
+        }
         // Nếu là bổ nhiệm chính → kết thúc bổ nhiệm cũ (nếu có)
         if (isLoaiBoNhiemChinh(bn)) {
             // Kết thúc bổ nhiệm chính cũ của nhân viên

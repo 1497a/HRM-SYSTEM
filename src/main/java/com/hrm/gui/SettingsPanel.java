@@ -16,7 +16,7 @@ import java.awt.*;
 import java.awt.Font;
 
 /**
- * Panel cai dat tai khoan - cho phep doi mat khau.
+ * Panel cai dat tai khoan - cho phep doi ten dang nhap va doi mat khau.
  */
 class SettingsPanel extends JPanel {
 
@@ -33,8 +33,48 @@ class SettingsPanel extends JPanel {
         JPanel center = new JPanel(new FlowLayout(FlowLayout.LEFT));
         center.setOpaque(false);
         center.setBorder(new EmptyBorder(25, 0, 0, 0));
+        center.add(buildUsernameCard());
         center.add(buildPasswordCard());
         add(center, BorderLayout.CENTER);
+    }
+
+    private RoundedPanel buildUsernameCard() {
+        RoundedPanel card = RoundedPanel.createFlatCard();
+        card.setLayout(new GridBagLayout());
+        card.setBorder(new EmptyBorder(25, 25, 25, 25));
+
+        GridBagConstraints gbc = UIHelper.gbc(0, 0);
+        gbc.insets = new Insets(8, 8, 8, 8);
+        gbc.gridwidth = 2;
+
+        JLabel heading = new JLabel("Đổi tên đăng nhập");
+        heading.setFont(UIFonts.HEADER_SUB);
+        heading.setForeground(UIColors.PRIMARY_PURPLE);
+        card.add(heading, gbc);
+
+        gbc.gridwidth = 1;
+        JTextField currentUsername = new JTextField(20);
+        currentUsername.setEditable(false);
+        currentUsername.setFocusable(false);
+        currentUsername.setBackground(new Color(245, 245, 245));
+
+        JTextField newUsername = new JTextField(20);
+        JPasswordField currentPassword = new JPasswordField(20);
+
+        TaiKhoan user = authService.getCurrentUser();
+        currentUsername.setText(user != null ? user.getTenDangNhap() : "");
+
+        addTextRow(card, gbc, 1, "Tài khoản hiện tại:", currentUsername);
+        addTextRow(card, gbc, 2, "Tài khoản mới:", newUsername);
+        addPasswordRow(card, gbc, 3, "Mật khẩu hiện tại:", currentPassword);
+
+        PurpleButton changeButton = new PurpleButton("Đổi tên đăng nhập");
+        gbc.gridx = 1;
+        gbc.gridy = 4;
+        gbc.insets = new Insets(20, 8, 8, 8);
+        card.add(changeButton, gbc);
+        changeButton.addActionListener(e -> changeUsername(currentUsername, newUsername, currentPassword));
+        return card;
     }
 
     private RoundedPanel buildPasswordCard() {
@@ -61,6 +101,17 @@ class SettingsPanel extends JPanel {
         card.add(changeButton, gbc);
         changeButton.addActionListener(e -> changePassword(current, next, confirm));
         return card;
+    }
+
+    private void addTextRow(JPanel panel, GridBagConstraints gbc, int row, String labelText, JTextField field) {
+        gbc.gridx = 0;
+        gbc.gridy = row;
+        JLabel label = new JLabel(labelText);
+        label.setFont(UIFonts.TEXT_NORMAL);
+        panel.add(label, gbc);
+        field.setFont(UIFonts.TEXT_NORMAL);
+        gbc.gridx = 1;
+        panel.add(field, gbc);
     }
 
     private void addPasswordRow(JPanel panel, GridBagConstraints gbc, int row, String labelText, JPasswordField field) {
@@ -101,5 +152,48 @@ class SettingsPanel extends JPanel {
         } else {
             DialogUtil.showError(this, result.getMessage());
         }
+    }
+
+    private void changeUsername(JTextField currentUsername, JTextField newUsername, JPasswordField currentPassword) {
+        TaiKhoan currentUser = authService.getCurrentUser();
+        if (currentUser == null) {
+            DialogUtil.showError(this, "Không tìm thấy người dùng hiện tại");
+            return;
+        }
+
+        String currentName = currentUsername.getText().trim();
+        String nextName = newUsername.getText() != null ? newUsername.getText().trim() : "";
+        String password = new String(currentPassword.getPassword());
+
+        if (nextName.isEmpty() || password.isEmpty()) {
+            DialogUtil.showWarn(this, "Vui lòng nhập đầy đủ thông tin");
+            if (nextName.isEmpty()) {
+                newUsername.requestFocusInWindow();
+            } else {
+                currentPassword.requestFocusInWindow();
+            }
+            return;
+        }
+        if (nextName.equals(currentName)) {
+            DialogUtil.showWarn(this, "Tên đăng nhập mới phải khác tên hiện tại");
+            newUsername.requestFocusInWindow();
+            newUsername.selectAll();
+            return;
+        }
+
+        KetQua<Void> result = authService.changeUsername(currentUser.getId(), nextName, password);
+        if (!result.isSuccess()) {
+            DialogUtil.showError(this, result.getMessage());
+            currentPassword.setText("");
+            return;
+        }
+
+        DialogUtil.showInfo(this, "Đổi tên đăng nhập thành công. Vui lòng đăng nhập lại bằng tên mới.");
+        authService.logout();
+        Window window = SwingUtilities.getWindowAncestor(this);
+        if (window != null) {
+            window.dispose();
+        }
+        new LoginFrame().setVisible(true);
     }
 }

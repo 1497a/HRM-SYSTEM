@@ -676,14 +676,13 @@ public class BangLuongDAO {
     }
 
     /** Tính số ngày công thực tế từ CHAMCONG trong tháng/năm theo giờ làm thực tế.
-     *  nghi_phep/cong_tac luôn = 1 ngày; còn lại = soGioLam / soGioChuan (ca làm, fallback 8h). */
+     *  nghi_phep/cong_tac luôn = 1 ngày; còn lại = soGioLam / 8.0 (ngày làm chuẩn 8h). */
     public double getSoNgayCong(String nhanVienId, int thang, int nam) {
         String sql = "SELECT COALESCE(SUM("
                 + "CASE WHEN c.trangThai IN ('nghi_phep','cong_tac') THEN 1.0 "
-                + "ELSE c.soGioLam / COALESCE(cl.soGioChuan, 8.0) END"
+                + "ELSE c.soGioLam / 8.0 END"
                 + "), 0) "
                 + "FROM CHAMCONG c "
-                + "LEFT JOIN CALAM cl ON c.maCaLam = cl.maCaLam "
                 + "WHERE c.maNV=? AND MONTH(c.ngay)=? AND YEAR(c.ngay)=? "
                 + "AND c.trangThai IN ('dung_gio','di_muon','ve_som','nghi_phep','cong_tac')";
         try (Connection conn = DatabaseConnection.getConnection();
@@ -717,11 +716,14 @@ public class BangLuongDAO {
         return 0;
     }
 
-    /** Tổng tiền OT = giờ OT quy đổi * đơn giá giờ công chuẩn.
+    /** Tổng tiền OT = giờ OT thực tế (CHAMCONG.gioLamThem) * heSoOT từ đơn được duyệt.
      *  @param ngayLamViecTrongThang số ngày làm việc thực tế của tháng (T2=20, T1=21, ...) */
     public double getTienOT(String nhanVienId, int thang, int nam, double luongCoBan, int ngayLamViecTrongThang) {
-        String sql = "SELECT COALESCE(SUM(soGio * heSoOT), 0) FROM DANGKY_LAMTHEM "
-                + "WHERE maNV=? AND MONTH(ngay)=? AND YEAR(ngay)=? AND trangThai='" + HRMConstants.TRANG_THAI_DA_DUYET + "'";
+        String sql = "SELECT COALESCE(SUM(cc.gioLamThem * dk.heSoOT), 0) "
+                + "FROM CHAMCONG cc "
+                + "INNER JOIN DANGKY_LAMTHEM dk ON cc.maNV = dk.maNV AND cc.ngay = dk.ngay "
+                + "AND dk.trangThai='" + HRMConstants.TRANG_THAI_DA_DUYET + "' "
+                + "WHERE cc.maNV=? AND MONTH(cc.ngay)=? AND YEAR(cc.ngay)=? AND cc.gioLamThem > 0";
         try (Connection conn = DatabaseConnection.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setString(1, nhanVienId);
@@ -791,10 +793,13 @@ public class BangLuongDAO {
         return null;
     }
 
-    /** Tổng giờ OT thô (để lưu vào soGioLamThem và hiển thị chi tiết). */
+    /** Tổng giờ OT thực tế từ CHAMCONG (chỉ tính khi có đơn được duyệt). */
     public double getTongGioOT(String nhanVienId, int thang, int nam) {
-        String sql = "SELECT COALESCE(SUM(soGio),0) FROM DANGKY_LAMTHEM "
-                + "WHERE maNV=? AND MONTH(ngay)=? AND YEAR(ngay)=? AND trangThai='" + HRMConstants.TRANG_THAI_DA_DUYET + "'";
+        String sql = "SELECT COALESCE(SUM(cc.gioLamThem), 0) "
+                + "FROM CHAMCONG cc "
+                + "INNER JOIN DANGKY_LAMTHEM dk ON cc.maNV = dk.maNV AND cc.ngay = dk.ngay "
+                + "AND dk.trangThai='" + HRMConstants.TRANG_THAI_DA_DUYET + "' "
+                + "WHERE cc.maNV=? AND MONTH(cc.ngay)=? AND YEAR(cc.ngay)=? AND cc.gioLamThem > 0";
         try (Connection conn = DatabaseConnection.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setString(1, nhanVienId);
