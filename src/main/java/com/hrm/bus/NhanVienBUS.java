@@ -127,6 +127,10 @@ public class NhanVienBUS {
         if (emailErr != null) return KetQua.error(emailErr);
         String phoneErr = ValidationUtils.validatePhone(ttcn.getDienThoai());
         if (phoneErr != null) return KetQua.error(phoneErr);
+        TaiKhoan currentUser = SessionContext.getInstance().getCurrentUser();
+        if (currentUser != null) {
+            ttcn.setNguoiCapNhat(currentUser.getMaNV());
+        }
         try {
             int rows = ttcnRepo.update(ttcn);
             if (rows <= 0) {
@@ -246,20 +250,6 @@ public class NhanVienBUS {
         }
     }
 
-    private KetQua<Void> validateCCCD(String cccdRaw, String maNV) {
-        if (ValidationUtils.isBlank(cccdRaw)) {
-            return KetQua.success(null, "");
-        }
-        String cccd = cccdRaw.trim();
-        if (!cccd.matches("\\d{12}")) {
-            return KetQua.error("CCCD phải là 12 chữ số.");
-        }
-        if (ttcnRepo.existsByCCCD(cccd, maNV)) {
-            return KetQua.error("CCCD '" + cccdRaw + "' đã được đăng ký cho nhân viên khác.");
-        }
-        return KetQua.success(null, "");
-    }
-
     private KetQua<Void> validateTrangThaiTransition(String trangThaiHienTai, String trangThaiMoi) {
         boolean valid = false;
         if (HRMConstants.TRANG_THAI_DANG_LAM_VIEC.equals(trangThaiHienTai)
@@ -323,7 +313,19 @@ public class NhanVienBUS {
         return currentUser != null
                 && (SessionContext.getInstance().isAdmin() || currentUser.coQuyen(action));
     }
-
+    private KetQua<Void> validateCCCD(String cccdRaw, String maNV) {
+        if (ValidationUtils.isBlank(cccdRaw)) {
+            return KetQua.success(null, "");
+        }
+        String cccd = cccdRaw.trim();
+        if (!cccd.matches("\\d{12}")) {
+            return KetQua.error("CCCD phải là 12 chữ số.");
+        }
+        if (ttcnRepo.existsByCCCD(cccd, maNV)) {
+            return KetQua.error("CCCD '" + cccdRaw + "' đã được đăng ký cho nhân viên khác.");
+        }
+        return KetQua.success(null, "");
+    }
     private boolean isTargetWithinActionScope(String action, String currentMaNV, String targetMaNV) {
         com.hrm.model.DataScope scope = XacThucBUS.getInstance().getScopeForAction(action);
         if (scope == com.hrm.model.DataScope.ALL) {

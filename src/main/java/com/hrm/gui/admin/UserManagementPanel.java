@@ -128,7 +128,7 @@ public class UserManagementPanel extends JPanel {
             southPanel.add(btnEdit);
         }
         JButton btnLamMoi = UIHelper.createDefaultButton("Làm mới");
-        btnLamMoi.addActionListener(e -> loadData());
+        btnLamMoi.addActionListener(e -> { txtSearch.setText(""); cboTrangThai.setSelectedIndex(0); cboVaiTro.setSelectedIndex(0); loadData(); applyFilter(); });
         southPanel.add(btnLamMoi);
 
         add(topPanel, BorderLayout.NORTH);

@@ -111,7 +111,7 @@ public class SalaryListPanel extends JPanel {
         btnDuyetBangLuong.addActionListener(e -> duyetBangLuong());
         btnKhoaBangLuong.addActionListener(e -> khoaBangLuong());
         btnXemChiTiet.addActionListener(e -> tabbedPane.setSelectedIndex(1));
-        btnLamMoi1.addActionListener(e -> loadBangLuong());
+        btnLamMoi1.addActionListener(e -> { txtTimKiemBL.setText(""); loadBangLuong(); });
         txtTimKiemBL = UIHelper.createSearchField("Tìm theo kỳ lương, tên bảng lương...");
         JPanel searchToolbar = new JPanel(new FlowLayout(FlowLayout.LEFT, 8, 4));
         searchToolbar.setOpaque(false);
@@ -200,7 +200,7 @@ public class SalaryListPanel extends JPanel {
         btnTinhLaiNhanVien = UIHelper.createPrimaryButton("Tính lại nhân viên");
         JButton btnLamMoi2 = UIHelper.createDefaultButton("Làm mới");
         btnTinhLaiNhanVien.addActionListener(e -> tinhLaiNhanVien());
-        btnLamMoi2.addActionListener(e -> { if (selectedMaBL >= 0) loadChiTiet(selectedMaBL); });
+        btnLamMoi2.addActionListener(e -> { txtTimKiemCD.setText(""); if (selectedMaBL >= 0) loadChiTiet(selectedMaBL); });
         txtTimKiemCD = UIHelper.createSearchField("Tìm theo mã NV, họ tên...");
 
         // Search toolbar (NORTH)

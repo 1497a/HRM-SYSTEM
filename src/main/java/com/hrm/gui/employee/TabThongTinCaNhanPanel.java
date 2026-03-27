@@ -73,6 +73,9 @@ class TabThongTinCaNhanPanel extends JPanel {
         cboTrangThaiNhanVien.setSelectedItem(nhanVien != null ? nhanVien.getTrangThai() : HRMConstants.TRANG_THAI_DANG_LAM_VIEC);
         setStatusEditMode(false);
         addInfoRow(nvPanel, 3, "Trạng thái:", cboTrangThaiNhanVien);
+        String tenNguoiDoiTT = nhanVien != null ? nhanVien.getTenNguoiCapNhatTrangThai() : null;
+        addInfoRow(nvPanel, 4, "Người đổi trạng thái:",
+                tenNguoiDoiTT != null && !tenNguoiDoiTT.isEmpty() ? tenNguoiDoiTT : "—");
         content.add(nvPanel);
         content.add(Box.createVerticalStrut(16));
         content.add(buildSectionTitle("Thông tin cá nhân"));
@@ -105,6 +108,14 @@ class TabThongTinCaNhanPanel extends JPanel {
             addInfoRow(ttcnPanel, 9, "Trình độ học vấn:", txtTrinhDoHocVan);
             addInfoRow(ttcnPanel, 10, "File CV:", txtFileCV);
             addInfoRow(ttcnPanel, 11, "Kinh nghiệm:", new JScrollPane(txtKinhNghiem));
+            String tenNguoiCapNhat = ttcn.getTenNguoiCapNhat();
+            String ngayCapNhat = ttcn.getNgayCapNhat() != null
+                    ? ttcn.getNgayCapNhat().format(java.time.format.DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm"))
+                    : null;
+            String capNhatInfo = (tenNguoiCapNhat != null && !tenNguoiCapNhat.isEmpty())
+                    ? tenNguoiCapNhat + (ngayCapNhat != null ? " (" + ngayCapNhat + ")" : "")
+                    : "—";
+            addInfoRow(ttcnPanel, 12, "Người cập nhật:", capNhatInfo);
             loadFields();
             setEditMode(false);
         } else {
@@ -213,7 +224,6 @@ class TabThongTinCaNhanPanel extends JPanel {
             ttcn.setMaNV(maNV);
         }
         String hoTen = txtHoTen.getText().trim();
-        if (hoTen.isEmpty()) return KetQua.error("Họ tên không được để trống.");
         String ngaySinhStr = txtNgaySinh.getText().trim();
         LocalDate ngaySinh = null;
         if (!ngaySinhStr.isEmpty()) {
@@ -222,15 +232,9 @@ class TabThongTinCaNhanPanel extends JPanel {
             } catch (DateTimeParseException e) {
                 return KetQua.error("Ngày sinh không hợp lệ. Định dạng dd/MM/yyyy.");
             }
-            String birthErr = ValidationUtils.validateBirthDate(ngaySinh);
-            if (birthErr != null) return KetQua.error(birthErr);
         }
         String email = txtEmail.getText().trim();
-        String emailErr = ValidationUtils.validateEmail(email);
-        if (emailErr != null) return KetQua.error(emailErr);
         String sdt = txtDienThoai.getText().trim();
-        String phoneErr = ValidationUtils.validatePhone(sdt);
-        if (phoneErr != null) return KetQua.error(phoneErr);
         ttcn.setHoTen(hoTen);
         ttcn.setNgaySinh(ngaySinh);
         ttcn.setGioiTinh((String) cboGioiTinh.getSelectedItem());
@@ -238,7 +242,6 @@ class TabThongTinCaNhanPanel extends JPanel {
         ttcn.setDienThoai(empty(sdt));
         ttcn.setEmail(empty(email));
         String diaChi = txtDiaChi.getText().trim();
-        if (diaChi.isEmpty()) return KetQua.error("Địa chỉ không được để trống.");
         ttcn.setDiaChi(diaChi);
         ttcn.setQueQuan(empty(txtQueQuan.getText().trim()));
         ttcn.setTrinhDoHocVan(empty(txtTrinhDoHocVan.getText().trim()));

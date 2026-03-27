@@ -135,7 +135,7 @@ public class EvalCycleListPanel extends JPanel {
         if (isManager) btnPanel.add(btnEvaluate);
         btnPanel.add(btnViewDetail);
         JButton btnLamMoi = UIHelper.createDefaultButton("Làm mới");
-        btnLamMoi.addActionListener(e -> loadData());
+        btnLamMoi.addActionListener(e -> { txtTimKiem.setText(""); cboTrangThai.setSelectedIndex(0); loadData(); });
         btnPanel.add(btnLamMoi);
         add(northPanel, BorderLayout.NORTH);
         add(cycleScroll, BorderLayout.CENTER);

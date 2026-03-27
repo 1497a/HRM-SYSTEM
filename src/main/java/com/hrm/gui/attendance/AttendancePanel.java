@@ -161,9 +161,6 @@ public class AttendancePanel extends JPanel {
         tb.add(new JLabel("Tháng:")); cboThang=combMonth(); tb.add(cboThang);
         tb.add(new JLabel("Năm:")); cboNam=combYear(); tb.add(cboNam);
         JButton bL=btn("Lọc dữ liệu",UIColors.PRIMARY_PURPLE); bL.addActionListener(e->loadCC()); tb.add(bL);
-        tb.add(Box.createHorizontalStrut(20));
-        JButton bT=btn("+ Thêm thủ công",UIColors.SUCCESS_GREEN); bT.addActionListener(e->dlgThemCC()); tb.add(bT);
-        JButton bS=btn("Xem chi tiết",UIColors.PRIMARY_PURPLE); bS.addActionListener(e->dlgChiTietCC()); tb.add(bS);
         JLabel lblHint = new JLabel("Tìm theo mã nhân viên hoặc họ tên.");
         lblHint.setFont(new Font("Segoe UI", Font.ITALIC, 12));
         lblHint.setForeground(UIColors.TEXT_DARK);
@@ -176,9 +173,17 @@ public class AttendancePanel extends JPanel {
         tableChamCong.getColumnModel().getColumn(8).setCellRenderer(new com.hrm.gui.components.StatusCellRenderer());
         for (int i : new int[]{2, 3, 4, 5, 6, 7}) tableChamCong.getColumnModel().getColumn(i).setCellRenderer(CENTER_R);
         p.add(new JScrollPane(tableChamCong),BorderLayout.CENTER);
+        // Bottom: action buttons (left) + stats (center)
+        JPanel actionPanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 8, 6)); actionPanel.setOpaque(false);
+        JButton bT=btn("+ Thêm thủ công",UIColors.SUCCESS_GREEN); bT.addActionListener(e->dlgThemCC()); actionPanel.add(bT);
+        JButton bS=btn("Xem chi tiết",UIColors.PRIMARY_PURPLE); bS.addActionListener(e->dlgChiTietCC()); actionPanel.add(bS);
+        JButton bR=btn("Làm mới",Color.GRAY); bR.addActionListener(e->loadCC()); actionPanel.add(bR);
         statsPanel=new JPanel(new FlowLayout(FlowLayout.LEFT,30,10));
         statsPanel.setOpaque(false); statsPanel.setBorder(new EmptyBorder(5,0,0,0));
-        p.add(statsPanel,BorderLayout.SOUTH); loadCC(); return p;
+        JPanel bottomPanel = new JPanel(new BorderLayout()); bottomPanel.setOpaque(false);
+        bottomPanel.add(actionPanel, BorderLayout.WEST);
+        bottomPanel.add(statsPanel, BorderLayout.CENTER);
+        p.add(bottomPanel,BorderLayout.SOUTH); loadCC(); return p;
     }
 
     private void loadCC() {
@@ -780,8 +785,6 @@ public class AttendancePanel extends JPanel {
             {"Tên nhân viên:",   don.getTenNhanVien() != null ? don.getTenNhanVien() : "-"},
             {"Ngày OT:",         don.getNgay() != null ? don.getNgay().format(fDate) : "-"},
             {"Số giờ OT:",       String.format("%.1f giờ", don.getSoGio())},
-            {"Giờ bắt đầu OT:", don.getGioVaoOT() != null ? don.getGioVaoOT().toString() : "-"},
-            {"Giờ kết thúc OT:", don.getGioRaOT()  != null ? don.getGioRaOT().toString()  : "-"},
             {"Hệ số OT:",        "x" + don.getHeSoOT()},
             {"Lý do:",           don.getLyDo() != null ? don.getLyDo() : "-"},
             {"Trạng thái:",      don.getTrangThai().getDisplayName()},
@@ -1310,49 +1313,25 @@ public class AttendancePanel extends JPanel {
         JTextField txtNgayOT = new JTextField(12);
         txtNgayOT.setText(LocalDate.now().format(DateTimeFormatter.ofPattern("dd/MM/yyyy")));
         g.gridx=1; g.weightx=1; formPanel.add(txtNgayOT,g);
-        // Row 1: Gio bat dau OT
-        g.gridx=0; g.gridy=1; g.weightx=0; formPanel.add(new JLabel("Giờ bắt đầu OT (HH:mm):"),g);
-        JTextField txtGioVaoOT = new JTextField("17:00", 10);
-        g.gridx=1; g.weightx=1; formPanel.add(txtGioVaoOT,g);
-        // Row 2: Gio ket thuc OT
-        g.gridx=0; g.gridy=2; g.weightx=0; formPanel.add(new JLabel("Giờ kết thúc OT (HH:mm):"),g);
-        JTextField txtGioRaOT = new JTextField("20:00", 10);
-        g.gridx=1; g.weightx=1; formPanel.add(txtGioRaOT,g);
-        // Row 3: So gio tu tinh
-        g.gridx=0; g.gridy=3; g.weightx=0; formPanel.add(new JLabel("Số giờ OT (tự tính):"),g);
-        JLabel lblSoGioTinhToan = new JLabel("3.0 gio");
-        lblSoGioTinhToan.setFont(com.hrm.util.UIFonts.BOLD_NORMAL);
-        lblSoGioTinhToan.setForeground(UIColors.PRIMARY_PURPLE);
-        g.gridx=1; g.weightx=1; formPanel.add(lblSoGioTinhToan,g);
-        java.awt.event.FocusAdapter recalcFocus = new java.awt.event.FocusAdapter() {
-            @Override public void focusLost(java.awt.event.FocusEvent e) {
-                try {
-                    java.time.LocalTime vao = java.time.LocalTime.parse(txtGioVaoOT.getText().trim(), DateTimeFormatter.ofPattern("HH:mm"));
-                    java.time.LocalTime ra  = java.time.LocalTime.parse(txtGioRaOT.getText().trim(),  DateTimeFormatter.ofPattern("HH:mm"));
-                    double so = DangKyLamThem.tinhSoGioOT(vao, ra);
-                    lblSoGioTinhToan.setText(String.format("%.1f gio", so));
-                    lblSoGioTinhToan.setForeground(so<=0||so>8 ? UIColors.DANGER_RED : UIColors.PRIMARY_PURPLE);
-                } catch (Exception ex) {
-                    lblSoGioTinhToan.setText("? (định dạng sai)"); lblSoGioTinhToan.setForeground(UIColors.DANGER_RED);
-                }
-            }
-        };
-        txtGioVaoOT.addFocusListener(recalcFocus); txtGioRaOT.addFocusListener(recalcFocus);
-        // Row 4: Ly do
-        g.gridx=0; g.gridy=4; g.weightx=0; formPanel.add(new JLabel("Lý do:"),g);
+        // Row 1: So gio OT
+        g.gridx=0; g.gridy=1; g.weightx=0; formPanel.add(new JLabel("Số giờ OT:"),g);
+        JTextField txtSoGioOT = new JTextField("2.0", 10);
+        g.gridx=1; g.weightx=1; formPanel.add(txtSoGioOT,g);
+        // Row 2: Ly do
+        g.gridx=0; g.gridy=2; g.weightx=0; formPanel.add(new JLabel("Lý do:"),g);
         JTextField txtLyDo = new JTextField(30);
         g.gridx=1; g.weightx=1; formPanel.add(txtLyDo,g);
-        // Row 5: Nut gui
+        // Row 3: Nut gui
         JButton btnTaoDon = btn("Gửi đơn OT", UIColors.PRIMARY_PURPLE);
-        g.gridx=0; g.gridy=5; g.gridwidth=2; g.insets=new Insets(12,8,8,8); formPanel.add(btnTaoDon,g);
+        g.gridx=0; g.gridy=3; g.gridwidth=2; g.insets=new Insets(12,8,8,8); formPanel.add(btnTaoDon,g);
         g.gridwidth=1;
         JPanel topOT = new JPanel(new BorderLayout(0, 10)); topOT.setOpaque(false);
         topOT.add(title, BorderLayout.NORTH); topOT.add(formPanel, BorderLayout.CENTER);
         // Bang don OT
-        String[] cols = {"Mã đơn", "Ngày", "Giờ OT", "Số giờ", "Lý do", "Trạng thái"};
+        String[] cols = {"Mã đơn", "Ngày", "Số giờ", "Lý do", "Trạng thái"};
         modelDonOTCaNhan = mdl(cols); tableDonOTCaNhan = tbl(modelDonOTCaNhan);
-        tableDonOTCaNhan.getColumnModel().getColumn(5).setCellRenderer(new com.hrm.gui.components.StatusCellRenderer());
-        for (int i : new int[]{1, 2, 3}) tableDonOTCaNhan.getColumnModel().getColumn(i).setCellRenderer(CENTER_R);
+        tableDonOTCaNhan.getColumnModel().getColumn(4).setCellRenderer(new com.hrm.gui.components.StatusCellRenderer());
+        for (int i : new int[]{1, 2}) tableDonOTCaNhan.getColumnModel().getColumn(i).setCellRenderer(CENTER_R);
         JButton btnHuyDon = btn("Hủy đơn", UIColors.DANGER_RED);
         JButton btnLamMoi = new JButton("Làm mới"); btnLamMoi.setFocusPainted(false);
         JPanel tblHeader = new JPanel(new BorderLayout()); tblHeader.setOpaque(false);
@@ -1366,21 +1345,26 @@ public class AttendancePanel extends JPanel {
         btnTaoDon.addActionListener(e -> {
             try {
                 LocalDate ngay = LocalDate.parse(txtNgayOT.getText().trim(), DateTimeFormatter.ofPattern("dd/MM/yyyy"));
-                java.time.LocalTime gioVao = java.time.LocalTime.parse(txtGioVaoOT.getText().trim(), DateTimeFormatter.ofPattern("HH:mm"));
-                java.time.LocalTime gioRa  = java.time.LocalTime.parse(txtGioRaOT.getText().trim(),  DateTimeFormatter.ofPattern("HH:mm"));
+                double soGio;
+                try {
+                    soGio = Double.parseDouble(txtSoGioOT.getText().trim().replace(",", "."));
+                } catch (NumberFormatException ex2) {
+                    DialogUtil.showError(this, "So gio OT phai la so (vi du: 2.0).", "Loi dinh dang");
+                    return;
+                }
                 String lyDo = txtLyDo.getText().trim();
                 if (lyDo.isEmpty()) { DialogUtil.showWarn(this, "Vui lòng nhập lý do."); return; }
-                KetQua<DangKyLamThem> res = svc.taoDonLamThem(maNVCaNhan, ngay, gioVao, gioRa, lyDo);
+                KetQua<DangKyLamThem> res = svc.taoDonLamThem(maNVCaNhan, ngay, soGio, lyDo);
                 if (res.isSuccess()) { DialogUtil.showSuccess(this, res.getMessage()); txtLyDo.setText(""); loadDonOTCaNhan(); }
                 else DialogUtil.showError(this, res.getMessage());
             } catch (Exception ex) {
-                DialogUtil.showError(this, "Kiểm tra lại: Ngày (dd/MM/yyyy), Giờ (HH:mm).", "Lỗi định dạng");
+                DialogUtil.showError(this, "Kiem tra lai: Ngay (dd/MM/yyyy).", "Loi dinh dang");
             }
         });
         btnHuyDon.addActionListener(e -> {
             int row = tableDonOTCaNhan.getSelectedRow();
             if (row < 0) { DialogUtil.showInfo(this, "Chọn đơn cần hủy."); return; }
-            String tt = (String) modelDonOTCaNhan.getValueAt(row, 5);
+            String tt = (String) modelDonOTCaNhan.getValueAt(row, 4);
             if (!DangKyLamThem.TrangThai.CHO_DUYET.getDisplayName().equals(tt)) {
                 DialogUtil.showInfo(this, "Chỉ hủy đơn chờ duyệt.");
                 return;
@@ -1399,16 +1383,11 @@ public class AttendancePanel extends JPanel {
         if (maNVCaNhan == null || modelDonOTCaNhan == null) return;
         modelDonOTCaNhan.setRowCount(0);
         DateTimeFormatter fDate = DateTimeFormatter.ofPattern("dd/MM/yyyy");
-        DateTimeFormatter fTime = DateTimeFormatter.ofPattern("HH:mm");
         for (DangKyLamThem don : svc.getDonLamThemCuaNV(maNVCaNhan)) {
-            String gioOT = (don.getGioVaoOT() != null && don.getGioRaOT() != null)
-                ? don.getGioVaoOT().format(fTime) + " -> " + don.getGioRaOT().format(fTime)
-                : String.format("%.1f gio", don.getSoGio());
             modelDonOTCaNhan.addRow(new Object[]{
                 don.getMaDK(),
                 don.getNgay() != null ? don.getNgay().format(fDate) : "-",
-                gioOT,
-                String.format("%.1f", don.getSoGio()),
+                String.format("%.1f gio", don.getSoGio()),
                 don.getLyDo(),
                 don.getTrangThai().getDisplayName()
             });

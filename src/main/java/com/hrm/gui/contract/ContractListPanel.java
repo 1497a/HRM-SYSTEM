@@ -195,7 +195,7 @@ public class ContractListPanel extends JPanel {
         btnXemChiTiet.setEnabled(false);
 
         JButton btnLamMoi = UIHelper.createDefaultButton("Làm mới");
-        btnLamMoi.addActionListener(e -> loadData());
+        btnLamMoi.addActionListener(e -> { txtTimKiem.setText(""); cboTrangThai.setSelectedIndex(0); if (cboNhanVien != null) cboNhanVien.setSelectedIndex(0); loadData(); });
 
         panel.add(btnTao);
         panel.add(btnXemChiTiet);

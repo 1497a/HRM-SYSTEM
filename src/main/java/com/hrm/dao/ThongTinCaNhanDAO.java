@@ -4,6 +4,7 @@ import com.hrm.model.ThongTinCaNhan;
 import com.hrm.util.DatabaseConnection;
 
 import java.sql.*;
+import java.time.LocalDateTime;
 
 /**
  * Repository cho bảng THONGTINCANHAN.
@@ -43,6 +44,11 @@ public class ThongTinCaNhanDAO {
         ttcn.setFileCv(rs.getString("fileCV"));
         ttcn.setTrinhDoHocVan(rs.getString("trinhDoHocVan"));
         ttcn.setKinhNghiem(rs.getString("kinhNghiem"));
+        ttcn.setNguoiCapNhat(rs.getString("nguoiCapNhat"));
+        Timestamp ngayCapNhat = rs.getTimestamp("ngayCapNhat");
+        if (ngayCapNhat != null) {
+            ttcn.setNgayCapNhat(ngayCapNhat.toLocalDateTime());
+        }
         return ttcn;
     }
 
@@ -50,13 +56,18 @@ public class ThongTinCaNhanDAO {
     // findByMaNV
     // ============================
     public ThongTinCaNhan findByMaNV(String maNV) {
-        String sql = "SELECT * FROM THONGTINCANHAN WHERE maNV = ?";
+        String sql = "SELECT t.*, nc.hoTen AS tenNguoiCapNhat "
+                + "FROM THONGTINCANHAN t "
+                + "LEFT JOIN THONGTINCANHAN nc ON t.nguoiCapNhat = nc.maNV "
+                + "WHERE t.maNV = ?";
         try (Connection conn = DatabaseConnection.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setString(1, maNV);
             try (ResultSet rs = ps.executeQuery()) {
                 if (rs.next()) {
-                    return mapRow(rs);
+                    ThongTinCaNhan ttcn = mapRow(rs);
+                    ttcn.setTenNguoiCapNhat(rs.getString("tenNguoiCapNhat"));
+                    return ttcn;
                 }
             }
         } catch (SQLException e) {
@@ -111,7 +122,7 @@ public class ThongTinCaNhanDAO {
         String sql = "UPDATE THONGTINCANHAN SET "
                 + "hoTen=?, ngaySinh=?, gioiTinh=?, CCCD=?, dienThoai=?, email=?, "
                 + "diaChi=?, queQuan=?, tinhTrangHonNhan=?, "
-                + "fileCV=?, trinhDoHocVan=?, kinhNghiem=? "
+                + "fileCV=?, trinhDoHocVan=?, kinhNghiem=?, nguoiCapNhat=? "
                 + "WHERE maNV=?";
         try (Connection conn = DatabaseConnection.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
@@ -127,7 +138,8 @@ public class ThongTinCaNhanDAO {
             ps.setString(10, ttcn.getFileCv());
             ps.setString(11, ttcn.getTrinhDoHocVan());
             ps.setString(12, ttcn.getKinhNghiem());
-            ps.setString(13, ttcn.getMaNV());
+            ps.setString(13, ttcn.getNguoiCapNhat());
+            ps.setString(14, ttcn.getMaNV());
             return ps.executeUpdate();
         } catch (SQLException e) {
             throw new RuntimeException("Loi cap nhat thong tin ca nhan: " + e.getMessage(), e);

@@ -39,6 +39,7 @@ public class NhanVienDAO {
         }
         nv.setTrangThai(rs.getString("trangThai"));
         nv.setGhiChu(rs.getString("ghiChu"));
+        nv.setNguoiCapNhatTrangThai(rs.getString("nguoiCapNhatTrangThai"));
         return nv;
     }
 
@@ -50,13 +51,14 @@ public class NhanVienDAO {
             return null;
         }
         String sql = "SELECT n.*, t.hoTen, pb.maPhongBan AS maPhongBanHT, "
-                + "pb.tenPhongBan, cv.tenChucVu "
+                + "pb.tenPhongBan, cv.tenChucVu, nt.hoTen AS tenNguoiCapNhatTrangThai "
                 + "FROM NHANVIEN n "
                 + "LEFT JOIN THONGTINCANHAN t ON n.maNV = t.maNV "
                 + "LEFT JOIN BONHIEM b ON n.maNV = b.maNV "
                 + "  AND b.trangThai = 'hieu_luc' AND b.loaiBoNhiem = 'chinh' "
                 + "LEFT JOIN PHONGBAN pb ON b.maPhongBan = pb.maPhongBan "
                 + "LEFT JOIN CHUCVU cv ON b.maChucVu = cv.maChucVu "
+                + "LEFT JOIN THONGTINCANHAN nt ON n.nguoiCapNhatTrangThai = nt.maNV "
                 + "WHERE n.maNV = ?";
         try (Connection conn = DatabaseConnection.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
@@ -68,6 +70,7 @@ public class NhanVienDAO {
                     nv.setMaPhongBanHienTai(rs.getString("maPhongBanHT"));
                     nv.setTenPhongBanHienTai(rs.getString("tenPhongBan"));
                     nv.setTenChucVuHienTai(rs.getString("tenChucVu"));
+                    nv.setTenNguoiCapNhatTrangThai(rs.getString("tenNguoiCapNhatTrangThai"));
                     return nv;
                 }
             }

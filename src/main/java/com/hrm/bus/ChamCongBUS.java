@@ -71,6 +71,10 @@ public class ChamCongBUS {
         if (caLam.getGioBatDau() == null || caLam.getGioKetThuc() == null) {
             return KetQua.error("Giờ bắt đầu và kết thúc không được để trống.");
         }
+        KetQua<Void> standardHoursValidation = validateStandardShiftHours(caLam.getSoGioChuan());
+        if (!standardHoursValidation.isSuccess()) return KetQua.error(standardHoursValidation.getMessage());
+        KetQua<Void> shiftDurationValidation = validateShiftDuration(caLam.getGioBatDau(), caLam.getGioKetThuc());
+        if (!shiftDurationValidation.isSuccess()) return KetQua.error(shiftDurationValidation.getMessage());
         try {
             int rows = repository.saveCaLam(caLam);
             if (rows <= 0) {
@@ -95,6 +99,10 @@ public class ChamCongBUS {
         } catch (Exception e) {
             return KetQua.error("Định dạng giờ không hợp lệ (HH:mm).");
         }
+        KetQua<Void> standardHoursValidation = validateStandardShiftHours(sg);
+        if (!standardHoursValidation.isSuccess()) return KetQua.error(standardHoursValidation.getMessage());
+        KetQua<Void> shiftDurationValidation = validateShiftDuration(tBD, tKT);
+        if (!shiftDurationValidation.isSuccess()) return KetQua.error(shiftDurationValidation.getMessage());
         try {
             CaLam ca = new CaLam(ma.trim(), ten.trim(), tBD, tKT);
             ca.setSoGioChuan(sg);
@@ -121,6 +129,10 @@ public class ChamCongBUS {
         } catch (Exception e) {
             return KetQua.error("Định dạng giờ không hợp lệ (HH:mm).");
         }
+        KetQua<Void> standardHoursValidation = validateStandardShiftHours(sg);
+        if (!standardHoursValidation.isSuccess()) return KetQua.error(standardHoursValidation.getMessage());
+        KetQua<Void> shiftDurationValidation = validateShiftDuration(tBD, tKT);
+        if (!shiftDurationValidation.isSuccess()) return KetQua.error(shiftDurationValidation.getMessage());
         try {
             ca.setTenCaLam(ten.trim());
             ca.setGioBatDau(tBD);
@@ -229,10 +241,14 @@ public class ChamCongBUS {
         if (caLam != null && gioRa.toLocalTime().isBefore(caLam.getGioKetThuc())) {
             cc.setTrangThai(ChamCong.TrangThai.VE_SOM);
         }
-        // Kiểm tra giờ làm thêm
+        // Kiểm tra giờ làm thêm: tính theo thời gian vượt quá giờ kết thúc ca
         boolean hasOT = repository.hasDuyetForNVAndNgay(maNV, today);
-        if (hasOT && caLam != null && cc.getSoGioLam() > caLam.getSoGioChuan()) {
-            cc.setGioLamThem(Math.round((cc.getSoGioLam() - caLam.getSoGioChuan()) * 100.0) / 100.0);
+        if (hasOT && caLam != null) {
+            long minutesOT = java.time.Duration.between(
+                    caLam.getGioKetThuc(), gioRa.toLocalTime()).toMinutes();
+            if (minutesOT > 0) {
+                cc.setGioLamThem(Math.round(minutesOT / 60.0 * 100.0) / 100.0);
+            }
         }
         int rows = repository.updateChamCong(cc);
         if (rows <= 0) {
@@ -278,6 +294,14 @@ public class ChamCongBUS {
         cc.setGioRa(gioRa);
         if (gioVao != null && gioRa != null) {
             cc.setSoGioLam(cc.tinhSoGioLam());
+            boolean hasOTManual = repository.hasDuyetForNVAndNgay(maNV, ngay);
+            if (hasOTManual) {
+                long minutesOT = java.time.Duration.between(
+                        caLam.getGioKetThuc(), gioRa.toLocalTime()).toMinutes();
+                if (minutesOT > 0) {
+                    cc.setGioLamThem(Math.round(minutesOT / 60.0 * 100.0) / 100.0);
+                }
+            }
         }
         cc.setTrangThai(trangThai != null ? trangThai : ChamCong.TrangThai.DUNG_GIO);
         cc.setPhuongThucChamCong(ChamCong.PhuongThuc.THU_CONG);
@@ -615,33 +639,6 @@ public class ChamCongBUS {
         return repository.findNhanVienByMa(maNV);
     }
 
-    // =====================================================================
-    // ĐĂNG KÝ LÀM THÊM — overload với khoảng giờ
-    // =====================================================================
-    /** Tạo đơn OT theo khoảng giờ (gioVao → gioRa), tính soGio tự động. */
-    public KetQua<DangKyLamThem> taoDonLamThem(String maNV, LocalDate ngay,
-            LocalTime gioVao, LocalTime gioRa, String lyDo) {
-        KetQua<Void> permission = validateSelfActionPermission(ACTION_OVERTIME_REQUEST, maNV);
-        if (!permission.isSuccess()) return KetQua.error(permission.getMessage());
-        if (gioVao == null || gioRa == null)
-            return KetQua.error("Vui lòng nhập giờ bắt đầu và kết thúc OT.");
-        double soGio = DangKyLamThem.tinhSoGioOT(gioVao, gioRa);
-        KetQua<Void> overtimeValidation = validateOvertimeInput(soGio, lyDo);
-        if (!overtimeValidation.isSuccess()) {
-            if (overtimeValidation.getMessage().contains("Số giờ OT")) {
-                return KetQua.error("Khoảng thời gian OT phải từ 0.5 đến 8 giờ.");
-            }
-            return KetQua.error(overtimeValidation.getMessage());
-        }
-        DangKyLamThem dk = new DangKyLamThem(maNV, ngay, gioVao, gioRa, lyDo.trim());
-        int id = repository.saveDangKyLamThem(dk);
-        if (id <= 0) {
-            return KetQua.error("Không thể tạo đơn OT. Vui lòng thử lại.");
-        }
-        return KetQua.success(dk, "Đã tạo đơn OT: " + gioVao + " → " + gioRa
-            + " (" + String.format("%.1f", soGio) + " giờ).");
-    }
-
     /** Xóa đơn OT đang chờ duyệt. */
     public KetQua<Void> xoaDonLamThem(int maDK, String maNV) {
         DangKyLamThem dk = repository.findById(maDK);
@@ -675,6 +672,27 @@ public class ChamCongBUS {
         }
         if (giaTri <= 0) {
             return KetQua.error("Giá trị phải lớn hơn 0.");
+        }
+        return KetQua.success(null, "");
+    }
+
+    private KetQua<Void> validateStandardShiftHours(double soGioChuan) {
+        if (Double.compare(soGioChuan, 8.0) != 0) {
+            return KetQua.error("Số giờ chuẩn của ca làm bắt buộc phải bằng 8 tiếng.");
+        }
+        return KetQua.success(null, "");
+    }
+
+    private KetQua<Void> validateShiftDuration(LocalTime gioBatDau, LocalTime gioKetThuc) {
+        if (gioBatDau == null || gioKetThuc == null) {
+            return KetQua.error("Giờ bắt đầu và kết thúc không được để trống.");
+        }
+        long phut = java.time.Duration.between(gioBatDau, gioKetThuc).toMinutes();
+        if (phut <= 0) {
+            phut += 24 * 60;
+        }
+        if (phut != 8 * 60) {
+            return KetQua.error("Khoảng thời gian của ca làm bắt buộc phải đúng 8 tiếng.");
         }
         return KetQua.success(null, "");
     }

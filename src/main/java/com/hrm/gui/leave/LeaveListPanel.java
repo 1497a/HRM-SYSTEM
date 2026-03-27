@@ -175,7 +175,7 @@ public class LeaveListPanel extends JPanel {
             southPanel.add(btnApprove);
         }
         JButton btnLamMoi = UIHelper.createDefaultButton("Làm mới");
-        btnLamMoi.addActionListener(e -> loadData());
+        btnLamMoi.addActionListener(e -> { txtTimKiem.setText(""); cboStatus.setSelectedIndex(0); if (isManager && cboNhanVien != null) cboNhanVien.setSelectedIndex(0); loadData(); });
         southPanel.add(btnLamMoi);
         add(topPanel, BorderLayout.NORTH);
         add(scrollPane, BorderLayout.CENTER);

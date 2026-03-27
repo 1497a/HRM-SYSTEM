@@ -13,11 +13,13 @@ public class NhanVien {
     private LocalDate ngayVaoLam;
     private String trangThai;   // "dang_lam_viec", "tam_nghi", "nghi_viec"
     private String ghiChu;
+    private String nguoiCapNhatTrangThai;  // maNV người đổi trạng thái
     // Transient - dung de hien thi, khong luu truc tiep trong bang nhan_viens
     private transient String hoTen;
     private transient String phongBanHienTaiId;
     private transient String tenPhongBanHienTai;
     private transient String tenChucVuHienTai;
+    private transient String tenNguoiCapNhatTrangThai; // hoTen để hiển thị
     public NhanVien() {
     }
 
@@ -104,6 +106,22 @@ public class NhanVien {
 
     public void setTenChucVuHienTai(String tenChucVuHienTai) {
         this.tenChucVuHienTai = tenChucVuHienTai;
+    }
+
+    public String getNguoiCapNhatTrangThai() {
+        return nguoiCapNhatTrangThai;
+    }
+
+    public void setNguoiCapNhatTrangThai(String nguoiCapNhatTrangThai) {
+        this.nguoiCapNhatTrangThai = nguoiCapNhatTrangThai;
+    }
+
+    public String getTenNguoiCapNhatTrangThai() {
+        return tenNguoiCapNhatTrangThai;
+    }
+
+    public void setTenNguoiCapNhatTrangThai(String tenNguoiCapNhatTrangThai) {
+        this.tenNguoiCapNhatTrangThai = tenNguoiCapNhatTrangThai;
     }
 
     // ============================

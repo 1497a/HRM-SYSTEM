@@ -178,7 +178,7 @@ public class AppointmentListPanel extends JPanel {
         btnXemChiTiet.setEnabled(false);
         panel.add(btnXemChiTiet);
         JButton btnLamMoi = UIHelper.createDefaultButton("Làm mới");
-        btnLamMoi.addActionListener(e -> loadData());
+        btnLamMoi.addActionListener(e -> { txtTimKiem.setText(""); cboTrangThai.setSelectedIndex(0); cboLoai.setSelectedIndex(0); loadData(); });
         panel.add(btnLamMoi);
         return panel;
     }

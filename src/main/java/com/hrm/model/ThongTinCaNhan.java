@@ -1,6 +1,7 @@
 package com.hrm.model;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 
 /**
  * Model cho thông tin cá nhân của nhân viên.
@@ -21,6 +22,9 @@ public class ThongTinCaNhan {
     private String fileCV;
     private String trinhDoHocVan;
     private String kinhNghiem;
+    private String nguoiCapNhat;           // maNV người thực hiện cập nhật
+    private LocalDateTime ngayCapNhat;     // thời điểm cập nhật
+    private transient String tenNguoiCapNhat; // hoTen để hiển thị, không lưu DB
     public ThongTinCaNhan() {
     }
 
@@ -145,6 +149,30 @@ public class ThongTinCaNhan {
 
     public void setKinhNghiem(String kinhNghiem) {
         this.kinhNghiem = kinhNghiem;
+    }
+
+    public String getNguoiCapNhat() {
+        return nguoiCapNhat;
+    }
+
+    public void setNguoiCapNhat(String nguoiCapNhat) {
+        this.nguoiCapNhat = nguoiCapNhat;
+    }
+
+    public LocalDateTime getNgayCapNhat() {
+        return ngayCapNhat;
+    }
+
+    public void setNgayCapNhat(LocalDateTime ngayCapNhat) {
+        this.ngayCapNhat = ngayCapNhat;
+    }
+
+    public String getTenNguoiCapNhat() {
+        return tenNguoiCapNhat;
+    }
+
+    public void setTenNguoiCapNhat(String tenNguoiCapNhat) {
+        this.tenNguoiCapNhat = tenNguoiCapNhat;
     }
 
     @Override

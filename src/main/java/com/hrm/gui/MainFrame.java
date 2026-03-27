@@ -20,6 +20,7 @@ import com.hrm.model.DataScope;
 import com.hrm.model.NhanVien;
 import com.hrm.model.TaiKhoan;
 import com.hrm.util.DialogUtil;
+import com.hrm.util.IconUtil;
 import com.hrm.util.PermissionCodes;
 import com.hrm.util.SessionContext;
 import com.hrm.util.UIColors;
@@ -101,6 +102,7 @@ public class MainFrame extends JFrame {
         btnSettings = createMenuButton("Cài đặt");
         btnLogout = createMenuButton("Đăng xuất");
         btnLogout.setForeground(UIColors.DANGER_RED);
+        applyMenuIcons();
     }
 
     private JButton createMenuButton(String text) {
@@ -112,6 +114,7 @@ public class MainFrame extends JFrame {
         button.setFocusPainted(false);
         button.setOpaque(true);
         button.setHorizontalAlignment(SwingConstants.LEFT);
+        button.setIconTextGap(10);
         button.setCursor(new Cursor(Cursor.HAND_CURSOR));
         button.setPreferredSize(MENU_BUTTON_SIZE);
         button.setMaximumSize(MENU_BUTTON_SIZE);
@@ -134,10 +137,42 @@ public class MainFrame extends JFrame {
         return button;
     }
 
+    private void applyMenuIcons() {
+        setMenuIcon(btnDashboard, "dashboard");
+        setMenuIcon(btnEmployees, "users");
+        setMenuIcon(btnOrganization, "organization");
+        setMenuIcon(btnAppointments, "appointments");
+        setMenuIcon(btnRecruitment, "recruitment");
+        setMenuIcon(btnAttendance, "attendance");
+        setMenuIcon(btnContracts, "contracts");
+        setMenuIcon(btnPayroll, "payroll");
+        setMenuIcon(btnLeave, "leave");
+        setMenuIcon(btnPerformance, "performance");
+        setMenuIcon(btnUsers, "employees");
+        setMenuIcon(btnRoles, "roles");
+        setMenuIcon(btnNotifications, "notifications");
+        setMenuIcon(btnReports, "reports");
+        setMenuIcon(btnSettings, "settings");
+        setMenuIcon(btnLogout, "logout");
+    }
+
+    private void setMenuIcon(AbstractButton button, String iconName) {
+        button.putClientProperty("menuIconName", iconName);
+        refreshMenuIcon(button);
+    }
+
+    private void refreshMenuIcon(AbstractButton button) {
+        Object iconName = button.getClientProperty("menuIconName");
+        if (iconName instanceof String name && !name.isBlank()) {
+            button.setIcon(IconUtil.loadMenuIcon(name, button.getForeground()));
+        }
+    }
+
     private void resetMenuButton(JButton button) {
         button.setBackground(Color.WHITE);
         button.setForeground(button == btnLogout ? UIColors.DANGER_RED : UIColors.TEXT_DARK);
         button.setBorder(new EmptyBorder(10, 20, 10, 10));
+        refreshMenuIcon(button);
     }
 
     private void setActiveButton(JButton button) {
@@ -150,6 +185,7 @@ public class MainFrame extends JFrame {
         button.setBorder(BorderFactory.createCompoundBorder(
                 BorderFactory.createMatteBorder(0, 4, 0, 0, UIColors.PRIMARY_PURPLE),
                 new EmptyBorder(10, 16, 10, 10)));
+        refreshMenuIcon(button);
     }
 
     private void setupLayout() {

@@ -136,7 +136,7 @@ public class EmployeeListPanel extends JPanel {
         panel.add(btnThem);
         panel.add(btnChiTiet);
         JButton btnLamMoi = UIHelper.createDefaultButton("Làm mới");
-        btnLamMoi.addActionListener(e -> loadData());
+        btnLamMoi.addActionListener(e -> { txtSearch.setText(""); cboTrangThai.setSelectedIndex(0); cboPhongBan.setSelectedIndex(0); loadData(); });
         panel.add(btnLamMoi);
 
         JSeparator sep = new JSeparator(JSeparator.VERTICAL);
@@ -324,7 +324,7 @@ public class EmployeeListPanel extends JPanel {
 
     private void doImportExcel() {
         JFileChooser fc = new JFileChooser();
-        fc.setDialogTitle("Chon file Excel de nhap");
+        fc.setDialogTitle("Chọn file Excel de nhap");
         fc.setFileFilter(new javax.swing.filechooser.FileNameExtensionFilter("Excel (*.xlsx)", "xlsx"));
         fc.setAcceptAllFileFilterUsed(false);
         if (fc.showOpenDialog(this) != JFileChooser.APPROVE_OPTION) return;
@@ -432,4 +432,4 @@ public class EmployeeListPanel extends JPanel {
         return String.join(", ", parts);
     }
 
-}
+}   
