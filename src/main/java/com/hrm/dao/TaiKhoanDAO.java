@@ -1,0 +1,640 @@
+package com.hrm.dao;
+
+import com.hrm.model.DataScope;
+import com.hrm.model.Quyen;
+import com.hrm.model.VaiTro;
+import com.hrm.model.TaiKhoan;
+import com.hrm.util.DatabaseConnection;
+
+import java.sql.*;
+import java.util.ArrayList;
+import java.util.List;
+
+/**
+ * Repository JDBC cho bảng TAIKHOAN, VAITRO, QUYEN, VAITRO_QUYEN, TAIKHOAN_QUYEN.
+ * Đã cập nhật để maNV là String (dạng "NV001", "NV002", ...).
+ */
+public class TaiKhoanDAO {
+
+    private static TaiKhoanDAO instance;
+    public static synchronized TaiKhoanDAO getInstance() {
+        if (instance == null) {
+            instance = new TaiKhoanDAO();
+        }
+        return instance;
+    }
+
+    // =====================================================================
+    // ==================== TaiKhoan (TAIKHOAN) Methods ========================
+    // =====================================================================
+    /**
+     * Tìm người dùng theo tên đăng nhập, nạp đầy đủ vai trò và quyền.
+     */
+    public TaiKhoan findByUsername(String username) {
+        if (username == null || username.trim().isEmpty()) return null;
+        String sql = "SELECT tk.maTaiKhoan, tk.tenDangNhap, tk.matKhau, tk.email, tk.hoatDong, tk.biKhoa, tk.maNV, "
+                   + "tk.maVaiTro, tt.hoTen "
+                   + "FROM TAIKHOAN tk "
+                   + "LEFT JOIN THONGTINCANHAN tt ON tt.maNV = tk.maNV "
+                   + "WHERE tk.tenDangNhap = ?";
+        try (Connection conn = DatabaseConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setString(1, username.trim());
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    TaiKhoan user = mapRowToUser(rs);
+                    loadUserRoleAndPermissions(conn, user, rs.getString("maVaiTro"));
+                    return user;
+                }
+            }
+        } catch (SQLException e) {
+            System.err.println("Lỗi findByUsername '" + username + "': " + e.getMessage());
+            e.printStackTrace();
+        }
+        return null;
+    }
+
+    /**
+     * Tìm người dùng theo ID tài khoản (maTaiKhoan - int).
+     */
+    public TaiKhoan findById(int id) {
+        String sql = "SELECT tk.maTaiKhoan, tk.tenDangNhap, tk.matKhau, tk.email, tk.hoatDong, tk.biKhoa, tk.maNV, "
+                   + "tk.maVaiTro, tt.hoTen "
+                   + "FROM TAIKHOAN tk "
+                   + "LEFT JOIN THONGTINCANHAN tt ON tt.maNV = tk.maNV "
+                   + "WHERE tk.maTaiKhoan = ?";
+        try (Connection conn = DatabaseConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setInt(1, id);
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    TaiKhoan user = mapRowToUser(rs);
+                    loadUserRoleAndPermissions(conn, user, rs.getString("maVaiTro"));
+                    return user;
+                }
+            }
+        } catch (SQLException e) {
+            System.err.println("Lỗi findById " + id + ": " + e.getMessage());
+            e.printStackTrace();
+        }
+        return null;
+    }
+
+    /**
+     * Lấy tất cả người dùng, nạp vai trò và quyền.
+     */
+    public List<TaiKhoan> findAll() {
+        List<TaiKhoan> list = new ArrayList<>();
+        String sql = "SELECT tk.maTaiKhoan, tk.tenDangNhap, tk.matKhau, tk.email, tk.hoatDong, tk.biKhoa, tk.maNV, "
+                   + "tk.maVaiTro, tt.hoTen "
+                   + "FROM TAIKHOAN tk "
+                   + "LEFT JOIN THONGTINCANHAN tt ON tt.maNV = tk.maNV "
+                   + "WHERE tk.tenDangNhap != 'admin' ORDER BY tk.maTaiKhoan";
+        try (Connection conn = DatabaseConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql);
+             ResultSet rs = ps.executeQuery()) {
+            while (rs.next()) {
+                TaiKhoan user = mapRowToUser(rs);
+                loadUserRoleAndPermissions(conn, user, rs.getString("maVaiTro"));
+                list.add(user);
+            }
+        } catch (SQLException e) {
+            System.err.println("Lỗi findAll users: " + e.getMessage());
+            e.printStackTrace();
+        }
+        return list;
+    }
+
+    /**
+     * Thêm tài khoản mới, trả về ID được sinh ra (maTaiKhoan - int).
+     * maNV là String (có thể null).
+     */
+    public int insert(String tenDangNhap, String matKhau, String maNV, String maVaiTro, String email) {
+        String sql = "INSERT INTO TAIKHOAN (tenDangNhap, matKhau, maNV, maVaiTro, email, hoatDong, biKhoa, ngayTao, ngayCapNhat) "
+                   + "VALUES (?, ?, ?, ?, ?, TRUE, FALSE, NOW(), NOW())";
+        try (Connection conn = DatabaseConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
+            ps.setString(1, tenDangNhap.trim());
+            ps.setString(2, matKhau);
+            if (maNV != null && !maNV.trim().isEmpty()) {
+                ps.setString(3, maNV.trim());
+            } else {
+                ps.setNull(3, Types.VARCHAR);
+            }
+            ps.setString(4, maVaiTro != null ? maVaiTro.trim() : null);
+            ps.setString(5, email != null ? email.trim() : null);
+            ps.executeUpdate();
+            try (ResultSet keys = ps.getGeneratedKeys()) {
+                if (keys.next()) {
+                    return keys.getInt(1);
+                }
+            }
+        } catch (SQLException e) {
+            throw new RuntimeException("Loi insert tai khoan '" + tenDangNhap + "': " + e.getMessage(), e);
+        }
+        return -1;
+    }
+
+    /**
+     * Cập nhật thông tin tài khoản (tenDangNhap, hoatDong, biKhoa, email).
+     * Vai trò được cập nhật riêng qua updateRole().
+     */
+    public int update(TaiKhoan user) {
+        String sql = "UPDATE TAIKHOAN SET tenDangNhap = ?, hoatDong = ?, biKhoa = ?, email = ?, ngayCapNhat = NOW() "
+                   + "WHERE maTaiKhoan = ?";
+        try (Connection conn = DatabaseConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setString(1, user.getTenDangNhap() != null ? user.getTenDangNhap().trim() : null);
+            ps.setBoolean(2, user.isHoatDong());
+            ps.setBoolean(3, user.isBiKhoa());
+            ps.setString(4, user.getEmail());
+            ps.setInt(5, user.getId());
+            return ps.executeUpdate();
+        } catch (SQLException e) {
+            throw new RuntimeException("Loi update tai khoan #" + user.getId() + ": " + e.getMessage(), e);
+        }
+    }
+
+    /**
+     * Cập nhật mật khẩu (đã hash sẵn).
+     */
+    public boolean updatePassword(int id, String hashedPassword) {
+        String sql = "UPDATE TAIKHOAN SET matKhau = ?, ngayCapNhat = NOW() WHERE maTaiKhoan = ?";
+        try (Connection conn = DatabaseConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setString(1, hashedPassword);
+            ps.setInt(2, id);
+            return ps.executeUpdate() > 0;
+        } catch (SQLException e) {
+            System.err.println("Lỗi updatePassword #" + id + ": " + e.getMessage());
+            e.printStackTrace();
+        }
+        return false;
+    }
+
+    /**
+     * Xóa tài khoản theo ID.
+     * Vai trò lưu trực tiếp trong cột maVaiTro của TAIKHOAN (không có bảng TAIKHOAN_QUYEN).
+     * Các FK liên quan (THONGBAO, LOG_AUDIT) đã có ON DELETE CASCADE / SET NULL.
+     */
+    public void delete(int id) {
+        String delUser = "DELETE FROM TAIKHOAN WHERE maTaiKhoan = ?";
+        try (Connection conn = DatabaseConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(delUser)) {
+            ps.setInt(1, id);
+            ps.executeUpdate();
+        } catch (SQLException e) {
+            System.err.println("Lỗi delete tài khoản #" + id + ": " + e.getMessage());
+            e.printStackTrace();
+        }
+    }
+
+    /**
+     * Tìm tài khoản theo maNV (String).
+     */
+    public TaiKhoan findByMaNV(String maNV) {
+        if (maNV == null || maNV.trim().isEmpty()) return null;
+        String sql = "SELECT tk.maTaiKhoan, tk.tenDangNhap, tk.matKhau, tk.email, tk.hoatDong, tk.biKhoa, tk.maNV, "
+                   + "tk.maVaiTro, tt.hoTen "
+                   + "FROM TAIKHOAN tk "
+                   + "LEFT JOIN THONGTINCANHAN tt ON tt.maNV = tk.maNV "
+                   + "WHERE tk.maNV = ? LIMIT 1";
+        try (Connection conn = DatabaseConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setString(1, maNV.trim());
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    TaiKhoan user = mapRowToUser(rs);
+                    loadUserRoleAndPermissions(conn, user, rs.getString("maVaiTro"));
+                    return user;
+                }
+            }
+        } catch (SQLException e) {
+            System.err.println("Lỗi findByMaNV '" + maNV + "': " + e.getMessage());
+            e.printStackTrace();
+        }
+        return null;
+    }
+
+    /**
+     * Cập nhật vai trò cho tài khoản.
+     */
+    public int updateRole(int maTaiKhoan, String maVaiTro) {
+        String sql = "UPDATE TAIKHOAN SET maVaiTro = ?, ngayCapNhat = NOW() WHERE maTaiKhoan = ?";
+        try (Connection conn = DatabaseConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setString(1, maVaiTro != null ? maVaiTro.trim() : null);
+            ps.setInt(2, maTaiKhoan);
+            return ps.executeUpdate();
+        } catch (SQLException e) {
+            throw new RuntimeException("Loi updateRole #" + maTaiKhoan + ": " + e.getMessage(), e);
+        }
+    }
+
+    /**
+     * Vô hiệu hóa tài khoản liên kết với nhân viên (khi NV nghỉ việc).
+     */
+    public int deactivateByMaNV(String maNV) {
+        if (maNV == null || maNV.trim().isEmpty()) return 0;
+        String sql = "UPDATE TAIKHOAN SET hoatDong = FALSE, ngayCapNhat = NOW() WHERE maNV = ?";
+        try (Connection conn = DatabaseConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setString(1, maNV.trim());
+            return ps.executeUpdate();
+        } catch (SQLException e) {
+            throw new RuntimeException("Loi deactivateByMaNV '" + maNV + "': " + e.getMessage(), e);
+        }
+    }
+
+    /**
+     * Kiểm tra tên đăng nhập đã tồn tại chưa.
+     */
+    public boolean existsByUsername(String username) {
+        if (username == null || username.trim().isEmpty()) return false;
+        String sql = "SELECT 1 FROM TAIKHOAN WHERE tenDangNhap = ? LIMIT 1";
+        try (Connection conn = DatabaseConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setString(1, username.trim());
+            try (ResultSet rs = ps.executeQuery()) {
+                return rs.next();
+            }
+        } catch (SQLException e) {
+            System.err.println("Lỗi existsByUsername '" + username + "': " + e.getMessage());
+            e.printStackTrace();
+        }
+        return false;
+    }
+
+    public boolean existsByUsernameExceptUserId(String username, int userId) {
+        if (username == null || username.trim().isEmpty()) return false;
+        String sql = "SELECT 1 FROM TAIKHOAN WHERE tenDangNhap = ? AND maTaiKhoan <> ? LIMIT 1";
+        try (Connection conn = DatabaseConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setString(1, username.trim());
+            ps.setInt(2, userId);
+            try (ResultSet rs = ps.executeQuery()) {
+                return rs.next();
+            }
+        } catch (SQLException e) {
+            System.err.println("Lỗi existsByUsernameExceptUserId '" + username + "'/#" + userId + ": " + e.getMessage());
+            e.printStackTrace();
+        }
+        return false;
+    }
+
+    // =====================================================================
+    // ==================== VaiTro (VAITRO) Methods ==========================
+    // =====================================================================
+    public List<VaiTro> findAllRoles() {
+        List<VaiTro> list = new ArrayList<>();
+        String sql = "SELECT maVaiTro, tenVaiTro, moTa, laVaiTroHeThong FROM VAITRO "
+                   + "WHERE trangThai = TRUE OR trangThai IS NULL ORDER BY maVaiTro";
+        try (Connection conn = DatabaseConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql);
+             ResultSet rs = ps.executeQuery()) {
+            while (rs.next()) {
+                VaiTro role = new VaiTro(
+                        rs.getString("maVaiTro"),
+                        rs.getString("tenVaiTro"),
+                        rs.getString("moTa")
+                );
+                role.setLaHeThong(rs.getBoolean("laVaiTroHeThong"));
+                // Nạp quyền
+                List<Quyen> perms = findPermissionsByRole(role.getId());
+                role.getQuyens().addAll(perms);
+                list.add(role);
+            }
+        } catch (SQLException e) {
+            System.err.println("Lỗi findAllRoles: " + e.getMessage());
+            e.printStackTrace();
+        }
+        return list;
+    }
+
+    public VaiTro findRoleByCode(String code) {
+        if (code == null || code.trim().isEmpty()) return null;
+        try (Connection conn = DatabaseConnection.getConnection()) {
+            return findRoleByCode(conn, code.trim());
+        } catch (SQLException e) {
+            System.err.println("Lỗi findRoleByCode '" + code + "': " + e.getMessage());
+            e.printStackTrace();
+        }
+        return null;
+    }
+
+    public int insertRole(String maVaiTro, String tenVaiTro, String moTa) {
+        String sql = "INSERT INTO VAITRO (maVaiTro, tenVaiTro, moTa, laVaiTroHeThong, trangThai) "
+                   + "VALUES (?, ?, ?, FALSE, TRUE)";
+        try (Connection conn = DatabaseConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setString(1, maVaiTro.trim());
+            ps.setString(2, tenVaiTro.trim());
+            ps.setString(3, moTa != null ? moTa.trim() : null);
+            return ps.executeUpdate();
+        } catch (SQLException e) {
+            throw new RuntimeException("Loi insertRole '" + maVaiTro + "': " + e.getMessage(), e);
+        }
+    }
+
+    public int updateRole(VaiTro role) {
+        if (role == null || role.getId() == null) return 0;
+        String sql = "UPDATE VAITRO SET tenVaiTro = ?, moTa = ? WHERE maVaiTro = ?";
+        try (Connection conn = DatabaseConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setString(1, role.getTenVaiTro());
+            ps.setString(2, role.getMoTa());
+            ps.setString(3, role.getId().trim());
+            return ps.executeUpdate();
+        } catch (SQLException e) {
+            throw new RuntimeException("Loi updateRole '" + role.getId() + "': " + e.getMessage(), e);
+        }
+    }
+
+    public boolean deleteRole(String code) {
+        if (code == null || code.trim().isEmpty()) return false;
+        String checkSystem = "SELECT laVaiTroHeThong FROM VAITRO WHERE maVaiTro = ?";
+        String checkInUse  = "SELECT COUNT(*) FROM TAIKHOAN WHERE maVaiTro = ?";
+        String delPerms    = "DELETE FROM VAITRO_QUYEN WHERE maVaiTro = ?";
+        String delRole     = "DELETE FROM VAITRO WHERE maVaiTro = ?";
+        try (Connection conn = DatabaseConnection.getConnection()) {
+            // Kiểm tra vai trò hệ thống
+            try (PreparedStatement ps = conn.prepareStatement(checkSystem)) {
+                ps.setString(1, code.trim());
+                try (ResultSet rs = ps.executeQuery()) {
+                    if (rs.next() && rs.getBoolean(1)) {
+                        System.err.println("Không thể xóa vai trò hệ thống: " + code);
+                        return false;
+                    }
+                }
+            }
+            // Kiểm tra đang được sử dụng
+            try (PreparedStatement ps = conn.prepareStatement(checkInUse)) {
+                ps.setString(1, code.trim());
+                try (ResultSet rs = ps.executeQuery()) {
+                    if (rs.next() && rs.getInt(1) > 0) {
+                        System.err.println("Vai trò đang được sử dụng, không thể xóa: " + code);
+                        return false;
+                    }
+                }
+            }
+            conn.setAutoCommit(false);
+            try {
+                try (PreparedStatement ps = conn.prepareStatement(delPerms)) {
+                    ps.setString(1, code.trim());
+                    ps.executeUpdate();
+                }
+                try (PreparedStatement ps = conn.prepareStatement(delRole)) {
+                    ps.setString(1, code.trim());
+                    int rows = ps.executeUpdate();
+                    conn.commit();
+                    return rows > 0;
+                }
+            } catch (SQLException e) {
+                conn.rollback();
+                throw e;
+            } finally {
+                conn.setAutoCommit(true);
+            }
+        } catch (SQLException e) {
+            System.err.println("Lỗi deleteRole '" + code + "': " + e.getMessage());
+            e.printStackTrace();
+        }
+        return false;
+    }
+
+    // =====================================================================
+    // ==================== Quyen (QUYEN) Methods ==========================
+    // =====================================================================
+    public List<Quyen> findAllPermissions() {
+        List<Quyen> list = new ArrayList<>();
+        String sql = "SELECT maQuyen, tenQuyen, nhomQuyen, moTa, coPhamVi FROM QUYEN ORDER BY nhomQuyen, maQuyen";
+        try (Connection conn = DatabaseConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql);
+             ResultSet rs = ps.executeQuery()) {
+            while (rs.next()) {
+                Quyen q = new Quyen(
+                        rs.getString("maQuyen"),
+                        rs.getString("tenQuyen"),
+                        rs.getString("nhomQuyen")
+                );
+                q.setMoTa(rs.getString("moTa"));
+                q.setCoPhamVi(rs.getBoolean("coPhamVi"));
+                list.add(q);
+            }
+        } catch (SQLException e) {
+            System.err.println("Lỗi findAllPermissions: " + e.getMessage());
+            e.printStackTrace();
+        }
+        return list;
+    }
+
+    public List<Quyen> findPermissionsByRole(String maVaiTro) {
+        if (maVaiTro == null || maVaiTro.trim().isEmpty()) return new ArrayList<>();
+        List<Quyen> list = new ArrayList<>();
+        String sql = "SELECT q.maQuyen, q.tenQuyen, q.nhomQuyen, q.moTa, q.coPhamVi, vq.phamVi "
+                   + "FROM QUYEN q JOIN VAITRO_QUYEN vq ON q.maQuyen = vq.maQuyen "
+                   + "WHERE vq.maVaiTro = ? ORDER BY q.nhomQuyen, q.maQuyen";
+        try (Connection conn = DatabaseConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setString(1, maVaiTro.trim());
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    Quyen q = new Quyen(
+                            rs.getString("maQuyen"),
+                            rs.getString("tenQuyen"),
+                            rs.getString("nhomQuyen")
+                    );
+                    q.setMoTa(rs.getString("moTa"));
+                    q.setCoPhamVi(rs.getBoolean("coPhamVi"));
+                    String pv = rs.getString("phamVi");
+                    if (pv != null) {
+                        try { q.setPhamVi(DataScope.valueOf(pv)); } catch (IllegalArgumentException ignored) {}
+                    }
+                    list.add(q);
+                }
+            }
+        } catch (SQLException e) {
+            System.err.println("Lỗi findPermissionsByRole '" + maVaiTro + "': " + e.getMessage());
+            e.printStackTrace();
+        }
+        return list;
+    }
+
+    public int setRolePermissions(String maVaiTro, List<Quyen> permissions) {
+        if (maVaiTro == null || maVaiTro.trim().isEmpty()) return 0;
+        String deleteSql = "DELETE FROM VAITRO_QUYEN WHERE maVaiTro = ?";
+        String insertSql = "INSERT INTO VAITRO_QUYEN (maVaiTro, maQuyen, phamVi) VALUES (?, ?, ?)";
+        try (Connection conn = DatabaseConnection.getConnection()) {
+            conn.setAutoCommit(false);
+            try {
+                int total = 0;
+                // Xóa quyền cũ
+                try (PreparedStatement ps = conn.prepareStatement(deleteSql)) {
+                    ps.setString(1, maVaiTro.trim());
+                    total += ps.executeUpdate();
+                }
+                // Thêm quyền mới
+                if (permissions != null && !permissions.isEmpty()) {
+                    try (PreparedStatement ps = conn.prepareStatement(insertSql)) {
+                        for (Quyen permission : permissions) {
+                            if (permission == null || permission.getId() == null || permission.getId().trim().isEmpty()) {
+                                continue;
+                            }
+                            ps.setString(1, maVaiTro.trim());
+                            ps.setString(2, permission.getId().trim());
+                            if (permission.isCoPhamVi()) {
+                                DataScope scope = permission.getPhamVi();
+                                if (scope == null || scope == DataScope.NONE) {
+                                    continue;
+                                }
+                                ps.setString(3, scope.name());
+                            } else {
+                                ps.setNull(3, Types.VARCHAR);
+                            }
+                            ps.addBatch();
+                        }
+                        int[] counts = ps.executeBatch();
+                        for (int ct : counts) total += (ct >= 0 ? ct : 0);
+                    }
+                }
+                conn.commit();
+                return total;
+            } catch (SQLException e) {
+                conn.rollback();
+                throw e;
+            } finally {
+                conn.setAutoCommit(true);
+            }
+        } catch (SQLException e) {
+            throw new RuntimeException("Loi setRolePermissions cho vai tro '" + maVaiTro + "': " + e.getMessage(), e);
+        }
+    }
+
+    // =====================================================================
+    // ==================== Private Helpers ================================
+    // =====================================================================
+    private TaiKhoan mapRowToUser(ResultSet rs) throws SQLException {
+        int id = rs.getInt("maTaiKhoan");
+        String username = rs.getString("tenDangNhap");
+        String password = rs.getString("matKhau");
+        String email = rs.getString("email");
+        boolean hoatDong = rs.getBoolean("hoatDong");
+        boolean biKhoa = rs.getBoolean("biKhoa");
+        String maNV = rs.getString("maNV");  // String
+        // Lấy họ tên nếu có
+        String fullName = rs.getString("hoTen");
+        if (fullName == null || fullName.trim().isEmpty()) {
+            fullName = username;
+        }
+        TaiKhoan user = new TaiKhoan(id, username, password, fullName, email);
+        user.setHoatDong(hoatDong);
+        user.setBiKhoa(biKhoa);
+        if (maNV != null && !maNV.trim().isEmpty()) {
+            user.setMaNV(maNV.trim());
+        }
+        return user;
+    }
+
+    private void loadUserRoleAndPermissions(Connection conn, TaiKhoan user, String maVaiTro) {
+        try {
+            if (maVaiTro != null && !maVaiTro.trim().isEmpty()) {
+                VaiTro role = findRoleByCode(conn, maVaiTro.trim());
+                if (role != null) {
+                    user.setVaiTro(role);
+                }
+            }
+        } catch (SQLException e) {
+            System.err.println("Lá»—i loadUserRoleAndPermissions #" + user.getId() + ": " + e.getMessage());
+        }
+    }
+
+    private VaiTro findRoleByCode(Connection conn, String code) throws SQLException {
+        String sql = "SELECT maVaiTro, tenVaiTro, moTa, laVaiTroHeThong FROM VAITRO WHERE maVaiTro = ?";
+        try (PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setString(1, code);
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    VaiTro role = new VaiTro(
+                            rs.getString("maVaiTro"),
+                            rs.getString("tenVaiTro"),
+                            rs.getString("moTa")
+                    );
+                    role.setLaHeThong(rs.getBoolean("laVaiTroHeThong"));
+                    role.getQuyens().addAll(findPermissionsByRole(conn, code));
+                    return role;
+                }
+            }
+        }
+        return null;
+    }
+
+    private List<Quyen> findPermissionsByRole(Connection conn, String maVaiTro) throws SQLException {
+        List<Quyen> list = new ArrayList<>();
+        String sql = "SELECT q.maQuyen, q.tenQuyen, q.nhomQuyen, q.moTa, q.coPhamVi, vq.phamVi "
+                   + "FROM QUYEN q JOIN VAITRO_QUYEN vq ON q.maQuyen = vq.maQuyen "
+                   + "WHERE vq.maVaiTro = ? ORDER BY q.nhomQuyen, q.maQuyen";
+        try (PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setString(1, maVaiTro);
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    Quyen q = new Quyen(
+                            rs.getString("maQuyen"),
+                            rs.getString("tenQuyen"),
+                            rs.getString("nhomQuyen")
+                    );
+                    q.setMoTa(rs.getString("moTa"));
+                    q.setCoPhamVi(rs.getBoolean("coPhamVi"));
+                    String pv = rs.getString("phamVi");
+                    if (pv != null) {
+                        try { q.setPhamVi(DataScope.valueOf(pv)); } catch (IllegalArgumentException ignored) {}
+                    }
+                    list.add(q);
+                }
+            }
+        }
+        return list;
+    }
+
+    private void loadUserRoleAndPermissions(TaiKhoan user, int maTaiKhoan) {
+        // Lấy vai trò (giả sử mỗi tài khoản chỉ có 1 vai trò)
+        String sqlRole = "SELECT maVaiTro FROM TAIKHOAN WHERE maTaiKhoan = ?";
+        try (Connection conn = DatabaseConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sqlRole)) {
+            ps.setInt(1, maTaiKhoan);
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    String maVaiTro = rs.getString("maVaiTro");
+                    if (maVaiTro != null && !maVaiTro.trim().isEmpty()) {
+                        VaiTro role = findRoleByCode(maVaiTro.trim());
+                        if (role != null) {
+                            user.setVaiTro(role);
+                        }
+                    }
+                }
+            }
+        } catch (SQLException e) {
+            System.err.println("Lỗi loadUserRoleAndPermissions (role) #" + maTaiKhoan + ": " + e.getMessage());
+        }
+    }
+
+    private String resolveFullName(String maNV, String fallback) {
+        if (maNV == null || maNV.trim().isEmpty()) return fallback;
+        String sql = "SELECT hoTen FROM THONGTINCANHAN WHERE maNV = ?";
+        try (Connection conn = DatabaseConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setString(1, maNV.trim());
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    String hoTen = rs.getString("hoTen");
+                    if (hoTen != null && !hoTen.trim().isEmpty()) {
+                        return hoTen.trim();
+                    }
+                }
+            }
+        } catch (SQLException ignored) {
+            // Không báo lỗi nặng nếu bảng THONGTINCANHAN chưa có
+        }
+        return fallback;
+    }
+
+}

@@ -1,0 +1,310 @@
+package com.hrm.gui.evaluation;
+
+import com.hrm.bus.DanhGiaBUS;
+import com.hrm.model.ChiTietDanhGia;
+import com.hrm.model.DanhGiaHieuSuat;
+import com.hrm.model.DotDanhGia;
+import com.hrm.model.NhanVien;
+import com.hrm.model.TaiKhoan;
+import com.hrm.util.PermissionCodes;
+import com.hrm.util.SessionContext;
+import com.hrm.gui.components.PurpleTable;
+import com.hrm.util.UIColors;
+import com.hrm.util.UIHelper;
+
+import javax.swing.*;
+import javax.swing.border.EmptyBorder;
+import javax.swing.border.TitledBorder;
+import javax.swing.table.DefaultTableCellRenderer;
+import javax.swing.table.DefaultTableModel;
+import javax.swing.table.TableRowSorter;
+
+import java.awt.*;
+import java.time.format.DateTimeFormatter;
+import java.util.Comparator;
+import java.util.List;
+
+public class EvalResultPanel extends JPanel {
+
+    private final DanhGiaBUS evalService;
+    private final TaiKhoan currentUser;
+    private final boolean isManager;
+    private final String myMaNV;
+    private final int presetCycleId;
+    private PurpleTable submissionTable;
+    private DefaultTableModel submissionModel;
+    private PurpleTable detailTable;
+    private DefaultTableModel detailModel;
+    private JTextArea txtComment;
+    private JComboBox<Object> cboNhanVien;
+    private JComboBox<Object> cboKyDanhGia;
+    private JTextField txtTimKiem;
+    private JComboBox<String> cboXepLoai;
+    private String filterKeyword = "";
+    private List<DanhGiaHieuSuat> cachedSubmissions;
+    private static final DateTimeFormatter DT_FORMAT = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm");
+    public EvalResultPanel() {
+        this(-1);
+    }
+
+    public EvalResultPanel(int presetCycleId) {
+        this.evalService = DanhGiaBUS.getInstance();
+        this.currentUser = SessionContext.getInstance().getCurrentUser();
+        SessionContext session = SessionContext.getInstance();
+        this.isManager = session.hasPermission(PermissionCodes.EVAL_MANAGE)
+                || session.hasPermission(PermissionCodes.EVAL_REVIEW);
+        this.presetCycleId = presetCycleId;
+        this.myMaNV = currentUser.getMaNV();
+        initComponents();
+        setupLayout();
+        loadData();
+    }
+
+    private void initComponents() {
+        setLayout(new BorderLayout(10, 10));
+        setBackground(Color.WHITE);
+        setBorder(new EmptyBorder(15, 15, 15, 15));
+        cboNhanVien = new JComboBox<>();
+        if (isManager) {
+            cboNhanVien.addItem("Tất cả");
+            List<NhanVien> dsNV = com.hrm.bus.NhanVienBUS.getInstance()
+                    .getAllByActionScope(PermissionCodes.EVAL_VIEW, currentUser.getMaNV());
+            for (NhanVien nv : dsNV) {
+                cboNhanVien.addItem(nv);
+            }
+            cboNhanVien.setRenderer(new DefaultListCellRenderer() {
+                @Override
+                public Component getListCellRendererComponent(JList<?> list, Object value,
+                                                              int index, boolean isSelected, boolean cellHasFocus) {
+                    super.getListCellRendererComponent(list, value, index, isSelected, cellHasFocus);
+                    if (value instanceof NhanVien) {
+                        NhanVien nv = (NhanVien) value;
+                        setText("[" + nv.getMaNhanVien() + "] " + nv.getHoTen());
+                    } else if (value != null) {
+                        setText(value.toString());
+                    }
+                    return this;
+                }
+            });
+        }
+        cboKyDanhGia = new JComboBox<>();
+        cboKyDanhGia.addItem("Tất cả kỳ đánh giá");
+        List<DotDanhGia> dsKy = evalService.getAllCycles();
+        if (dsKy != null) {
+            for (DotDanhGia ky : dsKy) {
+                String ten = ky.getTenDot() != null ? ky.getTenDot() : ("Đợt #" + ky.getId());
+                cboKyDanhGia.addItem(new KyDanhGiaItem(ky.getId(), ten));
+            }
+        }
+        cboKyDanhGia.setRenderer(new DefaultListCellRenderer() {
+            @Override
+            public Component getListCellRendererComponent(JList<?> list, Object value,
+                                                          int index, boolean isSelected, boolean cellHasFocus) {
+                super.getListCellRendererComponent(list, value, index, isSelected, cellHasFocus);
+                if (value instanceof KyDanhGiaItem) {
+                    setText(((KyDanhGiaItem) value).displayText);
+                } else if (value != null) {
+                    setText(value.toString());
+                }
+                return this;
+            }
+        });
+        if (presetCycleId > 0) {
+            for (int i = 0; i < cboKyDanhGia.getItemCount(); i++) {
+                Object item = cboKyDanhGia.getItemAt(i);
+                if (item instanceof KyDanhGiaItem && ((KyDanhGiaItem) item).cycleId == presetCycleId) {
+                    cboKyDanhGia.setSelectedIndex(i);
+                    break;
+                }
+            }
+        }
+        String[] subColumns = {"ID", "Kỳ đánh giá", "Nhân viên", "Người đánh giá", "Điểm", "Xếp loại", "Ngày"};
+        submissionModel = new DefaultTableModel(subColumns, 0) {
+            @Override public boolean isCellEditable(int row, int column) { return false; }
+        };
+        submissionTable = new PurpleTable(submissionModel);
+        submissionTable.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+        submissionTable.getSelectionModel().addListSelectionListener(e -> showDetail());
+        submissionTable.getColumnModel().getColumn(5).setCellRenderer(new DefaultTableCellRenderer() {
+            @Override
+            public Component getTableCellRendererComponent(JTable table, Object value,
+                                                           boolean isSelected, boolean hasFocus, int row, int column) {
+                Component c = super.getTableCellRendererComponent(table, value, isSelected, hasFocus, row, column);
+                if (!isSelected && value != null) {
+                    String rating = value.toString();
+                    if ("Xuất sắc".equals(rating))        { c.setBackground(UIColors.BG_SUCCESS); c.setForeground(UIColors.SUCCESS_GREEN); }
+                    else if ("Tốt".equals(rating))        { c.setBackground(UIColors.BG_SUCCESS); c.setForeground(UIColors.SUCCESS_GREEN); }
+                    else if ("Khá".equals(rating))        { c.setBackground(UIColors.BG_WARNING); c.setForeground(UIColors.WARNING_ORANGE); }
+                    else if ("Trung bình".equals(rating)) { c.setBackground(UIColors.BG_DANGER);  c.setForeground(UIColors.WARNING_ORANGE); }
+                    else                                  { c.setBackground(UIColors.BG_DANGER);  c.setForeground(UIColors.DANGER_RED); }
+                }
+                return c;
+            }
+        });
+        TableRowSorter<DefaultTableModel> submissionSorter = new TableRowSorter<>(submissionModel);
+        submissionTable.setRowSorter(submissionSorter);
+        // Chỉ cho sort cột 0 (ID) và cột 2 (Nhân viên)
+        for (int i = 0; i < 7; i++) {
+            submissionSorter.setSortable(i, false);
+        }
+        submissionSorter.setComparator(0, Comparator.comparingInt(a -> (Integer) a));
+        submissionSorter.setSortable(0, true); // ID
+        submissionSorter.setSortable(2, true); // Nhân viên
+        // Comparator tiếng Việt cho cột Nhân viên
+        submissionSorter.setComparator(2, com.hrm.util.UIHelper.vietnameseNameComparator());
+        // Mặc định sort theo ID tăng dần
+        submissionSorter.setSortKeys(List.of(new RowSorter.SortKey(0, SortOrder.ASCENDING)));
+        String[] detailColumns = {"Tiêu chí", "Trọng số", "Điểm (1-10)", "Điểm quy đổi", "Nhận xét"};
+        detailModel = new DefaultTableModel(detailColumns, 0) {
+            @Override public boolean isCellEditable(int row, int column) { return false; }
+        };
+        detailTable = new PurpleTable(detailModel);
+        txtComment = new JTextArea(3, 40);
+        txtComment.setEditable(false);
+        txtComment.setLineWrap(true);
+        txtComment.setWrapStyleWord(true);
+        txtComment.setBackground(Color.WHITE);
+        if (isManager) {
+            cboNhanVien.addActionListener(e -> loadData());
+        }
+        cboKyDanhGia.addActionListener(e -> loadData());
+        cboXepLoai = new JComboBox<>(new String[]{"Tất cả xếp loại", "Xuất sắc", "Tốt", "Khá", "Trung bình", "Yếu"});
+        cboXepLoai.addActionListener(e -> loadData());
+        txtTimKiem = UIHelper.createSearchField("Tìm theo tên nhân viên, kỳ đánh giá...");
+        txtTimKiem.addKeyListener(new java.awt.event.KeyAdapter() {
+            @Override public void keyReleased(java.awt.event.KeyEvent e) {
+                filterKeyword = UIHelper.normalizeSearch(txtTimKiem.getText());
+                loadData();
+            }
+        });
+    }
+
+    private void setupLayout() {
+        JPanel topPanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 10, 5));
+        topPanel.add(new JLabel("Tìm kiếm:"));
+        topPanel.add(txtTimKiem);
+        if (isManager) {
+            topPanel.add(new JLabel("Nhân viên:"));
+            topPanel.add(cboNhanVien);
+        }
+        topPanel.add(new JLabel("Kỳ đánh giá:"));
+        topPanel.add(cboKyDanhGia);
+        topPanel.add(new JLabel("Xếp loại:"));
+        topPanel.add(cboXepLoai);
+        JSplitPane splitPane = new JSplitPane(JSplitPane.VERTICAL_SPLIT);
+        splitPane.setDividerLocation(250);
+        JScrollPane subScroll = new JScrollPane(submissionTable);
+        subScroll.setBorder(BorderFactory.createLineBorder(Color.LIGHT_GRAY));
+        splitPane.setTopComponent(subScroll);
+        JPanel detailPanel = new JPanel(new BorderLayout(10, 10));
+        detailPanel.setBorder(new TitledBorder("Chi tiết đánh giá (chọn hàng để xem)"));
+        JScrollPane detailScroll = new JScrollPane(detailTable);
+        JPanel commentPanel = new JPanel(new BorderLayout(5, 5));
+        commentPanel.add(new JLabel("Nhận xét chung:"), BorderLayout.NORTH);
+        commentPanel.add(new JScrollPane(txtComment), BorderLayout.CENTER);
+        detailPanel.add(detailScroll, BorderLayout.CENTER);
+        detailPanel.add(commentPanel, BorderLayout.SOUTH);
+        splitPane.setBottomComponent(detailPanel);
+        JButton btnLamMoi = UIHelper.createDefaultButton("Làm mới");
+        btnLamMoi.addActionListener(e -> loadData());
+        JPanel southPanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 8, 4));
+        southPanel.add(btnLamMoi);
+        JLabel lblHint = new JLabel("Tìm theo: Tên nhân viên / Kỳ đánh giá");
+        lblHint.setFont(new Font("Segoe UI", Font.ITALIC, 12));
+        lblHint.setForeground(com.hrm.util.UIColors.TEXT_DARK);
+        JPanel northPanel = new JPanel(new BorderLayout(0, 2));
+        northPanel.add(topPanel, BorderLayout.NORTH);
+        northPanel.add(lblHint, BorderLayout.SOUTH);
+        add(northPanel, BorderLayout.NORTH);
+        add(splitPane, BorderLayout.CENTER);
+        add(southPanel, BorderLayout.SOUTH);
+    }
+
+    private void loadData() {
+        submissionModel.setRowCount(0);
+        detailModel.setRowCount(0);
+        txtComment.setText("");
+        String filterMaNV = null;
+        if (isManager && cboNhanVien.getSelectedItem() instanceof NhanVien) {
+            filterMaNV = ((NhanVien) cboNhanVien.getSelectedItem()).getMaNhanVien();
+        }
+        int filterKyId = -1;
+        if (cboKyDanhGia.getSelectedItem() instanceof KyDanhGiaItem) {
+            filterKyId = ((KyDanhGiaItem) cboKyDanhGia.getSelectedItem()).cycleId;
+        }
+        cachedSubmissions = evalService.getAllSubmissionsByScope(myMaNV);
+        if (cachedSubmissions == null) return;
+        for (DanhGiaHieuSuat sub : cachedSubmissions) {
+            if (filterMaNV != null && !filterMaNV.equals(sub.getMaNV())) continue;
+            if (filterKyId > 0 && sub.getMaDot() != filterKyId) continue;
+            String filterXepLoai = (String) cboXepLoai.getSelectedItem();
+            if (filterXepLoai != null && !"Tất cả xếp loại".equals(filterXepLoai)) {
+                String xepLoai = sub.getXepLoai() != null ? sub.getXepLoai().getTenHienThi() : "";
+                if (!filterXepLoai.equals(xepLoai)) continue;
+            }
+            if (!filterKeyword.isEmpty()) {
+                String tenNV  = UIHelper.normalizeSearch(sub.getTenNhanVien() != null ? sub.getTenNhanVien() : "");
+                String tenDot = UIHelper.normalizeSearch(sub.getTenDot() != null ? sub.getTenDot() : "");
+                if (!tenNV.contains(filterKeyword) && !tenDot.contains(filterKeyword)) continue;
+            }
+            submissionModel.addRow(new Object[]{
+                    sub.getId(),
+                    sub.getTenDot() != null ? sub.getTenDot() : ("#" + sub.getMaDot()),
+                    sub.getTenNhanVien() != null ? sub.getTenNhanVien() : ("#" + sub.getMaNV()),
+                    sub.getTenNguoiDanhGia() != null ? sub.getTenNguoiDanhGia() : ("#" + sub.getMaNguoiDanhGia()),
+                    String.format("%.2f", sub.getTongDiem()),
+                    sub.getXepLoai() != null ? sub.getXepLoai().getTenHienThi() : "?",
+                    sub.getNgayDanhGia() != null ? sub.getNgayDanhGia().format(DT_FORMAT) : ""
+            });
+        }
+    }
+
+    private void showDetail() {
+        int viewRow = submissionTable.getSelectedRow();
+        if (viewRow < 0 || cachedSubmissions == null) {
+            detailModel.setRowCount(0);
+            txtComment.setText("");
+            return;
+        }
+        int modelRow = submissionTable.convertRowIndexToModel(viewRow);
+        int submissionId = (int) submissionModel.getValueAt(modelRow, 0);
+        DanhGiaHieuSuat sub = cachedSubmissions.stream()
+                .filter(s -> s.getId() == submissionId).findFirst().orElse(null);
+        if (sub == null) {
+            detailModel.setRowCount(0);
+            txtComment.setText("");
+            return;
+        }
+        if (sub.getChiTietDanhGias().isEmpty()) {
+            sub.setChiTietDanhGias(evalService.loadScores(sub.getId()));
+        }
+        detailModel.setRowCount(0);
+        for (ChiTietDanhGia score : sub.getChiTietDanhGias()) {
+            detailModel.addRow(new Object[]{
+                    score.getTenTieuChi() != null ? score.getTenTieuChi() : ("TC#" + score.getMaTieuChi()),
+                    String.format("%.0f%%", score.getTrongSo()),
+                    String.format("%.1f", score.getDiem()),
+                    String.format("%.2f", score.getDiemCoTrong()),
+                    score.getNhanXet() != null ? score.getNhanXet() : ""
+            });
+        }
+        if (!sub.getChiTietDanhGias().isEmpty()) {
+            detailModel.addRow(new Object[]{
+                    "TỔNG CỘNG", "100%", "",
+                    String.format("%.2f", sub.getTongDiem()),
+                    sub.getXepLoai() != null ? sub.getXepLoai().getTenHienThi() : ""
+            });
+        }
+        txtComment.setText(sub.getNhanXetChung() != null ? sub.getNhanXetChung() : "");
+    }
+
+    private static class KyDanhGiaItem {
+        private final int cycleId;
+        private final String displayText;
+        private KyDanhGiaItem(int cycleId, String displayText) {
+            this.cycleId = cycleId;
+            this.displayText = displayText;
+        }
+    }
+
+}

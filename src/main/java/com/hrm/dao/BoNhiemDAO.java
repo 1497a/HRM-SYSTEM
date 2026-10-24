@@ -1,0 +1,531 @@
+package com.hrm.dao;
+import com.hrm.model.BoNhiem;
+import com.hrm.util.DaoHelper;
+import com.hrm.util.DatabaseConnection;
+import com.hrm.util.HRMConstants;
+import java.sql.*;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
+/**
+ * Repository cho bảng BONHIEM.
+ * Singleton pattern - sử dụng MySQL JDBC.
+ */
+public class BoNhiemDAO {
+    private static BoNhiemDAO instance;
+    private BoNhiemDAO() {
+    }
+    public static synchronized BoNhiemDAO getInstance() {
+        if (instance == null) {
+            instance = new BoNhiemDAO();
+        }
+        return instance;
+    }
+    // ============================
+    // Mapping helper
+    // ============================
+    private BoNhiem mapRow(ResultSet rs) throws SQLException {
+        BoNhiem bn = new BoNhiem();
+        bn.setId(rs.getInt("maBoNhiem"));
+        bn.setMaNV(rs.getString("maNV"));
+        bn.setMaPhongBan(rs.getString("maPhongBan"));
+        bn.setMaChucVu(rs.getString("maChucVu"));
+        bn.setLoaiBoNhiem(rs.getString("loaiBoNhiem"));
+        bn.setTyLeHuongLuong(rs.getDouble("tyLeHuongLuong"));
+        bn.setMaQuanLy(rs.getString("maQuanLy"));
+        bn.setNguoiDuyet(rs.getString("nguoiDuyet"));
+        Date tuNgay = rs.getDate("tuNgay");
+        if (tuNgay != null) bn.setTuNgay(tuNgay.toLocalDate());
+        Date denNgay = rs.getDate("denNgay");
+        if (denNgay != null) bn.setDenNgay(denNgay.toLocalDate());
+        Timestamp ngayPheDuyet = rs.getTimestamp("ngayPheDuyet");
+        if (ngayPheDuyet != null) bn.setNgayPheDuyet(ngayPheDuyet.toLocalDateTime());
+        bn.setLyDo(rs.getString("lyDo"));
+        bn.setTrangThai(rs.getString("trangThai"));
+        return bn;
+    }
+
+    private void trySetTransient(ResultSet rs, BoNhiem bn) {
+        try { bn.setTenNV(rs.getString("hoTen")); } catch (SQLException ignored) {}
+        try { bn.setTenPhongBan(rs.getString("tenPhongBan")); } catch (SQLException ignored) {}
+        try { bn.setTenChucVu(rs.getString("tenChucVu")); } catch (SQLException ignored) {}
+        try { bn.setTenQuanLy(rs.getString("tenQuanLy")); } catch (SQLException ignored) {}
+        try { bn.setTenNguoiDuyet(rs.getString("tenNguoiDuyet")); } catch (SQLException ignored) {}
+    }
+    // ============================
+    // insert - returns generated maBoNhiem
+    // ============================
+    public int insert(BoNhiem bn) throws SQLException {
+        String sql = "INSERT INTO BONHIEM "
+                + "(maNV, maPhongBan, maChucVu, loaiBoNhiem, tyLeHuongLuong, maQuanLy, "
+                + " nguoiDuyet, tuNgay, denNgay, ngayPheDuyet, lyDo, trangThai) "
+                + "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+        try (Connection conn = DatabaseConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
+            setInsertParams(ps, bn);
+            ps.executeUpdate();
+            try (ResultSet keys = ps.getGeneratedKeys()) {
+                if (keys.next()) {
+                    int id = keys.getInt(1);
+                    bn.setId(id);
+                    return id;
+                }
+            }
+        }
+        throw new SQLException("Không lấy được maBoNhiem sau khi insert.");
+    }
+
+    // ============================
+    // findById
+    // ============================
+    public BoNhiem findById(int maBoNhiem) {
+        String sql = buildJoinQuery("WHERE b.maBoNhiem = ?", "LIMIT 1");
+        try (Connection conn = DatabaseConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setInt(1, maBoNhiem);
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    BoNhiem bn = mapRow(rs);
+                    trySetTransient(rs, bn);
+                    return bn;
+                }
+            }
+        } catch (SQLException e) {
+            throw new RuntimeException("Lỗi tải bổ nhiệm #" + maBoNhiem + ": " + e.getMessage(), e);
+        }
+        return null;
+    }
+
+    // ============================
+    // updateTrangThai
+    // ============================
+    public int updateTrangThai(int maBoNhiem, String trangThai, LocalDateTime ngayPheDuyet) {
+        String sql = "UPDATE BONHIEM SET trangThai=?, ngayPheDuyet=? WHERE maBoNhiem=?";
+        try (Connection conn = DatabaseConnection.getConnection();
+            PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setString(1, trangThai);
+            ps.setTimestamp(2, ngayPheDuyet != null ? Timestamp.valueOf(ngayPheDuyet) : null);
+            ps.setInt(3, maBoNhiem);
+            return ps.executeUpdate();
+        } catch (SQLException e) {
+            throw new RuntimeException("Lỗi cập nhật trạng thái bổ nhiệm: " + e.getMessage(), e);
+        }
+    }
+
+    // ============================
+    // updateLyDoTuChoi
+    // ============================
+    public int updateLyDoTuChoi(int maBoNhiem, String lyDo) {
+        String sql = "UPDATE BONHIEM SET lyDo=? WHERE maBoNhiem=?";
+        try (Connection conn = DatabaseConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setString(1, lyDo);
+            ps.setInt(2, maBoNhiem);
+            return ps.executeUpdate();
+        } catch (SQLException e) {
+            throw new RuntimeException("Loi updateLyDoTuChoi: " + e.getMessage(), e);
+        }
+    }
+    // ============================
+    // updateNguoiDuyet
+    // ============================
+    public int updateNguoiDuyet(int maBoNhiem, String nguoiDuyetId) {
+        String sql = "UPDATE BONHIEM SET nguoiDuyet=? WHERE maBoNhiem=?";
+        try (Connection conn = DatabaseConnection.getConnection();
+            PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setString(1, nguoiDuyetId);
+            ps.setInt(2, maBoNhiem);
+            return ps.executeUpdate();
+        } catch (SQLException e) {
+            throw new RuntimeException("Lỗi cập nhật người duyệt: " + e.getMessage(), e);
+        }
+    }
+    // ===========================
+    // findByMaNV - with transient names
+    // ============================
+    public List<BoNhiem> findByMaNV(String maNV) {
+        String sql = buildJoinQuery("WHERE b.maNV = ?", "ORDER BY b.tuNgay DESC");
+        List<BoNhiem> result = new ArrayList<>();
+        try (Connection conn = DatabaseConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setString(1, maNV);
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    BoNhiem bn = mapRow(rs);
+                    trySetTransient(rs, bn);
+                    result.add(bn);
+                }
+            }
+        } catch (SQLException e) {
+            throw new RuntimeException("Lỗi tải bổ nhiệm theo nhân viên: " + e.getMessage(), e);
+        }
+        return result;
+    }
+    // ============================
+    // findBoNhiemChinhHieuLuc
+    // ============================
+    public BoNhiem findBoNhiemChinhHieuLuc(String maNV) {
+        String sql = buildJoinQuery(
+                "WHERE b.maNV = ? AND b.trangThai = '" + HRMConstants.TRANG_THAI_HIEU_LUC + "' AND b.loaiBoNhiem = '" + HRMConstants.LOAI_BO_NHIEM_CHINH + "'"
+                + " AND (b.denNgay IS NULL OR b.denNgay >= CURDATE())",
+                "LIMIT 1");
+        try (Connection conn = DatabaseConnection.getConnection();
+            PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setString(1, maNV);
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    BoNhiem bn = mapRow(rs);
+                    trySetTransient(rs, bn);
+                    return bn;
+                }
+            }
+        } catch (SQLException e) {
+            throw new RuntimeException("Lỗi tải bổ nhiệm chính hiệu lực: " + e.getMessage(), e);
+        }
+        return null;
+    }
+    // ============================
+    // findChoDuyet
+    // ============================
+    public List<BoNhiem> findChoDuyet() {
+        String sql = buildJoinQuery("WHERE b.trangThai = '" + HRMConstants.TRANG_THAI_CHO_DUYET + "'", "ORDER BY b.maBoNhiem ASC");
+        List<BoNhiem> result = new ArrayList<>();
+        try (Connection conn = DatabaseConnection.getConnection();
+            PreparedStatement ps = conn.prepareStatement(sql);
+            ResultSet rs = ps.executeQuery()) {
+            while (rs.next()) {
+                BoNhiem bn = mapRow(rs);
+                trySetTransient(rs, bn);
+                result.add(bn);
+            }
+        } catch (SQLException e) {
+            throw new RuntimeException("Lỗi tải bổ nhiệm chờ duyệt: " + e.getMessage(), e);
+        }
+        return result;
+    }
+
+    // ============================
+    // findAll - all with transient names
+    // ============================
+    public List<BoNhiem> findAll() {
+        String sql = buildJoinQuery("", "ORDER BY b.maBoNhiem DESC");
+        List<BoNhiem> result = new ArrayList<>();
+        try (Connection conn = DatabaseConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql);
+             ResultSet rs = ps.executeQuery()) {
+            while (rs.next()) {
+                BoNhiem bn = mapRow(rs);
+                trySetTransient(rs, bn);
+                result.add(bn);
+            }
+        } catch (SQLException e) {
+            throw new RuntimeException("Lỗi tải danh sách bổ nhiệm: " + e.getMessage(), e);
+        }
+        return result;
+    }
+
+    public List<BoNhiem> findAllByScope(com.hrm.model.DataScope scope, String currentMaNV) {
+        List<BoNhiem> result = new ArrayList<>();
+        if (scope == com.hrm.model.DataScope.NONE) return result;
+        if (scope == com.hrm.model.DataScope.DEPT) {
+            return findAllByDeptSubtree(currentMaNV);
+        }
+        String whereClause;
+        switch (scope) {
+            case ALL:
+                whereClause = "";
+                break;
+            case TEAM:
+                whereClause = "WHERE b.maQuanLy = ? OR b.maNV = ?";
+                break;
+            case SELF:
+                whereClause = "WHERE b.maNV = ?";
+                break;
+            default:
+                return result;
+        }
+        String sql = buildJoinQuery(whereClause, "ORDER BY b.maBoNhiem DESC");
+        try (Connection conn = DatabaseConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            if (scope == com.hrm.model.DataScope.TEAM) {
+                ps.setString(1, currentMaNV);
+                ps.setString(2, currentMaNV);
+            } else if (scope != com.hrm.model.DataScope.ALL) {
+                ps.setString(1, currentMaNV);
+            }
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    BoNhiem bn = mapRow(rs);
+                    trySetTransient(rs, bn);
+                    result.add(bn);
+                }
+            }
+        } catch (SQLException e) {
+            throw new RuntimeException("Loi tai danh sach bo nhiem theo scope: " + e.getMessage(), e);
+        }
+        return result;
+    }
+
+    private List<BoNhiem> findAllByDeptSubtree(String currentMaNV) {
+        List<BoNhiem> result = new ArrayList<>();
+        try (Connection conn = DatabaseConnection.getConnection()) {
+            java.util.Set<String> depts = DaoHelper.getDeptSubtree(currentMaNV, conn);
+            if (depts.isEmpty()) return result;
+            String ph = String.join(",", java.util.Collections.nCopies(depts.size(), "?"));
+            String sql = buildJoinQuery("WHERE b.maPhongBan IN (" + ph + ")", "ORDER BY b.maBoNhiem DESC");
+            try (PreparedStatement ps = conn.prepareStatement(sql)) {
+                int i = 1; for (String d : depts) ps.setString(i++, d);
+                try (ResultSet rs = ps.executeQuery()) {
+                    while (rs.next()) { BoNhiem bn = mapRow(rs); trySetTransient(rs, bn); result.add(bn); }
+                }
+            }
+        } catch (SQLException e) {
+            throw new RuntimeException("Lỗi tải bổ nhiệm theo phòng ban: " + e.getMessage(), e);
+        }
+        return result;
+    }
+    // ============================
+    // hasConflictingChinhBoNhiem
+    // ============================
+    public boolean hasConflictingChinhBoNhiem(String maNV, LocalDate tuNgay, LocalDate denNgay, int excludeId) {
+        // Kiểm tra overlap với bổ nhiệm chính đang hiệu lực hoặc chờ duyệt
+        String sql = "SELECT COUNT(*) FROM BONHIEM "
+                + "WHERE maNV=? AND loaiBoNhiem='" + HRMConstants.LOAI_BO_NHIEM_CHINH + "' "
+                + "AND trangThai IN ('" + HRMConstants.TRANG_THAI_HIEU_LUC + "','" + HRMConstants.TRANG_THAI_CHO_DUYET + "') "
+                + "AND maBoNhiem <> ? "
+                + "AND (denNgay IS NULL OR denNgay >= ?) "
+                + "AND tuNgay <= ?";
+        try (Connection conn = DatabaseConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setString(1, maNV);
+            ps.setInt(2, excludeId);
+            ps.setDate(3, Date.valueOf(tuNgay));
+            ps.setDate(4, denNgay != null ? Date.valueOf(denNgay) : Date.valueOf(LocalDate.of(9999, 12, 31)));
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    return rs.getInt(1) > 0;
+                }
+            }
+        } catch (SQLException e) {
+            throw new RuntimeException("Lỗi kiểm tra xung đột bổ nhiệm: " + e.getMessage(), e);
+        }
+        return false;
+    }
+
+    /**
+     * Kiểm tra chức vụ đã có người giữ bổ nhiệm chính hiệu lực trong phòng ban chưa.
+     * Dùng để ngăn bổ nhiệm nhiều người vào cùng một chức vụ chính (trưởng phòng, giám đốc...).
+     */
+    /**
+     * Neu maPhongBan = null: kiem tra toan cong ty (danh cho Giam doc - capBac=1).
+     * Neu maPhongBan co gia tri: kiem tra trong phong ban cu the.
+     */
+    public boolean hasActiveChinhForChucVuInDept(String maPhongBan, String maChucVu, int excludeBoNhiemId) {
+        String sql;
+        if (maPhongBan == null) {
+            // Company-wide check (for Director level)
+            sql = "SELECT COUNT(*) FROM BONHIEM "
+                    + "WHERE maChucVu=? AND loaiBoNhiem='" + HRMConstants.LOAI_BO_NHIEM_CHINH + "' "
+                    + "AND trangThai IN ('" + HRMConstants.TRANG_THAI_HIEU_LUC + "','" + HRMConstants.TRANG_THAI_CHO_DUYET + "') "
+                    + "AND maBoNhiem <> ? "
+                    + "AND (denNgay IS NULL OR denNgay >= CURDATE())";
+        } else {
+            sql = "SELECT COUNT(*) FROM BONHIEM "
+                    + "WHERE maPhongBan=? AND maChucVu=? AND loaiBoNhiem='" + HRMConstants.LOAI_BO_NHIEM_CHINH + "' "
+                    + "AND trangThai IN ('" + HRMConstants.TRANG_THAI_HIEU_LUC + "','" + HRMConstants.TRANG_THAI_CHO_DUYET + "') "
+                    + "AND maBoNhiem <> ? "
+                    + "AND (denNgay IS NULL OR denNgay >= CURDATE())";
+        }
+        try (Connection conn = DatabaseConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            if (maPhongBan == null) {
+                ps.setString(1, maChucVu);
+                ps.setInt(2, excludeBoNhiemId);
+            } else {
+                ps.setString(1, maPhongBan);
+                ps.setString(2, maChucVu);
+                ps.setInt(3, excludeBoNhiemId);
+            }
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) return rs.getInt(1) > 0;
+            }
+        } catch (SQLException e) {
+            throw new RuntimeException("Loi kiem tra chuc vu doc quyen: " + e.getMessage(), e);
+        }
+        return false;
+    }
+
+    /**
+     * Tìm bổ nhiệm chính đang hiệu lực theo phòng ban + chức vụ (để tự động kết thúc khi phê duyệt).
+     */
+    public BoNhiem findBoNhiemChinhHieuLucByChucVuInDept(String maPhongBan, String maChucVu, int excludeBoNhiemId) {
+        String sql = buildJoinQuery(
+                "WHERE b.maPhongBan=? AND b.maChucVu=? AND b.loaiBoNhiem='" + HRMConstants.LOAI_BO_NHIEM_CHINH + "' AND b.trangThai='" + HRMConstants.TRANG_THAI_HIEU_LUC + "' AND b.maBoNhiem<>?",
+                "LIMIT 1");
+        try (Connection conn = DatabaseConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setString(1, maPhongBan);
+            ps.setString(2, maChucVu);
+            ps.setInt(3, excludeBoNhiemId);
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    BoNhiem bn = mapRow(rs);
+                    trySetTransient(rs, bn);
+                    return bn;
+                }
+            }
+        } catch (SQLException e) {
+            throw new RuntimeException("Lỗi tìm bổ nhiệm chính theo chức vụ + phòng ban: " + e.getMessage(), e);
+        }
+        return null;
+    }
+
+    /**
+     * Kiểm tra phòng ban có bổ nhiệm đang hiệu lực không (để validate trước khi ngưng phòng ban).
+     */
+    public boolean hasActiveBoNhiemInDepartment(String maPhongBan) {
+        String sql = "SELECT COUNT(*) FROM BONHIEM WHERE maPhongBan=? AND trangThai='" + HRMConstants.TRANG_THAI_HIEU_LUC + "' AND (denNgay IS NULL OR denNgay >= CURDATE())";
+        try (Connection conn = DatabaseConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setString(1, maPhongBan);
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) return rs.getInt(1) > 0;
+            }
+        } catch (SQLException e) {
+            throw new RuntimeException("Lỗi kiểm tra bổ nhiệm phòng ban: " + e.getMessage(), e);
+        }
+        return false;
+    }
+
+    /**
+     * Kiểm tra một chức vụ còn đang được sử dụng bởi bổ nhiệm hiệu lực hay không.
+     */
+    public boolean hasActiveBoNhiemByChucVu(String maChucVu) {
+        String sql = "SELECT COUNT(*) FROM BONHIEM WHERE maChucVu=? AND trangThai='" + HRMConstants.TRANG_THAI_HIEU_LUC + "' AND (denNgay IS NULL OR denNgay >= CURDATE())";
+        try (Connection conn = DatabaseConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setString(1, maChucVu);
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) return rs.getInt(1) > 0;
+            }
+        } catch (SQLException e) {
+            throw new RuntimeException("Lỗi kiểm tra bổ nhiệm theo chức vụ: " + e.getMessage(), e);
+        }
+        return false;
+    }
+
+    // ============================
+    // endBoNhiem - set denNgay + trangThai=het_hieu_luc
+    // ============================
+    public int endBoNhiem(int maBoNhiem, LocalDate denNgay) {
+        String sql = "UPDATE BONHIEM SET denNgay=?, trangThai='" + HRMConstants.TRANG_THAI_HET_HIEU_LUC + "' WHERE maBoNhiem=?";
+        try (Connection conn = DatabaseConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setDate(1, Date.valueOf(denNgay));
+            ps.setInt(2, maBoNhiem);
+            return ps.executeUpdate();
+        } catch (SQLException e) {
+            throw new RuntimeException("Lỗi kết thúc bổ nhiệm: " + e.getMessage(), e);
+        }
+    }
+
+    /**
+     * Kết thúc tất cả bổ nhiệm chính hiệu lực của một nhân viên (dùng khi nghỉ việc).
+     */
+    public int endAllActiveBoNhiemForNV(String maNV, LocalDate denNgay, String nguoiKetThuc) {
+        String sql = "UPDATE BONHIEM SET denNgay=?, nguoiKetThuc=?, trangThai='" + HRMConstants.TRANG_THAI_HET_HIEU_LUC + "' "
+                + "WHERE maNV=? AND trangThai='" + HRMConstants.TRANG_THAI_HIEU_LUC + "'";
+        try (Connection conn = DatabaseConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setDate(1, Date.valueOf(denNgay));
+            ps.setString(2, nguoiKetThuc);
+            ps.setString(3, maNV);
+            return ps.executeUpdate();
+        } catch (SQLException e) {
+            throw new RuntimeException("Lỗi kết thúc tất cả bổ nhiệm: " + e.getMessage(), e);
+        }
+    }
+
+    /**
+     * Tìm maNV của tất cả cấp dưới trực tiếp đang có bổ nhiệm hiệu lực
+     * (dùng khi kết thúc bổ nhiệm của quản lý để cascade maQuanLy lên cấp trên).
+     */
+    public List<String> findActiveSubordinateNVIds(String maNV) {
+        String sql = "SELECT DISTINCT maNV FROM BONHIEM WHERE maQuanLy=? AND trangThai='" + HRMConstants.TRANG_THAI_HIEU_LUC + "'";
+        List<String> result = new java.util.ArrayList<>();
+        try (Connection conn = DatabaseConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setString(1, maNV);
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) result.add(rs.getString("maNV"));
+            }
+        } catch (SQLException e) {
+            throw new RuntimeException("Lỗi tìm cấp dưới trực tiếp: " + e.getMessage(), e);
+        }
+        return result;
+    }
+
+    /**
+     * Cập nhật maQuanLy cho danh sách nhân viên (cascade khi quản lý kết thúc bổ nhiệm).
+     * newMaQuanLy = null nếu người vừa kết thúc là CEO (không còn cấp trên nào).
+     */
+    public int updateManagerForNVList(List<String> maNVList, String newMaQuanLy) {
+        if (maNVList == null || maNVList.isEmpty()) return 0;
+        String placeholders = String.join(",", java.util.Collections.nCopies(maNVList.size(), "?"));
+        String sql = "UPDATE BONHIEM SET maQuanLy=? WHERE maNV IN (" + placeholders + ") AND trangThai='" + HRMConstants.TRANG_THAI_HIEU_LUC + "'";
+        try (Connection conn = DatabaseConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            if (newMaQuanLy != null && !newMaQuanLy.isEmpty()) {
+                ps.setString(1, newMaQuanLy);
+            } else {
+                ps.setNull(1, Types.VARCHAR);
+            }
+            for (int i = 0; i < maNVList.size(); i++) {
+                ps.setString(2 + i, maNVList.get(i));
+            }
+            return ps.executeUpdate();
+        } catch (SQLException e) {
+            throw new RuntimeException("Lỗi cập nhật cấp trên cho cấp dưới: " + e.getMessage(), e);
+        }
+    }
+
+    // ============================
+    // Private helper: build SELECT with JOINs
+    // ============================
+    private String buildJoinQuery(String whereClause, String orderAndLimit) {
+        return "SELECT b.*, t.hoTen, b.maNV AS maNhanVien, pb.tenPhongBan, cv.tenChucVu, t_ql.hoTen AS tenQuanLy, t_nd.hoTen AS tenNguoiDuyet "
+                + "FROM BONHIEM b "
+                + "LEFT JOIN THONGTINCANHAN t ON b.maNV = t.maNV "
+                + "LEFT JOIN PHONGBAN pb ON b.maPhongBan = pb.maPhongBan "
+                + "LEFT JOIN CHUCVU cv ON b.maChucVu = cv.maChucVu "
+                + "LEFT JOIN THONGTINCANHAN t_ql ON b.maQuanLy = t_ql.maNV "
+                + "LEFT JOIN THONGTINCANHAN t_nd ON b.nguoiDuyet = t_nd.maNV "
+                + (whereClause.isEmpty() ? "" : whereClause + " ")
+                + orderAndLimit;
+    }
+
+    private void setInsertParams(PreparedStatement ps, BoNhiem bn) throws SQLException {
+        ps.setString(1, bn.getMaNV());
+        ps.setString(2, bn.getMaPhongBan());   // maPhongBan  ← FIXED (was chucVuId)
+        ps.setString(3, bn.getMaChucVu());     // maChucVu
+        ps.setString(4, bn.getLoaiBoNhiem());
+        ps.setDouble(5, bn.getTyLeHuongLuong());
+        if (bn.getMaQuanLy() != null && !bn.getMaQuanLy().isEmpty()) {
+            ps.setString(6, bn.getMaQuanLy());
+        } else {
+            ps.setNull(6, Types.VARCHAR);
+        }
+        if (bn.getNguoiDuyet() != null && !bn.getNguoiDuyet().isEmpty()) {
+            ps.setString(7, bn.getNguoiDuyet());
+        } else {
+            ps.setNull(7, Types.VARCHAR);
+        }
+        ps.setDate(8, bn.getTuNgay() != null ? Date.valueOf(bn.getTuNgay()) : null);
+        ps.setDate(9, bn.getDenNgay() != null ? Date.valueOf(bn.getDenNgay()) : null);
+        ps.setTimestamp(10, bn.getNgayPheDuyet() != null ? Timestamp.valueOf(bn.getNgayPheDuyet()) : null);
+        ps.setString(11, bn.getLyDo());
+        ps.setString(12, bn.getTrangThai());
+    }
+
+}
